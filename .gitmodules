@@ -1,0 +1,19 @@
+[submodule "mbtiusa/awesome-mbti"]
+	path = mbtiusa/awesome-mbti
+	url = https://github.com/mbtiusa/awesome-mbti
+[submodule "yusufkaraaslan/skill-seekers"]
+	path = yusufkaraaslan/skill-seekers
+	url = https://github.com/yusufkaraaslan/Skill_Seekers
+	branch = development
+[submodule "ECC/everything-claude-code"]
+	path = ECC/everything-claude-code
+	url = https://github.com/affaan-m/ECC
+[submodule "microsoft/azure-resource-manager-playwright-dotnet"]
+	path = microsoft/azure-resource-manager-playwright-dotnet
+	url = https://github.com/microsoft/skills
+[submodule "anthropics/frontend-design"]
+	path = anthropics/frontend-design
+	url = https://github.com/anthropics/claude-code
+[submodule "mattpocock/skills"]
+	path = mattpocock/skills
+	url = https://github.com/mattpocock/skills
