@@ -33,12 +33,19 @@ collapse to one-liners once their durable signal lands in an ADR or
    own README should test/warn about at session start. Landing the code
    was not landing the capability — treat "hook active and actually
    persisting learnings" as the real done-condition, not "PR merged."
-2. **Git guardrail hook** — never-push-to-`main` enforcement. User: "I
-   REALLY feel we've experienced enough to begin this work" (referencing
-   the direct-to-`main` incident this same session). Mechanism identified
-   (`git-guardrails-claude-code`, needs main-only adaptation — see
-   `hooks/README.md`); scope (project-local vs. global, hook vs. installer
-   skill) still an open decision to resolve while building.
+2. ~~Git guardrail hook~~ — built, see `hooks/git-guardrails/`. Branch-aware
+   `git push` guard (blocks only `main`/`master` targets, allows feature
+   branches) plus the upstream blanket-blocked destructive patterns
+   (`reset --hard`, `clean -f(d)`, `branch -D`, `checkout .`/`restore .`),
+   global-scope install per user decision (matches `continual-learning`'s
+   scope). No `jq` dependency (uses `sed`) — **not gated on the same
+   activation problem as `continual-learning`**, this one can actually be
+   installed and active today. Verified against 14 hand-built test cases
+   (main/master targets by refspec, delete, rename-into-main, bare push
+   falling back to current branch, explicit non-main branches, force-push
+   to a feature branch, non-git commands) before writing it up. Needs a
+   PR + merge, then an explicit decision on whether to actually install it
+   into `~/.claude/settings.json` on this machine now.
 3. **Check-in hygiene hook** — flags empty/stale scaffold files + README
    staleness (see the `README.md` Roadmap item logged during
    `project-memory-template` planning).

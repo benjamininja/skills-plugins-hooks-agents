@@ -18,32 +18,20 @@ patterns and decays stale/low-value learnings at session end (60-day TTL,
 low hit count). See its own README for install steps and the full list of
 what changed porting from Copilot CLI's format.
 
-## Reference candidate, ready to adapt (not yet activated): git-guardrails-claude-code
+## `git-guardrails` — adapted and ready to install
 
+[`git-guardrails/`](git-guardrails/) adapts
 [mattpocock/skills/misc/git-guardrails-claude-code](https://github.com/mattpocock/skills/tree/main/skills/misc/git-guardrails-claude-code)
-is a real, working Claude Code `PreToolUse` hook (unlike `continual-learning`
-above, this one is already Claude-Code-native — no porting needed). It
-intercepts the Bash tool and blocks dangerous git commands
-(`git push`, `reset --hard`, `clean -f`, `branch -D`, `checkout .`/`restore .`)
-via pattern-matching before they execute (`scripts/block-dangerous-git.sh`),
-wired in via `.claude/settings.json`'s `hooks.PreToolUse`.
-
-**Adaptation needed before use**: as-is it blanket-blocks *all* `git push` —
-too broad for "never push directly to `main`," which should still allow
-pushing feature branches. Needs a branch/ref check, not a blanket pattern.
-
-**Layered-defense note**: this hook only intercepts when Claude Code itself
-runs git via the Bash tool. It does not stop a direct terminal `git push`,
-another tool, or another machine. Treating this as sufficient for an
-absolute "never" would be wrong — the durable version of this rule likely
-wants at least one more layer (a native `.git/hooks/pre-push` check and/or
-GitHub branch protection on `main`, which can't be bypassed locally at all).
-
-**Not yet vendored or activated** — this is a planning-phase pointer per the
-2026-07-11 discussion: whether this becomes a project-local hook, a global
-hook (`~/.claude/settings.json`, all repos), a `setup-pre-commit`-style
-skill that installs it, or some combination, is an open scope decision.
-See the repo root README's Roadmap for the tracked task.
+(already Claude-Code-native — no format porting needed, unlike
+`continual-learning`). A `PreToolUse` hook intercepting the Bash tool:
+`git push` is now **branch-aware** — blocked only when the target is
+`main`/`master`, feature-branch pushes are allowed (upstream blanket-blocks
+all push); `reset --hard`/`clean -f(d)`/`branch -D`/`checkout .`/`restore .`
+stay blanket-blocked, unchanged. No `jq` dependency (uses `sed`), so it
+works today regardless of the `continual-learning` activation gate. See its
+own README for the full adaptation rationale, the layered-defense caveat
+(only intercepts Claude Code's own Bash-tool git calls, not a direct
+terminal push or another machine), and install steps.
 
 ## Population status
 

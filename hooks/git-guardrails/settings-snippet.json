@@ -1,0 +1,16 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "$HOME/.claude/hooks/git-guardrails/block-dangerous-git.sh",
+            "timeout": 5
+          }
+        ]
+      }
+    ]
+  }
+}
