@@ -25,7 +25,7 @@ Some skills are authored here; others are vendored from upstream projects and cr
 │   ├── ponytail/                                # YAGNI/minimal-diff discipline for code generation (pairs with caveman)
 │   ├── ponytail-debt/                           # harvest `ponytail:` shortcut comments into a ledger
 │   ├── fantasy-football-python/                # dynasty fantasy football ETL
-│   │   └── references/data_model.md
+│   │   └── references/data-model.md
 │   ├── frontend-design/                        # production-grade frontend UI (+ LICENSE.txt)
 │   ├── azure-resource-manager-playwright-dotnet/   # Azure Playwright Testing ARM SDK (.NET)
 │   ├── everything-claude-code/                 # Claude Code conventions reference
@@ -71,13 +71,39 @@ A **fork** happens when we need a skill to diverge from its upstream vendor copy
 
 ## Installation
 
-To use these in Claude Code, link or copy the skills into a discovered skills directory (personal `~/.claude/skills/` or a project's `.claude/skills/`). For example, to symlink the entire library on Windows (run as admin):
+Claude Code discovers skills **one level deep only** — `~/.claude/skills/<name>/SKILL.md` (personal) or `<repo>/.claude/skills/<name>/SKILL.md` (project-local). It does **not** scan nested subdirectories, so a single symlink pointing `~/.claude/skills/library` at this repo's `skills/` folder will not work — skills would sit two levels deep (`library/<name>/SKILL.md`) and never be found.
+
+Link each skill individually instead. On Windows, `New-Item -ItemType SymbolicLink` needs admin (or Developer Mode enabled to skip elevation) — if neither is available, use a **directory junction** instead (`-ItemType Junction`), which needs no special privilege and behaves the same for local skill discovery:
 
 ```powershell
-New-Item -ItemType SymbolicLink -Path "$env:USERPROFILE\.claude\skills\library" -Target "C:\Users\benha\OneDrive\Documents\GitHub\skills\skills"
+$source = "C:\Users\benha\OneDrive\Documents\GitHub\skills\skills"
+Get-ChildItem $source -Directory | ForEach-Object {
+    New-Item -ItemType Junction -Path "$env:USERPROFILE\.claude\skills\$($_.Name)" -Target $_.FullName
+}
 ```
 
-Or link individual skills as needed. Each `skills/<name>/SKILL.md` is self-contained and loadable on its own.
+(Swap `Junction` for `SymbolicLink` if running elevated / Developer Mode is on — true symlinks support cross-volume and relative targets, which junctions don't, but that doesn't matter for a same-drive local install.)
+
+**Junction caveat**: junctions pin an absolute local path baked in at creation time. If this repo's folder is ever moved or renamed, every junction breaks silently (skills stop resolving, no error until Claude Code fails to load them) — re-run the command above to relink.
+
+Re-run this after pulling new skills into the central repo — it's idempotent for existing links (re-run will error on already-linked names; delete stale links first if a skill was renamed/removed centrally). Each `skills/<name>/SKILL.md` is also self-contained and loadable on its own if you only want one.
+
+### Cross-tool discovery (VS Code Agents window / GitHub Copilot)
+
+The same `~/.claude/skills/` symlinks above also feed VS Code's native
+Agents-window Skills panel — per its
+[Agent Skills docs](https://code.visualstudio.com/docs/agent-customization/agent-skills),
+it discovers project skills from `.github/skills/`, `.claude/skills/`, and
+`.agents/skills/`, and personal skills from `~/.copilot/skills/`,
+`~/.claude/skills/`, and `~/.agents/skills/` — built on the
+[agentskills.io](https://agentskills.io) open standard, which GitHub Copilot
+also reads. No separate distribution step needed for that surface.
+
+For a **project-scoped subset** (a repo that should only see some skills,
+not the whole library) — not a pattern used yet, but natively
+supported whenever it's needed: symlink individual skill folders into that
+repo's `.claude/skills/<name>/` the same way, instead of (or in addition to)
+the personal `~/.claude/skills/`.
 
 ---
 
@@ -314,5 +340,7 @@ To add a new vendored skill, copy its folder into `skills/` and add a matching e
 - **Regression-testing standard** (raised 2026-07-11, no Pocock skill covers this directly): `Python-PowerBI-DynastyFantasyFootball` has no regression-testing discipline today. Building blocks exist — `tdd` (test discipline), `diagnosing-bugs` (regression-test-on-every-fix), `powerbi-report-authoring/references/screenshot-review.md` (seed for dashboard visual-regression) — but need synthesis into a Python-flavored standard (pytest + `pre-commit` + `check_sources.py`, which that repo's own `PLAN.md` already lists as a deferred pre-commit item) as part of `project-memory-template`, then retrofitted into the Dynasty repo. Especially load-bearing once dashboarding work starts there.
 - **Git guardrail — never push directly to `main`** (raised 2026-07-11): `mattpocock/skills/misc/git-guardrails-claude-code` is a real, ready-to-adapt Claude Code `PreToolUse` hook — see `hooks/README.md` for the full writeup, the blanket-block-vs-main-only adaptation it needs, and the layered-defense point (a Claude Code hook alone doesn't stop a direct terminal push or a different machine — likely also wants a native `.git/hooks/pre-push` check and/or GitHub branch protection). Scope (project-local vs. global `~/.claude/settings.json`, hook vs. a `setup-pre-commit`-style installer skill) is an open decision, deliberately not resolved yet.
 - **Enforcement**: hooks/subagents that scan repo structure on check-in for compliance with the agreed template, and flag any skill/plugin/hook checked in from a non-central source.
-- **Skill distribution beyond manual symlink** (raised 2026-07-11, during `project-memory-template` planning): today, a consuming repo (e.g. `project-memory-template`, or any repo built from it) uses this library's skills only by manually running the README's symlink command. A more portable distribution mechanism (bootstrap script, per-repo skill-link manifest) is future work — cross-referenced in `project-memory-template/README.md`'s Roadmap.
+- **Live-vs-central drift detection** (raised 2026-07-11): the distribution verification pass found `~/.claude/skills/` holding real (non-symlinked) copies of `caveman`, `grill-me`, `grill-with-docs`, `fantasy-football-python` that had silently diverged from this repo's copies in both directions (`fantasy-football-python`'s live copy was more current than central; `grill-with-docs`'s live copy was stale). A future hook/subagent should diff live `~/.claude/skills/<name>/` against `skills-plugins-hooks/skills/<name>/` on some cadence (check-in, or a scheduled check) and flag divergence before it's silently overwritten in either direction.
+- **Skill distribution beyond manual symlink** (raised 2026-07-11, during `project-memory-template` planning; narrowed 2026-07-11 after confirming `.claude/skills/` is natively shared across Claude Code CLI, the VS Code extension, and VS Code's own Agents-window Skills panel — see Installation above): the remaining gap is just **new-machine bootstrap** — the symlink loop still has to be run manually once per machine. A setup script (or a `setup-project-memory`-style skill) that runs it as part of onboarding a new dev environment is future work.
 - ~~**Skill-stage/domain routing map**~~ **Done** (raised and closed 2026-07-11) — see the **Routing: which skill, when** section above: all 34 skills cross-cut by process stage (Plan/Crystallize/Execute) and domain (Power BI's own Plan→Design→Author→Manage pipeline, this user's repos, cross-cutting/always-on). `project-memory-template`'s `CLAUDE.md` should reference this section once that template starts seeing real use.
+- **Orphan project-skill detection** (raised 2026-07-11): the reverse direction of "Enforcement" above — a hook/subagent that scans a *consuming* project's own `.claude/skills/` (or `.github/skills/`, `.agents/skills/`) for skills that exist there but aren't in this central catalog. Flags candidates for promotion (a genuinely reusable skill someone built one-off in a project repo) vs. skills that are legitimately project-scoped and should stay local (e.g. `discord-bot-github-fetch`, which is intentionally Dynasty-repo-only). The check's manifest of "what's known-local-and-intentional" would live per-project, not globally, since scoping is a per-repo decision.
