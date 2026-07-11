@@ -33,19 +33,16 @@ collapse to one-liners once their durable signal lands in an ADR or
    own README should test/warn about at session start. Landing the code
    was not landing the capability — treat "hook active and actually
    persisting learnings" as the real done-condition, not "PR merged."
-2. ~~Git guardrail hook~~ — built, see `hooks/git-guardrails/`. Branch-aware
-   `git push` guard (blocks only `main`/`master` targets, allows feature
-   branches) plus the upstream blanket-blocked destructive patterns
-   (`reset --hard`, `clean -f(d)`, `branch -D`, `checkout .`/`restore .`),
-   global-scope install per user decision (matches `continual-learning`'s
-   scope). No `jq` dependency (uses `sed`) — **not gated on the same
-   activation problem as `continual-learning`**, this one can actually be
-   installed and active today. Verified against 14 hand-built test cases
-   (main/master targets by refspec, delete, rename-into-main, bare push
-   falling back to current branch, explicit non-main branches, force-push
-   to a feature branch, non-git commands) before writing it up. Needs a
-   PR + merge, then an explicit decision on whether to actually install it
-   into `~/.claude/settings.json` on this machine now.
+2. ~~Git guardrail hook~~ — built, merged (PR #13), **and activated** on
+   this machine 2026-07-11: script copied to
+   `~/.claude/hooks/git-guardrails/block-dangerous-git.sh`, the
+   `PreToolUse`/`Bash` entry from `hooks/git-guardrails/settings-snippet.json`
+   merged into `~/.claude/settings.json` (no prior `hooks` key existed —
+   clean merge), and re-verified against the installed script path
+   post-copy. First hook in this program to go all the way from built to
+   live. Note: Claude Code reads hook config at session start, so this
+   session (already running) isn't covered — it protects every session
+   from the next one on.
 3. **Check-in hygiene hook** — flags empty/stale scaffold files + README
    staleness (see the `README.md` Roadmap item logged during
    `project-memory-template` planning).

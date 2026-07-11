@@ -108,14 +108,14 @@ to trust it elsewhere and we are not there yet."
    Deliberately left as an open gate rather than silently installed —
    which binaries, how (winget/choco/manual), and whether `jq` is
    optional long-term all still need a real decision. See `PLAN.md`.
-5. ~~Git guardrail hook~~ — built, not yet merged (`hooks/git-guardrails/`).
-   Branch-aware `git push` guard (blocks `main`/`master` targets only,
-   allows feature branches) + upstream's blanket-blocked destructive
-   patterns kept as-is; global-scope install; no `jq` dependency, so unlike
-   `continual-learning` this one isn't gated on a missing binary — it can
-   actually be installed on this machine today pending a PR + explicit
-   go-ahead. See `PLAN.md` for the full test matrix it was verified
-   against before write-up.
+5. ~~Git guardrail hook~~ — built, merged (PR #13), **activated** on this
+   machine. Branch-aware `git push` guard (blocks `main`/`master` targets
+   only, allows feature branches) + upstream's blanket-blocked destructive
+   patterns kept as-is; global-scope install, registered in
+   `~/.claude/settings.json`'s `hooks.PreToolUse`. No `jq` dependency, so
+   unlike `continual-learning` this one isn't gated on a missing binary —
+   it's live from the next session on. See `PLAN.md` for the test matrix
+   it was verified against, pre- and post-install.
 6. **Check-in hygiene hook** — flags empty/stale scaffold files + README
    staleness.
 7. **Regression-testing standard** — moved to *last*, not because the
