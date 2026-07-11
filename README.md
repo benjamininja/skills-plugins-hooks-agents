@@ -73,14 +73,18 @@ A **fork** happens when we need a skill to diverge from its upstream vendor copy
 
 Claude Code discovers skills **one level deep only** — `~/.claude/skills/<name>/SKILL.md` (personal) or `<repo>/.claude/skills/<name>/SKILL.md` (project-local). It does **not** scan nested subdirectories, so a single symlink pointing `~/.claude/skills/library` at this repo's `skills/` folder will not work — skills would sit two levels deep (`library/<name>/SKILL.md`) and never be found.
 
-Symlink each skill individually instead. On Windows (run as admin, or with Developer Mode enabled so symlinks don't require elevation):
+Link each skill individually instead. On Windows, `New-Item -ItemType SymbolicLink` needs admin (or Developer Mode enabled to skip elevation) — if neither is available, use a **directory junction** instead (`-ItemType Junction`), which needs no special privilege and behaves the same for local skill discovery:
 
 ```powershell
 $source = "C:\Users\benha\OneDrive\Documents\GitHub\skills\skills"
 Get-ChildItem $source -Directory | ForEach-Object {
-    New-Item -ItemType SymbolicLink -Path "$env:USERPROFILE\.claude\skills\$($_.Name)" -Target $_.FullName
+    New-Item -ItemType Junction -Path "$env:USERPROFILE\.claude\skills\$($_.Name)" -Target $_.FullName
 }
 ```
+
+(Swap `Junction` for `SymbolicLink` if running elevated / Developer Mode is on — true symlinks support cross-volume and relative targets, which junctions don't, but that doesn't matter for a same-drive local install.)
+
+**Junction caveat**: junctions pin an absolute local path baked in at creation time. If this repo's folder is ever moved or renamed, every junction breaks silently (skills stop resolving, no error until Claude Code fails to load them) — re-run the command above to relink.
 
 Re-run this after pulling new skills into the central repo — it's idempotent for existing links (re-run will error on already-linked names; delete stale links first if a skill was renamed/removed centrally). Each `skills/<name>/SKILL.md` is also self-contained and loadable on its own if you only want one.
 
