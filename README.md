@@ -178,6 +178,79 @@ the personal `~/.claude/skills/`.
 
 ---
 
+## Routing: which skill, when
+
+Cross-cut of the Skills catalog above by **process stage** (Pocock's
+idea→ship flow: Plan → Crystallize → Execute) and **domain**, so a session
+knows what to reach for without re-deriving it. `ask-matt` is the router if
+none of this is obvious in the moment — it's built for exactly that.
+
+**Plan** — before code exists, resolving what to build:
+
+| Skill | Reach for it when |
+|-------|-------------------|
+| **ask-matt** | Unsure which skill fits — start here |
+| **grill-with-docs** / **grill-me** | Stress-test a plan by interview (with codebase / without) |
+| **grilling** | The interview discipline itself (used by `grill-with-docs`) |
+| **to-spec** | Synthesize the conversation into a spec/PRD |
+| **to-tickets** | Break a spec into tracer-bullet tickets |
+| **wayfinder** | The effort is huge and foggy — chart it as investigation tickets |
+| **triage** | An incoming issue/external PR needs categorizing |
+| **prototype** | Need throwaway code to answer one design question |
+| **improve-codebase-architecture** | Scan for deepening opportunities before committing to a design |
+| **setup-matt-pocock-skills** | One-time bootstrap — run before using the flow at all |
+
+**Crystallize** — pinning down the model, during/after Plan:
+
+| Skill | Reach for it when |
+|-------|-------------------|
+| **domain-modeling** | Terminology needs sharpening, or an ADR/`CONTEXT.md` needs updating |
+| **codebase-design** | Talking about module depth, seams, or interfaces |
+| **writing-great-skills** | Authoring or editing a `SKILL.md` |
+| **teach** | Building a multi-session teaching workspace on any topic |
+| **handoff** | Compacting the session into a doc for another agent to pick up |
+
+**Execute** — building/fixing:
+
+| Skill | Reach for it when |
+|-------|-------------------|
+| **implement** | Building a ticket — drives `/tdd`, closes with `/two-axis-code-review` |
+| **tdd** | Writing tests — red-green-refactor, seam discipline |
+| **diagnosing-bugs** | Something's broken/throwing/slow and the cause isn't obvious |
+| **resolving-merge-conflicts** | An in-progress git merge/rebase has conflicts |
+| **two-axis-code-review** | Closing out a ticket-tracked change — Standards + Spec review |
+| **ponytail** | Every code-writing turn — YAGNI ladder, auto-active by design |
+| **ponytail-debt** | Periodically / end of session — harvest `ponytail:` shortcut markers |
+
+**Domain: Power BI / Microsoft Fabric** — its own internal
+Plan→Design→Author→Manage pipeline, not the general one above:
+
+| Skill | Domain stage |
+|-------|--------------|
+| **powerbi-report-planning** | Plan — requirements, page plan, approval gate |
+| **powerbi-report-design** | Design — archetype, layout, theme, accessibility |
+| **powerbi-report-authoring** | Author — PBIR/PBIP file mechanics |
+| **powerbi-report-management** | Manage — Fabric REST API item CRUD |
+| **semantic-model-authoring** | Author (model layer) — DAX/TMDL, Direct Lake |
+| **microsoft-docs** | Any stage — "how does X work" research, not Power BI-specific |
+| **azure-resource-manager-playwright-dotnet** | Execute-equivalent — Azure Playwright Testing management-plane ops |
+
+**Domain: this user's repos**
+
+| Skill | Domain |
+|-------|--------|
+| **fantasy-football-python** | `Python-PowerBI-DynastyFantasyFootball` ETL/data-model work |
+| **frontend-design** | Any frontend/UI build |
+
+**Cross-cutting / always-on** — not stage-bound:
+
+| Skill | Why it's cross-cutting |
+|-------|------------------------|
+| **caveman** | Standing communication-style preference, not tied to any stage |
+| **everything-claude-code** | Reference doc for Claude Code conventions, consulted as needed |
+
+---
+
 ## Sources & Credits
 
 Vendored skills are static copies of a single skill folder from each upstream repo. The authoritative pins live in [`vendor-skills.json`](vendor-skills.json); the table below mirrors it for readability. To check for and apply updates, run [`tools/update-vendor-skills.ipynb`](tools/update-vendor-skills.ipynb) (see **Maintaining vendored skills** below).
@@ -269,5 +342,5 @@ To add a new vendored skill, copy its folder into `skills/` and add a matching e
 - **Enforcement**: hooks/subagents that scan repo structure on check-in for compliance with the agreed template, and flag any skill/plugin/hook checked in from a non-central source.
 - **Live-vs-central drift detection** (raised 2026-07-11): the distribution verification pass found `~/.claude/skills/` holding real (non-symlinked) copies of `caveman`, `grill-me`, `grill-with-docs`, `fantasy-football-python` that had silently diverged from this repo's copies in both directions (`fantasy-football-python`'s live copy was more current than central; `grill-with-docs`'s live copy was stale). A future hook/subagent should diff live `~/.claude/skills/<name>/` against `skills-plugins-hooks/skills/<name>/` on some cadence (check-in, or a scheduled check) and flag divergence before it's silently overwritten in either direction.
 - **Skill distribution beyond manual symlink** (raised 2026-07-11, during `project-memory-template` planning; narrowed 2026-07-11 after confirming `.claude/skills/` is natively shared across Claude Code CLI, the VS Code extension, and VS Code's own Agents-window Skills panel — see Installation above): the remaining gap is just **new-machine bootstrap** — the symlink loop still has to be run manually once per machine. A setup script (or a `setup-project-memory`-style skill) that runs it as part of onboarding a new dev environment is future work.
-- **Skill-stage/domain routing map** (raised 2026-07-11): document which vendored skills pair with which process stage (Plan / Crystallize / Execute) or domain (e.g. `microsoft-docs` for anything Microsoft-related), so a session knows what to reach for without re-deriving it each time. Owned here since this repo is the skill catalog; `project-memory-template`'s `CLAUDE.md` should reference the map once it exists.
+- ~~**Skill-stage/domain routing map**~~ **Done** (raised and closed 2026-07-11) — see the **Routing: which skill, when** section above: all 34 skills cross-cut by process stage (Plan/Crystallize/Execute) and domain (Power BI's own Plan→Design→Author→Manage pipeline, this user's repos, cross-cutting/always-on). `project-memory-template`'s `CLAUDE.md` should reference this section once that template starts seeing real use.
 - **Orphan project-skill detection** (raised 2026-07-11): the reverse direction of "Enforcement" above — a hook/subagent that scans a *consuming* project's own `.claude/skills/` (or `.github/skills/`, `.agents/skills/`) for skills that exist there but aren't in this central catalog. Flags candidates for promotion (a genuinely reusable skill someone built one-off in a project repo) vs. skills that are legitimately project-scoped and should stay local (e.g. `discord-bot-github-fetch`, which is intentionally Dynasty-repo-only). The check's manifest of "what's known-local-and-intentional" would live per-project, not globally, since scoping is a per-repo decision.
