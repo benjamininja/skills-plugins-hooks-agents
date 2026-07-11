@@ -279,8 +279,8 @@
       "pinned_ref": "b961296",
       "pinned_commit": "b961296e97a89a39e81e10501c2ef846ad0c54db",
       "source_path": "plugins/powerbi-authoring/common",
-      "local_path": "common",
-      "_comment": "Shared reference docs (COMMON-CLI.md, COMMON-CORE.md, ITEM-DEFINITIONS-CORE.md) linked by the powerbi-authoring skills above via relative paths."
+      "local_path": "skills/_powerbi-authoring-common",
+      "_comment": "Shared reference docs (COMMON-CLI.md, COMMON-CORE.md, ITEM-DEFINITIONS-CORE.md) linked by the powerbi-authoring skills above via relative paths. Nested inside skills/ (not repo root) for shorter relative paths; not itself a skill (no SKILL.md, never symlinked/junctioned on its own)."
     },
     {
       "name": "ponytail",

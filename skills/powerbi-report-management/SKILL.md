@@ -50,7 +50,7 @@ the resulting `semanticModelId` and binds the report to it. See the
 | Tool | Role | Install |
 |---|---|---|
 | `az` CLI | **Primary**: `az rest` for Fabric REST API calls, `az login` for auth | Pre-installed in most dev environments |
-| `jq` | Parse and construct JSON payloads | Standard CLI tool — see [COMMON-CLI.md § Tool Selection Rationale](../../common/COMMON-CLI.md#tool-selection-rationale) |
+| `jq` | Parse and construct JSON payloads | Standard CLI tool — see [COMMON-CLI.md § Tool Selection Rationale](../_powerbi-authoring-common/COMMON-CLI.md#tool-selection-rationale) |
 | `base64` | Encode/decode PBIR file content for definition payloads | Built-in on Linux/macOS · Windows: use PowerShell `[Convert]::ToBase64String()` / `FromBase64String()` |
 
 > **Agent check** — verify before first operation:
@@ -68,16 +68,16 @@ All calls use the Fabric API audience. Using the wrong audience returns a 401.
 | Fabric Report Items API | `https://api.fabric.microsoft.com` |
 
 For the shared authentication model, token audiences, and identity types, see
-[COMMON-CORE.md § Authentication & Token Acquisition](../../common/COMMON-CORE.md#authentication--token-acquisition).
+[COMMON-CORE.md § Authentication & Token Acquisition](../_powerbi-authoring-common/COMMON-CORE.md#authentication--token-acquisition).
 
 For full authentication recipes (interactive, device-code, service principal, managed identity),
-see [COMMON-CLI.md § Authentication Recipes](../../common/COMMON-CLI.md#authentication-recipes).
+see [COMMON-CLI.md § Authentication Recipes](../_powerbi-authoring-common/COMMON-CLI.md#authentication-recipes).
 
 ## Finding Workspaces and Reports
 
 > **Shared patterns** — workspace and item resolution, pagination, and LRO polling
 > are documented in the common skill library.
-> Read [COMMON-CLI.md § Finding Workspaces and Items in Fabric](../../common/COMMON-CLI.md#finding-workspaces-and-items-in-fabric)
+> Read [COMMON-CLI.md § Finding Workspaces and Items in Fabric](../_powerbi-authoring-common/COMMON-CLI.md#finding-workspaces-and-items-in-fabric)
 > **before** using the CRUD operations below.
 
 ### Resolve Report ID by Name
@@ -290,7 +290,7 @@ az rest --method delete \
 `Create Report`, `Get Report Definition`, and `Update Report Definition` may
 return `202 Accepted` instead of an immediate result. Capture
 `x-ms-operation-id` from the verbose output and poll until terminal state per
-[COMMON-CLI.md § Long-Running Operations](../../common/COMMON-CLI.md#long-running-operations-lro-pattern).
+[COMMON-CLI.md § Long-Running Operations](../_powerbi-authoring-common/COMMON-CLI.md#long-running-operations-lro-pattern).
 
 The management-specific guardrails below take precedence over the generic
 pattern when they conflict.
@@ -413,7 +413,7 @@ downloaded from Fabric and only the `.Report` folder is present with a
 workflow instead.
 
 **2. Confirm the target workspace once.** Resolve and store the workspace
-ID by name (per [COMMON-CLI.md](../../common/COMMON-CLI.md#finding-workspaces-and-items-in-fabric)).
+ID by name (per [COMMON-CLI.md](../_powerbi-authoring-common/COMMON-CLI.md#finding-workspaces-and-items-in-fabric)).
 This single workspace is reused for both the model deploy (if applicable)
 and the report publish — never split them.
 
@@ -503,7 +503,7 @@ the LRO to terminal success.
 
 ### Modifying an existing report in Fabric
 
-1. **Authenticate** → see [COMMON-CLI.md § Authentication Recipes](../../common/COMMON-CLI.md#authentication-recipes)
+1. **Authenticate** → see [COMMON-CLI.md § Authentication Recipes](../_powerbi-authoring-common/COMMON-CLI.md#authentication-recipes)
 2. **Find workspace** → Resolve workspace ID by name
 3. **List/find report** → Resolve report ID by name
 4. **Download definition** → `getDefinition?format=PBIR` → poll LRO → decode parts to local files
@@ -513,7 +513,7 @@ the LRO to terminal success.
 
 ### Creating a new report in Fabric
 
-1. **Authenticate** → see [COMMON-CLI.md § Authentication Recipes](../../common/COMMON-CLI.md#authentication-recipes)
+1. **Authenticate** → see [COMMON-CLI.md § Authentication Recipes](../_powerbi-authoring-common/COMMON-CLI.md#authentication-recipes)
 2. **Find workspace** → Resolve workspace ID by name
 3. **Resolve semantic model** → Find the semantic model ID and workspace name for the `definition.pbir` connection string
 4. **Verify semantic-model bindings** → Download the target semantic model definition (TMDL) and compare all PBIR `Entity`, `queryRef`, `nativeQueryRef`, and filter references against the target table/column names. If names differ but structure matches, remap all table-qualified bindings. If models are structurally different, prompt the user before proceeding — explain what doesn't match and ask whether to re-author the affected bindings

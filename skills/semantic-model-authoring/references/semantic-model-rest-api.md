@@ -55,7 +55,7 @@ az rest --method post \
 
 ## TMDL Definition CRUD (Fabric Items API)
 
-For the full definition envelope and part paths, see [ITEM-DEFINITIONS-CORE.md](../../../common/ITEM-DEFINITIONS-CORE.md#semanticmodel).
+For the full definition envelope and part paths, see [ITEM-DEFINITIONS-CORE.md](../../_powerbi-authoring-common/ITEM-DEFINITIONS-CORE.md#semanticmodel).
 
 ### TMDL File Structure
 
@@ -137,7 +137,7 @@ az rest --method post --verbose \
 
 > **PowerShell** - use `[Convert]::ToBase64String([System.IO.File]::ReadAllBytes("file"))` instead of `base64 -w 0`.
 
-If the response is `202 Accepted`, poll using the LRO pattern from [COMMON-CLI.md](../../../common/COMMON-CLI.md#long-running-operations-lro-pattern).
+If the response is `202 Accepted`, poll using the LRO pattern from [COMMON-CLI.md](../../_powerbi-authoring-common/COMMON-CLI.md#long-running-operations-lro-pattern).
 
 ### Get/Download Definition
 

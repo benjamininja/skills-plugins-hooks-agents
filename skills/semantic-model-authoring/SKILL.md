@@ -63,12 +63,12 @@ Load these references on demand when a workflow step requires them. Do not load 
 | Semantic Model AI Readiness                | [semantic-model-ai-readiness.md](./references/semantic-model-ai-readiness.md)                          | When preparing a model for Copilot or Data Agents                                           |
 | Semantic Model REST API          | [semantic-model-rest-api.md](./references/semantic-model-rest-api.md)              | When using `az rest` for TMDL CRUD, refresh, parameters, permissions, or property retrieval |
 | Connection Binding               | [connection-binding.md](./references/connection-binding.md)                        | When binding/unbinding a semantic model to a Fabric data connection (gateway, cloud, VNet, automatic, none) |
-| Finding Workspaces/Items         | [COMMON-CLI.md](../../common/COMMON-CLI.md#finding-workspaces-and-items-in-fabric) | When resolving workspace/item IDs                                                           |
-| Fabric Control-Plane API         | [COMMON-CLI.md](../../common/COMMON-CLI.md#fabric-control-plane-api-via-az-rest)   | When using `az rest` patterns, LRO, pagination                                              |
-| Authentication                   | [COMMON-CLI.md](../../common/COMMON-CLI.md#authentication-recipes)                 | When authenticating with `az login`                                                         |
-| Authentication & Token Acquisition | [COMMON-CORE.md § Authentication & Token Acquisition](../../common/COMMON-CORE.md#authentication--token-acquisition) | Wrong audience = 401; read before any auth issue |
-| Core Control-Plane REST APIs | [COMMON-CORE.md § Core Control-Plane REST APIs](../../common/COMMON-CORE.md#core-control-plane-rest-apis) | Includes pagination, LRO polling, and rate-limiting patterns |
-| Definition Envelope              | [ITEM-DEFINITIONS-CORE.md](../../common/ITEM-DEFINITIONS-CORE.md#semanticmodel)    | When building TMDL definition payloads                                                      |
+| Finding Workspaces/Items         | [COMMON-CLI.md](../_powerbi-authoring-common/COMMON-CLI.md#finding-workspaces-and-items-in-fabric) | When resolving workspace/item IDs                                                           |
+| Fabric Control-Plane API         | [COMMON-CLI.md](../_powerbi-authoring-common/COMMON-CLI.md#fabric-control-plane-api-via-az-rest)   | When using `az rest` patterns, LRO, pagination                                              |
+| Authentication                   | [COMMON-CLI.md](../_powerbi-authoring-common/COMMON-CLI.md#authentication-recipes)                 | When authenticating with `az login`                                                         |
+| Authentication & Token Acquisition | [COMMON-CORE.md § Authentication & Token Acquisition](../_powerbi-authoring-common/COMMON-CORE.md#authentication--token-acquisition) | Wrong audience = 401; read before any auth issue |
+| Core Control-Plane REST APIs | [COMMON-CORE.md § Core Control-Plane REST APIs](../_powerbi-authoring-common/COMMON-CORE.md#core-control-plane-rest-apis) | Includes pagination, LRO polling, and rate-limiting patterns |
+| Definition Envelope              | [ITEM-DEFINITIONS-CORE.md](../_powerbi-authoring-common/ITEM-DEFINITIONS-CORE.md#semanticmodel)    | When building TMDL definition payloads                                                      |
 | Examples                         | [Examples](#examples)                                                              | Reference end-to-end walkthroughs. |
 
 ---
@@ -96,7 +96,7 @@ Priority order (highest first):
 A semantic model can live in three locations. Resolve the connection per [Tool Selection Priority](#tool-selection-priority):
 
 - **Power BI Desktop**: Locate the running Power BI Desktop instance and connect to its local model.
-- **Fabric workspace**: First, find the workspace and semantic model using the [Finding Workspaces and Items](../../common/COMMON-CLI.md#finding-workspaces-and-items-in-fabric) pattern: list workspaces to resolve the workspace ID by name, then list items of type `SemanticModel` in that workspace to resolve the model ID by name. Then connect to the model (live) or export its TMDL definition for local editing.
+- **Fabric workspace**: First, find the workspace and semantic model using the [Finding Workspaces and Items](../_powerbi-authoring-common/COMMON-CLI.md#finding-workspaces-and-items-in-fabric) pattern: list workspaces to resolve the workspace ID by name, then list items of type `SemanticModel` in that workspace to resolve the model ID by name. Then connect to the model (live) or export its TMDL definition for local editing.
 - **PBIP project**: Connect to the `[Name].SemanticModel/definition` folder. Load [pbip.md](./references/pbip.md) to understand the PBIP folder structure - only load the `[Name].SemanticModel/definition` folder that includes the TMDL code.
 
 ### Saving Changes to a Semantic Model
@@ -327,7 +327,7 @@ If any check fails, fix the issue and re-run validation.
 
 ## Examples
 
-> **Scope note** — examples use `az rest` for discovery to resolve ID's and discover Fabric metadata (see [COMMON-CLI.md § Finding Workspaces and Items](../../common/COMMON-CLI.md#finding-workspaces-and-items-in-fabric)). Authoring of the semantic model definition is routed through [Tool Selection Priority](#tool-selection-priority): Tier 1 MCP `powerbi-modeling-mcp` when available, Tier 2 TMDL editing via `getDefinition` / `updateDefinition` otherwise.
+> **Scope note** — examples use `az rest` for discovery to resolve ID's and discover Fabric metadata (see [COMMON-CLI.md § Finding Workspaces and Items](../_powerbi-authoring-common/COMMON-CLI.md#finding-workspaces-and-items-in-fabric)). Authoring of the semantic model definition is routed through [Tool Selection Priority](#tool-selection-priority): Tier 1 MCP `powerbi-modeling-mcp` when available, Tier 2 TMDL editing via `getDefinition` / `updateDefinition` otherwise.
 
 ### Example 1: Modify an Existing Semantic Model
 
