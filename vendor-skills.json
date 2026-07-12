@@ -21,8 +21,8 @@
       "name": "azure-resource-manager-playwright-dotnet",
       "repo": "microsoft/skills",
       "branch": "main",
-      "pinned_ref": "684313b",
-      "pinned_commit": "684313b5263c04177dd0e232571feae1c9079573",
+      "pinned_ref": "073741f",
+      "pinned_commit": "073741f2fc5628b22e8a5f8b56fb3878c418ecb6",
       "source_path": ".github/plugins/azure-sdk-dotnet/skills/azure-resource-manager-playwright-dotnet",
       "local_path": "skills/azure-resource-manager-playwright-dotnet"
     },
@@ -250,8 +250,8 @@
       "name": "microsoft-docs",
       "repo": "microsoft/skills",
       "branch": "main",
-      "pinned_ref": "c33193b",
-      "pinned_commit": "c33193b1b2dd14d5946e3c6213fd095ffa5b31df",
+      "pinned_ref": "c80e398",
+      "pinned_commit": "c80e39837bb085dd852a900f2580b9351d111a92",
       "source_path": ".github/skills/microsoft-docs",
       "local_path": "skills/microsoft-docs"
     },
