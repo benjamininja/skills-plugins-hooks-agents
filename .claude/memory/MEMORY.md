@@ -1,4 +1,4 @@
-# Memory Index — skills-plugins-hooks (project)
+# Memory Index — skills-plugins-hooks-agents (project)
 
 > Project-local memory. Cross-project preferences, terminology, and working
 > method live in root (`C:\Users\benha\.claude\`). Consolidated 2026-07-11

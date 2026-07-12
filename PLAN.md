@@ -8,40 +8,23 @@ collapse to one-liners once their durable signal lands in an ADR or
 
 **Goal 3 is fully shipped, including activation.** All four re-sequenced
 items landed and merged to `main` on every repo touched
-(`skills-plugins-hooks`, `project-memory-template`,
+(`skills-plugins-hooks-agents`, `project-memory-template`,
 `Python-PowerBI-DynastyFantasyFootball`) — zero open PRs anywhere. The
 `continual-learning` hook is now installed and live on this machine (see
 Shipped below). Full detail in `.claude/memory/program-status.md`.
 
+**2026-07-12 rename**: repo renamed `skills-plugins-hooks` →
+`skills-plugins-hooks-agents` on GitHub (`gh repo rename`) and locally
+(folder renamed by user, `origin` remote updated to match). In-repo
+references to the old name updated in `CLAUDE.md`, `README.md`, `PLAN.md`,
+`.claude/memory/MEMORY.md`; historical mentions of the Goal-1
+`skills`→`skills-plugins-hooks` rename left as accurate history. No
+`agents/` directory exists yet — the name anticipates future scope, not
+yet scaffolded; revisit when agent content actually lands.
+
 ## ➡ NEXT
 
-**2026-07-12, second session: skill routing + drift detection, shipped.**
-A post-audit discovery (every `~/.claude/skills/` junction on this machine
-was broken — pointed at the repo's name from *before* even the Goal-1
-rename, silently stranding every Pocock-flow skill for weeks) turned into
-a grilled, ADR'd design covering three related gaps. See
-[ADR-0005](docs/adr/0005-skill-routing-and-drift-detection.md) for full
-reasoning; summary:
-
-- **`hooks/skill-catalog-health/`** (new, installed and active) —
-  `SessionStart` hook injecting a compact routing index (mirrors upstream
-  `mattpocock/skills`' own README Reference-table format) so
-  `disable-model-invocation: true` router skills still get surfaced as
-  suggestions without changing their manual-invoke status, plus flags any
-  broken skill junction going forward instead of failing silently.
-- **`skills/setup-project-memory`** (new, manual-invoke) — orchestrates
-  the three previously-uncoordinated bootstrap steps (memory tier scaffold,
-  `setup-matt-pocock-skills`, `check-in-hygiene` pre-commit wiring) for a
-  brand-new or partially-wired project. Lives here (the one canonical
-  skill-source repo), reads tier content from `project-memory-template`.
-- `ask-matt`'s Precondition section updated to point at it.
-- `manifest.json`'s `hooks: []` was also stale (never listed
-  `continual-learning`/`git-guardrails` despite both being real, active
-  hooks) — fixed alongside adding the new entries.
-
-This also unblocks the long-deferred "apply `project-memory-template` to a
-fresh environment" item below — `setup-project-memory` is that test case,
-not yet run.
+Nothing actively sequenced — see the Deferred backlog below.
 
 ## [ ] Deferred
 
@@ -71,3 +54,27 @@ not yet run.
   regression-testing standard (general doc + Dynasty retrofit, ADR-0008)
   — all merged to `main` across all three repos. Full detail in
   `.claude/memory/program-status.md`.
+- **Repo renamed** `skills-plugins-hooks` → `skills-plugins-hooks-agents`
+  (2026-07-12, `gh repo rename` + local remote + in-repo references).
+- **Post-Goal-3 audit, all 4 gaps fixed**: `continual-learning` re-verified
+  live post-restart (real harness-fired `tool_log` rows) and grilled
+  against upstream `microsoft/skills` source (two known limitations
+  confirmed inherited, not port bugs — see `hooks/continual-learning/README.md`);
+  Dynasty's `pre-commit install` activated (`Python-PowerBI-DynastyFantasyFootball#20`);
+  `check-in-hygiene` adopted by a real consumer for the first time ever
+  (Dynasty + this repo), which surfaced and fixed two genuine cross-platform
+  packaging bugs (`project-memory-template#6`); stale docs (`hooks/README.md`,
+  root `README.md`) corrected.
+- **Skill routing + junction drift detection** (ADR-0005): discovered
+  every `~/.claude/skills/` junction on this machine was broken (pointed
+  at the repo's pre-Goal-1 name, silently stranding every Pocock-flow
+  skill for weeks) — all 34 relinked. New `hooks/skill-catalog-health/`
+  (`SessionStart`) injects a self-generated routing index (mirrors
+  upstream `mattpocock/skills`' README Reference-table format) so
+  `disable-model-invocation: true` router skills still get surfaced, and
+  flags future broken junctions instead of failing silently. New
+  `skills/setup-project-memory` orchestrates the three previously
+  uncoordinated bootstrap steps (memory tier, `setup-matt-pocock-skills`,
+  `check-in-hygiene` pre-commit) in one pass — resolves the "apply
+  `project-memory-template` to a fresh environment" deferred item below
+  (not yet run as a live test).
