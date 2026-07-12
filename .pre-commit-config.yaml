@@ -1,0 +1,5 @@
+repos:
+  - repo: https://github.com/benjamininja/project-memory-template
+    rev: 0b39690a6a04f8194873374c44c78390cf718d09
+    hooks:
+      - id: check-in-hygiene
