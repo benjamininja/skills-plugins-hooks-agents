@@ -15,7 +15,33 @@ Shipped below). Full detail in `.claude/memory/program-status.md`.
 
 ## ➡ NEXT
 
-Nothing actively sequenced — see the Deferred backlog below.
+**2026-07-12, second session: skill routing + drift detection, shipped.**
+A post-audit discovery (every `~/.claude/skills/` junction on this machine
+was broken — pointed at the repo's name from *before* even the Goal-1
+rename, silently stranding every Pocock-flow skill for weeks) turned into
+a grilled, ADR'd design covering three related gaps. See
+[ADR-0005](docs/adr/0005-skill-routing-and-drift-detection.md) for full
+reasoning; summary:
+
+- **`hooks/skill-catalog-health/`** (new, installed and active) —
+  `SessionStart` hook injecting a compact routing index (mirrors upstream
+  `mattpocock/skills`' own README Reference-table format) so
+  `disable-model-invocation: true` router skills still get surfaced as
+  suggestions without changing their manual-invoke status, plus flags any
+  broken skill junction going forward instead of failing silently.
+- **`skills/setup-project-memory`** (new, manual-invoke) — orchestrates
+  the three previously-uncoordinated bootstrap steps (memory tier scaffold,
+  `setup-matt-pocock-skills`, `check-in-hygiene` pre-commit wiring) for a
+  brand-new or partially-wired project. Lives here (the one canonical
+  skill-source repo), reads tier content from `project-memory-template`.
+- `ask-matt`'s Precondition section updated to point at it.
+- `manifest.json`'s `hooks: []` was also stale (never listed
+  `continual-learning`/`git-guardrails` despite both being real, active
+  hooks) — fixed alongside adding the new entries.
+
+This also unblocks the long-deferred "apply `project-memory-template` to a
+fresh environment" item below — `setup-project-memory` is that test case,
+not yet run.
 
 ## [ ] Deferred
 
@@ -26,7 +52,7 @@ Nothing actively sequenced — see the Deferred backlog below.
 - [ ] Orphan project-skill detection — hook/subagent scanning consuming
   repos' own `.claude/skills/` for skills not in this central catalog.
 - [ ] Apply `project-memory-template` to a fresh environment as a test
-  case — after the above, not yet chosen.
+  case, now via `/setup-project-memory` — not yet run.
 
 ## Shipped (one-liners; full detail in ADR / `.claude/memory/`)
 

@@ -1,0 +1,15 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "$HOME/.claude/hooks/skill-catalog-health/check.sh sessionStart",
+            "timeout": 5
+          }
+        ]
+      }
+    ]
+  }
+}

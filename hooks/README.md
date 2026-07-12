@@ -33,8 +33,19 @@ own README for the full adaptation rationale, the layered-defense caveat
 (only intercepts Claude Code's own Bash-tool git calls, not a direct
 terminal push or another machine), and install steps.
 
+## `skill-catalog-health` — installed and active
+
+[`skill-catalog-health/`](skill-catalog-health/) is a `SessionStart` hook
+with two jobs: inject a compact routing index of every installed skill
+(surfacing router skills that are deliberately `disable-model-invocation:
+true` and would otherwise only get used if someone remembers `/ask-matt`
+exists), and flag any `~/.claude/skills/*` junction/symlink broken by a
+renamed or moved source-repo folder — the exact failure mode that
+silently stranded every skill in this catalog for several weeks before
+this hook existed. See [ADR-0005](../docs/adr/0005-skill-routing-and-drift-detection.md)
+and its own README for the full reasoning and install steps.
+
 ## Population status
 
-Otherwise empty as of the `skills` → `skills-plugins-hooks` restructure.
-Further population is scoped to a later phase of the saturation effort —
-see the repo root README's Roadmap section.
+All three hooks above are installed and active on this machine, wired
+into `~/.claude/settings.json`.

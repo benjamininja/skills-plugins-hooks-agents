@@ -73,4 +73,4 @@ Off the main flow entirely.
 
 ## Precondition
 
-**`/setup-matt-pocock-skills`** — run before your first engineering flow to configure the issue tracker, triage labels, and doc layout the other skills assume. Custom issue trackers also work.
+**`/setup-project-memory`** — run once on a brand-new (or partially-wired) project to fully bootstrap it: memory scaffold, `setup-matt-pocock-skills`' issue tracker/triage/doc-layout config, and `check-in-hygiene` pre-commit wiring, in one pass. If the project already has some of these and just needs the tracker/labels reconfigured, `/setup-matt-pocock-skills` on its own still works standalone. Custom issue trackers also work.

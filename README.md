@@ -38,6 +38,7 @@ Some skills are authored here; others are vendored from upstream projects and cr
 │   ├── prototype/                              # throwaway code to answer a design question
 │   ├── resolving-merge-conflicts/              # resolve an in-progress git merge/rebase conflict
 │   ├── setup-matt-pocock-skills/               # bootstrap: issue tracker, triage labels, doc layout
+│   ├── setup-project-memory/                   # full bootstrap: memory tier + setup-matt-pocock-skills + pre-commit/check-in-hygiene
 │   ├── tdd/                                    # red-green-refactor discipline, seam-based testing
 │   ├── to-spec/                                # synthesize the conversation into a spec/PRD
 │   ├── to-tickets/                             # break a spec into tracer-bullet tickets with blocking edges
@@ -58,7 +59,7 @@ Some skills are authored here; others are vendored from upstream projects and cr
 │       └── ITEM-DEFINITIONS-CORE.md
 ├── plugins/
 │   └── fabric-collection/                      # manifest-only: fabric-authoring/operations/skills (see plugins/README.md)
-└── hooks/                                      # reserved: standalone event-triggered hooks (empty — see Roadmap)
+└── hooks/                                      # standalone event-triggered hooks — continual-learning + git-guardrails + skill-catalog-health, all installed and active (see hooks/README.md)
 ```
 
 `manifest.json` tracks *membership* (what's in this repo, by category). `vendor-skills.json` tracks *provenance* (upstream repo/commit for vendored skills, plus a `forks[]` list for skills that diverged from a faithful vendor copy) — the two are separate and both authoritative for their own concern.

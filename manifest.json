@@ -26,6 +26,7 @@
     "resolving-merge-conflicts",
     "semantic-model-authoring",
     "setup-matt-pocock-skills",
+    "setup-project-memory",
     "tdd",
     "teach",
     "to-spec",
@@ -40,5 +41,9 @@
     "fabric-collection/fabric-operations (manifest-only)",
     "fabric-collection/fabric-skills (manifest-only)"
   ],
-  "hooks": []
+  "hooks": [
+    "continual-learning",
+    "git-guardrails",
+    "skill-catalog-health"
+  ]
 }
