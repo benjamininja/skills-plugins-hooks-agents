@@ -24,7 +24,21 @@ yet scaffolded; revisit when agent content actually lands.
 
 ## ➡ NEXT
 
-Nothing actively sequenced — see the Deferred backlog below.
+**`subagent-audit` skill + first real run (2026-07-12, in flight).** User
+supplied a "Subagent Opportunity Audit" prompt (six candidate categories,
+hard hook-vs-subagent boundary, 3–5 candidate cap, `.claude/agents/*.md`
+draft output); decided it belongs here as an authored skill — this repo is
+the skill catalog and the `-agents` rename anticipated exactly this scope
+(`project-memory-template` was considered and rejected: memory-scoped, and
+a doc there isn't invocable). Adaptations over the raw prompt: inventory
+step also reads reachable skills so it doesn't propose subagents that
+duplicate them; added an explicit skill (vs hook/subagent) definition; new
+Step 5 persists accepted/rejected reasoning to the target repo's memory
+scaffold. Acceptance test: run the audit for real against
+`Python-PowerBI-DynastyFantasyFootball` (richest target: MCP surface,
+large data fixtures, scrapers). Its output will produce the first real
+`.claude/agents/` definitions anywhere in this ecosystem — which then
+informs whether this repo grows an `agents/` catalog directory.
 
 ## [ ] Deferred
 

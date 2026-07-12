@@ -39,6 +39,7 @@ Some skills are authored here; others are vendored from upstream projects and cr
 │   ├── resolving-merge-conflicts/              # resolve an in-progress git merge/rebase conflict
 │   ├── setup-matt-pocock-skills/               # bootstrap: issue tracker, triage labels, doc layout
 │   ├── setup-project-memory/                   # full bootstrap: memory tier + setup-matt-pocock-skills + pre-commit/check-in-hygiene
+│   ├── subagent-audit/                         # structural audit: where a repo should delegate to subagents (vs hooks/skills)
 │   ├── tdd/                                    # red-green-refactor discipline, seam-based testing
 │   ├── to-spec/                                # synthesize the conversation into a spec/PRD
 │   ├── to-tickets/                             # break a spec into tracer-bullet tickets with blocking edges
@@ -116,6 +117,8 @@ the personal `~/.claude/skills/`.
 |-------|-------------|---------|
 | **caveman** | Token-compression communication. Strips filler, preamble, hedging, and pleasantries; technical content passes through untouched. Two modes: **lite** (default, full grammar) and **ultra** (telegraphic fragments). *Modified from [juliusbrussee/caveman](https://github.com/juliusbrussee/caveman).* | `/caveman`, `/caveman ultra`, `/caveman lite` |
 | **fantasy-football-python** | Python Data Engineer / Fantasy Sports Architect for a 28-team, dual-conference dynasty league. Rookie draft pipelines, combine data, salary cap ($500M / 3-yr contracts), Fantrax scraping, star-schema Parquet, Jupyter conventions. | Auto-activates on dynasty league ETL, nflverse/nflreadpy, Fantrax ADP, or the star-schema tables |
+| **setup-project-memory** | Full project bootstrap in one pass: memory-tier scaffold (from `project-memory-template`), `setup-matt-pocock-skills` config, and `check-in-hygiene` pre-commit wiring. See [ADR-0005](docs/adr/0005-skill-routing-and-drift-detection.md). | `/setup-project-memory` (explicit invocation only) |
+| **subagent-audit** | Structural audit of a repo for high-ROI subagent opportunities across six categories (context firewall, adversarial auditor, schema transformer, MCP wrapper, background specialist, parallel dispatch) — with a hard hook-vs-skill-vs-subagent boundary and a 3–5 candidate cap. Outputs ready-to-drop-in `.claude/agents/*.md` drafts and persists reasoning to the target repo's memory scaffold. *Adapted from a community audit-prompt design.* | "audit for subagents", "where should we use subagents", `/subagent-audit` |
 
 ### Vendored from upstream
 
@@ -199,7 +202,9 @@ none of this is obvious in the moment — it's built for exactly that.
 | **triage** | An incoming issue/external PR needs categorizing |
 | **prototype** | Need throwaway code to answer one design question |
 | **improve-codebase-architecture** | Scan for deepening opportunities before committing to a design |
+| **subagent-audit** | Deciding where a repo should delegate to subagents vs hooks/skills/main agent |
 | **setup-matt-pocock-skills** | One-time bootstrap — run before using the flow at all |
+| **setup-project-memory** | One-time bootstrap — memory scaffold + skills config + pre-commit, in one pass |
 
 **Crystallize** — pinning down the model, during/after Plan:
 
