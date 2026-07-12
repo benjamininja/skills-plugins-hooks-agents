@@ -3,7 +3,7 @@
 Reserved for standalone Claude Code hooks (event-triggered shell commands
 configured via `settings.json`) that belong to this central repo.
 
-## `continual-learning` — ported and ready to install
+## `continual-learning` — ported, installed, and active
 
 [`continual-learning/`](continual-learning/) is a Claude Code port of
 [microsoft/skills](https://github.com/microsoft/skills)'
@@ -15,10 +15,16 @@ scope (global `~/.claude/learnings.db` for cross-project tool patterns,
 local `<repo>/.claude/learnings.db` per repo) — surfaces prior learnings at
 session start, logs tool outcomes silently, detects repeated tool-failure
 patterns and decays stale/low-value learnings at session end (60-day TTL,
-low hit count). See its own README for install steps and the full list of
-what changed porting from Copilot CLI's format.
+low hit count). **Installed and verified live on this machine (2026-07-12)**
+— `sqlite3`/`jq` on `PATH` via winget, hooks merged into
+`~/.claude/settings.json`, confirmed writing real `tool_log` rows from
+harness-fired events. See its own README for install steps, the full list
+of what changed porting from Copilot CLI's format, and known limitations
+inherited from upstream (failure-pattern grouping is tool-name-only; the
+`mistake`/`preference`/`pattern` learning categories have no write path in
+either upstream's script or this port — accepted as-is, not a porting bug).
 
-## `git-guardrails` — adapted and ready to install
+## `git-guardrails` — adapted and active
 
 [`git-guardrails/`](git-guardrails/) adapts
 [mattpocock/skills/misc/git-guardrails-claude-code](https://github.com/mattpocock/skills/tree/main/skills/misc/git-guardrails-claude-code)

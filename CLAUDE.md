@@ -1,7 +1,7 @@
 # CLAUDE.md
 
 Project: central repository for Claude Code skills, plugins, and hooks —
-`benjamininja/skills-plugins-hooks`. Every skill lives at a flat, loadable
+`benjamininja/skills-plugins-hooks-agents`. Every skill lives at a flat, loadable
 path (`skills/<name>/SKILL.md`); some are authored here, most are vendored
 from upstream projects and credited in `README.md`. This is the source of
 truth other repos symlink/junction from — see `README.md`'s Installation
