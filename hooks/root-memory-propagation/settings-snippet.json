@@ -1,0 +1,16 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "$HOME/.claude/hooks/root-memory-propagation/nudge.sh",
+            "timeout": 5
+          }
+        ]
+      }
+    ]
+  }
+}

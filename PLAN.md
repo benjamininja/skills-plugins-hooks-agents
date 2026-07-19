@@ -3,6 +3,111 @@ Scratchpad for active/upcoming work. Expected to drift — completed items
 collapse to one-liners once their durable signal lands in an ADR or
 `.claude/memory/`. Blow-by-blow does NOT live here.
 
+## Open question (2026-07-18, unanswered): stage/commit/PR outstanding work?
+
+Three repos have uncommitted changes from this session's work (root-memory
+propagation hook/agent + ADR-0010, ADR-0011 design docs, and the earlier
+token-gating-loop compact-budget propagation): this repo, root `~/.claude`,
+and `Python-PowerBI-DynastyFantasyFootball`. Asked once ("Want me to stage
+and open PRs?"), not yet answered — do not assume declined or approved.
+Note: `Python-PowerBI-DynastyFantasyFootball`'s `git status` also shows a
+large number of modified/untracked files (parquet data, notebooks, backend
+routers, `docs/DATA_MODEL.md`, etc.) **unrelated to this session's edits**
+— pre-existing work-in-progress in that repo, not something this session
+touched or should sweep into any commit.
+
+## Shipped (2026-07-18): unified distribution architecture design
+
+Grilling session (`/grill-with-docs`) resolved and written up as
+[ADR-0011](docs/adr/0011-unified-distribution-architecture.md) —
+**design only, implementation not started.** Also produced this repo's
+first `CONTEXT.md`. Summary: one `distribution-registry.json` + one
+`tools/manage_distribution.py` (`--check`/`--bless`/`--apply`) covering
+all 4 artifact types bidirectionally; agents and hooks move to ADR-0003's
+junction mechanism (currently copy-based); plugins go project-scoped via
+downstream `.claude/settings.json`; `root-memory-propagation` (ADR-0010)
+stays separate, not absorbed.
+
+**Next build steps (not started):**
+- `distribution-registry.json` — create empty/seeded with the
+  `frontend-design@claude-plugins-official` test case (this repo +
+  `Python-PowerBI-DynastyFantasyFootball`).
+- `tools/manage_distribution.py` — `--apply` (junction/settings-merge
+  install), `--check` (distribution drift + upstream check-in scan),
+  `--bless` (mark a divergence intentional).
+- Migrate existing hook installs
+  (`~/.claude/hooks/root-memory-propagation/`, `~/.claude/hooks/
+  git-guardrails/`, etc.) from physical copies to junctions once
+  `--apply` exists.
+- First real distribution target for agents: get
+  `root-memory-propagation-auditor` (and the other 3) reachable from
+  `Python-PowerBI-DynastyFantasyFootball`.
+
+<details>
+<summary>Grilling session decision log (resolved 2026-07-18, kept for
+traceability — see ADR-0011 for the authoritative write-up)</summary>
+
+1. **Scope: all 4 artifact types** — skills, plugins, hooks, agents. Plugins
+   explicitly in scope despite `plugins/` being nearly empty today (only
+   manifest-only `fabric-collection` cataloged, nothing physically vendored)
+   — user wants a real downstream flow for it, and upstream check-in for
+   plugins built in a downstream repo (e.g. a future fantasy-football
+   plugin flowing back here).
+2. **One unified registry + verb set**, not 4 separate mechanisms and not
+   one fully-uniform file-copy mechanism. Reuses the
+   `known_local_edits[]`/`--check`/`--bless`/`--apply` *shape* from
+   `vendor-skills.json`/`tools/update_vendor_skills.py` — but note that
+   existing tool solves the **opposite direction** (external upstream → this
+   repo); the new registry is this-repo-as-upstream → downstream project
+   repos, plus the reverse (downstream local edit → flows back here).
+   Type-specific adapters underneath one CLI, because Claude Code discovers
+   each type differently: skills/agents = filesystem dir-scan one level
+   deep; hooks = explicit `settings.json` pointer + script file; plugins =
+   `settings.json` `enabledPlugins`/`extraKnownMarketplaces` entries, not a
+   file tree at all.
+3. **Plugin distribution = project-scoped**, not global. A downstream
+   repo's own (currently nonexistent — neither repo has one yet)
+   `.claude/settings.json` gets its own `enabledPlugins`/marketplace
+   entries propagated in, tracked per-repo in the registry. Rejected
+   global-only enablement in `~/.claude/settings.json`: it can't express
+   "this plugin belongs in these 2 repos, not the other N" — confirmed by
+   the concrete driving example below.
+
+**Concrete test case carried through the design:** user wants
+`frontend-design@claude-plugins-official` (a real plugin, already
+registered as a marketplace in `~/.claude/settings.json`'s
+`extraKnownMarketplaces`/`enabledPlugins`) enabled in *both*
+`skills-plugins-hooks-agents` (tool library) and
+`Python-PowerBI-DynastyFantasyFootball` (for web app dev work there) — but
+not necessarily anywhere else. Note: this is a different artifact from the
+already-vendored `frontend-design` **skill** (`vendor-skills.json`, from
+`anthropics/claude-code`'s `plugins/frontend-design/skills/frontend-design`)
+— same name, different type, don't conflate them when building the example
+into a test fixture later.
+
+4. **Agents and hooks move to junction/symlink** (ADR-0003's mechanism),
+   replacing hooks' copy-and-manually-re-copy pattern. Agents: one junction
+   per `.md` file. Hooks: junction the script file; the `settings.json`
+   registration entry still needs an explicit merge (can't symlink into a
+   JSON object).
+5. **"Downstream local edit" = two cases**: (a) a wholly new artifact built
+   downstream, never linked from central; (b) a junction broken/replaced
+   with a standalone copy that's now diverged. Both are in scope for
+   upstream check-in detection.
+6. **Detection = on-demand `--check` CLI verb**, not a background subagent
+   or auto-triggering hook — manual invocation, same model as
+   `update_vendor_skills.py` today.
+7. **Registry = single new `distribution-registry.json`**, sibling to (not
+   merged with) `vendor-skills.json`, split by artifact type internally.
+8. **`root-memory-propagation` (ADR-0010) stays separate**, not absorbed —
+   different domain (prose-diff-and-judge vs. link/copy + new-artifact
+   detection).
+9. **Tool name: `tools/manage_distribution.py`**, verb set
+   `--check`/`--bless`/`--apply`.
+
+Session used `/grilling` + `/domain-modeling` (via `/grill-with-docs`).
+</details>
+
 ## Working state (2026-07-12, end of second session — compact checkpoint)
 
 **Everything in flight is shipped and merged; zero open PRs across all
@@ -18,6 +123,14 @@ Live infrastructure a fresh session should know exists:
 - **Plan gate** in root `CLAUDE.md` — request→plan→confirm→write for
   non-trivial changes, plan mode by default; mirrored in
   `project-memory-template` tiers with sync markers.
+
+## Shipped (2026-07-18)
+
+- **`root-memory-propagation` hook + `root-memory-propagation-auditor`
+  agent** (ADR-0010): `PostToolUse` nudge on root-memory edits, paired
+  subagent sweeps a registry of downstream repos for stale duplicated
+  content, judging genuine matches apart from coincidental ones. Fourth
+  agent in this repo's `.claude/agents/`.
 - Root tier is git-versioned: private `benjamininja/dotclaude`
   (allowlist; RESTORE.md; manual cadence — offer commit after any
   root-tier edit, per preferences.md nudge).

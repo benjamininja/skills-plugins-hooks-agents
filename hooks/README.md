@@ -51,7 +51,28 @@ silently stranded every skill in this catalog for several weeks before
 this hook existed. See [ADR-0005](../docs/adr/0005-skill-routing-and-drift-detection.md)
 and its own README for the full reasoning and install steps.
 
+## `root-memory-propagation` — installed and active
+
+[`root-memory-propagation/`](root-memory-propagation/) is a `PostToolUse`
+hook + companion subagent. Root memory (`~/.claude/memory/*.md`,
+`~/.claude/CLAUDE.md`) is auto-loaded into every session, but downstream
+repos have been found hand-duplicating it anyway — a plan naming specific
+files to fix can still miss copies it never enumerated (the exact
+near-miss recorded in [ADR-0010](../docs/adr/0010-root-memory-propagation-audit.md)).
+The hook (`nudge.sh`) deterministically detects "a root memory file just
+changed" and points at the `root-memory-propagation-auditor` subagent,
+which diffs root memory, greps a registry of known downstream repos for
+the old text, and judges genuine stale duplicates apart from coincidental
+matches. See its own README for install steps and the registry format.
+
 ## Population status
 
-All three hooks above are installed and active on this machine, wired
+All four hooks above are installed and active on this machine, wired
 into `~/.claude/settings.json`.
+
+**Distribution note (2026-07-18):** per [ADR-0011](../docs/adr/0011-unified-distribution-architecture.md),
+hooks are slated to move from copy-and-manually-re-copy to junction-linked
+installs, the same mechanism skills already use (ADR-0003), managed by a
+future `tools/manage_distribution.py`. Design-only for now — the hooks
+above stay installed as physical copies until that tool exists and
+`--apply` is run against them.

@@ -56,3 +56,16 @@
   (Claude Code's built-in skill, not a repo file) required before opening
   a PR in both this repo and `project-memory-template`'s three tiers;
   extends ADR-0004's CI-vs-agent-in-the-loop boundary to a new case
+- `docs/adr/0010-root-memory-propagation-audit.md` — fourth agent,
+  `root-memory-propagation-auditor` (background), paired with a new
+  `hooks/root-memory-propagation/` nudge hook: sweeps known downstream
+  repos for stale copies of root-memory content after it changes, judging
+  genuine duplicates apart from coincidental text matches
+- `docs/adr/0011-unified-distribution-architecture.md` — design-only:
+  bidirectional distribution (central → downstream) + upstream check-in
+  for all 4 artifact types, via one `distribution-registry.json` +
+  `tools/manage_distribution.py` (`--check`/`--bless`/`--apply`); agents
+  and hooks move to ADR-0003's junction mechanism; plugins go
+  project-scoped via downstream `.claude/settings.json`. `CONTEXT.md`
+  (new, repo's first) holds the terms coined in the grilling session.
+  Implementation not yet started.

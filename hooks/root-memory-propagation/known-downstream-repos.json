@@ -1,0 +1,6 @@
+{
+  "_comment": "Absolute paths to repos known to have, at some point, hand-duplicated content from root memory (~/.claude/memory/*.md, ~/.claude/CLAUDE.md). Not exhaustive by design — grow this list whenever root-memory-propagation-auditor (or a manual sweep) finds a new duplicate. Consulted by that subagent as the sweep target list.",
+  "repos": [
+    "C:\\Users\\benha\\OneDrive\\Documents\\GitHub\\Python-PowerBI-DynastyFantasyFootball"
+  ]
+}
