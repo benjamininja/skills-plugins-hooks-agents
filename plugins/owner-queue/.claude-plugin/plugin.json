@@ -1,0 +1,6 @@
+{
+  "name": "owner-queue",
+  "version": "0.1.0",
+  "description": "A live pane of the decisions and hands-on actions waiting on the owner, read from the project's .claude/memory/NEEDS-OWNER.md",
+  "types": "./types/index.d.ts"
+}
