@@ -107,12 +107,14 @@ test('presses are staged, and Submit writes them and sends one message', async (
   expect(await ui.find({ text: /\(a\) The builder, with/ })).toBeDefined()
   await ui.press({ key: `code:${id}:a:0` })
   expect(copied).toEqual(['gh pr merge'])
-  await ui.press({ key: `print:${id}` })
-  expect(logged[0]).toContain('Decision 1: Who merges (#166)')
-  expect(logged[0]).toContain('gh pr merge')
+  // "Print in chat" is gone; /owner show prints an entry.
+  expect(await ui.find({ key: `print:${id}` })).toBe(undefined)
+  expect(logged).toHaveLength(0)
 
-  await ui.press({ key: `other:${id}` })
-  expect(drafts[0]).toContain('Decision: Who merges (#166)')
+  // "Other..." is gone; nothing fills the prompt box any more.
+  expect(await ui.find({ key: `other:${id}` })).toBe(undefined)
+  expect(await ui.find({ key: `post:${id}` })).toBeDefined()
+  expect(drafts).toHaveLength(0)
   expect(file).toBe(FILE)
 
   // A press stages; nothing is written, and Clear drops it.
@@ -131,12 +133,13 @@ test('presses are staged, and Submit writes them and sends one message', async (
   await ui.press({ key: `code:${task}:1` })
   expect(copied).toEqual(['gh pr merge', 'python login.py', 'login done'])
 
-  // A fenced block is one chunk; its entry's spans get no button.
+  // A fenced block is one chunk; its entry's spans keep their buttons.
   const rules = 'action:Add two rules'
   await ui.press({ key: `row:${rules}` })
   await ui.press({ key: `block:${rules}:0` })
   expect(copied.at(-1)).toBe('"one",\n  "two"')
-  expect(await ui.find({ key: `code:${rules}:0` })).toBe(undefined)
+  await ui.press({ key: `code:${rules}:0` })
+  expect(copied.at(-1)).toBe('the file')
 
   // Mark done stages too, and can be taken back by the same button.
   await ui.press({ key: `done:${task}` })
@@ -176,7 +179,7 @@ test('presses are staged, and Submit writes them and sends one message', async (
   expect(toasts.at(-1)).toBe(
     'Queue read: Owner: 1 decision, 1 action, 1 answered',
   )
-  expect(await ui.find({ text: /owner-queue 0\.5\.0/ })).toBeDefined()
+  expect(await ui.find({ text: /owner-queue 0\.7\.1/ })).toBeDefined()
 
   await ui.unmount()
 })

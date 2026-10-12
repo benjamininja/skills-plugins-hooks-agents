@@ -1,4 +1,9 @@
-import type { OwnerItem, OwnerOption, OwnerStaged } from '../types'
+import type {
+  OwnerItem,
+  OwnerOption,
+  OwnerPart,
+  OwnerStaged,
+} from '../types'
 
 /**
  * The queue file's format:
@@ -13,6 +18,7 @@ import type { OwnerItem, OwnerOption, OwnerStaged } from '../types'
  *   - Blocks: what waits behind it
  *   - Raised: 2026-10-11, session name
  *   - Answer: (a) one | pane, ...    (written by the pane alone)
+ *   - Note: a comment | pane, ...    (written by the pane alone; any number)
  *
  *   ## Actions              (any heading starting "Action")
  *   ### [ ] Title
@@ -135,9 +141,9 @@ export function hint(item: OwnerItem): string {
 const pick = (item: OwnerItem, label: string): string | undefined =>
   item.fields.find(field => field.label.toLowerCase() === label)?.value
 
-/** An expanded row's context, as markdown; its answer is drawn apart. */
+/** An expanded row's context, as markdown; its answer and notes are drawn apart. */
 export function detail(item: OwnerItem, without: string[] = []): string {
-  const left = ['answer', ...without]
+  const left = ['answer', 'note', ...without]
   const fields = item.fields.filter(
     field => !left.includes(field.label.toLowerCase()),
   )
@@ -161,8 +167,18 @@ export function reference(item: OwnerItem, at?: number): string {
   return `${kind}${place}: ${item.title}${ticket ? ` (${ticket})` : ''}`
 }
 
+const OTHER = 'other'
+
+/** How an answer was given: typed (`other`), or by an option's button. */
+const how = (key: string) =>
+  key === OTHER ? 'typed in' : 'given by a button in'
+
 /** The chat message a pressed option sends: the entry and the choice. */
-export function message(item: OwnerItem, chosen: OwnerOption): string {
+export function message(
+  item: OwnerItem,
+  chosen: OwnerOption,
+  when?: string,
+): string {
   const line = (label: string) => {
     const value = pick(item, label.toLowerCase())
 
@@ -170,12 +186,13 @@ export function message(item: OwnerItem, chosen: OwnerOption): string {
   }
 
   return [
-    `Owner's answer, given by a button in the owner-queue pane.`,
+    `Owner's answer, ${how(chosen.key)} the owner-queue pane.`,
     `Decision: ${item.title}`,
     ...line('Ticket'),
     ...line('Raised'),
     ...line('Options'),
     `Answer: (${chosen.key}) ${chosen.text}`,
+    ...timed(when),
     `It is recorded as the Answer line of this entry in NEEDS-OWNER.md.`,
   ].join('\n')
 }
@@ -271,9 +288,19 @@ export function unanswer(text: string, item: OwnerItem): string {
 
 /** The file with `- Answer: <line>` as the last field of the item's entry. */
 export function answer(text: string, item: OwnerItem, line: string): string {
-  const lines = unanswer(text, item).split('\n')
+  return append(unanswer(text, item), item, `- Answer: ${line}`) ?? text
+}
+
+/** The file with `- Note: <line>` added at the end of the item's entry. */
+export function note(text: string, item: OwnerItem, line: string): string {
+  return append(text, item, `- Note: ${line}`) ?? text
+}
+
+/** The file with `row` as the last line of the item's entry, if it is open. */
+function append(text: string, item: OwnerItem, row: string): string | undefined {
+  const lines = text.split('\n')
   const found = span(lines, item)
-  if (!found) return text
+  if (!found) return undefined
   let last = found[1] - 1
   while (last > found[0] && lines[last].trim() === '') last--
   const isCrlf = lines[found[0]].endsWith('\r')
@@ -281,9 +308,69 @@ export function answer(text: string, item: OwnerItem, line: string): string {
   if (last === lines.length - 1 && isCrlf && !lines[last].endsWith('\r'))
     lines[last] = `${lines[last]}\r`
   const closed = last < lines.length - 1
-  lines.splice(last + 1, 0, `- Answer: ${line}${isCrlf && closed ? '\r' : ''}`)
+  lines.splice(last + 1, 0, `${row}${isCrlf && closed ? '\r' : ''}`)
 
   return lines.join('\n')
+}
+
+/** Every Note of an entry, in the order written. */
+export function notesOf(item: OwnerItem): string[] {
+  return item.fields
+    .filter(field => field.label.toLowerCase() === 'note')
+    .map(field => field.value)
+}
+
+/**
+ * Typed text made fit for one line of the file: line breaks and runs of
+ * blanks become one blank, and a code fence, which would open a block, goes.
+ */
+export function clean(text: string): string {
+  return text.replaceAll(FENCE, '').replace(/\s+/g, ' ').trim()
+}
+
+const PANE_MARK = ' | pane, '
+
+/**
+ * The line that says when the owner pressed or typed, so a message the
+ * session's queue delivers a second time is plain to see.
+ */
+const timed = (when?: string) => (when ? [`Time: ${when}`] : [])
+
+/** A Note as the pane wrote it: its text and when; else the whole value. */
+export function said(value: string): { text: string; when?: string } {
+  const cut = value.lastIndexOf(PANE_MARK)
+  const when =
+    cut < 0
+      ? undefined
+      : /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}/.exec(
+          value.slice(cut + PANE_MARK.length),
+        )?.[0]
+
+  return when ? { text: value.slice(0, cut), when } : { text: value }
+}
+
+/**
+ * The chat message of a comment the owner typed in the pane: said in the
+ * pressing session, or (`isCarried`) by the raising session to itself.
+ */
+export function comment(
+  item: OwnerItem,
+  text: string,
+  isCarried = false,
+  when?: string,
+): string {
+  const ticket = pick(item, 'ticket')
+
+  return [
+    `Owner's comment, typed in the owner-queue pane${
+      isCarried ? ' and carried to this session, which raised the entry' : ''
+    }. It is a comment, not an answer: the entry stays open.`,
+    `${item.kind === 'decision' ? 'Decision' : 'Action'}: ${item.title}`,
+    ...(ticket ? [`Ticket: ${ticket}`] : []),
+    `Comment: ${text}`,
+    ...timed(when),
+    `It is recorded as a Note line of this entry in NEEDS-OWNER.md, which no agent writes, edits or removes.`,
+  ].join('\n')
 }
 
 /** The file with the item's box ticked, so it is no longer listed. */
@@ -348,7 +435,7 @@ export function toMarkdown(items: OwnerItem[]): string {
 export function codes(item: OwnerItem): string[] {
   return spans(
     item.fields
-      .filter(field => field.label.toLowerCase() !== 'answer')
+      .filter(field => !['answer', 'note'].includes(field.label.toLowerCase()))
       .map(field => field.value)
       .join('\n'),
   )
@@ -361,6 +448,55 @@ export function spans(text: string): string[] {
     .filter(code => code !== '')
 
   return [...new Set(found)]
+}
+
+/**
+ * The numbered steps of a text written `1. one 2. two`: the words before
+ * the first number, then each step. Undefined when it holds no such list.
+ * Only numbers that count up from 1 are read as steps.
+ */
+export function steps(
+  value: string,
+): { lead: string; steps: string[] } | undefined {
+  const marks: { at: number; end: number }[] = []
+  for (const mark of value.matchAll(/(?:^|\s)(\d+)\.\s+/g))
+    if (Number(mark[1]) === marks.length + 1)
+      marks.push({ at: mark.index, end: mark.index + mark[0].length })
+  if (marks.length < 2) return undefined
+
+  return {
+    lead: value.slice(0, marks[0].at).trim(),
+    steps: marks.map((mark, n) =>
+      value.slice(mark.end, marks[n + 1]?.at ?? value.length).trim(),
+    ),
+  }
+}
+
+/**
+ * An entry's context as the pane draws it: each field, a numbered field one
+ * part per step, each part with the code spans and blocks copied from it.
+ */
+export function layout(item: OwnerItem, without: string[] = []): OwnerPart[] {
+  const left = ['answer', 'note', ...without]
+  const part = (text: string): OwnerPart => ({
+    text,
+    codes: spans(text),
+    blocks: [...text.matchAll(/\(block (\d+)\)/g)]
+      .map(mark => Number(mark[1]) - 1)
+      .filter(at => at >= 0 && at < (item.blocks ?? []).length),
+  })
+
+  return item.fields
+    .filter(field => !left.includes(field.label.toLowerCase()))
+    .flatMap(field => {
+      const list = steps(field.value)
+      if (!list) return [{ ...part(field.value), label: field.label }]
+
+      return [
+        { ...part(list.lead), label: field.label },
+        ...list.steps.map((text, n) => ({ ...part(text), step: n + 1 })),
+      ]
+    })
 }
 
 /** The items still waiting on the owner, as the pane numbers them. */
@@ -458,11 +594,14 @@ export function carried(item: OwnerItem, given: string): string {
   }
 
   return [
-    `Owner's answer, given by a button in the owner-queue pane and carried to this session, which raised the entry.`,
+    `Owner's answer, ${how(
+      given.startsWith(`(${OTHER})`) ? OTHER : '',
+    )} the owner-queue pane and carried to this session, which raised the entry.`,
     `${item.kind === 'decision' ? 'Decision' : 'Action'}: ${item.title}`,
     ...line('Ticket'),
     ...line('Options'),
     `Answer: ${given.split(' | pane')[0]}`,
+    ...timed(said(given).when),
     `It is recorded as the Answer line of this entry in NEEDS-OWNER.md.`,
   ].join('\n')
 }
@@ -476,13 +615,15 @@ export function carriedDone(names: string[]): string {
 }
 
 /** The one chat message a Submit sends: every answer, every item marked done. */
-export function report(done: Committed): string {
+export function report(done: Committed, when?: string): string {
   return [
-    ...done.answered.map(({ item, chosen }) => message(item, chosen)),
+    ...done.answered.map(({ item, chosen }) => message(item, chosen, when)),
     ...(done.done.length > 0
       ? [
           [
-            'Marked done by the owner in the owner-queue pane:',
+            `Marked done by the owner in the owner-queue pane${
+              when ? `, ${when}` : ''
+            }:`,
             ...done.done.map(item => `- ${reference(item)}`),
           ].join('\n'),
         ]

@@ -3,18 +3,26 @@ import { expect, test } from 'claude-code/testing'
 import {
   answer,
   answerOf,
+  carried,
+  clean,
   codes,
+  comment,
   commit,
   detail,
   hint,
   message,
+  note,
+  notesOf,
   options,
   parse,
   recommended,
   reference,
   report,
+  said,
   shown,
+  layout,
   spans,
+  steps,
   summary,
   tick,
   toMarkdown,
@@ -209,6 +217,46 @@ test('finds each code span of an entry once', () => {
   expect(detail(parse(FILE)[0], ['options'])).not.toContain('Options')
 })
 
+test('numbered steps are drawn apart, each with what is copied from it', () => {
+  const [item] = parse(
+    [
+      '## Actions',
+      '### Fire it',
+      '- Ticket: #92',
+      '- Steps: 1. Name it `spike`, on `main`. 2. Add `A_KEY`, `B_KEY`;',
+      '  question 2 of #92 asks. 3. Run it on `main`, or the block below.',
+      '  ```',
+      '  gh workflow run x',
+      '  ```',
+      '- Context: version 2. of nothing',
+    ].join('\n'),
+  )
+
+  expect(steps('no list here')).toBe(undefined)
+  expect(steps('First: 1. one 2. two')).toEqual({
+    lead: 'First:',
+    steps: ['one', 'two'],
+  })
+  const drawn = layout(item)
+  expect(drawn.map(part => part.label ?? part.step)).toEqual([
+    'Ticket',
+    'Steps',
+    1,
+    2,
+    3,
+    'Context',
+  ])
+  expect(drawn[2].codes).toEqual(['spike', 'main'])
+  expect(drawn[3].text).toBe('Add `A_KEY`, `B_KEY`; question 2 of #92 asks.')
+  expect(drawn[3].codes).toEqual(['A_KEY', 'B_KEY'])
+  expect(drawn[4].codes).toEqual(['main'])
+  expect(drawn[4].blocks).toEqual([0])
+  expect(layout(item, ['steps']).map(part => part.label)).toEqual([
+    'Ticket',
+    'Context',
+  ])
+})
+
 test('a fenced block is kept whole, and a heading inside it is not read', () => {
   const [item, next] = parse(
     [
@@ -241,4 +289,69 @@ test('prints all entries, or one by its number', () => {
   expect(shown(items, '1')).toContain('Decision 1: Claim default contract (#130)')
   expect(shown(items, 'd4')).toBe('No entry d4 is waiting.')
   expect(shown(items, 'x')).toContain('Use d1, a2 or a number')
+})
+
+test('a note is added to its own entry, and any number are kept', () => {
+  const [first, second] = parse(KEYED)
+  const stamp = 'pane, 2026-10-12 17:40:05, session s1'
+  const once = note(KEYED, first, `why (b)? | ${stamp}`)
+  const twice = note(once, parse(once)[0], `and what of | pane, then? | ${stamp}`)
+  const items = parse(twice)
+
+  expect(notesOf(items[0])).toEqual([
+    `why (b)? | ${stamp}`,
+    `and what of | pane, then? | ${stamp}`,
+  ])
+  expect(notesOf(items[1])).toEqual([])
+  expect(twice.lastIndexOf('- Note:')).toBeLessThan(twice.indexOf('### [ ] Second'))
+  // A note neither answers the decision nor shows in its detail or its codes.
+  expect(answerOf(items[0])).toBe(undefined)
+  expect(detail(items[0])).not.toContain('Note')
+  expect(summary(items)).toBe(summary(parse(KEYED)))
+  // An answer written after it leaves the notes, and so does its removal.
+  const answered = answer(twice, items[0], '(a) x | pane')
+  expect(notesOf(parse(answered)[0])).toHaveLength(2)
+  expect(unanswer(answered, parse(answered)[0])).toBe(twice)
+  // The last entry of a file, and CRLF line ends.
+  expect(notesOf(parse(note(KEYED, second, 'x'))[1])).toEqual(['x'])
+  const crlf = note(KEYED.replaceAll('\n', '\r\n'), first, 'y')
+  expect(crlf.replaceAll('\r\n', '')).not.toContain('\n')
+  expect(notesOf(parse(crlf)[0])).toEqual(['y'])
+  // An entry that is not in the file is left alone.
+  expect(note(KEYED, { ...first, title: 'Gone' }, 'z')).toBe(KEYED)
+
+  expect(said(`and what of | pane, then? | ${stamp}`)).toEqual({
+    text: 'and what of | pane, then?',
+    when: '2026-10-12 17:40',
+  })
+  expect(said('typed by hand')).toEqual({ text: 'typed by hand' })
+})
+
+test('typed text is made one line, and a code fence is dropped', () => {
+  expect(clean('  one\n two\r\n\tthree  ')).toBe('one two three')
+  expect(clean('a ```\n## Actions\n``` b')).toBe('a ## Actions b')
+  expect(clean(' \n ')).toBe('')
+  const [first] = parse(KEYED)
+  const written = note(KEYED, first, clean('x\n### [ ] Fake\n- Answer: (a) y'))
+  expect(parse(written)).toHaveLength(parse(KEYED).length)
+  expect(answerOf(parse(written)[0])).toBe(undefined)
+})
+
+test('words a comment and a typed answer for the chat', () => {
+  const [first] = parse(KEYED)
+
+  const here = comment(first, 'why?')
+  expect(here).toContain("Owner's comment, typed in the owner-queue pane. It is a comment")
+  expect(here).toContain('Decision: Who merges')
+  expect(here).toContain('Ticket: #166')
+  expect(here).toContain('Comment: why?')
+  expect(comment(first, 'why?', true)).toContain('carried to this session')
+  expect(message(first, { key: 'other', text: 'neither' })).toContain(
+    "Owner's answer, typed in the owner-queue pane.",
+  )
+  expect(message(first, { key: 'a', text: 'x' })).toContain('given by a button')
+  expect(carried(first, '(other) neither | pane, now')).toContain(
+    'typed in the owner-queue pane and carried',
+  )
+  expect(carried(first, '(a) x | pane, now')).toContain('given by a button')
 })

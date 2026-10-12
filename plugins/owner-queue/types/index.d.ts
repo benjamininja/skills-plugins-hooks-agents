@@ -8,6 +8,22 @@ export type OwnerItem = {
   blocks?: string[]
 }
 
+/**
+ * One stretch of an entry's text as the pane draws it: a field's own words,
+ * or one numbered step of it (`step`), with what is copied from it.
+ */
+export type OwnerPart = {
+  /** The field's label, on the part that opens the field. */
+  label?: string
+  /** The step's number, on a numbered step. */
+  step?: number
+  text: string
+  /** Each `code` span of the text, once. */
+  codes: string[]
+  /** The places, in the entry's blocks, of the blocks the text names. */
+  blocks: number[]
+}
+
 /** One choice of a decision: its key (`a`) and its text as written. */
 export type OwnerOption = { key: string; text: string }
 
@@ -21,6 +37,8 @@ export type OwnerQueue = {
   file?: string
   /** The ids of answered decisions whose Answer line the pane did not write. */
   foreign?: string[]
+  /** By item id, the Note lines of the entry that the pane did not write. */
+  unpenned?: Record<string, string[]>
   /** False when the main checkout was not found and the session's copy is read. */
   isMain?: boolean
 }
@@ -37,6 +55,13 @@ export type OwnerStaged = Record<string, OwnerOption | 'done'>
  */
 export type OwnerAnswers = Record<string, string>
 
+/**
+ * The mod's own store, key `notes`: the Note lines the pane wrote for each
+ * entry, under `<file>|<kind:title>`. Key `noted:<session>` holds, in the
+ * same shape, the ones already said in that session's chat.
+ */
+export type OwnerNotes = Record<string, string[]>
+
 declare module 'claude-code' {
   interface PluginState {
     'owner-queue': {
@@ -49,6 +74,10 @@ declare module 'claude-code' {
       readAt: string
       /** Pressed, not yet submitted; nothing is written before Submit. */
       staged: OwnerStaged
+      /** The ids of the items whose comment box is open. */
+      writing: string[]
+      /** Counts the key presses in a comment box, to redraw what was typed. */
+      strokes: number
     }
   }
 }
