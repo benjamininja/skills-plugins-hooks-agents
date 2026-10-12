@@ -3,6 +3,8 @@ import { expect, test } from 'claude-code/testing'
 import {
   answer,
   answerOf,
+  codes,
+  commit,
   detail,
   hint,
   message,
@@ -10,6 +12,8 @@ import {
   parse,
   recommended,
   reference,
+  report,
+  shown,
   summary,
   tick,
   toMarkdown,
@@ -170,4 +174,45 @@ test('draws both lists, an empty one included', () => {
   expect(drawn).toContain('## Decisions for you (1)')
   expect(drawn).toContain('- **Context:** c')
   expect(drawn).toContain('## Actions by your hand (0)')
+})
+
+test('everything staged is applied in one pass, and the lost are named', () => {
+  const made = commit(
+    KEYED + '\n## Actions\n\n### [ ] Run it\n- Ticket: #9\n',
+    {
+      'decision:Who merges': { key: 'b', text: 'Two-key merge' },
+      'action:Run it': 'done',
+      'action:Gone': 'done',
+    },
+    chosen => `(${chosen.key}) ${chosen.text} | pane`,
+  )
+
+  expect(made.text).toContain('- Answer: (b) Two-key merge | pane')
+  expect(made.text).toContain('### [x] Run it')
+  expect(made.missing).toEqual(['action:Gone'])
+  expect(made.answered.map(one => one.line)).toEqual(['(b) Two-key merge | pane'])
+  const sent = report(made)
+  expect(sent).toContain('Answer: (b) Two-key merge')
+  expect(sent).toContain('- Action: Run it (#9)')
+  expect(commit(KEYED, {}, () => '').text).toBe(KEYED)
+})
+
+test('finds each code span of an entry once', () => {
+  const [item] = parse(
+    '## Actions\n### Run\n- Steps: run `a b`, then `c`\n- Context: `a b` again\n- Answer: `no`\n',
+  )
+
+  expect(codes(item)).toEqual(['a b', 'c'])
+  expect(codes(parse(KEYED)[0])).toEqual([])
+})
+
+test('prints all entries, or one by its number', () => {
+  const items = parse(FILE)
+
+  expect(shown(items)).toContain('## Decisions for you (1)')
+  expect(shown(items, ' a1')).toContain('**Action 1: Create the Supabase project**')
+  expect(shown(items, 'a1')).toContain('- **Blocks:** stage C')
+  expect(shown(items, '1')).toContain('Decision 1: Claim default contract (#130)')
+  expect(shown(items, 'd4')).toBe('No entry d4 is waiting.')
+  expect(shown(items, 'x')).toContain('Use d1, a2 or a number')
 })

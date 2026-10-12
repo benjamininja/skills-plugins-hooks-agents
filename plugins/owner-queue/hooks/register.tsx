@@ -6,23 +6,27 @@ import type {
   OwnerItem,
   OwnerOption,
   OwnerQueue,
+  OwnerStaged,
 } from '../types'
 import {
-  answer,
   answerOf,
+  codes,
+  commit,
   detail,
   hint,
   idOf,
-  message,
   options,
   parse,
   recommended,
   reference,
+  report,
+  shown as printed,
   summary,
-  tick,
   unanswer,
+  waiting,
 } from './parse'
 
+const VERSION = '0.4.0'
 const PANE = 'owner-queue'
 const TITLE = 'Needs owner'
 const FILE = '.claude/memory/NEEDS-OWNER.md'
@@ -37,21 +41,27 @@ const shownRef = { plugin: 'owner-queue', key: 'shown' } as const
 const shown = atom(shownRef, false)
 const readAtRef = { plugin: 'owner-queue', key: 'readAt' } as const
 const readAt = atom(readAtRef, '')
+const stagedRef = { plugin: 'owner-queue', key: 'staged' } as const
+const NONE: OwnerStaged = {}
+const staged = atom(stagedRef, NONE)
 
-let found: Promise<string> | undefined
+type Source = { file: string; isMain: boolean }
+
+let found: Promise<Source> | undefined
 
 /**
  * The queue file every session reads: the main checkout's, so a session in a
  * worktree shows the same queue. A worktree's `.git` is a file naming the
  * main checkout; elsewhere git is asked; failing both, the session's own copy.
  */
-function source($: EngineInterface): Promise<string> {
+function source($: EngineInterface): Promise<Source> {
   found ??= (async () => {
     try {
       const link = /^gitdir:\s*(.+?)[\\/]\.git[\\/]worktrees[\\/]/m.exec(
         await $.fs.read('.git'),
       )
-      if (link) return `${link[1].replaceAll('\\', '/')}/${FILE}`
+      if (link)
+        return { file: `${link[1].replaceAll('\\', '/')}/${FILE}`, isMain: true }
     } catch {
       // A main checkout's `.git` is a folder: no file to read.
     }
@@ -64,12 +74,15 @@ function source($: EngineInterface): Promise<string> {
       ])
       const common = stdout.trim().replaceAll('\\', '/')
       if (exitCode === 0 && common.endsWith('/.git'))
-        return `${common.slice(0, -'/.git'.length)}/${FILE}`
+        return {
+          file: `${common.slice(0, -'/.git'.length)}/${FILE}`,
+          isMain: true,
+        }
     } catch {
       // Not a repository, or a surface that runs no process.
     }
 
-    return FILE
+    return { file: FILE, isMain: false }
   })()
 
   return found
@@ -125,7 +138,7 @@ async function toggle($: EngineInterface): Promise<void> {
 
 /** Re-reads the queue file; redraws, toasts and opens the pane on a change. */
 async function refresh($: EngineInterface): Promise<OwnerQueue> {
-  const file = await source($)
+  const { file, isMain } = await source($)
   let text: string | undefined
   try {
     text = await $.fs.read(file)
@@ -139,6 +152,7 @@ async function refresh($: EngineInterface): Promise<OwnerQueue> {
     hasFile: text !== undefined,
     items,
     file,
+    isMain,
     foreign: items
       .filter(item => {
         const given = answerOf(item)
@@ -149,6 +163,16 @@ async function refresh($: EngineInterface): Promise<OwnerQueue> {
   }
   $.ui.status(summary(now.items))
   await $.state.set(readAtRef, (await clock($)).time)
+  // What was staged for an entry that has left the list is dropped.
+  const { value: held = NONE } = await $.state.get(stagedRef)
+  const live = new Set(
+    items.filter(item => answerOf(item) === undefined).map(idOf),
+  )
+  const kept = Object.fromEntries(
+    Object.entries(held).filter(([id]) => live.has(id)),
+  )
+  if (Object.keys(kept).length !== Object.keys(held).length)
+    await $.state.set(stagedRef, kept)
   const { value: was = EMPTY } = await $.state.get(ref)
   if (JSON.stringify(was) === JSON.stringify(now)) return now
 
@@ -178,26 +202,33 @@ async function reread($: EngineInterface): Promise<void> {
   )
 }
 
-/** Ticks the item's box in the queue file, which takes it off the list. */
-async function markDone($: EngineInterface, item: OwnerItem): Promise<void> {
-  const file = await source($)
-  const text = await $.fs.read(file)
-  await $.fs.write(file, tick(text, item))
-  $.ui.toast(`Done: ${item.title}`)
-  await refresh($)
+/** Stages a press, or takes it back when the same thing is pressed again. */
+function stage(
+  $: EngineInterface,
+  item: OwnerItem,
+  what: OwnerOption | 'done',
+): Promise<void> {
+  const id = idOf(item)
+  const isSame = (was: OwnerOption | 'done' | undefined) =>
+    was !== undefined &&
+    (was === 'done' || what === 'done' ? was === what : was.key === what.key)
+
+  return update($, staged, held => {
+    const { [id]: was, ...rest } = held
+
+    return isSame(was) ? rest : { ...rest, [id]: what }
+  })
 }
 
 /**
- * A pressed option: the Answer line goes into the entry, the pane's own
- * record of it into the store, and the answer to this session's chat as the
- * owner's words.
+ * Submit: everything staged goes into the queue file in one write, the
+ * pane's own record of each Answer line into the store, and one message to
+ * this session's chat as the owner's words. Nothing is written before it.
  */
-async function choose(
-  $: EngineInterface,
-  item: OwnerItem,
-  chosen: OwnerOption,
-): Promise<void> {
-  const file = await source($)
+async function submit($: EngineInterface): Promise<void> {
+  const { value: held = NONE } = await $.state.get(stagedRef)
+  if (Object.keys(held).length === 0) return
+  const { file } = await source($)
   const { day, time } = await clock($)
   let session = 'unknown'
   try {
@@ -205,22 +236,30 @@ async function choose(
   } catch {
     // The line still says when and by what it was written.
   }
-  const line = `(${chosen.key}) ${chosen.text} | pane, ${day} ${time}, session ${session}`
   const text = await $.fs.read(file)
-  const next = answer(text, item, line)
-  if (next === text) {
-    $.ui.toast(`Could not find the entry: ${item.title}`)
-
-    return
+  const made = commit(
+    text,
+    held,
+    chosen =>
+      `(${chosen.key}) ${chosen.text} | pane, ${day} ${time}, session ${session}`,
+  )
+  const count = made.answered.length + made.done.length
+  if (count > 0) {
+    await $.fs.write(file, made.text)
+    if (made.answered.length > 0)
+      await $.store.set(ANSWERS, {
+        ...(await penned($)),
+        ...Object.fromEntries(
+          made.answered.map(({ item, line }) => [`${file}|${idOf(item)}`, line]),
+        ),
+      })
   }
-  await $.fs.write(file, next)
-  await $.store.set(ANSWERS, {
-    ...(await penned($)),
-    [`${file}|${idOf(item)}`]: line,
-  })
+  await $.state.set(stagedRef, NONE)
   await refresh($)
-  $.ui.toast(`Answered: ${item.title}`)
-  void $.prompt.submit({ text: message(item, chosen), asUser: true })
+  const lost =
+    made.missing.length > 0 ? `; ${made.missing.length} not found` : ''
+  $.ui.toast(`Submitted: ${count}${lost}`)
+  if (count > 0) void $.prompt.submit({ text: report(made), asUser: true })
 }
 
 /** "Other...": a draft in the prompt box for an answer no option covers. */
@@ -238,7 +277,7 @@ async function other($: EngineInterface, item: OwnerItem): Promise<void> {
 
 /** "Change answer": the Answer line and the pane's record of it are removed. */
 async function reopen($: EngineInterface, item: OwnerItem): Promise<void> {
-  const file = await source($)
+  const { file } = await source($)
   const text = await $.fs.read(file)
   await $.fs.write(file, unanswer(text, item))
   const own = { ...(await penned($)) }
@@ -272,8 +311,12 @@ export const register: Register = on => {
     return next(e)
   })
 
-  on('command.run', { command: 'owner' }, async $ => {
+  on('command.run', { command: 'owner' }, async ($, e) => {
     const now = await refresh($)
+    // `/owner show`, `/owner show a2`: the entries as text in the transcript,
+    // where the mouse can select them.
+    const asked = /^show\b(.*)$/i.exec((e.args ?? '').trim())
+    if (asked) return { text: printed(now.items, asked[1]) }
     await show($)
 
     return { text: summary(now.items) ?? 'Nothing is waiting on the owner.' }
@@ -312,8 +355,10 @@ export const register: Register = on => {
   }).catch(($, e, next) => next(e))
 
   on('ui.render', { component: 'Pane', requestId: PANE }, async ($, e) => {
-    const { Box, Text, Button, Markdown } = $.ui.resolve(e)
+    const { Box, Text, Button, Markdown, Link } = $.ui.resolve(e)
     const now = await read($, queue)
+    const held = await read($, staged)
+    const pending = Object.keys(held).length
     const opened = new Set(await read($, open))
     const lastRead = await read($, readAt)
     const all = now.items.map(idOf)
@@ -327,6 +372,8 @@ export const register: Register = on => {
       const given = answerOf(item)
       const short = reference(item, given === undefined ? at : undefined)
       const best = recommended(item)
+      const mine = held[id]
+      const spans = codes(item)
       const choices =
         item.kind === 'decision' && given === undefined ? options(item) : []
 
@@ -354,6 +401,15 @@ export const register: Register = on => {
               )}
             </Box>
           )}
+          {mine !== undefined && (
+            <Box paddingLeft={4}>
+              <Text color="green">
+                {mine === 'done'
+                  ? 'Marked done, not submitted'
+                  : `Chosen, not submitted: (${mine.key}) ${mine.text}`}
+              </Text>
+            </Box>
+          )}
           {!isOpen && given === undefined && about !== '' && (
             <Box paddingLeft={4}>
               <Text dimColor>{about}</Text>
@@ -370,8 +426,14 @@ export const register: Register = on => {
                       key={`pick:${id}:${choice.key}`}
                       label={`(${choice.key}) ${choice.text}${
                         choice.key === best ? '  [recommended]' : ''
+                      }${
+                        mine !== undefined &&
+                        mine !== 'done' &&
+                        mine.key === choice.key
+                          ? '  [selected]'
+                          : ''
                       }`}
-                      onPress={() => choose($, item, choice)}
+                      onPress={() => stage($, item, choice)}
                     />
                   ))}
                 </Box>
@@ -408,14 +470,29 @@ export const register: Register = on => {
                     )
                   }
                 />
-                {given === undefined && (
+              </Box>
+              {spans.length > 0 && (
+                <Box flexDirection="column" marginTop={1}>
+                  {spans.map((code, n) => (
+                    <Button
+                      key={`code:${id}:${n}`}
+                      label={`Copy: ${
+                        code.length > 60 ? `${code.slice(0, 57)}...` : code
+                      }`}
+                      onPress={press => copy($, code, code, press.surface)}
+                    />
+                  ))}
+                </Box>
+              )}
+              {given === undefined && (
+                <Box marginTop={1}>
                   <Button
                     key={`done:${id}`}
-                    label="Mark done"
-                    onPress={() => markDone($, item)}
+                    label={mine === 'done' ? 'Not done after all' : 'Mark done'}
+                    onPress={() => stage($, item, 'done')}
                   />
-                )}
-              </Box>
+                </Box>
+              )}
             </Box>
           )}
         </Box>
@@ -432,12 +509,16 @@ export const register: Register = on => {
       </Box>
     )
 
-    const waiting = (kind: OwnerItem['kind']) =>
-      now.items.filter(item => item.kind === kind && !isAnswered(item))
     const answered = now.items.filter(isAnswered)
 
     return (
       <Box flexDirection="column">
+        <Text dimColor>owner-queue {VERSION}</Text>
+        {now.isLoaded && now.isMain === false && (
+          <Text bold>
+            Reading this session's copy, not the main checkout's.
+          </Text>
+        )}
         {!now.isLoaded && <Text dimColor>Reading the queue...</Text>}
         {now.isLoaded && !now.hasFile && (
           <Box flexDirection="column">
@@ -460,9 +541,31 @@ export const register: Register = on => {
                 onPress={() => update($, open, () => [])}
               />
             </Box>
-            {part(waiting('decision'), 'Decisions for you', 'Nothing to decide.')}
+            {pending > 0 && (
+              <Box flexDirection="row" gap={2} marginBottom={1}>
+                <Button
+                  key="submit"
+                  variant="primary"
+                  label={`Submit (${pending})`}
+                  onPress={() => submit($)}
+                />
+                <Button
+                  key="clear"
+                  label="Clear"
+                  onPress={() => update($, staged, () => NONE)}
+                />
+                <Text color="green">
+                  {pending} staged; nothing is written until Submit
+                </Text>
+              </Box>
+            )}
             {part(
-              waiting('action'),
+              waiting(now.items, 'decision'),
+              'Decisions for you',
+              'Nothing to decide.',
+            )}
+            {part(
+              waiting(now.items, 'action'),
               'Actions by your hand',
               'Nothing to do by hand.',
             )}
@@ -473,6 +576,13 @@ export const register: Register = on => {
         <Text dimColor>
           Source: {now.file ?? FILE}. Last read {lastRead || 'not yet'}; it is
           read again every 5 seconds. Press a row for its context.
+        </Text>
+        {now.isMain && now.file && (
+          <Link href={`file:///${now.file}`} label="Open the queue file" />
+        )}
+        <Text dimColor>
+          To select text with the mouse, type /owner show (or /owner show a2)
+          and it is printed in the chat.
         </Text>
       </Box>
     )

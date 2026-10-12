@@ -1,4 +1,4 @@
-import type { OwnerItem, OwnerOption } from '../types'
+import type { OwnerItem, OwnerOption, OwnerStaged } from '../types'
 
 /**
  * The queue file's format:
@@ -304,4 +304,93 @@ export function toMarkdown(items: OwnerItem[]): string {
     part('decision', 'Decisions for you', 'Nothing to decide.'),
     part('action', 'Actions by your hand', 'Nothing to do by hand.'),
   ].join('\n')
+}
+
+/** Each `code` span of the item's fields, once, in the order written. */
+export function codes(item: OwnerItem): string[] {
+  const found = item.fields
+    .filter(field => field.label.toLowerCase() !== 'answer')
+    .flatMap(field => [...field.value.matchAll(/`([^`]+)`/g)])
+    .map(match => match[1].trim())
+    .filter(code => code !== '')
+
+  return [...new Set(found)]
+}
+
+/** The items still waiting on the owner, as the pane numbers them. */
+export function waiting(items: OwnerItem[], kind: OwnerItem['kind']): OwnerItem[] {
+  return items.filter(
+    item => item.kind === kind && answerOf(item) === undefined,
+  )
+}
+
+/**
+ * Entries as markdown for the transcript, where the mouse can select them.
+ * `which` is empty for all, `d2` or `a1` for one, `2` for the second of each.
+ */
+export function shown(items: OwnerItem[], which = ''): string {
+  const asked = /^([da])?\s*(\d+)$/.exec(which.trim().toLowerCase())
+  if (!asked) return which.trim() === '' ? toMarkdown(items) : `No entry "${which.trim()}". Use d1, a2 or a number.`
+  const at = Number(asked[2]) - 1
+  const kinds: OwnerItem['kind'][] =
+    asked[1] === 'd' ? ['decision'] : asked[1] === 'a' ? ['action'] : ['decision', 'action']
+  const found = kinds.flatMap(kind => {
+    const item = waiting(items, kind)[at]
+
+    return item ? [`**${reference(item, at)}**\n\n${detail(item)}`] : []
+  })
+
+  return found.length > 0 ? found.join('\n\n') : `No entry ${which.trim()} is waiting.`
+}
+
+export type Committed = {
+  text: string
+  answered: { item: OwnerItem; chosen: OwnerOption; line: string }[]
+  done: OwnerItem[]
+  /** The ids staged whose entry is no longer open in the file. */
+  missing: string[]
+}
+
+/**
+ * The file with everything staged applied in one pass: an Answer line per
+ * chosen option (`line` words it) and a ticked box per item marked done.
+ */
+export function commit(
+  text: string,
+  staged: OwnerStaged,
+  line: (chosen: OwnerOption) => string,
+): Committed {
+  const out: Committed = { text, answered: [], done: [], missing: [] }
+  for (const [id, what] of Object.entries(staged)) {
+    const item = parse(out.text).find(one => idOf(one) === id)
+    const next = !item
+      ? out.text
+      : what === 'done'
+        ? tick(out.text, item)
+        : answer(out.text, item, line(what))
+    if (!item || next === out.text) {
+      out.missing.push(id)
+      continue
+    }
+    out.text = next
+    if (what === 'done') out.done.push(item)
+    else out.answered.push({ item, chosen: what, line: line(what) })
+  }
+
+  return out
+}
+
+/** The one chat message a Submit sends: every answer, every item marked done. */
+export function report(done: Committed): string {
+  return [
+    ...done.answered.map(({ item, chosen }) => message(item, chosen)),
+    ...(done.done.length > 0
+      ? [
+          [
+            'Marked done by the owner in the owner-queue pane:',
+            ...done.done.map(item => `- ${reference(item)}`),
+          ].join('\n'),
+        ]
+      : []),
+  ].join('\n\n')
 }

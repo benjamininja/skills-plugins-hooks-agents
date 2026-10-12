@@ -19,7 +19,15 @@ export type OwnerQueue = {
   file?: string
   /** The ids of answered decisions whose Answer line the pane did not write. */
   foreign?: string[]
+  /** False when the main checkout was not found and the session's copy is read. */
+  isMain?: boolean
 }
+
+/**
+ * What the owner has pressed and not yet submitted, by item id: the option
+ * chosen for a decision, or `done` for an item marked done.
+ */
+export type OwnerStaged = Record<string, OwnerOption | 'done'>
 
 /**
  * The mod's own store (`$.store`), key `answers`: the Answer line the pane
@@ -37,6 +45,8 @@ declare module 'claude-code' {
       shown: boolean
       /** When the queue file was last read, as `HH:MM:SS`. */
       readAt: string
+      /** Pressed, not yet submitted; nothing is written before Submit. */
+      staged: OwnerStaged
     }
   }
 }
