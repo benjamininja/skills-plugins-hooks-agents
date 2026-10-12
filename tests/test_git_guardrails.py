@@ -141,6 +141,27 @@ def on_feature(tmp_path):
     "git checkout main && git push",
     "git switch main && git merge feat && git push",
     "git checkout main; git push origin",
+    "git checkout main && git merge feat && git push origin HEAD",
+    "git checkout main && git push -u origin HEAD",
+    "git checkout main 2>&1 && git push",
+    "git checkout main -q && git push",
+    "(git checkout main && git merge feat && git push)",
+    # a line continuation must not separate a push from its refspec
+    "git push --force-with-lease \\\n  origin main",
+    "git push --force-with-lease `\n  origin main",
+    "git reset \\\n  --hard",
+    # quotes, backticks and parentheses around the command
+    "git submodule foreach 'git checkout .'",
+    "bash -lc 'cd repo && git restore .'",
+    "`git checkout .`",
+    "(cd /some/repo && git push origin main)",
+    "echo $(git push origin main)",
+    "bash -c 'git push origin main'",
+    # extra whitespace
+    "git  push   origin    main",
+    "git\tpush origin main",
+    # a comment never clears a block
+    "git push origin my-feature # not main",
 ])
 def test_blocked(command, on_feature):
     result = run_hook(command, project_dir=on_feature)
@@ -184,7 +205,9 @@ def test_blocked_from_the_powershell_tool(command, on_feature):
     "gh pr merge 12 --merge",
     "git checkout .gitignore",
     "git push origin my-feature 2>&1",
-    "git push origin my-feature # not main",
+    "git push origin my-feature # ready for review",
+    "git push -u origin HEAD",               # on a feature branch
+    "(git fetch && git push)",               # on a feature branch
     "git checkout main && git pull && git checkout -b next && git push -u origin next",
     "git checkout main && git pull && git switch -c next && git push",
     "ls -la",
@@ -203,7 +226,12 @@ def test_branch_name_in_another_segment_does_not_block(on_feature):
 
 # --- bare push falls back to the checked-out branch ---------------------------
 
-@pytest.mark.parametrize("command", ["git push", "git push origin", "git push -u origin"])
+@pytest.mark.parametrize("command", [
+    "git push", "git push origin", "git push -u origin",
+    "git push origin HEAD", "git push -u origin @",
+    "(git fetch && git push)", "bash -c 'git push'",
+    "git push # to origin my-feature",
+])
 def test_bare_push_blocked_on_main(command, on_main):
     result = run_hook(command, project_dir=on_main)
     assert result.returncode == 2, result.stderr.decode()

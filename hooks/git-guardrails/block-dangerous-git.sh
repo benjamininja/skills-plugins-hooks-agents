@@ -12,20 +12,25 @@
 #     all). Upstream blanket-blocks ALL push.
 #   - reset --hard / clean -f / branch -D / checkout . / restore . stay
 #     blanket-blocked — always destructive regardless of branch.
-#   - git's global options are stripped before matching, so
-#     `git -C <path> push origin main`, `git -c k=v reset --hard` and
-#     `git --git-dir=<dir> clean -fd` are seen as what they are.
-#   - Each `&&` / `||` / `;` / `|` segment is checked on its own, so a
-#     branch name in one segment cannot clear or condemn another.
 #   - No jq dependency: the command string is pulled out of the hook JSON
 #     with sed, honoring escaped quotes (jq isn't reliably on PATH here).
 #
-# Tests: tests/test_git_guardrails.py (run in CI).
+# How a command is read (each step exists because a real bypass got through
+# without it — see tests/test_git_guardrails.py):
+#   1. Line continuations are joined; remaining newlines act as `;`.
+#   2. The command is split on && || ; | & and each segment judged alone.
+#   3. git's global options (-C <path>, -c k=v, --git-dir=…) are removed, so
+#      `git -C x push` is seen as `git push`.
+#   4. Quotes, backticks, parentheses, braces and `$` become spaces, and
+#      whitespace is collapsed, so `(git push)`, `bash -c 'git restore .'`
+#      and `git  push` all read as plain words.
+# When in doubt the hook blocks: text after a `#` still counts toward a
+# block, and never toward an exemption.
 #
 # Layered-defense note: this is a text match on one tool call. It does not
-# see git run from inside a script, `gh api`, an alias, a direct terminal
-# push, or another machine — see hooks/git-guardrails/README.md. The
-# GitHub ruleset on `main` is the layer that cannot be bypassed locally.
+# see git run from inside a script file, `gh api`, an alias, a direct
+# terminal push, or another machine — see hooks/git-guardrails/README.md.
+# The GitHub ruleset on `main` is the layer that cannot be bypassed locally.
 
 set -uo pipefail
 
@@ -37,10 +42,14 @@ RAW=$(printf '%s' "$INPUT" | tr '\n' ' ' \
   | sed -n 's/.*"command"[[:space:]]*:[[:space:]]*"\(\(\\.\|[^"\\]\)*\)".*/\1/p')
 [[ -z "$RAW" ]] && exit 0
 
-# JSON-unescape what matters for matching: \n \r \t -> space, \" -> ",
-# \\ -> \ (order matters: protect \\ first).
+# JSON-unescape what matters for matching. \x01 stands in for a literal
+# backslash while the other escapes are handled. A backslash or backtick
+# right before a newline is a line continuation: join the lines. Any other
+# newline separates commands, like `;`.
 COMMAND=$(printf '%s' "$RAW" | sed -e 's/\\\\/\x01/g' \
-  -e 's/\\[nr]/;/g' -e 's/\\t/ /g' -e 's/\\"/"/g' -e 's/\\\//\//g' -e 's/\x01/\\/g')
+  -e 's/\x01\(\\r\)\{0,1\}\\n/ /g' -e 's/`\(\\r\)\{0,1\}\\n/ /g' \
+  -e 's/\\[nr]/;/g' -e 's/\\t/ /g' -e 's/\\"/"/g' -e 's/\\\//\//g' \
+  -e 's/\x01/\\/g')
 
 block() {
   echo "BLOCKED: '$COMMAND' — $1. The user has prevented you from doing this." >&2
@@ -51,6 +60,17 @@ block() {
 VAL="(\"[^\"]*\"|'[^']*'|[^[:space:]]+)"
 # git's global options that can sit between `git` and the subcommand.
 GLOBAL_OPT="[[:space:]]+((-C|-c|--git-dir|--work-tree|--namespace|--exec-path|--super-prefix)([[:space:]]+|=)${VAL}|--no-pager|--paginate|-p|-P|--bare|--no-replace-objects|--literal-pathspecs|--no-optional-locks|--exec-path)"
+
+# Zero or more arguments, then the one named: `<sub>( <arg>)* <wanted>`.
+ARGS='([[:space:]]+[^[:space:]]+)*[[:space:]]+'
+END='([[:space:]]|$)'
+
+# Set when an earlier segment of the same command switches to main/master.
+SWITCHED_TO_MAIN=""
+
+# Text up to a `#` that starts a word (a shell comment), for exemptions and
+# for counting what a push names. Blocking patterns never use this.
+uncommented() { echo "$1" | sed -E 's/(^|[[:space:]])#.*$//'; }
 
 check_segment() {
   local seg="$1"
@@ -63,73 +83,71 @@ check_segment() {
   cdir=$(echo "$seg" | sed -nE "s/.*git(\.exe)?[[:space:]]+(.*[[:space:]])?-C[[:space:]]+${VAL}.*/\3/p" \
     | sed -e 's/^"\(.*\)"$/\1/' -e "s/^'\(.*\)'\$/\1/")
 
-  # Canonical form: `git <subcommand> ...` with global options removed.
-  local norm
-  norm=$(echo "$seg" | sed -E "s/git(\.exe)?(${GLOBAL_OPT})+[[:space:]]+/git /g; s/git\.exe[[:space:]]+/git /g")
+  # `git <subcommand> ...` with global options removed, then every shell
+  # delimiter turned into a space and whitespace collapsed.
+  local flat
+  flat=$(echo "$seg" \
+    | sed -E "s/git(\.exe)?(${GLOBAL_OPT})+[[:space:]]+/git /g; s/git\.exe([[:space:]]|$)/git /g" \
+    | tr "\"'\`(){}\$\t" '         ' | tr -s ' ')
 
   # --- Blanket-blocked destructive commands ---
-  if echo "$norm" | grep -qE 'git reset([[:space:]]+[^[:space:]]+)*[[:space:]]+--hard'; then
+  if echo "$flat" | grep -qE "git reset${ARGS}--hard${END}"; then
     block "matches blanket-blocked pattern 'git reset --hard'"
   fi
-  if echo "$norm" | grep -qE 'git clean([[:space:]]+[^[:space:]]+)*[[:space:]]+(-[[:alnum:]]*f[[:alnum:]]*|--force)'; then
+  if echo "$flat" | grep -qE "git clean${ARGS}(-[[:alnum:]]*f[[:alnum:]]*|--force)${END}"; then
     block "matches blanket-blocked pattern 'git clean -f'"
   fi
-  if echo "$norm" | grep -qE 'git branch([[:space:]]+[^[:space:]]+)*[[:space:]]+-[[:alnum:]]*D'; then
+  if echo "$flat" | grep -qE "git branch${ARGS}-[[:alnum:]]*D[[:alnum:]]*${END}"; then
     block "matches blanket-blocked pattern 'git branch -D'"
   fi
-  if echo "$norm" | grep -qE 'git checkout([[:space:]]+[^[:space:]]+)*[[:space:]]+\.[/\\]?([[:space:])]|$)'; then
+  if echo "$flat" | grep -qE "git checkout${ARGS}\.[/\\\\]?${END}"; then
     block "matches blanket-blocked pattern 'git checkout .'"
   fi
-  if echo "$norm" | grep -qE 'git restore([[:space:]]+[^[:space:]]+)*[[:space:]]+\.[/\\]?([[:space:])]|$)'; then
+  if echo "$flat" | grep -qE "git restore${ARGS}\.[/\\\\]?${END}"; then
     # `git restore --staged .` only unstages; the working tree is untouched.
-    # Judge the flags on the command itself, not on a trailing # comment.
-    local args="${norm%%#*}"
-    if ! echo "$args" | grep -qE -- '--staged|[[:space:]]-S([[:space:]]|$)' \
-       || echo "$args" | grep -qE -- '--worktree|[[:space:]]-W([[:space:]]|$)'; then
+    local args
+    args=$(uncommented "$flat")
+    if ! echo "$args" | grep -qE -- "[[:space:]](--staged|-S)${END}" \
+       || echo "$args" | grep -qE -- "[[:space:]](--worktree|-W)${END}"; then
       block "matches blanket-blocked pattern 'git restore .'"
     fi
   fi
 
-  # --- Remember a switch to or away from main/master for a later bare push ---
-  if echo "$norm" | grep -qE 'git (checkout|switch)([[:space:]]|$)'; then
-    if echo "${norm%%#*}" | tr -d "\"'" | grep -qE 'git (checkout|switch)([[:space:]]+[^[:space:]]+)*[[:space:]]+(main|master)[[:space:]]*$'; then
-      SWITCHED_TO_MAIN=$(echo "${norm%%#*}" | sed -nE 's/.*git ((checkout|switch).*)/\1/p' | sed -E 's/[[:space:]]+$//')
-    elif echo "$norm" | grep -qE 'git (checkout|switch)[[:space:]]+(-b|-B|-c|-C|--create|--orphan)[[:space:]]'; then
-      SWITCHED_TO_MAIN=""   # a new branch was created; the push is not on main
+  # --- Remember a switch to main/master for a later bare push ---
+  if echo "$flat" | grep -qE "git (checkout|switch)${END}"; then
+    if echo "$flat" | grep -qE "git (checkout|switch)${ARGS}(-b|-B|-c|-C|--create|--force-create|--orphan)${END}"; then
+      SWITCHED_TO_MAIN=""   # a new branch is created; a later push is not on main
+    elif echo "$flat" | grep -qE "git (checkout|switch)${ARGS}(main|master)${END}"; then
+      SWITCHED_TO_MAIN=$(echo "$flat" | sed -nE 's/.*git ((checkout|switch).*)/\1/p' | sed -E 's/[[:space:]]+$//')
     fi
   fi
 
   # --- Branch-aware push guard ---
-  if echo "$norm" | grep -qE 'git push([[:space:]]|$)'; then
-    local rest
-    rest="${norm#*git push}"   # text after the FIRST `git push`
-    rest="${rest%%#*}"         # minus any trailing comment
+  if echo "$flat" | grep -qE "git push${END}"; then
+    local rest="${flat#*git push}"   # text after the FIRST `git push`
 
     # An explicit main/master target: `main`, `HEAD:main`, `:main`,
     # `+main`, `refs/heads/main`.
-    # Quotes around the ref are stripped first (`git push origin "main"`).
-    if echo "$rest" | tr -d "\"'" | grep -qE '(^|[[:space:]:+]|refs/heads/)(main|master)([[:space:]]|$)'; then
+    if echo "$rest" | grep -qE "(^|[[:space:]:+]|refs/heads/)(main|master)${END}"; then
       block "pushes directly to main/master — push a feature branch and open a PR instead"
     fi
 
-    # No explicit main/master. Count non-flag tokens after "push": 0-1
-    # (nothing, or just a remote) means the push implicitly targets the
-    # checked-out branch — look it up. 2+ means an explicit non-main
-    # branch was named — already cleared above, allow.
-    local non_flag
-    non_flag=$(echo "$rest" | tr ' ' '\n' | grep -cvE '^(-|$)' || true)
-    if [[ "$non_flag" -lt 2 ]]; then
+    # No explicit main/master. What does the push name? Drop flags; the
+    # first word left is the remote, the rest are refspecs. No refspec, or
+    # only HEAD / @ (which mean "whatever is checked out"), is an implicit
+    # push of the current branch.
+    local refs
+    refs=$(uncommented "$rest" | tr ' ' '\n' | grep -vE '^(-|$)' | tail -n +2 \
+      | grep -vE '^\+?(HEAD|@)$' || true)
+    if [[ -z "$refs" ]]; then
+      if [[ -n "$SWITCHED_TO_MAIN" ]]; then
+        block "an earlier 'git $SWITCHED_TO_MAIN' in this command puts this push on main/master — push a feature branch and open a PR instead"
+      fi
       # Never open a network path named by the command just to look up a
       # branch (on Windows that can send credentials to the named host).
       case "$cdir" in
-        [/\\][/\\]*|[/\\]\?\?[/\\]*) block "bare push with -C pointing at a network path — name the branch explicitly" ;;
+        [/\\][/\\]*|[/\\]\?\?[/\\]*) block "push with -C pointing at a network path and no branch named — name the branch explicitly" ;;
       esac
-      # An earlier segment switched to main/master (`git checkout main &&
-      # git merge x && git push`): the lookup below would still see the
-      # old branch, because nothing has run yet.
-      if [[ -n "$SWITCHED_TO_MAIN" ]]; then
-        block "an earlier 'git $SWITCHED_TO_MAIN' in this command puts the bare push on main/master — push a feature branch and open a PR instead"
-      fi
       local dir="${cdir:-${CLAUDE_PROJECT_DIR:-$PWD}}"
       local branch
       branch=$(git -C "$dir" rev-parse --abbrev-ref HEAD 2>/dev/null || echo "")
@@ -142,9 +160,8 @@ check_segment() {
   return 0
 }
 
-# Split on shell separators (&&, ||, ;, |, &) and check each segment on
-# its own. `2>&1` splits too, which is harmless.
-SWITCHED_TO_MAIN=""
+# Split on shell separators (&&, ||, ;, |, &) and check each segment on its
+# own. `2>&1` splits too, which is harmless.
 while IFS= read -r segment; do
   [[ -z "${segment// /}" ]] && continue
   check_segment "$segment"

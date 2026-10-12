@@ -35,7 +35,21 @@ this is a behavior adaptation.
   `git --git-dir=<dir> clean -fd` used to pass because the match was on the
   literal text `git push` / `git clean -f`. A bare push with `-C <path>`
   looks up the branch checked out in that path, not in the session's repo.
-- **Each `&&` / `||` / `;` / `|` segment is checked on its own.**
+- **Each `&&` / `||` / `;` / `|` / `&` segment is checked on its own**, and
+  a line continuation (`\` or a PowerShell backtick before a newline) is
+  joined first, so a push cannot be separated from its refspec.
+- **Shell punctuation is read as spaces.** Quotes, backticks, parentheses,
+  braces and `$` become spaces before matching, so `(git push)`,
+  `bash -c 'git restore .'` and `git submodule foreach 'git checkout .'`
+  are judged like the plain command.
+- **`HEAD` and `@` count as "whatever is checked out"**, so
+  `git push origin HEAD` gets the same branch lookup as a bare `git push`.
+- **A switch to `main` earlier in the same command blocks a later bare
+  push** (`git checkout main && git merge x && git push`), because the
+  lookup would otherwise see the branch from before the command ran.
+- **When in doubt it blocks.** Text after a `#` still counts toward a
+  block and never toward an exemption, so
+  `git push origin my-feature # not main` is blocked. Reword the comment.
 - **No `jq` dependency.** Upstream's script requires `jq` to parse
   `tool_input.command`; `jq` is not reliably on `PATH` in this machine's Git
   Bash, so extraction uses `sed`. It honors escaped quotes, so a command
