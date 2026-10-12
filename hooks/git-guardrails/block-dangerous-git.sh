@@ -83,12 +83,14 @@ check_segment() {
   cdir=$(echo "$seg" | sed -nE "s/.*git(\.exe)?[[:space:]]+(.*[[:space:]])?-C[[:space:]]+${VAL}.*/\3/p" \
     | sed -e 's/^"\(.*\)"$/\1/' -e "s/^'\(.*\)'\$/\1/")
 
-  # `git <subcommand> ...` with global options removed, then every shell
+  # `git <subcommand> ...` with global options removed, redirections
+  # (`>file`, `2>>file`, `<file`) and backslashes dropped, then every shell
   # delimiter turned into a space and whitespace collapsed.
   local flat
   flat=$(echo "$seg" \
     | sed -E "s/git(\.exe)?(${GLOBAL_OPT})+[[:space:]]+/git /g; s/git\.exe([[:space:]]|$)/git /g" \
-    | tr "\"'\`(){}\$\t" '         ' | tr -s ' ')
+    | sed -E 's/[0-9]*(>>?|<)[[:space:]]*[^[:space:]]*/ /g' \
+    | tr -d '\\' | tr "\"'\`(){}\$\t" '         ' | tr -s ' ')
 
   # --- Blanket-blocked destructive commands ---
   if echo "$flat" | grep -qE "git reset${ARGS}--hard${END}"; then
@@ -100,10 +102,11 @@ check_segment() {
   if echo "$flat" | grep -qE "git branch${ARGS}-[[:alnum:]]*D[[:alnum:]]*${END}"; then
     block "matches blanket-blocked pattern 'git branch -D'"
   fi
-  if echo "$flat" | grep -qE "git checkout${ARGS}\.[/\\\\]?${END}"; then
+  # `.` and its other spellings: `./`, `./.`, `./*`, `..`
+  if echo "$flat" | grep -qE "git checkout${ARGS}\.[./*]*${END}"; then
     block "matches blanket-blocked pattern 'git checkout .'"
   fi
-  if echo "$flat" | grep -qE "git restore${ARGS}\.[/\\\\]?${END}"; then
+  if echo "$flat" | grep -qE "git restore${ARGS}\.[./*]*${END}"; then
     # `git restore --staged .` only unstages; the working tree is untouched.
     local args
     args=$(uncommented "$flat")
@@ -161,10 +164,13 @@ check_segment() {
 }
 
 # Split on shell separators (&&, ||, ;, |, &) and check each segment on its
-# own. `2>&1` splits too, which is harmless.
+# own. The `&` and `|` of a redirection (`2>&1`, `&>file`, `>|file`) are not
+# separators: reduce those to a plain `>` first, so `git push 2>&1 origin
+# main` stays one segment.
 while IFS= read -r segment; do
   [[ -z "${segment// /}" ]] && continue
   check_segment "$segment"
-done < <(printf '%s\n' "$COMMAND" | sed -E 's/(&&|\|\||;|\||&)/\n/g')
+done < <(printf '%s\n' "$COMMAND" \
+  | sed -E -e 's/&>/>/g' -e 's/>&/>/g' -e 's/>\|/>/g' -e 's/(&&|\|\||;|\||&)/\n/g')
 
 exit 0

@@ -157,6 +157,23 @@ def on_feature(tmp_path):
     "(cd /some/repo && git push origin main)",
     "echo $(git push origin main)",
     "bash -c 'git push origin main'",
+    # a redirection must not split a push from its refspec or shield a token
+    "git push 2>&1 origin HEAD:main",
+    "git push &>/dev/null origin main",
+    "git push >| /dev/null origin main",
+    "git push>/dev/null origin main",
+    "git clean -fd>/dev/null",
+    "git reset --hard>/dev/null",
+    "git branch -D>/dev/null feature",
+    "git checkout .>/dev/null",
+    "git restore .>log",
+    "git clean -f\\d",
+    # other spellings of the whole-tree pathspec
+    "git checkout ./.",
+    "git checkout ././",
+    "git checkout ./*",
+    "git checkout ..",
+    "git restore ./.",
     # extra whitespace
     "git  push   origin    main",
     "git\tpush origin main",
@@ -205,6 +222,10 @@ def test_blocked_from_the_powershell_tool(command, on_feature):
     "gh pr merge 12 --merge",
     "git checkout .gitignore",
     "git push origin my-feature 2>&1",
+    "git push origin my-feature > push.log 2>&1",
+    "git push 2>&1 origin my-feature",
+    "git status > main",                     # a file named main, not a push
+    "git checkout src\\.gitignore",
     "git push origin my-feature # ready for review",
     "git push -u origin HEAD",               # on a feature branch
     "(git fetch && git push)",               # on a feature branch
@@ -231,6 +252,7 @@ def test_branch_name_in_another_segment_does_not_block(on_feature):
     "git push origin HEAD", "git push -u origin @",
     "(git fetch && git push)", "bash -c 'git push'",
     "git push # to origin my-feature",
+    "git push -u origin HEAD > push.log",    # the log file is not a refspec
 ])
 def test_bare_push_blocked_on_main(command, on_main):
     result = run_hook(command, project_dir=on_main)

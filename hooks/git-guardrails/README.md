@@ -42,6 +42,12 @@ this is a behavior adaptation.
   braces and `$` become spaces before matching, so `(git push)`,
   `bash -c 'git restore .'` and `git submodule foreach 'git checkout .'`
   are judged like the plain command.
+- **Redirections are dropped before matching.** `2>&1`, `&>file`, `>file`
+  and `<file` are removed with their target, so `git push 2>&1 origin main`
+  and `git clean -fd>/dev/null` are judged like the plain command, and a
+  log file is never mistaken for a refspec.
+- **Every spelling of the whole tree is blocked** for `checkout` / `restore`:
+  `.`, `./`, `./.`, `./*`, `..`.
 - **`HEAD` and `@` count as "whatever is checked out"**, so
   `git push origin HEAD` gets the same branch lookup as a bare `git push`.
 - **A switch to `main` earlier in the same command blocks a later bare
