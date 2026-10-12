@@ -2,7 +2,7 @@
 name: skill-safety-auditor
 description: Adversarial read-only review of any change to disable-model-invocation, a new vendored skill, or vendor-skills.json's safety-relevant fields. Independently judges blast radius from the skill's actual body against the criteria in docs/adr/0005 and docs/adr/0006, without seeing the main agent's proposed tier first. Use before committing any such change.
 tools: Read, Grep, Glob
-model: cheapest model that reliably handles this task (currently: sonnet-tier — misjudging blast radius has real safety cost)
+model: "cheapest model that reliably handles this task (currently: sonnet-tier — misjudging blast radius has real safety cost)"
 background: false
 ---
 

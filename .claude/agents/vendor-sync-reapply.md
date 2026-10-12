@@ -2,7 +2,7 @@
 name: vendor-sync-reapply
 description: Reapplies known_local_edits after `tools/update_vendor_skills.py --apply <name>` overwrites a vendored skill with fresh upstream content. Judges whether the blessed edit's rationale still applies to the new upstream text, reapplies it, then re-blesses. Use immediately after any `--apply` run that printed a "Reapply ritual" notice.
 tools: Read, Edit, Bash, Grep
-model: cheapest model that reliably handles this task (currently: haiku-tier)
+model: "cheapest model that reliably handles this task (currently: haiku-tier)"
 background: true
 ---
 
