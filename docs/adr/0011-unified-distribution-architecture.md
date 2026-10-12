@@ -158,3 +158,15 @@ scope is cut:
 - **Consequences**: the hook-copy migration noted under Consequences is
   performed by the gap-closure PR for this revision (the four installed
   hook copies were byte-identical to the repo and are now junctions).
+- **Known risk — junction target is the main checkout**: the
+  `~/.claude/agents` and `~/.claude/hooks/<name>` junctions resolve into
+  this repo's main checkout, so what runs is whatever that checkout holds.
+  If the junction target stops resolving (checkout moved, renamed, or
+  deleted; OneDrive-evicted files; or a checked-out branch lacking
+  `hooks/` or `.claude/agents/`), the hook command is simply not found.
+  Claude Code treats a non-2 exit from a `PreToolUse` hook as
+  non-blocking, so `git-guardrails` **fails open** silently — the same
+  failure class as the stale skills junctions found after the repo
+  rename. Accepted for now; the planned mitigation is extending
+  `skill-catalog-health`'s SessionStart junction-drift check to cover
+  `~/.claude/agents` and `~/.claude/hooks/*` (follow-up, not this PR).
