@@ -7,7 +7,7 @@
 
 ## What's in this repo
 
-- **Skills** (36 loadable: 4 authored, 31 vendored, 1 forked) — one folder per skill under `skills/`, each with a `SKILL.md`; junctioned into `~/.claude/skills/` per machine.
+- **Skills** (38 loadable: 4 authored, 33 vendored, 1 forked) — one folder per skill under `skills/`, each with a `SKILL.md`; junctioned into `~/.claude/skills/` per machine.
 - **Plugins** (3, manifest-only) — cataloged upstream bundles whose ~30 skills are deliberately not vendored (unused Fabric workloads). See `plugins/README.md` / ADR-0002.
 - **Hooks** (3, all installed on this machine) — deterministic event-triggered scripts under `hooks/`, registered in `~/.claude/settings.json`. See `hooks/README.md`.
 - **Vendor cache** (1) — pristine, never-loaded upstream mirrors of forked skills, for diffing. See ADR-0001.
@@ -42,10 +42,12 @@ Tags follow the routing-map axes (see README "Routing: which skill, when"): stag
 | **powerbi-report-management** | execute | powerbi-fabric | model | [microsoft/skills-for-fabric](https://github.com/microsoft/skills-for-fabric) | Manage Power BI report workspace items and PBIR definitions in Microsoft Fabric via `az rest` CLI against the Fabric REST API. |
 | **powerbi-report-planning** | plan | powerbi-fabric | model | [microsoft/skills-for-fabric](https://github.com/microsoft/skills-for-fabric) | Build a guided requirements-to-implementation workflow for new Power BI reports and dashboards from semantic models, datasets, or PBIP projects. |
 | **prototype** | plan | engineering-flow | model | [mattpocock/skills](https://github.com/mattpocock/skills) | Build a throwaway prototype to answer a design question. |
+| **read-the-damn-docs** | cross-cutting | engineering-flow | model | [BuilderIO/skills](https://github.com/BuilderIO/skills) | Use when implementing, integrating, upgrading, debugging, or answering anything involving third-party APIs, libraries, frameworks, CLIs, cloud services, model/provider SDKs, fast-moving product behavior, user requests f… |
 | **resolving-merge-conflicts** | execute | engineering-flow | model | [mattpocock/skills](https://github.com/mattpocock/skills) | Use when you need to resolve an in-progress git merge/rebase conflict. |
 | **semantic-model-authoring** | execute | powerbi-fabric | model | [microsoft/skills-for-fabric](https://github.com/microsoft/skills-for-fabric) | Manages Power BI semantic models, including tables, columns, measures, relationships, field parameters, DAX, Import, DirectQuery and Direct Lake designs, sources, connections, permissions, refresh, and deployment. |
 | **setup-matt-pocock-skills** | plan | meta | user | [mattpocock/skills](https://github.com/mattpocock/skills) | Configure this repo for the engineering skills: set up its issue tracker, triage label vocabulary, and domain doc layout. |
 | **setup-project-memory** | plan | meta | user | authored here | Fully wire a brand-new (or partially-wired) project — memory scaffold, engineering-skills config, and pre-commit hooks — in one pass instead of three separate manual steps. |
+| **stay-within-limits** | plan | engineering-flow | model | [BuilderIO/skills](https://github.com/BuilderIO/skills) | Use when long-running or parallel agent work must respect 5-hour and weekly usage limits by checking usage between waves, pausing near the cap, and resuming only when the window is clear. |
 | **subagent-audit** | plan | meta | model | authored here | Structural audit of the current repo to find high-ROI subagent opportunities — the specific architectural boundaries where delegating to an isolated agent improves speed, reliability, or context integrity. |
 | **tdd** | execute | engineering-flow | model | [mattpocock/skills](https://github.com/mattpocock/skills) | Test-driven development. |
 | **teach** | crystallize | reference | model | [mattpocock/skills](https://github.com/mattpocock/skills) | Teach the user a new skill or concept, within this workspace. |
