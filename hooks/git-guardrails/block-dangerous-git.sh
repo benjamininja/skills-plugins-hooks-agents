@@ -106,6 +106,11 @@ check_segment() {
     local non_flag
     non_flag=$(echo "$rest" | tr ' ' '\n' | grep -cvE '^(-|$)' || true)
     if [[ "$non_flag" -lt 2 ]]; then
+      # Never open a network path named by the command just to look up a
+      # branch (on Windows that can send credentials to the named host).
+      case "$cdir" in
+        //*|\\*) block "bare push with -C pointing at a network path — name the branch explicitly" ;;
+      esac
       local dir="${cdir:-${CLAUDE_PROJECT_DIR:-$PWD}}"
       local branch
       branch=$(git -C "$dir" rev-parse --abbrev-ref HEAD 2>/dev/null || echo "")

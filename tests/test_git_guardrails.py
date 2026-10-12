@@ -205,6 +205,16 @@ def test_bare_push_uses_the_dash_C_repo_not_the_session_repo(on_main, on_feature
     assert result.returncode == 0, result.stderr.decode()
 
 
+@pytest.mark.parametrize("command", [
+    "git -C //some-host/share push",
+    r"git -C \some-host\share push origin",
+])
+def test_bare_push_never_opens_a_network_path(command, on_feature):
+    result = run_hook(command, project_dir=on_feature)
+    assert result.returncode == 2, result.stderr.decode()
+    assert b"network path" in result.stderr
+
+
 # --- input handling -----------------------------------------------------------
 
 def test_non_shell_tool_input_is_ignored():
