@@ -7,7 +7,7 @@ configured via `settings.json`) that belong to this central repo.
 
 [`git-guardrails/`](git-guardrails/) adapts
 [mattpocock/skills/misc/git-guardrails-claude-code](https://github.com/mattpocock/skills/tree/main/skills/misc/git-guardrails-claude-code)
-(already Claude-Code-native — no format porting needed). A `PreToolUse` hook intercepting the Bash tool:
+(already Claude-Code-native — no format porting needed). A `PreToolUse` hook intercepting the Bash and PowerShell tools:
 `git push` is now **branch-aware** — blocked only when the target is
 `main`/`master`, feature-branch pushes are allowed (upstream blanket-blocks
 all push); `reset --hard`/`clean -f(d)`/`branch -D`/`checkout .`/`restore .`

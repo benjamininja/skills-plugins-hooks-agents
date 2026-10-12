@@ -1,0 +1,56 @@
+name: vendor-check
+
+# Weekly look at upstream for every vendored skill. Read-only against this
+# repo: it never applies an update. When upstream has moved it opens (or
+# updates) one issue; applying is a deliberate step in a Claude Code session,
+# which then runs the vendor-sync-reapply and skill-safety-auditor agents
+# (see CLAUDE.md, "Agents — when to run").
+
+on:
+  schedule:
+    - cron: "17 13 * * 1"   # Mondays 13:17 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      ISSUE_TITLE: "Vendored skills: upstream updates available"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Check upstream
+        run: python tools/update_vendor_skills.py --no-drift | tee check.txt
+      - name: Open, update or close the tracking issue
+        run: |
+          existing=$(gh issue list --state open --search "in:title \"$ISSUE_TITLE\"" --json number --jq '.[0].number // empty')
+          if grep -q "UPDATE available" check.txt; then
+            {
+              echo "The weekly check found upstream changes for vendored skills."
+              echo
+              echo "To apply: in a Claude Code session, run \`python tools/update_vendor_skills.py --apply <name>\` per skill,"
+              echo "then the \`vendor-sync-reapply\` agent for any \"Reapply ritual\" notice and the \`skill-safety-auditor\` agent"
+              echo "before committing (see CLAUDE.md, \"Agents — when to run\")."
+              echo
+              echo '```'
+              grep -E "UPDATE available|^skill|^-+$|^==" check.txt
+              echo '```'
+              echo
+              echo "_Updated by the vendor-check workflow, run ${GITHUB_RUN_ID}._"
+            } > body.md
+            if [ -n "$existing" ]; then
+              gh issue edit "$existing" --body-file body.md
+            else
+              gh issue create --title "$ISSUE_TITLE" --body-file body.md
+            fi
+          elif [ -n "$existing" ]; then
+            gh issue close "$existing" --comment "Weekly check: everything is up to date."
+          fi
