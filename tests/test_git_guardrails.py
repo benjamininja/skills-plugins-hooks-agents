@@ -129,6 +129,18 @@ def on_feature(tmp_path):
     # a quoted argument earlier in the command must not hide what follows
     'git commit -m "wip" && git push origin main',
     'echo "done" ; git reset --hard',
+    # regressions caught in review of the first rewrite
+    "git push origin main # git push",
+    "git push origin main & git push origin feat",
+    "git checkout ./",
+    "git restore ./",
+    "(git checkout .)",
+    "git restore . # --staged",
+    "git restore . & echo --staged",
+    # a switch to main earlier in the same command, then a bare push
+    "git checkout main && git push",
+    "git switch main && git merge feat && git push",
+    "git checkout main; git push origin",
 ])
 def test_blocked(command, on_feature):
     result = run_hook(command, project_dir=on_feature)
@@ -170,6 +182,11 @@ def test_blocked_from_the_powershell_tool(command, on_feature):
     "git merge --ff-only origin/main",
     "git fetch origin main",
     "gh pr merge 12 --merge",
+    "git checkout .gitignore",
+    "git push origin my-feature 2>&1",
+    "git push origin my-feature # not main",
+    "git checkout main && git pull && git checkout -b next && git push -u origin next",
+    "git checkout main && git pull && git switch -c next && git push",
     "ls -la",
     "echo git is great",
     "",

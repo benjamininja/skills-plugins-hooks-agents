@@ -40,7 +40,7 @@ RAW=$(printf '%s' "$INPUT" | tr '\n' ' ' \
 # JSON-unescape what matters for matching: \n \r \t -> space, \" -> ",
 # \\ -> \ (order matters: protect \\ first).
 COMMAND=$(printf '%s' "$RAW" | sed -e 's/\\\\/\x01/g' \
-  -e 's/\\[nrt]/ /g' -e 's/\\"/"/g' -e 's/\\\//\//g' -e 's/\x01/\\/g')
+  -e 's/\\[nr]/;/g' -e 's/\\t/ /g' -e 's/\\"/"/g' -e 's/\\\//\//g' -e 's/\x01/\\/g')
 
 block() {
   echo "BLOCKED: '$COMMAND' — $1. The user has prevented you from doing this." >&2
@@ -77,21 +77,33 @@ check_segment() {
   if echo "$norm" | grep -qE 'git branch([[:space:]]+[^[:space:]]+)*[[:space:]]+-[[:alnum:]]*D'; then
     block "matches blanket-blocked pattern 'git branch -D'"
   fi
-  if echo "$norm" | grep -qE 'git checkout([[:space:]]+[^[:space:]]+)*[[:space:]]+\.([[:space:]]|$)'; then
+  if echo "$norm" | grep -qE 'git checkout([[:space:]]+[^[:space:]]+)*[[:space:]]+\.[/\\]?([[:space:])]|$)'; then
     block "matches blanket-blocked pattern 'git checkout .'"
   fi
-  if echo "$norm" | grep -qE 'git restore([[:space:]]+[^[:space:]]+)*[[:space:]]+\.([[:space:]]|$)'; then
+  if echo "$norm" | grep -qE 'git restore([[:space:]]+[^[:space:]]+)*[[:space:]]+\.[/\\]?([[:space:])]|$)'; then
     # `git restore --staged .` only unstages; the working tree is untouched.
-    if ! echo "$norm" | grep -qE -- '--staged|[[:space:]]-S([[:space:]]|$)' \
-       || echo "$norm" | grep -qE -- '--worktree|[[:space:]]-W([[:space:]]|$)'; then
+    # Judge the flags on the command itself, not on a trailing # comment.
+    local args="${norm%%#*}"
+    if ! echo "$args" | grep -qE -- '--staged|[[:space:]]-S([[:space:]]|$)' \
+       || echo "$args" | grep -qE -- '--worktree|[[:space:]]-W([[:space:]]|$)'; then
       block "matches blanket-blocked pattern 'git restore .'"
+    fi
+  fi
+
+  # --- Remember a switch to or away from main/master for a later bare push ---
+  if echo "$norm" | grep -qE 'git (checkout|switch)([[:space:]]|$)'; then
+    if echo "${norm%%#*}" | tr -d "\"'" | grep -qE 'git (checkout|switch)([[:space:]]+[^[:space:]]+)*[[:space:]]+(main|master)[[:space:]]*$'; then
+      SWITCHED_TO_MAIN=$(echo "${norm%%#*}" | sed -nE 's/.*git ((checkout|switch).*)/\1/p' | sed -E 's/[[:space:]]+$//')
+    elif echo "$norm" | grep -qE 'git (checkout|switch)[[:space:]]+(-b|-B|-c|-C|--create|--orphan)[[:space:]]'; then
+      SWITCHED_TO_MAIN=""   # a new branch was created; the push is not on main
     fi
   fi
 
   # --- Branch-aware push guard ---
   if echo "$norm" | grep -qE 'git push([[:space:]]|$)'; then
     local rest
-    rest=$(echo "$norm" | sed -E 's/^.*git push//')
+    rest="${norm#*git push}"   # text after the FIRST `git push`
+    rest="${rest%%#*}"         # minus any trailing comment
 
     # An explicit main/master target: `main`, `HEAD:main`, `:main`,
     # `+main`, `refs/heads/main`.
@@ -112,6 +124,12 @@ check_segment() {
       case "$cdir" in
         [/\\][/\\]*|[/\\]\?\?[/\\]*) block "bare push with -C pointing at a network path — name the branch explicitly" ;;
       esac
+      # An earlier segment switched to main/master (`git checkout main &&
+      # git merge x && git push`): the lookup below would still see the
+      # old branch, because nothing has run yet.
+      if [[ -n "$SWITCHED_TO_MAIN" ]]; then
+        block "an earlier 'git $SWITCHED_TO_MAIN' in this command puts the bare push on main/master — push a feature branch and open a PR instead"
+      fi
       local dir="${cdir:-${CLAUDE_PROJECT_DIR:-$PWD}}"
       local branch
       branch=$(git -C "$dir" rev-parse --abbrev-ref HEAD 2>/dev/null || echo "")
@@ -124,10 +142,12 @@ check_segment() {
   return 0
 }
 
-# Split on shell separators and check each segment on its own.
+# Split on shell separators (&&, ||, ;, |, &) and check each segment on
+# its own. `2>&1` splits too, which is harmless.
+SWITCHED_TO_MAIN=""
 while IFS= read -r segment; do
   [[ -z "${segment// /}" ]] && continue
   check_segment "$segment"
-done < <(printf '%s\n' "$COMMAND" | sed -E 's/(&&|\|\||;|\|)/\n/g')
+done < <(printf '%s\n' "$COMMAND" | sed -E 's/(&&|\|\||;|\||&)/\n/g')
 
 exit 0
