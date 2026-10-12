@@ -16,15 +16,27 @@ const open = atom({ plugin: 'owner-queue', key: 'open' } as const, [])
 const shownRef = { plugin: 'owner-queue', key: 'shown' } as const
 const shown = atom(shownRef, false)
 
-/** Puts the pane on screen and records that it is there. */
+/** Puts the pane on screen and records whether a surface drew it. */
 async function show($: EngineInterface): Promise<void> {
-  await $.state.set(shownRef, true)
-  await $.ui.open({ id: PANE, title: TITLE })
+  const { isPlaced } = await $.ui.open({ id: PANE, title: TITLE })
+  await $.state.set(shownRef, isPlaced)
 }
 
-/** Takes the pane off screen; the `ui.close` hook records it. */
+/**
+ * Takes the pane off screen and records it. The `ui.close` hook only hears
+ * the person's close and an unload, so this call records its own.
+ */
 async function hide($: EngineInterface): Promise<void> {
   await $.ui.close({ id: PANE })
+  await $.state.set(shownRef, false)
+}
+
+/** Flips the pane by the engine's record, so a stale flag cannot stick. */
+async function toggle($: EngineInterface): Promise<void> {
+  const isUp = (await $.ui.panes()).some(
+    pane => pane.id === PANE && pane.isPlaced,
+  )
+  await (isUp ? hide($) : show($))
 }
 
 /** Re-reads the queue file; redraws, toasts and opens the pane on a change. */
@@ -118,7 +130,7 @@ export const register: Register = on => {
         <Button
           key="toggle"
           label={isShown ? 'Hide queue' : 'Show queue'}
-          onPress={() => (isShown ? hide($) : show($))}
+          onPress={() => toggle($)}
         />
       </Box>
     )
