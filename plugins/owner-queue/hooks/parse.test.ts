@@ -209,6 +209,29 @@ test('finds each code span of an entry once', () => {
   expect(detail(parse(FILE)[0], ['options'])).not.toContain('Options')
 })
 
+test('a fenced block is kept whole, and a heading inside it is not read', () => {
+  const [item, next] = parse(
+    [
+      '## Actions',
+      '### Paste',
+      '- Steps: add:',
+      '  ```json',
+      '    "a",',
+      '    "b"',
+      '  ## not a section',
+      '  ```',
+      '  then save.',
+      '### Next',
+    ].join('\n'),
+  )
+
+  expect(item.blocks).toEqual(['  "a",\n  "b"\n## not a section'])
+  expect(item.fields[0].value).toBe('add: (block 1) then save.')
+  expect(detail(item)).toContain('Block 1:\n```\n  "a",')
+  expect(next.title).toBe('Next')
+  expect(parse(FILE)[0].blocks).toBe(undefined)
+})
+
 test('prints all entries, or one by its number', () => {
   const items = parse(FILE)
 

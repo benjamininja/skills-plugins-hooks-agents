@@ -19,6 +19,14 @@ const FILE = `# NEEDS-OWNER
 ### [ ] Fire the first login
 - Ticket: #92
 - Steps: run \`python login.py\`, then say \`login done\` in chat
+
+### [ ] Add two rules
+- Steps: in \`the file\` add to allow:
+  \`\`\`
+  "one",
+    "two"
+  \`\`\`
+  then save.
 `
 
 const PANE = {
@@ -123,6 +131,13 @@ test('presses are staged, and Submit writes them and sends one message', async (
   await ui.press({ key: `code:${task}:1` })
   expect(copied).toEqual(['gh pr merge', 'python login.py', 'login done'])
 
+  // A fenced block is one chunk; its entry's spans get no button.
+  const rules = 'action:Add two rules'
+  await ui.press({ key: `row:${rules}` })
+  await ui.press({ key: `block:${rules}:0` })
+  expect(copied.at(-1)).toBe('"one",\n  "two"')
+  expect(await ui.find({ key: `code:${rules}:0` })).toBe(undefined)
+
   // Mark done stages too, and can be taken back by the same button.
   await ui.press({ key: `done:${task}` })
   expect((await ui.find({ key: `done:${task}` }))?.text).toBe('Not done after all')
@@ -154,13 +169,14 @@ test('presses are staged, and Submit writes them and sends one message', async (
 
   await ui.press({ key: `reopen:${id}` })
   expect(file).toBe(FILE.replace('### [ ] Fire', '### [x] Fire'))
+  expect(file).toContain('  "one",\n    "two"')
   expect(await ui.find({ key: `pick:${id}:a` })).toBeDefined()
 
   await ui.press({ key: 'refresh' })
   expect(toasts.at(-1)).toBe(
-    'Queue read: Owner: 1 decision, 0 actions, 1 answered',
+    'Queue read: Owner: 1 decision, 1 action, 1 answered',
   )
-  expect(await ui.find({ text: /owner-queue 0\.4\.1/ })).toBeDefined()
+  expect(await ui.find({ text: /owner-queue 0\.4\.2/ })).toBeDefined()
 
   await ui.unmount()
 })

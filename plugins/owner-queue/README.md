@@ -15,6 +15,10 @@ written until `Submit`.
   the transcript, where the mouse can select it; the model does not receive
   it), one `Copy: ...` button for each `code` span, directly under the
   entry's text, and, on a row of its own, `Mark done`.
+- A fenced code block inside an entry is one chunk: the pane draws one
+  `Copy block N` button for it and copies it with its line breaks. An
+  entry that has a block gets no button for its inline `code` spans, so
+  put everything meant for one paste inside one fence.
 - An open decision draws each option in full as text, with a short
   `Choose (a)` button under it, the recommended one marked, and a
   `Copy: ...` button beside it for each `code` span of that option.

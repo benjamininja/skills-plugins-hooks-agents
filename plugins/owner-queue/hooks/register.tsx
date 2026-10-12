@@ -27,7 +27,7 @@ import {
   waiting,
 } from './parse'
 
-const VERSION = '0.4.1'
+const VERSION = '0.4.2'
 const PANE = 'owner-queue'
 const TITLE = 'Needs owner'
 const FILE = '.claude/memory/NEEDS-OWNER.md'
@@ -386,8 +386,14 @@ export const register: Register = on => {
       const choices =
         item.kind === 'decision' && given === undefined ? options(item) : []
       // An option's own code spans are copied beside it, the rest up top.
+      // An entry with fenced blocks has said what is pasted: its spans get
+      // no button.
+      const blocks = item.blocks ?? []
+      const hasBlocks = blocks.length > 0
       const beside = new Set(choices.flatMap(choice => spans(choice.text)))
-      const above = codes(item).filter(code => !beside.has(code))
+      const above = hasBlocks
+        ? []
+        : codes(item).filter(code => !beside.has(code))
       const whole = `${short}\n${detail(item).replaceAll('**', '')}`
       const copyCode = (code: string, key: string) => (
         <Button
@@ -440,6 +446,19 @@ export const register: Register = on => {
               <Markdown
                 text={detail(item, choices.length > 0 ? ['options'] : [])}
               />
+              {hasBlocks && (
+                <Box flexDirection="row" gap={2} marginTop={1}>
+                  {blocks.map((block, n) => (
+                    <Button
+                      key={`block:${id}:${n}`}
+                      label={`Copy block ${n + 1}`}
+                      onPress={press =>
+                        copy($, block, `block ${n + 1}`, press.surface)
+                      }
+                    />
+                  ))}
+                </Box>
+              )}
               {above.length > 0 && (
                 <Box flexDirection="column" marginTop={1}>
                   {above.map((code, n) => copyCode(code, `code:${id}:${n}`))}
@@ -470,7 +489,7 @@ export const register: Register = on => {
                             }${isMine ? '  [selected]' : ''}`}
                             onPress={() => stage($, item, choice)}
                           />
-                          {spans(choice.text).map((code, n) =>
+                          {(hasBlocks ? [] : spans(choice.text)).map((code, n) =>
                             copyCode(code, `code:${id}:${choice.key}:${n}`),
                           )}
                         </Box>

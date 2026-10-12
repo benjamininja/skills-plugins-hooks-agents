@@ -4,6 +4,8 @@ export type OwnerItem = {
   kind: 'decision' | 'action'
   title: string
   fields: OwnerField[]
+  /** Each fenced block of the entry, whole: one chunk to copy and paste. */
+  blocks?: string[]
 }
 
 /** One choice of a decision: its key (`a`) and its text as written. */

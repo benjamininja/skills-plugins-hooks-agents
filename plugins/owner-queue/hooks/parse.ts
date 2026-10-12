@@ -22,20 +22,51 @@ import type { OwnerItem, OwnerOption, OwnerStaged } from '../types'
  * A line under a field that is not a new "- Label:" continues that field.
  * Text under a title before any field is its Context.
  */
+const FENCE = '```'
+
 export function parse(text: string): OwnerItem[] {
   const items: OwnerItem[] = []
   let kind: OwnerItem['kind'] | undefined
   let item: OwnerItem | undefined
   let isDone = false
+  // The lines of a fenced block being read, or undefined outside one.
+  let fence: string[] | undefined
 
   const close = () => {
     if (item && !isDone) items.push(item)
     item = undefined
     isDone = false
+    fence = undefined
   }
 
   for (const raw of text.split(/\r?\n/)) {
     const line = raw.trimEnd()
+    if (item && line.trim().startsWith(FENCE)) {
+      if (fence === undefined) {
+        fence = []
+        continue
+      }
+      const indent = Math.min(
+        ...fence
+          .filter(one => one.trim() !== '')
+          .map(one => one.length - one.trimStart().length),
+      )
+      const block = fence
+        .map(one => one.slice(Number.isFinite(indent) ? indent : 0))
+        .join('\n')
+      fence = undefined
+      if (block.trim() === '') continue
+      item.blocks = [...(item.blocks ?? []), block]
+      const mark = `(block ${item.blocks.length})`
+      const held = item.fields[item.fields.length - 1]
+      if (held) held.value = `${held.value} ${mark}`.trim()
+      else item.fields.push({ label: 'Context', value: mark })
+      continue
+    }
+    if (fence !== undefined) {
+      fence.push(line)
+      continue
+    }
     const section = /^##\s+(.+)$/.exec(line)
     if (section) {
       close()
@@ -111,8 +142,14 @@ export function detail(item: OwnerItem, without: string[] = []): string {
     field => !left.includes(field.label.toLowerCase()),
   )
   if (fields.length === 0) return '_No context was given._'
+  const blocks = (item.blocks ?? []).map(
+    (block, at) => `\nBlock ${at + 1}:\n${FENCE}\n${block}\n${FENCE}`,
+  )
 
-  return fields.map(field => `- **${field.label}:** ${field.value}`).join('\n')
+  return [
+    fields.map(field => `- **${field.label}:** ${field.value}`).join('\n'),
+    ...blocks,
+  ].join('\n')
 }
 
 /** A short way to name the item in chat: its place, title and ticket. */
