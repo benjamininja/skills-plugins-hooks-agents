@@ -74,6 +74,12 @@
   weeks with four skills' `disable-model-invocation` wrongly restored.
 - `docs/adr/0012-retire-continual-learning.md` — hook removed: its only
   output was "tool X frequently fails", injected every session
+- `docs/adr/0013-session-dispatch-plugin.md` — plugin
+  `plugins/session-dispatch-managers-build-review/`: a dry-run-first
+  script that starts a builder session at a tier, with the permission
+  mode fixed in the script and one owner-only config file; two skills
+  split by ADR-0006 (`session-rules` loadable, `session-dispatch`
+  manual only); templates. First skills that live inside a plugin
 - **Agents are wired, three remain** (`vendor-sync-reapply`,
   `skill-safety-auditor`, `root-memory-propagation-auditor`): real `model:`
   aliases, the vendor tool's reapply notice names them, `CLAUDE.md` has an

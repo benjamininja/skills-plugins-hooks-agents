@@ -42,6 +42,14 @@ If a Fabric workload beyond Power BI becomes relevant, use the matching
 `*.plugin.json`'s `skills` list to know exactly what to pull from upstream
 (same repo, same pinned approach as everything else in `vendor-skills.json`).
 
+## session-dispatch-managers-build-review
+
+A plugin of this repository, not a vendored one: a script that starts a
+builder session at the tier planning set, two skills with the rules of
+planner, builder manager and builder, and blank templates for a new
+project. See its `README.md` and ADR-0013. Its skills live inside the
+plugin, so `CATALOG.md` and `vendor-skills.json` do not list them.
+
 ## Population status
 
 Empty otherwise as of the `skills` → `skills-plugins-hooks` restructure.

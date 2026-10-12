@@ -1,0 +1,21 @@
+{
+  "//": "The project owner's file. Copy it to <main checkout>/.claude/dispatch.json and edit it by hand; no agent writes it. A key that starts with // is a note and is not read.",
+
+  "//agent": "The agent a builder runs as: the name of a file in .claude/agents/, without .md.",
+  "agent": "stage-builder",
+
+  "//buildersSettings": "The builders' settings file, from the main checkout. Its permissions.deny list is also passed to the session, so the list is kept in one place.",
+  "buildersSettings": ".claude/builders.settings.json",
+
+  "//claude": "The Claude CLI. A bare name is found on PATH; a full path also works.",
+  "claude": "claude",
+
+  "//setup": "Commands run in the new worktree before the session starts, one PowerShell line each. They are run as written. Leave the list empty when the project needs none.",
+  "setup": [],
+
+  "//readLine": "The first lines of every builder's prompt: what it reads before it works. No double quote.",
+  "readLine": "Read .claude/memory/PROJECT-RULES.md and .claude/memory/NEEDS-OWNER.md, then load the session-rules skill.",
+
+  "//tiers": "Optional. Overrides of the plugin's tier table, per tier: model, effort, turnCap. Leave it out to use the defaults (low: claude-sonnet-5-5, medium, 30 turns; medium: claude-sonnet-5-5, high, 80; high: claude-opus-5-5, medium, 200).",
+  "tiers": {}
+}
