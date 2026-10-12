@@ -1,9 +1,10 @@
 # skills-plugins-hooks-agents
 
 The central tools repo: first-party skills, plugins, hooks, and agents,
-vendored third-party skills, and (as of ADR-0011) the machinery that
-distributes these artifacts to other repos on this machine and detects
-when those repos have drifted from or extended what's here.
+vendored third-party skills. Skills, agents, and hooks are distributed to
+`~/.claude/` and other repos on this machine via ADR-0003 directory
+junctions (scope per ADR-0011's 2026-10-12 revision); drift detection and
+check-in tooling are deferred until drift is observed.
 
 ## Language
 
@@ -33,17 +34,26 @@ conflated:
 - **Vendoring** = external upstream (e.g. `anthropics/claude-code`) →
   this repo. Tracked in `vendor-skills.json`, managed by
   `tools/update_vendor_skills.py`.
-- **Distribution** = this repo → downstream repos, plus downstream local
-  changes flowing back. Tracked in `distribution-registry.json`, managed
-  by `tools/manage_distribution.py` (ADR-0011).
+- **Distribution** = this repo → downstream repos (and `~/.claude/`),
+  by directory junction (ADR-0003). A registry and `--check`/`--bless`
+  tooling (`distribution-registry.json`, `tools/manage_distribution.py`)
+  were designed but are deferred — ADR-0011 revision.
 
 **Junction-linked artifact**:
 A skill, agent, or hook whose file(s) live physically in the central
 repo and are made to appear in a downstream repo (or `~/.claude/`) via a
-directory junction or file symlink (ADR-0003's mechanism), rather than a
-copy. Editing the file anywhere edits the one physical file everywhere
-it's linked.
+directory junction (ADR-0003's mechanism), rather than a copy. Editing
+the file anywhere edits the one physical file everywhere it's linked.
 _Avoid_: Installed skill/agent/hook (doesn't distinguish link from copy)
+
+**Directory-level junction**:
+The actual unit of linking: one junction per folder (a skill folder,
+`.claude/agents/`, or a hook's `hooks/<name>/`). Junctions cannot link a
+single file, so "junction each agent `.md`" is not possible; agents share
+one junction `~/.claude/agents` → `<repo>\.claude\agents`.
+
+> The four terms below name detection/tooling that is **deferred**
+> (ADR-0011 revision, 2026-10-12) — kept as vocabulary, not built.
 
 **Broken junction**:
 A junction-linked artifact whose link has been replaced by a standalone
@@ -60,7 +70,7 @@ was never a link to break.
 **Blessed divergence**:
 A downstream-built artifact or broken junction that the user has
 reviewed and decided to leave as-is (not pull into central, not
-auto-repair) via `manage_distribution.py --bless`. Mirrors
+auto-repair) via a future `--bless` verb. Mirrors
 `vendor-skills.json`'s `known_local_edits[]` concept, applied to the
 opposite direction.
 

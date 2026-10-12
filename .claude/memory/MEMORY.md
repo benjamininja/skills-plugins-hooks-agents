@@ -9,10 +9,8 @@
 ## Active Files
 
 - [Program status](program-status.md) — the 3-goal restructure/saturation
-  program: what's shipped across all three goals, what's next, sequencing
-  rationale; 2026-07-12 second-session checkpoint (subagent-audit + first
-  Dynasty agents, plan gate + dotclaude, tags/CATALOG.md, three-state
-  vendor-drift ontology, full upstream currency)
+  program, all shipped; pointer file to PLAN.md/README/ADRs + one open
+  question (agents catalog directory)
 
 ## Related decision records elsewhere
 
@@ -20,8 +18,8 @@
   vendor ontology's per-skill annotations (grilled 2026-07-12, design in
   PR #25 body and README "Maintaining vendored skills")
 - Dynasty `docs/adr/0009-first-subagent-roster.md` — first subagent
-  roster + rejected-candidates record (informs this repo's open `agents/`
-  directory question)
+  roster + rejected-candidates record (the former open `agents/`
+  directory question — resolved by ADR-0011's revision: one junction)
 - `benjamininja/dotclaude` — versioned root tier; RESTORE.md documents
   new-machine bootstrap order
 
@@ -61,11 +59,10 @@
   `hooks/root-memory-propagation/` nudge hook: sweeps known downstream
   repos for stale copies of root-memory content after it changes, judging
   genuine duplicates apart from coincidental text matches
-- `docs/adr/0011-unified-distribution-architecture.md` — design-only:
-  bidirectional distribution (central → downstream) + upstream check-in
-  for all 4 artifact types, via one `distribution-registry.json` +
-  `tools/manage_distribution.py` (`--check`/`--bless`/`--apply`); agents
-  and hooks move to ADR-0003's junction mechanism; plugins go
-  project-scoped via downstream `.claude/settings.json`. `CONTEXT.md`
-  (new, repo's first) holds the terms coined in the grilling session.
-  Implementation not yet started.
+- `docs/adr/0011-unified-distribution-architecture.md` — **under revision
+  2026-10-12**: original design (registry + `tools/manage_distribution.py`,
+  all 4 artifact types) is deferred history. Current scope: agents + hooks
+  only, via ADR-0003 directory junctions (`~/.claude/agents` and
+  `~/.claude/hooks/<name>`); registry/CLI/check-in wait for observed
+  drift; native plugin marketplace evaluated, not adopted. `CONTEXT.md`'s
+  distribution terms match the rescope.

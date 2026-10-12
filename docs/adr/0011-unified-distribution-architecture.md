@@ -1,6 +1,6 @@
 # Unified bidirectional distribution architecture (skills, plugins, hooks, agents)
 
-- Status: accepted (design only — no implementation yet)
+- Status: under revision (2026-10-12) — see "Revision" below; original text kept as history
 - Date: 2026-07-18
 - Scope: repo-wide; introduces `distribution-registry.json`,
   `tools/manage_distribution.py`, and a junction-based install path for
@@ -130,3 +130,31 @@ sharing a schema.
   `frontend-design` test case) — this ADR does not populate it.
 - Implementation (the tool, the registry file, the junction migration) is
   follow-up work, not part of this ADR.
+
+## Revision (2026-10-12)
+
+The original design above had zero implementation. A survey of the real
+state showed the actual gaps are narrower than the design assumed, so the
+scope is cut:
+
+- **Scope cut to agents + hooks**, closed with ADR-0003's existing
+  junction mechanism. No new tool.
+- **Registry, `tools/manage_distribution.py`, and upstream check-in are
+  deferred** until drift is actually observed. Today there are two
+  downstream repos; skills are already junctioned to `~/.claude/skills`.
+  The "Decision" and "Alternatives rejected" sections above describe the
+  deferred design, not current work.
+- **Correction**: directory junctions cannot link single files, so
+  "junction each agent `.md` individually" and "junction the script file
+  itself" (hooks) were wrong. Agents use ONE directory junction,
+  `~/.claude/agents` -> `<repo>\.claude\agents`; each hook uses a
+  directory junction, `~/.claude/hooks/<name>` -> `<repo>\hooks\<name>`.
+  `settings.json` hook commands already use `$HOME/.claude/hooks/<name>/...`,
+  so no settings edit is needed.
+- **Native plugin marketplace evaluated, not adopted.** Open items that
+  would need resolving first: skill namespacing (`/plugin:skill`),
+  cloud sessions not loading local plugin settings, and Windows hook
+  behavior inside plugins.
+- **Consequences**: the hook-copy migration noted under Consequences is
+  performed by the gap-closure PR for this revision (the four installed
+  hook copies were byte-identical to the repo and are now junctions).
