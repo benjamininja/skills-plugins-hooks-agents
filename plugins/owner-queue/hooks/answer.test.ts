@@ -6,7 +6,7 @@ const FILE = `# NEEDS-OWNER
 
 ### [ ] Who merges
 - Ticket: #166
-- Options: (a) The builder; (b) Two-key merge
+- Options: (a) The builder, with \`gh pr merge\`; (b) Two-key merge
 - Recommended: (b), because two sets of eyes
 - Raised: 2026-10-12, by the builder manager
 
@@ -35,6 +35,7 @@ test('presses are staged, and Submit writes them and sends one message', async (
   const drafts: string[] = []
   const toasts: string[] = []
   const copied: string[] = []
+  const logged: string[] = []
   mock.store(on)
   mock.clock(on, { now: Date.UTC(2026, 9, 12, 12, 0, 0) })
   on('fs.read', ($$, e) => {
@@ -72,6 +73,11 @@ test('presses are staged, and Submit writes them and sends one message', async (
     return { value: undefined }
   })
   on('ui.open', () => ({ value: { isPlaced: true } }))
+  on('ui.log', ($$, e) => {
+    logged.push(e.text)
+
+    return { value: undefined }
+  })
   on('ui.copy', ($$, e) => {
     copied.push(e.text)
 
@@ -86,9 +92,16 @@ test('presses are staged, and Submit writes them and sends one message', async (
   expect(await ui.find({ text: /Not written by the pane/ })).toBeDefined()
 
   await ui.press({ key: `row:${id}` })
-  expect((await ui.find({ key: `pick:${id}:b` }))?.text).toContain(
-    '[recommended]',
+  expect((await ui.find({ key: `pick:${id}:b` }))?.text).toBe(
+    'Choose (b)  [recommended]',
   )
+  // An option is drawn in full as text, its code span copied beside it.
+  expect(await ui.find({ text: /\(a\) The builder, with/ })).toBeDefined()
+  await ui.press({ key: `code:${id}:a:0` })
+  expect(copied).toEqual(['gh pr merge'])
+  await ui.press({ key: `print:${id}` })
+  expect(logged[0]).toContain('Decision 1: Who merges (#166)')
+  expect(logged[0]).toContain('gh pr merge')
 
   await ui.press({ key: `other:${id}` })
   expect(drafts[0]).toContain('Decision: Who merges (#166)')
@@ -108,7 +121,7 @@ test('presses are staged, and Submit writes them and sends one message', async (
   await ui.press({ key: `row:${task}` })
   await ui.press({ key: `code:${task}:0` })
   await ui.press({ key: `code:${task}:1` })
-  expect(copied).toEqual(['python login.py', 'login done'])
+  expect(copied).toEqual(['gh pr merge', 'python login.py', 'login done'])
 
   // Mark done stages too, and can be taken back by the same button.
   await ui.press({ key: `done:${task}` })
@@ -147,7 +160,7 @@ test('presses are staged, and Submit writes them and sends one message', async (
   expect(toasts.at(-1)).toBe(
     'Queue read: Owner: 1 decision, 0 actions, 1 answered',
   )
-  expect(await ui.find({ text: /owner-queue 0\.4\.0/ })).toBeDefined()
+  expect(await ui.find({ text: /owner-queue 0\.4\.1/ })).toBeDefined()
 
   await ui.unmount()
 })

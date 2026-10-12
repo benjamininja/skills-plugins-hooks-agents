@@ -14,6 +14,7 @@ import {
   reference,
   report,
   shown,
+  spans,
   summary,
   tick,
   toMarkdown,
@@ -204,6 +205,8 @@ test('finds each code span of an entry once', () => {
 
   expect(codes(item)).toEqual(['a b', 'c'])
   expect(codes(parse(KEYED)[0])).toEqual([])
+  expect(spans('use `x y` or `z`, `x y`')).toEqual(['x y', 'z'])
+  expect(detail(parse(FILE)[0], ['options'])).not.toContain('Options')
 })
 
 test('prints all entries, or one by its number', () => {

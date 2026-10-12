@@ -21,12 +21,13 @@ import {
   reference,
   report,
   shown as printed,
+  spans,
   summary,
   unanswer,
   waiting,
 } from './parse'
 
-const VERSION = '0.4.0'
+const VERSION = '0.4.1'
 const PANE = 'owner-queue'
 const TITLE = 'Needs owner'
 const FILE = '.claude/memory/NEEDS-OWNER.md'
@@ -287,6 +288,15 @@ async function reopen($: EngineInterface, item: OwnerItem): Promise<void> {
   await refresh($)
 }
 
+/**
+ * Prints an entry into the transcript as a notice, where the mouse can
+ * select it. The model does not receive it.
+ */
+function print($: EngineInterface, text: string): void {
+  $.ui.log(text)
+  $.ui.toast('Printed in the chat')
+}
+
 /** Puts text on the clipboard and says what was copied. */
 async function copy(
   $: EngineInterface,
@@ -373,9 +383,19 @@ export const register: Register = on => {
       const short = reference(item, given === undefined ? at : undefined)
       const best = recommended(item)
       const mine = held[id]
-      const spans = codes(item)
       const choices =
         item.kind === 'decision' && given === undefined ? options(item) : []
+      // An option's own code spans are copied beside it, the rest up top.
+      const beside = new Set(choices.flatMap(choice => spans(choice.text)))
+      const above = codes(item).filter(code => !beside.has(code))
+      const whole = `${short}\n${detail(item).replaceAll('**', '')}`
+      const copyCode = (code: string, key: string) => (
+        <Button
+          key={key}
+          label={`Copy: ${code.length > 60 ? `${code.slice(0, 57)}...` : code}`}
+          onPress={press => copy($, code, code, press.surface)}
+        />
+      )
 
       return (
         <Box flexDirection="column" marginBottom={isOpen ? 1 : 0}>
@@ -417,25 +437,46 @@ export const register: Register = on => {
           )}
           {isOpen && (
             <Box flexDirection="column" paddingLeft={4}>
-              <Markdown text={detail(item)} />
+              <Markdown
+                text={detail(item, choices.length > 0 ? ['options'] : [])}
+              />
+              {above.length > 0 && (
+                <Box flexDirection="column" marginTop={1}>
+                  {above.map((code, n) => copyCode(code, `code:${id}:${n}`))}
+                </Box>
+              )}
               {choices.length > 0 && (
                 <Box flexDirection="column" marginTop={1}>
-                  <Text dimColor>Answer with a button:</Text>
-                  {choices.map(choice => (
-                    <Button
-                      key={`pick:${id}:${choice.key}`}
-                      label={`(${choice.key}) ${choice.text}${
-                        choice.key === best ? '  [recommended]' : ''
-                      }${
-                        mine !== undefined &&
-                        mine !== 'done' &&
-                        mine.key === choice.key
-                          ? '  [selected]'
-                          : ''
-                      }`}
-                      onPress={() => stage($, item, choice)}
-                    />
-                  ))}
+                  <Text dimColor>Options:</Text>
+                  {choices.map(choice => {
+                    const isMine =
+                      mine !== undefined &&
+                      mine !== 'done' &&
+                      mine.key === choice.key
+                    const words = `(${choice.key}) ${choice.text}`
+
+                    return (
+                      <Box flexDirection="column" marginTop={1}>
+                        {isMine ? (
+                          <Text color="green">{words}</Text>
+                        ) : (
+                          <Text>{words}</Text>
+                        )}
+                        <Box flexDirection="row" gap={2}>
+                          <Button
+                            key={`pick:${id}:${choice.key}`}
+                            label={`Choose (${choice.key})${
+                              choice.key === best ? '  [recommended]' : ''
+                            }${isMine ? '  [selected]' : ''}`}
+                            onPress={() => stage($, item, choice)}
+                          />
+                          {spans(choice.text).map((code, n) =>
+                            copyCode(code, `code:${id}:${choice.key}:${n}`),
+                          )}
+                        </Box>
+                      </Box>
+                    )
+                  })}
                 </Box>
               )}
               <Box flexDirection="row" gap={2} marginTop={1}>
@@ -462,28 +503,15 @@ export const register: Register = on => {
                   key={`copy:${id}`}
                   label="Copy all"
                   onPress={press =>
-                    copy(
-                      $,
-                      `${short}\n${detail(item).replaceAll('**', '')}`,
-                      `all of ${item.title}`,
-                      press.surface,
-                    )
+                    copy($, whole, `all of ${item.title}`, press.surface)
                   }
                 />
+                <Button
+                  key={`print:${id}`}
+                  label="Print in chat"
+                  onPress={() => print($, whole)}
+                />
               </Box>
-              {spans.length > 0 && (
-                <Box flexDirection="column" marginTop={1}>
-                  {spans.map((code, n) => (
-                    <Button
-                      key={`code:${id}:${n}`}
-                      label={`Copy: ${
-                        code.length > 60 ? `${code.slice(0, 57)}...` : code
-                      }`}
-                      onPress={press => copy($, code, code, press.surface)}
-                    />
-                  ))}
-                </Box>
-              )}
               {given === undefined && (
                 <Box marginTop={1}>
                   <Button
@@ -581,8 +609,8 @@ export const register: Register = on => {
           <Link href={`file:///${now.file}`} label="Open the queue file" />
         )}
         <Text dimColor>
-          To select text with the mouse, type /owner show (or /owner show a2)
-          and it is printed in the chat.
+          To select text with the mouse, press Print in chat on an entry, or
+          type /owner show (or /owner show a2).
         </Text>
       </Box>
     )

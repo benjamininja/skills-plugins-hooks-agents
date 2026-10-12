@@ -105,9 +105,10 @@ const pick = (item: OwnerItem, label: string): string | undefined =>
   item.fields.find(field => field.label.toLowerCase() === label)?.value
 
 /** An expanded row's context, as markdown; its answer is drawn apart. */
-export function detail(item: OwnerItem): string {
+export function detail(item: OwnerItem, without: string[] = []): string {
+  const left = ['answer', ...without]
   const fields = item.fields.filter(
-    field => field.label.toLowerCase() !== 'answer',
+    field => !left.includes(field.label.toLowerCase()),
   )
   if (fields.length === 0) return '_No context was given._'
 
@@ -308,9 +309,17 @@ export function toMarkdown(items: OwnerItem[]): string {
 
 /** Each `code` span of the item's fields, once, in the order written. */
 export function codes(item: OwnerItem): string[] {
-  const found = item.fields
-    .filter(field => field.label.toLowerCase() !== 'answer')
-    .flatMap(field => [...field.value.matchAll(/`([^`]+)`/g)])
+  return spans(
+    item.fields
+      .filter(field => field.label.toLowerCase() !== 'answer')
+      .map(field => field.value)
+      .join('\n'),
+  )
+}
+
+/** Each `code` span of a text, once, in the order written. */
+export function spans(text: string): string[] {
+  const found = [...text.matchAll(/`([^`]+)`/g)]
     .map(match => match[1].trim())
     .filter(code => code !== '')
 

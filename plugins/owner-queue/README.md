@@ -11,9 +11,13 @@ written until `Submit`.
   it read and links to it.
 - The pane lists each item, collapsed by default. An open item has
   `Copy name` (one line: its place, title and ticket), `Copy all` (the title
-  and detail as plain text), one `Copy: ...` button for each `code` span
-  in the entry, and, on a row of its own, `Mark done`.
-- An open decision has one button per option, the recommended one marked.
+  and detail as plain text), `Print in chat` (the same text as a notice in
+  the transcript, where the mouse can select it; the model does not receive
+  it), one `Copy: ...` button for each `code` span, directly under the
+  entry's text, and, on a row of its own, `Mark done`.
+- An open decision draws each option in full as text, with a short
+  `Choose (a)` button under it, the recommended one marked, and a
+  `Copy: ...` button beside it for each `code` span of that option.
 - A pressed option or `Mark done` is only staged. The row says so in green,
   and pressing the same button again takes it back. `Submit (N)` then
   writes everything staged in one pass: an `Answer:` line per decision, a
