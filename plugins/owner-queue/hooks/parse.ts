@@ -1,4 +1,4 @@
-import type { OwnerItem } from '../types'
+import type { OwnerItem, OwnerOption } from '../types'
 
 /**
  * The queue file's format:
@@ -8,9 +8,11 @@ import type { OwnerItem } from '../types'
  *   - Ticket: #130
  *   - Context: why it is asked, with the evidence
  *   - Options: A; B
+ *   - Options: (a) one; (b) two      (the keyed form, also read)
  *   - Recommended: A, because ...
  *   - Blocks: what waits behind it
  *   - Raised: 2026-10-11, session name
+ *   - Answer: (a) one | pane, ...    (written by the pane alone)
  *
  *   ## Actions              (any heading starting "Action")
  *   ### [ ] Title
@@ -75,13 +77,16 @@ export function count(items: OwnerItem[], kind: OwnerItem['kind']): number {
   return items.filter(item => item.kind === kind).length
 }
 
+/** What still waits on the owner; an answered decision waits on a session. */
 export function summary(items: OwnerItem[]): string | undefined {
-  const decisions = count(items, 'decision')
+  const answered = items.filter(item => answerOf(item) !== undefined).length
+  const decisions = count(items, 'decision') - answered
   const actions = count(items, 'action')
-  if (decisions + actions === 0) return undefined
+  if (decisions + actions + answered === 0) return undefined
   const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? '' : 's'}`
+  const tail = answered > 0 ? `, ${answered} answered` : ''
 
-  return `Owner: ${plural(decisions, 'decision')}, ${plural(actions, 'action')}`
+  return `Owner: ${plural(decisions, 'decision')}, ${plural(actions, 'action')}${tail}`
 }
 
 export function idOf(item: OwnerItem): string {
@@ -90,21 +95,157 @@ export function idOf(item: OwnerItem): string {
 
 /** One line for a collapsed row: its ticket and what it blocks. */
 export function hint(item: OwnerItem): string {
-  const pick = (label: string) =>
-    item.fields.find(field => field.label.toLowerCase() === label)?.value
-  const ticket = pick('ticket')
-  const blocks = pick('blocks')
+  const ticket = pick(item, 'ticket')
+  const blocks = pick(item, 'blocks')
 
   return [ticket, blocks && `blocks: ${blocks}`].filter(Boolean).join(' | ')
 }
 
-/** An expanded row's context, as markdown. */
-export function detail(item: OwnerItem): string {
-  if (item.fields.length === 0) return '_No context was given._'
+const pick = (item: OwnerItem, label: string): string | undefined =>
+  item.fields.find(field => field.label.toLowerCase() === label)?.value
 
-  return item.fields
-    .map(field => `- **${field.label}:** ${field.value}`)
+/** An expanded row's context, as markdown; its answer is drawn apart. */
+export function detail(item: OwnerItem): string {
+  const fields = item.fields.filter(
+    field => field.label.toLowerCase() !== 'answer',
+  )
+  if (fields.length === 0) return '_No context was given._'
+
+  return fields.map(field => `- **${field.label}:** ${field.value}`).join('\n')
+}
+
+/** A short way to name the item in chat: its place, title and ticket. */
+export function reference(item: OwnerItem, at?: number): string {
+  const kind = item.kind === 'decision' ? 'Decision' : 'Action'
+  const place = at === undefined ? '' : ` ${at + 1}`
+  const ticket = pick(item, 'ticket')
+
+  return `${kind}${place}: ${item.title}${ticket ? ` (${ticket})` : ''}`
+}
+
+/** The chat message a pressed option sends: the entry and the choice. */
+export function message(item: OwnerItem, chosen: OwnerOption): string {
+  const line = (label: string) => {
+    const value = pick(item, label.toLowerCase())
+
+    return value ? [`${label}: ${value}`] : []
+  }
+
+  return [
+    `Owner's answer, given by a button in the owner-queue pane.`,
+    `Decision: ${item.title}`,
+    ...line('Ticket'),
+    ...line('Raised'),
+    ...line('Options'),
+    `Answer: (${chosen.key}) ${chosen.text}`,
+    `It is recorded as the Answer line of this entry in NEEDS-OWNER.md.`,
+  ].join('\n')
+}
+
+/**
+ * The choices of a decision, from its Options field. Written
+ * `(a) one; (b) two`, the keys are the letters; written `One; Two`, the
+ * keys are a, b, c by place.
+ */
+export function options(item: OwnerItem): OwnerOption[] {
+  const value = pick(item, 'options')
+  if (!value) return []
+  const clean = (text: string) => text.trim().replace(/[;,.]+$/, '').trim()
+
+  const keyed = [...value.matchAll(/\(([A-Za-z0-9])\)\s*/g)]
+  if (keyed.length > 0 && keyed[0].index === 0) {
+    return keyed
+      .map((match, at) => ({
+        key: match[1].toLowerCase(),
+        text: clean(
+          value.slice(
+            (match.index ?? 0) + match[0].length,
+            keyed[at + 1]?.index ?? value.length,
+          ),
+        ),
+      }))
+      .filter(option => option.text !== '')
+  }
+
+  return value
+    .split(';')
+    .map(clean)
+    .filter(text => text !== '')
+    .map((text, at) => ({ key: String.fromCharCode(97 + at), text }))
+}
+
+/** The key of the option the Recommended field names, if it names one. */
+export function recommended(item: OwnerItem): string | undefined {
+  const value = pick(item, 'recommended')?.trim()
+  if (!value) return undefined
+  const all = options(item)
+  const keyed = /^\(?([A-Za-z0-9])\)/.exec(value)?.[1].toLowerCase()
+  if (keyed && all.some(option => option.key === keyed)) return keyed
+  const lower = value.toLowerCase()
+
+  return [...all]
+    .sort((one, other) => other.text.length - one.text.length)
+    .find(option => lower.startsWith(option.text.toLowerCase()))?.key
+}
+
+/** The decision's recorded answer, if it has one. */
+export function answerOf(item: OwnerItem): string | undefined {
+  return pick(item, 'answer')
+}
+
+const ANSWER = /^\s*[-*]\s+\**Answer\**:/i
+
+/** The first and one-past-last line of the open item's entry, title included. */
+function span(lines: string[], item: OwnerItem): [number, number] | undefined {
+  let kind: OwnerItem['kind'] | undefined
+  let from = -1
+  for (let at = 0; at < lines.length; at++) {
+    const line = lines[at].replace(/\r$/, '')
+    const section = /^##\s+(.+)$/.exec(line)
+    const title = /^###\s+(?:\[ \]\s*)?(.+)$/.exec(line)
+    if (from >= 0 && (section || /^###\s/.test(line))) return [from, at]
+    if (section) {
+      const name = section[1].trim().toLowerCase()
+      kind = name.startsWith('decision')
+        ? 'decision'
+        : name.startsWith('action')
+          ? 'action'
+          : undefined
+    } else if (title && kind === item.kind && title[1].trim() === item.title) {
+      from = at
+    }
+  }
+
+  return from >= 0 ? [from, lines.length] : undefined
+}
+
+/** The file without the item's Answer line. */
+export function unanswer(text: string, item: OwnerItem): string {
+  const lines = text.split('\n')
+  const found = span(lines, item)
+  if (!found) return text
+  const [from, to] = found
+
+  return lines
+    .filter((line, at) => at <= from || at >= to || !ANSWER.test(line))
     .join('\n')
+}
+
+/** The file with `- Answer: <line>` as the last field of the item's entry. */
+export function answer(text: string, item: OwnerItem, line: string): string {
+  const lines = unanswer(text, item).split('\n')
+  const found = span(lines, item)
+  if (!found) return text
+  let last = found[1] - 1
+  while (last > found[0] && lines[last].trim() === '') last--
+  const isCrlf = lines[found[0]].endsWith('\r')
+  // The file's last line has no line break after it; give it its own first.
+  if (last === lines.length - 1 && isCrlf && !lines[last].endsWith('\r'))
+    lines[last] = `${lines[last]}\r`
+  const closed = last < lines.length - 1
+  lines.splice(last + 1, 0, `- Answer: ${line}${isCrlf && closed ? '\r' : ''}`)
+
+  return lines.join('\n')
 }
 
 /** The file with the item's box ticked, so it is no longer listed. */

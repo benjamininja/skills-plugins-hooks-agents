@@ -1,6 +1,20 @@
 import { expect, test } from 'claude-code/testing'
 
-import { detail, hint, parse, summary, tick, toMarkdown } from './parse'
+import {
+  answer,
+  answerOf,
+  detail,
+  hint,
+  message,
+  options,
+  parse,
+  recommended,
+  reference,
+  summary,
+  tick,
+  toMarkdown,
+  unanswer,
+} from './parse'
 
 const FILE = `# NEEDS-OWNER
 
@@ -69,6 +83,85 @@ test('a collapsed row shows its ticket and what it blocks', () => {
   expect(hint(items[0])).toBe('#130')
   expect(hint(items[1])).toBe('blocks: stage C')
   expect(detail(items[0])).toContain('- **Options:** FA; Minor')
+})
+
+const KEYED = `## Decisions
+
+### [ ] Who merges
+- Ticket: #166
+- Options: (a) The builder; it is green. (b) Two-key merge;
+  (c) The owner
+- Recommended: (b), because two sets of eyes
+
+### [ ] Second one
+- Options: Yes; No
+`
+
+test('reads options in both written forms', () => {
+  const [keyed, plain] = parse(KEYED)
+
+  expect(options(keyed)).toEqual([
+    { key: 'a', text: 'The builder; it is green' },
+    { key: 'b', text: 'Two-key merge' },
+    { key: 'c', text: 'The owner' },
+  ])
+  expect(options(plain)).toEqual([
+    { key: 'a', text: 'Yes' },
+    { key: 'b', text: 'No' },
+  ])
+  expect(options(parse(FILE)[1])).toEqual([])
+})
+
+test('finds the recommended option by key or by its text', () => {
+  expect(recommended(parse(KEYED)[0])).toBe('b')
+  expect(recommended(parse(KEYED)[1])).toBe(undefined)
+  expect(recommended(parse(FILE)[0])).toBe('a')
+})
+
+test('an answer is written into its own entry, replaced, and removed', () => {
+  const [first, second] = parse(KEYED)
+  const once = answer(KEYED, first, '(a) The builder | pane')
+  const twice = answer(once, first, '(b) Two-key merge | pane')
+
+  expect(answerOf(parse(twice)[0])).toBe('(b) Two-key merge | pane')
+  expect(twice.match(/- Answer:/g)?.length).toBe(1)
+  expect(answerOf(parse(twice)[1])).toBe(undefined)
+  expect(twice.indexOf('- Answer:')).toBeLessThan(twice.indexOf('### [ ] Second'))
+  expect(unanswer(twice, first)).toBe(KEYED)
+
+  const last = answer(KEYED, second, '(b) No | pane')
+  expect(answerOf(parse(last)[1])).toBe('(b) No | pane')
+  expect(unanswer(last, second)).toBe(KEYED)
+})
+
+test('an answer keeps the CRLF line ends of a file', () => {
+  const crlf = KEYED.replaceAll('\n', '\r\n')
+  const [first, second] = parse(crlf)
+  const written = answer(answer(crlf, first, '(c) x'), second, '(a) Yes')
+
+  expect(written.replaceAll('\r\n', '')).not.toContain('\n')
+  expect(written.replaceAll('\r\n', '')).not.toContain('\r')
+  expect(answerOf(parse(written)[0])).toBe('(c) x')
+  expect(answerOf(parse(written)[1])).toBe('(a) Yes')
+})
+
+test('an answered decision leaves the count, and its detail', () => {
+  const [first] = parse(KEYED)
+  const items = parse(answer(KEYED, first, '(a) The builder | pane'))
+
+  expect(summary(items)).toBe('Owner: 1 decision, 0 actions, 1 answered')
+  expect(detail(items[0])).not.toContain('Answer')
+})
+
+test('names an item shortly, and words the chat message', () => {
+  const [first] = parse(KEYED)
+
+  expect(reference(first, 0)).toBe('Decision 1: Who merges (#166)')
+  expect(reference(parse(FILE)[1])).toBe('Action: Create the Supabase project')
+  const sent = message(first, { key: 'b', text: 'Two-key merge' })
+  expect(sent).toContain('Decision: Who merges')
+  expect(sent).toContain('Ticket: #166')
+  expect(sent).toContain('Answer: (b) Two-key merge')
 })
 
 test('draws both lists, an empty one included', () => {
