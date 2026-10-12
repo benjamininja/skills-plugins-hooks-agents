@@ -42,10 +42,13 @@ the glossary for the skills catalog itself.
   [ADR-0003](docs/adr/0003-junction-vs-symlink-fallback.md) for the
   symlink/junction distinction and why junctions are the practical default
   on this machine.
-- **No CI, and no local hook standing in for one, today** — see
-  [ADR-0004](docs/adr/0004-ci-over-local-pr-hook.md): CI is the correct
+- **CI runs on every PR** (`.github/workflows/test.yml`, since 2026-10-12):
+  pytest for `hooks/git-guardrails` and agent frontmatter on Ubuntu and
+  Windows, plus a check that `CATALOG.md` is current. `vendor-check.yml`
+  looks at upstream weekly and opens an issue; it never applies an update.
+  See [ADR-0004](docs/adr/0004-ci-over-local-pr-hook.md): CI is the correct
   enforcement layer for "tests must pass before merge," a local hook is a
-  legitimate complement to it but not a substitute. This repo does run one
+  legitimate complement to it but not a substitute. This repo also runs one
   local `pre-commit` hook, `check-in-hygiene` (from `project-memory-template`,
   scoped to `.claude/memory/`/`CLAUDE.md`/`docs/adr/` hygiene) — a
   different concern ADR-0004 doesn't cover. Setup: `pip install pre-commit`,

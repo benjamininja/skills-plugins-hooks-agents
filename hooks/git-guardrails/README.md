@@ -3,9 +3,9 @@
 A Claude-Code-native `PreToolUse` hook adapted from
 [mattpocock/skills](https://github.com/mattpocock/skills)'
 [`skills/misc/git-guardrails-claude-code`](https://github.com/mattpocock/skills/tree/main/skills/misc/git-guardrails-claude-code).
-Intercepts the Bash tool and blocks dangerous git commands before they
-execute. No porting needed here (unlike `continual-learning`) — upstream's
-hook format already matches Claude Code's; this is a behavior adaptation.
+Intercepts the Bash and PowerShell tools and blocks dangerous git commands
+before they execute. Upstream's hook format already matches Claude Code's;
+this is a behavior adaptation.
 
 ## What changed from upstream, and why
 
@@ -23,42 +23,82 @@ hook format already matches Claude Code's; this is a behavior adaptation.
     that's `main`/`master`.
   - An explicit non-main branch named (`git push origin my-feature`) →
     always allowed, even if `main` happens to be checked out locally.
-- **`reset --hard` / `clean -f(d)` / `branch -D` / `checkout .` / `restore .`
-  stay blanket-blocked, unchanged** — these are destructive regardless of
-  branch, so no branch-aware logic applies (kept per explicit decision when
-  this hook was built, 2026-07-11).
+- **`reset --hard` / `clean -f` / `branch -D` / `checkout .` / `restore .`
+  stay blanket-blocked** — these are destructive regardless of branch, so no
+  branch-aware logic applies (kept per explicit decision when this hook was
+  built, 2026-07-11). Matching is by meaning, not by one spelling: any flag
+  cluster containing `f` on `clean` (`-df`, `-xdf`, `--force`), `--hard`
+  anywhere after `reset`, `checkout -- .`. `git restore --staged .` is
+  allowed (it only unstages).
+- **Global options are stripped before matching** (2026-10-12).
+  `git -C <path> push origin main`, `git -c k=v reset --hard` and
+  `git --git-dir=<dir> clean -fd` used to pass because the match was on the
+  literal text `git push` / `git clean -f`. A bare push with `-C <path>`
+  looks up the branch checked out in that path, not in the session's repo.
+- **Each `&&` / `||` / `;` / `|` / `&` segment is checked on its own**, and
+  a line continuation (`\` or a PowerShell backtick before a newline) is
+  joined first, so a push cannot be separated from its refspec.
+- **Shell punctuation is read as spaces.** Quotes, backticks, parentheses,
+  braces and `$` become spaces before matching, so `(git push)`,
+  `bash -c 'git restore .'` and `git submodule foreach 'git checkout .'`
+  are judged like the plain command.
+- **Redirections are dropped before matching.** `2>&1`, `&>file`, `>file`
+  and `<file` are removed with their target, so `git push 2>&1 origin main`
+  and `git clean -fd>/dev/null` are judged like the plain command, and a
+  log file is never mistaken for a refspec.
+- **Every spelling of the whole tree is blocked** for `checkout` / `restore`:
+  `.`, `./`, `./.`, `./*`, `..`.
+- **`HEAD` and `@` count as "whatever is checked out"**, so
+  `git push origin HEAD` gets the same branch lookup as a bare `git push`.
+- **A switch to `main` earlier in the same command blocks a later bare
+  push** (`git checkout main && git merge x && git push`), because the
+  lookup would otherwise see the branch from before the command ran.
+- **When in doubt it blocks.** Text after a `#` still counts toward a
+  block and never toward an exemption, so
+  `git push origin my-feature # not main` is blocked. Reword the comment.
 - **No `jq` dependency.** Upstream's script requires `jq` to parse
-  `tool_input.command`. This repo's own `continual-learning` hook found
-  `jq` missing on this machine's Git Bash — since this hook is meant to be
-  active *today*, not parked behind the same install decision, command
-  extraction uses `sed` instead.
-  **ponytail-flagged limitation**: the `sed` extraction stops at the first
-  literal `"` in the JSON value — a command containing an embedded double
-  quote (rare for git commands, but possible in e.g. a commit message
-  passed inline) will parse wrong. Upgrade to `jq` if that ever bites.
+  `tool_input.command`; `jq` is not reliably on `PATH` in this machine's Git
+  Bash, so extraction uses `sed`. It honors escaped quotes, so a command
+  containing `"` (a quoted path, a commit message) is read in full — the
+  original extraction stopped at the first quote and missed everything after
+  it.
 
 ## Layered-defense note
 
-This hook only intercepts when **Claude Code itself** runs git via the Bash
-tool. It does not stop a direct terminal `git push`, another tool, or
-another machine — an absolute "never push to `main`" guarantee needs at
-least one more layer (a `.git/hooks/pre-push` check and/or GitHub branch
-protection on `main`, which can't be bypassed locally at all). This hook is
-one layer, not the whole guarantee.
+This hook is a text match on one tool call made by **Claude Code itself**.
+It does not see:
+
+- git run from inside a script, a Makefile, or a shell alias/function
+- `gh api` or any other tool that writes to the remote without `git push`
+- a `cd` in an earlier tool call (a bare `git push` is judged against the
+  session's repo unless `-C <path>` is given)
+- a direct terminal `git push`, or another machine
+
+The layer that cannot be bypassed locally is the GitHub ruleset on `main`
+(require a pull request, no direct pushes). This hook is the seatbelt in
+front of it, and the only layer covering the local-only destructive
+commands (`reset --hard`, `clean -f`, ...).
 
 ## Install (global — one machine-wide install, works in every repo)
 
-1. Copy the script to a fixed, machine-wide location:
-   ```bash
-   mkdir -p "$HOME/.claude/hooks/git-guardrails"
-   cp block-dangerous-git.sh "$HOME/.claude/hooks/git-guardrails/block-dangerous-git.sh"
-   chmod +x "$HOME/.claude/hooks/git-guardrails/block-dangerous-git.sh"
-   ```
+1. Link this folder into `~/.claude/hooks/git-guardrails` with
+   `tools/relink_live.ps1` (see the repo README's Installation section).
 2. Merge `settings-snippet.json`'s `hooks.PreToolUse` entry into
    `~/.claude/settings.json` (merge into the existing `PreToolUse` array if
-   one is already there — don't overwrite other hooks or settings).
+   one is already there — don't overwrite other hooks or settings). The
+   matcher is `Bash|PowerShell`: both tools pass the command as
+   `tool_input.command`.
 3. No other dependencies — works with the shell tools already present in
-   Claude Code's Bash environment.
+   Claude Code's Bash environment (GNU `sed`, `grep`).
+
+## Tests
+
+`tests/test_git_guardrails.py` feeds the hook the JSON a `PreToolUse` hook
+receives and asserts blocked (exit 2) or allowed (exit 0) for every pattern
+and every bypass found so far. It runs in CI on Ubuntu and Windows
+(`.github/workflows/test.yml`). Locally: `pip install pytest pyyaml`, then
+`python -m pytest -q tests`. A new bypass lands as a pinned case alongside
+its fix.
 
 ## Verify
 
