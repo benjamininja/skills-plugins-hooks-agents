@@ -5,8 +5,8 @@
       "name": "frontend-design",
       "repo": "anthropics/claude-code",
       "branch": "main",
-      "pinned_ref": "423563c",
-      "pinned_commit": "423563cfe38c90fdf3b428cff0ee7f51cfec3ca7",
+      "pinned_ref": "dbdd79c",
+      "pinned_commit": "dbdd79cebfae5891f5b0fab6f7773ea520d289a7",
       "source_path": "plugins/frontend-design/skills/frontend-design",
       "local_path": "skills/frontend-design",
       "known_local_edits": [
@@ -39,15 +39,15 @@
       "name": "grill-me",
       "repo": "mattpocock/skills",
       "branch": "main",
-      "pinned_ref": "cbf6db4",
-      "pinned_commit": "cbf6db4233c7e4202abaf79643f7ab395c75a2df",
+      "pinned_ref": "fcf0071",
+      "pinned_commit": "fcf0071560d32913c9d4f820e0d7ca467c881619",
       "source_path": "skills/productivity/grill-me",
       "local_path": "skills/grill-me",
       "known_local_edits": [
         {
           "file": "SKILL.md",
           "reason": "disable-model-invocation removed: promoted to model-invocable per ADR-0006 (low-blast-radius tier of domain/planning routing).",
-          "local_sha": "b69573bc759d6d09354b988ad3b60a0398dd090e"
+          "local_sha": "aaf877759bad367230b1a12921a096cf779bd110"
         }
       ]
     },
@@ -55,15 +55,15 @@
       "name": "grill-with-docs",
       "repo": "mattpocock/skills",
       "branch": "main",
-      "pinned_ref": "658d53e",
-      "pinned_commit": "658d53e6ded8cc0eaa26a96e0580bee9381ca0e3",
+      "pinned_ref": "447ca70",
+      "pinned_commit": "447ca70872026d5b79d6073a546dac082117fed7",
       "source_path": "skills/engineering/grill-with-docs",
       "local_path": "skills/grill-with-docs",
       "known_local_edits": [
         {
           "file": "SKILL.md",
           "reason": "disable-model-invocation removed: promoted to model-invocable per ADR-0006 (low-blast-radius tier of domain/planning routing).",
-          "local_sha": "fa1bf7d181a91f0ba65dc35a5a365cc6e1d3d340"
+          "local_sha": "04fe7e698a88cc72e12768f81242a4fe2147523b"
         }
       ]
     },
@@ -71,8 +71,8 @@
       "name": "grilling",
       "repo": "mattpocock/skills",
       "branch": "main",
-      "pinned_ref": "e5932a7",
-      "pinned_commit": "e5932a7a47e5cae312c1b814ce6194b09aa27be1",
+      "pinned_ref": "95249b0",
+      "pinned_commit": "95249b0b49782349740fd9b8c6ce32b4e59e497a",
       "source_path": "skills/productivity/grilling",
       "local_path": "skills/grilling"
     },
@@ -80,8 +80,8 @@
       "name": "domain-modeling",
       "repo": "mattpocock/skills",
       "branch": "main",
-      "pinned_ref": "ee8bae4",
-      "pinned_commit": "ee8bae40062cd6b435073368ed0c540f48c35862",
+      "pinned_ref": "d80fa0f",
+      "pinned_commit": "d80fa0f4ebe0c5714af0adf8670336065233ecc6",
       "source_path": "skills/engineering/domain-modeling",
       "local_path": "skills/domain-modeling"
     },
@@ -89,8 +89,8 @@
       "name": "handoff",
       "repo": "mattpocock/skills",
       "branch": "main",
-      "pinned_ref": "386d4ff",
-      "pinned_commit": "386d4ff719a7c420ad1454232d0436b01f1b8c17",
+      "pinned_ref": "0f5e033",
+      "pinned_commit": "0f5e033ebc47b142f5ffa56a582ede6d9d9bada3",
       "source_path": "skills/productivity/handoff",
       "local_path": "skills/handoff"
     },
@@ -98,15 +98,15 @@
       "name": "ask-matt",
       "repo": "mattpocock/skills",
       "branch": "main",
-      "pinned_ref": "44eed54",
-      "pinned_commit": "44eed545186ffd0263e8004867750b80cfddd215",
+      "pinned_ref": "954ee7f",
+      "pinned_commit": "954ee7fd7f1911b79bfa82589b4d35ab6c4b13b8",
       "source_path": "skills/engineering/ask-matt",
       "local_path": "skills/ask-matt",
       "known_local_edits": [
         {
           "file": "SKILL.md",
           "reason": "router pointers rewritten for this catalog: code-review -> two-axis-code-review (fork rename), research -> deep-research substitution, setup-matt-pocock-skills section -> setup-project-memory orchestrator; disable-model-invocation removed per ADR-0006 (low-blast-radius tier)",
-          "local_sha": "ad4a35b4cdf6e5205a4ac271a6e67118837ef7fb"
+          "local_sha": "10236e831c42b95fb6fd4cfe436e36c76b0477bc"
         }
       ]
     },
@@ -114,8 +114,8 @@
       "name": "codebase-design",
       "repo": "mattpocock/skills",
       "branch": "main",
-      "pinned_ref": "ee8bae4",
-      "pinned_commit": "ee8bae40062cd6b435073368ed0c540f48c35862",
+      "pinned_ref": "d80fa0f",
+      "pinned_commit": "d80fa0f4ebe0c5714af0adf8670336065233ecc6",
       "source_path": "skills/engineering/codebase-design",
       "local_path": "skills/codebase-design"
     },
@@ -123,8 +123,8 @@
       "name": "diagnosing-bugs",
       "repo": "mattpocock/skills",
       "branch": "main",
-      "pinned_ref": "ee8bae4",
-      "pinned_commit": "ee8bae40062cd6b435073368ed0c540f48c35862",
+      "pinned_ref": "f3fc563",
+      "pinned_commit": "f3fc5632f401156837ee3872f14fe33ccf1024ea",
       "source_path": "skills/engineering/diagnosing-bugs",
       "local_path": "skills/diagnosing-bugs"
     },
@@ -132,15 +132,15 @@
       "name": "implement",
       "repo": "mattpocock/skills",
       "branch": "main",
-      "pinned_ref": "386d4ff",
-      "pinned_commit": "386d4ff719a7c420ad1454232d0436b01f1b8c17",
+      "pinned_ref": "6d6a5b9",
+      "pinned_commit": "6d6a5b9072f47ee7ba1d972d8ce0ee98b7ed4394",
       "source_path": "skills/engineering/implement",
       "local_path": "skills/implement",
       "known_local_edits": [
         {
           "file": "SKILL.md",
           "reason": "/code-review -> /two-axis-code-review (fork rename)",
-          "local_sha": "92a22a982dec4e8dcdcc7ebfc9afaab3e0991563"
+          "local_sha": "9ead3ad32fa09445c6b7d761726cd3b2317a20d0"
         }
       ]
     },
@@ -148,8 +148,8 @@
       "name": "improve-codebase-architecture",
       "repo": "mattpocock/skills",
       "branch": "main",
-      "pinned_ref": "221ffca",
-      "pinned_commit": "221ffca96736afefdc08ca7cf0b3965e9ea83f41",
+      "pinned_ref": "d80fa0f",
+      "pinned_commit": "d80fa0f4ebe0c5714af0adf8670336065233ecc6",
       "source_path": "skills/engineering/improve-codebase-architecture",
       "local_path": "skills/improve-codebase-architecture"
     },
@@ -157,8 +157,8 @@
       "name": "prototype",
       "repo": "mattpocock/skills",
       "branch": "main",
-      "pinned_ref": "fa460cb",
-      "pinned_commit": "fa460cbf095a893d14bf41d3db7798cada500259",
+      "pinned_ref": "3216582",
+      "pinned_commit": "321658273cb1d20b76026717d027d505790106d4",
       "source_path": "skills/engineering/prototype",
       "local_path": "skills/prototype"
     },
@@ -175,8 +175,8 @@
       "name": "setup-matt-pocock-skills",
       "repo": "mattpocock/skills",
       "branch": "main",
-      "pinned_ref": "44eed54",
-      "pinned_commit": "44eed545186ffd0263e8004867750b80cfddd215",
+      "pinned_ref": "5b7cade",
+      "pinned_commit": "5b7cade4d68947f34dae71326a0ce89f09e22c9c",
       "source_path": "skills/engineering/setup-matt-pocock-skills",
       "local_path": "skills/setup-matt-pocock-skills"
     },
@@ -184,15 +184,15 @@
       "name": "tdd",
       "repo": "mattpocock/skills",
       "branch": "main",
-      "pinned_ref": "bd453a6",
-      "pinned_commit": "bd453a6742fb8660bf618c298f1e2b80fb9f35e3",
+      "pinned_ref": "3f59913",
+      "pinned_commit": "3f599139104dfceabc7754eeb91319802f85e042",
       "source_path": "skills/engineering/tdd",
       "local_path": "skills/tdd",
       "known_local_edits": [
         {
           "file": "SKILL.md",
           "reason": "code-review -> two-axis-code-review (fork rename)",
-          "local_sha": "6df9f45bdc7cdc27dd980a12159e24852606f82c"
+          "local_sha": "d86aea55cb3f2da5b496e3243b9c9aeb054b3905"
         }
       ]
     },
@@ -200,8 +200,8 @@
       "name": "to-spec",
       "repo": "mattpocock/skills",
       "branch": "main",
-      "pinned_ref": "386d4ff",
-      "pinned_commit": "386d4ff719a7c420ad1454232d0436b01f1b8c17",
+      "pinned_ref": "5c89081",
+      "pinned_commit": "5c89081d4bbeb3d039a42093653f90bb698d780e",
       "source_path": "skills/engineering/to-spec",
       "local_path": "skills/to-spec"
     },
@@ -209,8 +209,8 @@
       "name": "to-tickets",
       "repo": "mattpocock/skills",
       "branch": "main",
-      "pinned_ref": "19c50d5",
-      "pinned_commit": "19c50d50fd1f1fd73cffc4de61a1aabee4cf8728",
+      "pinned_ref": "9e2abf8",
+      "pinned_commit": "9e2abf8611a345efbf779aacb171cff015bcdeb6",
       "source_path": "skills/engineering/to-tickets",
       "local_path": "skills/to-tickets"
     },
@@ -218,8 +218,8 @@
       "name": "triage",
       "repo": "mattpocock/skills",
       "branch": "main",
-      "pinned_ref": "e00eadb",
-      "pinned_commit": "e00eadb4bb32c3d5a631ead1a5ed5d6a7c5f74e2",
+      "pinned_ref": "d80fa0f",
+      "pinned_commit": "d80fa0f4ebe0c5714af0adf8670336065233ecc6",
       "source_path": "skills/engineering/triage",
       "local_path": "skills/triage"
     },
@@ -227,8 +227,8 @@
       "name": "wayfinder",
       "repo": "mattpocock/skills",
       "branch": "main",
-      "pinned_ref": "639df6e",
-      "pinned_commit": "639df6e7386dfddc739b2aecdeff37a876f2483b",
+      "pinned_ref": "8295b8e",
+      "pinned_commit": "8295b8e10d4cdb6cce772a56dda7b7c37075074d",
       "source_path": "skills/engineering/wayfinder",
       "local_path": "skills/wayfinder"
     },
@@ -236,15 +236,15 @@
       "name": "teach",
       "repo": "mattpocock/skills",
       "branch": "main",
-      "pinned_ref": "aa024cb",
-      "pinned_commit": "aa024cb1954fedbc8221967c080fa40b9867f994",
+      "pinned_ref": "ad5400b",
+      "pinned_commit": "ad5400b930b297b0c0cb231ff1ffe42a7da666aa",
       "source_path": "skills/productivity/teach",
       "local_path": "skills/teach",
       "known_local_edits": [
         {
           "file": "SKILL.md",
           "reason": "disable-model-invocation removed: promoted to model-invocable per ADR-0006 (low-blast-radius tier of domain/planning routing).",
-          "local_sha": "474567e776967f76b6fc6d36176f67a01a8e3df8"
+          "local_sha": "f6f0ae1c78736f6ec04b55a70a76759962ba539a"
         }
       ]
     },
@@ -268,8 +268,8 @@
       "name": "code-review",
       "repo": "mattpocock/skills",
       "branch": "main",
-      "pinned_ref": "14c13c5",
-      "pinned_commit": "14c13c5bf9ec1bee9926c0c1f388534f0b9ab8e8",
+      "pinned_ref": "3da8c01",
+      "pinned_commit": "3da8c01116264675eeefbd6e9d59c734de9095cc",
       "source_path": "skills/engineering/code-review",
       "local_path": "vendor-cache/code-review",
       "_comment": "Pristine mirror only, deliberately outside skills/ so it's never symlinked/loaded. Never hand-edit. See forks[] for the usable version."
@@ -287,15 +287,15 @@
       "name": "semantic-model-authoring",
       "repo": "microsoft/skills-for-fabric",
       "branch": "main",
-      "pinned_ref": "4e8a636",
-      "pinned_commit": "4e8a63682c6ed575b68410e6bce3d83d40c05c55",
+      "pinned_ref": "a31549e",
+      "pinned_commit": "a31549e4690e03b78c507c7a81cebdbe0caefc5b",
       "source_path": "plugins/powerbi-authoring/skills/semantic-model-authoring",
       "local_path": "skills/semantic-model-authoring",
       "known_local_edits": [
         {
           "file": "SKILL.md",
           "reason": "../../common/ -> ../_powerbi-authoring-common/ link rewrites (common/ relocation into skills/)",
-          "local_sha": "0899fedebcc11f7527887ef69ba95f338c670d88"
+          "local_sha": "6b3fabcfe867d98d25fcb4d2c8dcb95e594b1e70"
         },
         {
           "file": "references/semantic-model-rest-api.md",
@@ -351,8 +351,8 @@
       "name": "powerbi-authoring-common",
       "repo": "microsoft/skills-for-fabric",
       "branch": "main",
-      "pinned_ref": "03f3bfb",
-      "pinned_commit": "03f3bfb5679991568f93c61184759722d7f60f0b",
+      "pinned_ref": "2b3530e",
+      "pinned_commit": "2b3530e8be2b89d0bbfe50833f24fd36b79d6397",
       "source_path": "plugins/powerbi-authoring/common",
       "local_path": "skills/_powerbi-authoring-common",
       "_comment": "Shared reference docs (COMMON-CLI.md, COMMON-CORE.md, ITEM-DEFINITIONS-CORE.md) linked by the powerbi-authoring skills above via relative paths. Nested inside skills/ (not repo root) for shorter relative paths; not itself a skill (no SKILL.md, never symlinked/junctioned on its own)."
@@ -361,8 +361,8 @@
       "name": "ponytail",
       "repo": "DietrichGebert/ponytail",
       "branch": "main",
-      "pinned_ref": "b6c0448",
-      "pinned_commit": "b6c04480c03e8db2f035751d7c46289779ec3362",
+      "pinned_ref": "2a1fe84",
+      "pinned_commit": "2a1fe842d078cf66ec7f3e6096a8ca4279c2cad7",
       "source_path": ".openclaw/skills/ponytail",
       "local_path": "skills/ponytail"
     },
@@ -370,8 +370,8 @@
       "name": "ponytail-debt",
       "repo": "DietrichGebert/ponytail",
       "branch": "main",
-      "pinned_ref": "ff5d093",
-      "pinned_commit": "ff5d0936bee1f1267f4f4a7c34a2e6c796254f0b",
+      "pinned_ref": "2a1fe84",
+      "pinned_commit": "2a1fe842d078cf66ec7f3e6096a8ca4279c2cad7",
       "source_path": ".openclaw/skills/ponytail-debt",
       "local_path": "skills/ponytail-debt"
     }
@@ -401,8 +401,8 @@
       "name": "fabric-skills",
       "repo": "microsoft/skills-for-fabric",
       "branch": "main",
-      "pinned_ref": "65cb0bc",
-      "pinned_commit": "65cb0bce057bcc6795f68ac1234fc68de463cea7",
+      "pinned_ref": "2e4e559",
+      "pinned_commit": "2e4e559428360f6d1355374a014adeb64366f2d5",
       "source_path": "plugins/fabric-skills/.github/plugin/plugin.json",
       "local_path": "plugins/fabric-collection/fabric-skills.plugin.json",
       "_comment": "Manifest only — the full bundle (~30 skills), largely superset of fabric-authoring/fabric-operations. See plugins/README.md."
@@ -412,7 +412,7 @@
     {
       "name": "two-axis-code-review",
       "forked_from": "code-review",
-      "forked_at_commit": "14c13c5bf9ec1bee9926c0c1f388534f0b9ab8e8",
+      "forked_at_commit": "3da8c01116264675eeefbd6e9d59c734de9095cc",
       "local_path": "skills/two-axis-code-review",
       "reason": "Renamed to avoid colliding with this repo's existing general-purpose code-review skill. Diff skills/two-axis-code-review against vendor-cache/code-review after any update to see what upstream changed vs. what we changed.",
       "_comment": "tools/update_vendor_skills.py flags when vendor-cache/code-review advances past forked_at_commit (hand-merge due) and refuses --apply on this name. The merge itself stays manual: update the mirror via the normal vendor flow, hand-merge relevant changes into skills/two-axis-code-review, then bump forked_at_commit."
