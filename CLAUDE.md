@@ -51,6 +51,22 @@ the glossary for the skills catalog itself.
   different concern ADR-0004 doesn't cover. Setup: `pip install pre-commit`,
   then `pre-commit install`.
 
+## Agents — when to run
+
+Three agents live in `.claude/agents/` and are linked into `~/.claude/agents`,
+so they are available from any repo. They only help if they are run:
+
+- **`vendor-sync-reapply`** — right after `python tools/update_vendor_skills.py
+  --apply <name>` prints a "Reapply ritual" notice. Never commit a re-vendor
+  with the ritual outstanding: the overwritten `known_local_edits` are lost
+  otherwise.
+- **`skill-safety-auditor`** — before committing any change to
+  `disable-model-invocation`, any new vendored skill, or
+  `vendor-skills.json`'s safety-relevant fields. Show its table to the user.
+- **`root-memory-propagation-auditor`** — after root memory
+  (`~/.claude/memory/*.md`, `~/.claude/CLAUDE.md`) changes; give it the
+  commit or merge range if the change is already committed.
+
 ## Git
 
 Feature branch → `main` via PR. Never commit or push directly to `main`,

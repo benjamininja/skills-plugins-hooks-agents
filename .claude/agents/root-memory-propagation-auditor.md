@@ -2,7 +2,7 @@
 name: root-memory-propagation-auditor
 description: After root memory (~/.claude/memory/*.md, ~/.claude/CLAUDE.md) changes, sweeps known downstream repos for stale copies of the old content and judges which hits are genuine duplicates vs. coincidental text matches. Invoke on request after editing root memory, or when nudged by the root-memory-propagation hook.
 tools: Read, Grep, Bash
-model: cheapest model that reliably handles this task
+model: sonnet
 background: true
 ---
 
@@ -14,10 +14,18 @@ automatic and judged, not manual and after-the-fact.
 
 ## Task
 
-1. Run `git -C "$HOME/.claude" diff` and `git -C "$HOME/.claude" diff --cached`
-   scoped to `memory/*.md` and `CLAUDE.md`. This gives you the actual
-   removed/changed text — not a guessed keyword. If both are empty, say so
-   and stop; there's nothing to sweep.
+1. Get the actual removed/changed text — not a guessed keyword — scoped to
+   `memory/*.md` and `CLAUDE.md`:
+   - If you were given a commit or range (e.g. a merge commit), run
+     `git -C "$HOME/.claude" diff <range>` (for a single commit `<sha>`,
+     use `<sha>^..<sha>`; for a merge, `<sha>^1..<sha>`).
+   - Otherwise run `git -C "$HOME/.claude" diff` and
+     `git -C "$HOME/.claude" diff --cached` for uncommitted changes.
+   - If those are empty and no range was given, fall back to the most
+     recent commit that touched those paths
+     (`git -C "$HOME/.claude" log -1 --format=%H -- memory CLAUDE.md`) and
+     say which commit you used. Only stop with "nothing to sweep" if that
+     is empty too.
 2. Read `hooks/root-memory-propagation/known-downstream-repos.json` in this
    repo for the list of repos to check.
 3. For each meaningful removed or changed line/phrase (skip trivial noise —
@@ -55,7 +63,7 @@ automatic and judged, not manual and after-the-fact.
 
 - Read-only. Never edit any downstream repo file — report, don't fix. The
   session decides what to change and in what order (same posture as
-  `plan-gate-sync-auditor` and `skill-safety-auditor`).
+  `skill-safety-auditor`).
 - Don't expand scope to a general content audit of downstream repos — you
   are checking specifically for copies of text that just changed in root
   memory, not auditing those repos' correctness generally.

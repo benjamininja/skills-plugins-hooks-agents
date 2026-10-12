@@ -11,7 +11,7 @@
 - **Plugins** (3, manifest-only) — cataloged upstream bundles whose ~30 skills are deliberately not vendored (unused Fabric workloads). See `plugins/README.md` / ADR-0002.
 - **Hooks** (3, all installed on this machine) — deterministic event-triggered scripts under `hooks/`, registered in `~/.claude/settings.json`. See `hooks/README.md`.
 - **Vendor cache** (1) — pristine, never-loaded upstream mirrors of forked skills, for diffing. See ADR-0001.
-- **Agents** (3 here: plan-gate-sync-auditor, skill-safety-auditor, vendor-sync-reapply) — see each agent's own frontmatter `description`, and `docs/adr/` for the decision record behind it.
+- **Agents** (3 here: root-memory-propagation-auditor, skill-safety-auditor, vendor-sync-reapply) — see each agent's own frontmatter `description`, and `docs/adr/` for the decision record behind it.
 
 ## Skills
 
@@ -68,6 +68,6 @@ Tags follow the routing-map axes (see README "Routing: which skill, when"): stag
 
 | Hook | Summary |
 |---|---|
-| **continual-learning** | A Claude Code port of [microsoft/skills](https://github.com/microsoft/skills)' [`hooks/continual-learning`](https://github.com/microsoft/skills/tree/main/hooks/continual-learning), which was built for GitHub Copilot CLI… |
 | **git-guardrails** | A Claude-Code-native `PreToolUse` hook adapted from [mattpocock/skills](https://github.com/mattpocock/skills)' [`skills/misc/git-guardrails-claude-code`](https://github.com/mattpocock/skills/tree/main/skills/misc/git-gu… |
+| **root-memory-propagation** | A `PostToolUse` hook + companion subagent pair. |
 | **skill-catalog-health** | A `SessionStart` hook with two jobs, both driven by the same scan of `~/.claude/skills/` (see [ADR-0005](docs/adr/0005-skill-routing-and-drift-detection.md) for the full reasoning): |
