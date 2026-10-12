@@ -1,0 +1,5 @@
+{
+  "name": "session-dispatch-managers-build-review",
+  "version": "0.1.0",
+  "description": "Dispatch builder sessions at the tier planning set: one script for the fixed steps, one skill for the rules of planner, builder manager and builder, and blank templates for a new project."
+}

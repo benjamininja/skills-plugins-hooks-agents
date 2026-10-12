@@ -1,0 +1,6 @@
+{
+  "//": "The owner's file. Copy it to <user profile>/.claude/dispatch-projects.json and edit it by hand; no agent writes it. The dispatch script acts with -Apply only in a main checkout listed here.",
+  "projects": [
+    "C:/path/to/the/main/checkout"
+  ]
+}

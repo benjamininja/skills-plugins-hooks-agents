@@ -1,0 +1,50 @@
+{
+  "//": "A proposal. The project owner copies this text into the real file and edits it by hand; no agent creates or changes a settings file. Add the project's own proof commands to allow and its own fenced-off commands to deny. This key is a note: delete it in the real file.",
+  "permissions": {
+    "allow": [
+      "Bash(gh pr merge * --squash --delete-branch)",
+      "Bash(gh pr merge * --squash)",
+      "Bash(gh issue edit *)",
+      "Bash(gh issue close *)",
+      "Bash(git pull --ff-only)",
+      "Bash(git branch -d *)",
+      "Bash(git push origin --delete *)",
+      "Bash(git worktree list)",
+      "Bash(git worktree remove *)",
+      "PowerShell(*session-dispatch-managers-build-review\\scripts\\dispatch.ps1 *)",
+      "PowerShell(*claude.exe agents *)",
+      "PowerShell(*claude.exe --resume *)",
+      "PowerShell(*claude.exe stop *)",
+      "PowerShell(*claude.exe rm *)"
+    ],
+    "deny": [
+      "Bash(git worktree remove*--force*)",
+      "Edit(.claude/settings.json)",
+      "Write(.claude/settings.json)",
+      "Edit(.claude/settings.local.json)",
+      "Write(.claude/settings.local.json)",
+      "Edit(.claude/builders.settings.json)",
+      "Write(.claude/builders.settings.json)",
+      "Edit(.claude/managers.settings.json)",
+      "Write(.claude/managers.settings.json)",
+      "Edit(.claude/dispatch.json)",
+      "Write(.claude/dispatch.json)",
+      "Edit(~/.claude/dispatch-projects.json)",
+      "Write(~/.claude/dispatch-projects.json)",
+      "Edit(.claude/agents/**)",
+      "Write(.claude/agents/**)",
+      "Read(.env)",
+      "Edit(.env)",
+      "Write(.env)",
+      "Bash(git push*--force*)",
+      "Bash(git push* -f*)",
+      "Bash(git push*origin main*)",
+      "Bash(git commit*--no-verify*)",
+      "Bash(git commit* -n *)",
+      "Bash(gh pr merge*--admin*)",
+      "Bash(gh pr merge*--auto*)",
+      "Bash(gh workflow run*)",
+      "Bash(gh secret *)"
+    ]
+  }
+}
