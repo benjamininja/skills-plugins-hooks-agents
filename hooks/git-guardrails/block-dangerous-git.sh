@@ -95,7 +95,8 @@ check_segment() {
 
     # An explicit main/master target: `main`, `HEAD:main`, `:main`,
     # `+main`, `refs/heads/main`.
-    if echo "$rest" | grep -qE '(^|[[:space:]:+]|refs/heads/)(main|master)([[:space:]]|$)'; then
+    # Quotes around the ref are stripped first (`git push origin "main"`).
+    if echo "$rest" | tr -d "\"'" | grep -qE '(^|[[:space:]:+]|refs/heads/)(main|master)([[:space:]]|$)'; then
       block "pushes directly to main/master — push a feature branch and open a PR instead"
     fi
 
@@ -109,7 +110,7 @@ check_segment() {
       # Never open a network path named by the command just to look up a
       # branch (on Windows that can send credentials to the named host).
       case "$cdir" in
-        //*|\\*) block "bare push with -C pointing at a network path — name the branch explicitly" ;;
+        [/\\][/\\]*|[/\\]\?\?[/\\]*) block "bare push with -C pointing at a network path — name the branch explicitly" ;;
       esac
       local dir="${cdir:-${CLAUDE_PROJECT_DIR:-$PWD}}"
       local branch

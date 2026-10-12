@@ -93,6 +93,8 @@ def on_feature(tmp_path):
     "git push origin feature:main",
     "git push origin refs/heads/main",
     "git push -u origin main",
+    'git push origin "main"',
+    "git push origin 'master'",
     # blanket-blocked destructive commands
     "git reset --hard",
     "git reset --hard HEAD~1",
@@ -207,7 +209,9 @@ def test_bare_push_uses_the_dash_C_repo_not_the_session_repo(on_main, on_feature
 
 @pytest.mark.parametrize("command", [
     "git -C //some-host/share push",
-    r"git -C \some-host\share push origin",
+    r"git -C /\some-host\share push",
+    "git -C /??/UNC/some-host/share push",
+    r"git -C \\some-host\share push origin",
 ])
 def test_bare_push_never_opens_a_network_path(command, on_feature):
     result = run_hook(command, project_dir=on_feature)
