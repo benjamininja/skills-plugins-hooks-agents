@@ -10,9 +10,12 @@ import type {
 } from '../types'
 import {
   answerOf,
+  carried,
+  carriedDone,
   codes,
   commit,
   detail,
+  here,
   hint,
   idOf,
   options,
@@ -20,6 +23,7 @@ import {
   recommended,
   reference,
   report,
+  sessionOf,
   shown as printed,
   spans,
   summary,
@@ -27,7 +31,7 @@ import {
   waiting,
 } from './parse'
 
-const VERSION = '0.4.2'
+const VERSION = '0.5.0'
 const PANE = 'owner-queue'
 const TITLE = 'Needs owner'
 const FILE = '.claude/memory/NEEDS-OWNER.md'
@@ -114,6 +118,74 @@ async function penned($: EngineInterface): Promise<OwnerAnswers> {
   }
 }
 
+/** This session's id, or undefined where the engine gives none. */
+async function me($: EngineInterface): Promise<string | undefined> {
+  try {
+    return (await $.session.id()) || undefined
+  } catch {
+    return undefined
+  }
+}
+
+async function kept<T>($: EngineInterface, key: string, none: T): Promise<T> {
+  try {
+    return ((await $.store.get(key)) as T | undefined) ?? none
+  } catch {
+    return none
+  }
+}
+
+let isDelivering = false
+
+/**
+ * Message back: an entry that names this session and has gained an Answer
+ * line the pane wrote, or was marked done, in any session's pane, is said in
+ * this session's chat as the owner's words, once.
+ */
+async function deliver(
+  $: EngineInterface,
+  file: string,
+  items: OwnerItem[],
+  own: OwnerAnswers,
+): Promise<void> {
+  if (isDelivering) return
+  isDelivering = true
+  try {
+    const mine = await me($)
+    if (!mine) return
+    const had = await kept<OwnerAnswers>($, `delivered:${mine}`, {})
+    const due = items.filter(item => {
+      const given = answerOf(item)
+      const at = `${file}|${idOf(item)}`
+
+      return (
+        sessionOf(item) === mine &&
+        given !== undefined &&
+        own[at] === given &&
+        had[at] !== given
+      )
+    })
+    const marked = await kept<string[]>($, `done:${mine}`, [])
+    if (due.length === 0 && marked.length === 0) return
+    if (due.length > 0)
+      await $.store.set(`delivered:${mine}`, {
+        ...had,
+        ...Object.fromEntries(
+          due.map(item => [`${file}|${idOf(item)}`, answerOf(item) ?? '']),
+        ),
+      })
+    if (marked.length > 0) await $.store.set(`done:${mine}`, [])
+    const text = [
+      ...due.map(item => carried(item, answerOf(item) ?? '')),
+      ...(marked.length > 0 ? [carriedDone(marked)] : []),
+    ].join('\n\n')
+    $.ui.toast(`The owner answered: ${due.length + marked.length}`)
+    void $.prompt.submit({ text, asUser: true })
+  } finally {
+    isDelivering = false
+  }
+}
+
 /** Puts the pane on screen and records whether a surface drew it. */
 async function show($: EngineInterface): Promise<void> {
   const { isPlaced } = await $.ui.open({ id: PANE, title: TITLE })
@@ -163,6 +235,7 @@ async function refresh($: EngineInterface): Promise<OwnerQueue> {
       .map(idOf),
   }
   $.ui.status(summary(now.items))
+  await deliver($, file, items, own)
   await $.state.set(readAtRef, (await clock($)).time)
   // What was staged for an entry that has left the list is dropped.
   const { value: held = NONE } = await $.state.get(stagedRef)
@@ -245,7 +318,30 @@ async function submit($: EngineInterface): Promise<void> {
       `(${chosen.key}) ${chosen.text} | pane, ${day} ${time}, session ${session}`,
   )
   const count = made.answered.length + made.done.length
+  const mine = session === 'unknown' ? undefined : session
+  const said = here(made, mine)
+  const away = count - said.answered.length - said.done.length
   if (count > 0) {
+    // This session's own entries are said by Submit below, not carried again.
+    const self = made.answered.filter(
+      ({ item }) => mine !== undefined && sessionOf(item) === mine,
+    )
+    if (mine !== undefined && self.length > 0)
+      await $.store.set(`delivered:${mine}`, {
+        ...(await kept<OwnerAnswers>($, `delivered:${mine}`, {})),
+        ...Object.fromEntries(
+          self.map(({ item, line }) => [`${file}|${idOf(item)}`, line]),
+        ),
+      })
+    // An item marked done has left the file: its raiser is told by the store.
+    for (const item of made.done) {
+      const to = sessionOf(item)
+      if (to === undefined || to === mine) continue
+      await $.store.set(`done:${to}`, [
+        ...(await kept<string[]>($, `done:${to}`, [])),
+        reference(item),
+      ])
+    }
     await $.fs.write(file, made.text)
     if (made.answered.length > 0)
       await $.store.set(ANSWERS, {
@@ -259,8 +355,10 @@ async function submit($: EngineInterface): Promise<void> {
   await refresh($)
   const lost =
     made.missing.length > 0 ? `; ${made.missing.length} not found` : ''
-  $.ui.toast(`Submitted: ${count}${lost}`)
-  if (count > 0) void $.prompt.submit({ text: report(made), asUser: true })
+  const gone = away > 0 ? `; ${away} go to the session that raised them` : ''
+  $.ui.toast(`Submitted: ${count}${lost}${gone}`)
+  if (count - away > 0)
+    void $.prompt.submit({ text: report(said), asUser: true })
 }
 
 /** "Other...": a draft in the prompt box for an answer no option covers. */
@@ -327,9 +425,32 @@ export const register: Register = on => {
     // where the mouse can select them.
     const asked = /^show\b(.*)$/i.exec((e.args ?? '').trim())
     if (asked) return { text: printed(now.items, asked[1]) }
+    // `/owner id`: the id an entry's Session field names for this session.
+    if (/^id$/i.test((e.args ?? '').trim()))
+      return { text: `Session: ${(await me($)) ?? 'unknown'}` }
     await show($)
 
     return { text: summary(now.items) ?? 'Nothing is waiting on the owner.' }
+  })
+
+  // A session in a project with a queue is told its own id, so it can name
+  // itself in the Session field of an entry it raises.
+  on('prompt.compose', async ($, e, next) => {
+    const made = await next(e)
+    const mine = await me($)
+    const { value: now = EMPTY } = await $.state.get(ref)
+    if (!mine || !now.hasFile) return made
+
+    return {
+      sections: [
+        ...made.sections,
+        {
+          id: 'owner-queue:session',
+          text: `owner-queue: this session's id is ${mine}. When you write an entry in NEEDS-OWNER.md whose answer should come back to this session, add the field "- Session: ${mine}" to it. For an entry you write for another session, use that session's id.`,
+          scope: 'session' as const,
+        },
+      ],
+    }
   })
 
   on('ui.close', async ($, e, next) => {

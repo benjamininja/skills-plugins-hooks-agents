@@ -15,6 +15,13 @@ written until `Submit`.
   the transcript, where the mouse can select it; the model does not receive
   it), one `Copy: ...` button for each `code` span, directly under the
   entry's text, and, on a row of its own, `Mark done`.
+- Message back: an entry may carry `- Session: <id>`, the session its
+  answer goes back to. That session's own copy of the mod sees the
+  pane-written `Answer:` line (or the item marked done) at its next read
+  and says it in its own chat as the owner's words, once; a closed session
+  gets it when it is next opened. Submit says in the pressing session only
+  the entries that name it or name no session. The mod tells each session
+  its id in the system prompt, and `/owner id` prints it.
 - A fenced code block inside an entry is one chunk: the pane draws one
   `Copy block N` button for it and copies it with its line breaks. An
   entry that has a block gets no button for its inline `code` spans, so

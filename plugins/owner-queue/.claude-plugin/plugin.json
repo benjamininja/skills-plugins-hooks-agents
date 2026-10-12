@@ -1,6 +1,6 @@
 {
   "name": "owner-queue",
-  "version": "0.4.2",
+  "version": "0.5.0",
   "description": "A live pane of the decisions and hands-on actions waiting on the owner, read from the main checkout's .claude/memory/NEEDS-OWNER.md; a decision is answered by pressing one of its options, and nothing is written until Submit",
   "types": "./types/index.d.ts"
 }

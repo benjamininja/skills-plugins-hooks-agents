@@ -426,6 +426,55 @@ export function commit(
   return out
 }
 
+/** The id of the session an entry's answer goes back to, if it names one. */
+export function sessionOf(item: OwnerItem): string | undefined {
+  return pick(item, 'session')?.trim().split(/\s+/)[0] || undefined
+}
+
+/**
+ * The part of a Submit that is said in the pressing session's own chat: the
+ * entries that name it, or name no session. The rest wait for their raiser.
+ */
+export function here(done: Committed, mine: string | undefined): Committed {
+  const isHere = (item: OwnerItem) =>
+    sessionOf(item) === undefined || sessionOf(item) === mine
+
+  return {
+    ...done,
+    answered: done.answered.filter(one => isHere(one.item)),
+    done: done.done.filter(isHere),
+  }
+}
+
+/**
+ * The chat message the raising session gives itself when one of its entries
+ * was answered in another session's pane. `given` is the Answer line.
+ */
+export function carried(item: OwnerItem, given: string): string {
+  const line = (label: string) => {
+    const value = pick(item, label.toLowerCase())
+
+    return value ? [`${label}: ${value}`] : []
+  }
+
+  return [
+    `Owner's answer, given by a button in the owner-queue pane and carried to this session, which raised the entry.`,
+    `${item.kind === 'decision' ? 'Decision' : 'Action'}: ${item.title}`,
+    ...line('Ticket'),
+    ...line('Options'),
+    `Answer: ${given.split(' | pane')[0]}`,
+    `It is recorded as the Answer line of this entry in NEEDS-OWNER.md.`,
+  ].join('\n')
+}
+
+/** The same, for entries of the raising session that were marked done. */
+export function carriedDone(names: string[]): string {
+  return [
+    'Marked done by the owner in the owner-queue pane, carried to this session, which raised them:',
+    ...names.map(name => `- ${name}`),
+  ].join('\n')
+}
+
 /** The one chat message a Submit sends: every answer, every item marked done. */
 export function report(done: Committed): string {
   return [
