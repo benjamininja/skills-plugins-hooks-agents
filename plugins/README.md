@@ -30,6 +30,14 @@ Skipped from the vendor: upstream's `check-updates` skill (a self-update
 checker for skills-for-fabric's own releases) — redundant with this repo's
 own `vendor-skills.json` / `update-vendor-skills.ipynb` mechanism.
 
+**Do not install these manifests as plugins as they stand.**
+`fabric-skills.plugin.json` declares remote MCP servers in `mcpServers`
+(FabricIQ and Power BI authoring with every tool allowed, plus a SQL endpoint
+exposing `execute_query`). Stored here they are inert — nothing loads a
+`*.plugin.json` from this folder — but installed as a real plugin they would
+give a session write access to Fabric items and arbitrary SQL. Review the
+`mcpServers` block first.
+
 If a Fabric workload beyond Power BI becomes relevant, use the matching
 `*.plugin.json`'s `skills` list to know exactly what to pull from upstream
 (same repo, same pinned approach as everything else in `vendor-skills.json`).
