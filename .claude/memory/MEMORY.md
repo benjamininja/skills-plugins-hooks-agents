@@ -45,7 +45,8 @@
   `.claude/agents/` roster in this repo: `vendor-sync-reapply` (background)
   and `skill-safety-auditor` (foreground), both born from gaps found while
   executing ADR-0006 in the same session
-- `docs/adr/0008-plan-gate-sync-auditor.md` — third agent, homed here
+- `docs/adr/0008-plan-gate-sync-auditor.md` — **superseded 2026-10-12, agent
+  retired** (tiers no longer restate the plan gate). History: third agent, homed here
   despite auditing `project-memory-template`'s tier CLAUDE.md files against
   the private `dotclaude` root — chosen over homing it in either of those
   repos since this repo is the one every project already junction-installs
@@ -66,3 +67,15 @@
   `~/.claude/hooks/<name>`); registry/CLI/check-in wait for observed
   drift; native plugin marketplace evaluated, not adopted. `CONTEXT.md`'s
   distribution terms match the rescope.
+  **Revision 2 (2026-10-12)**: all `~/.claude` links point at a live clone
+  pinned to `main` (`C:\Users\benha\claude-live\skills-plugins-hooks-agents`),
+  created by `tools/relink_live.ps1`; pull it after every merge. Reason: an
+  uncommitted 2026-08-02 re-vendor in the working checkout was live for ten
+  weeks with four skills' `disable-model-invocation` wrongly restored.
+- `docs/adr/0012-retire-continual-learning.md` — hook removed: its only
+  output was "tool X frequently fails", injected every session
+- **Agents are wired, three remain** (`vendor-sync-reapply`,
+  `skill-safety-auditor`, `root-memory-propagation-auditor`): real `model:`
+  aliases, the vendor tool's reapply notice names them, `CLAUDE.md` has an
+  "Agents — when to run" section. They had 0 runs before 2026-10-12 because
+  two could not parse and nothing triggered the others.

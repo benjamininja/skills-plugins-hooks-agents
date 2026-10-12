@@ -35,12 +35,11 @@ way the junction targets did, because it's re-derived from the actual
    ```
 2. Merge `settings-snippet.json`'s `hooks.SessionStart` array into
    `~/.claude/settings.json` — **append** to the array if a `SessionStart`
-   hook already exists there (e.g. from `continual-learning`), don't
+   hook already exists there, don't
    replace it. Claude Code runs every entry in the array; their outputs
    concatenate into context.
 
-No `sqlite3`/`jq` dependency — pure `bash`/`awk`, works regardless of
-`continual-learning`'s activation state.
+No `sqlite3`/`jq` dependency — pure `bash`/`awk`.
 
 ## Disable
 

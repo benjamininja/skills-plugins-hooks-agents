@@ -158,15 +158,49 @@ scope is cut:
 - **Consequences**: the hook-copy migration noted under Consequences is
   performed by the gap-closure PR for this revision (the four installed
   hook copies were byte-identical to the repo and are now junctions).
-- **Known risk — junction target is the main checkout**: the
-  `~/.claude/agents` and `~/.claude/hooks/<name>` junctions resolve into
-  this repo's main checkout, so what runs is whatever that checkout holds.
-  If the junction target stops resolving (checkout moved, renamed, or
-  deleted; OneDrive-evicted files; or a checked-out branch lacking
-  `hooks/` or `.claude/agents/`), the hook command is simply not found.
-  Claude Code treats a non-2 exit from a `PreToolUse` hook as
-  non-blocking, so `git-guardrails` **fails open** silently — the same
-  failure class as the stale skills junctions found after the repo
-  rename. Accepted for now; the planned mitigation is extending
-  `skill-catalog-health`'s SessionStart junction-drift check to cover
-  `~/.claude/agents` and `~/.claude/hooks/*` (follow-up, not this PR).
+- **Known risk — junction target is the main checkout**: superseded by
+  Revision 2 below.
+
+## Revision 2 (2026-10-12) — links point at a live clone pinned to `main`
+
+**What went wrong.** Every `~/.claude` link (skills since ADR-0003, agents
+and hooks since the revision above) pointed into the checkout that is also
+edited by hand. Whatever sat in that working tree was live in every session
+at once, reviewed or not. On 2026-08-02 a mass `--apply` re-vendor was run
+there and left uncommitted. It overwrote ten skills' recorded
+`known_local_edits`, and the reapply never happened, so for ten weeks the
+live `grill-me`, `grill-with-docs`, `teach` and `writing-great-skills`
+carried `disable-model-invocation: true` again (against ADR-0006), the live
+`implement` pointed at `/code-review` instead of `/two-axis-code-review`,
+and `frontend-design` had no `LICENSE.txt`. Nothing flagged it.
+
+**Decision.** Links point at a second, independent clone that only ever
+holds merged `main` and is never edited by hand:
+`C:\Users\benha\claude-live\skills-plugins-hooks-agents` (outside OneDrive, so files are
+never evicted or locked). `tools/relink_live.ps1` creates and re-points all
+links; the live clone is updated with `git pull --ff-only` after each
+merge. Live behaviour now changes only when a PR merges.
+
+**Cost accepted.** Editing a skill no longer takes effect instantly; it
+takes a merge and a pull. A forgotten pull leaves live behaviour one merge
+behind, which is visible (`git -C <live clone> status -sb`) and safe, unlike
+unreviewed content going live.
+
+**Correction to the first revision.** It named extending
+`skill-catalog-health` as the mitigation for a dangling junction. That
+cannot work: the hook is linked from the same checkout as the hooks it
+would watch, so if that checkout moves, the checker goes with it. The
+claim that a missing `PreToolUse` script fails open silently was also never
+tested. What remains true: a moved or renamed live clone breaks every link
+until `relink_live.ps1` is re-run. A dedicated clone that nobody renames or
+branch-switches makes that far less likely than it was.
+
+**Why the agents never ran** (context for the wiring fixes shipped with this
+revision): two of the four had invalid YAML frontmatter and could not load
+anywhere; the vendor tool told the user to reapply edits "by hand" and
+never named `vendor-sync-reapply`; nothing told a session when to run
+`skill-safety-auditor`; `root-memory-propagation-auditor` read uncommitted
+diffs only and was reachable only from this repo. The fixes: real `model:`
+aliases, the tool's notice names both agents, `CLAUDE.md` states when each
+runs, and the auditor accepts a commit range. `plan-gate-sync-auditor` is
+retired (ADR-0008).

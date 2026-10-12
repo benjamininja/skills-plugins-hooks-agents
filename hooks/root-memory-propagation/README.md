@@ -15,7 +15,8 @@ This pair turns that from a manual afterthought into a standing check.
   project repo's own local `.claude/memory/`), and if so prints a one-line
   reminder. Never blocks (`exit 0` always) — this is a nudge, not a gate.
 - **`root-memory-propagation-auditor`** (`.claude/agents/root-memory-propagation-auditor.md`)
-  — judgment. Diffs root memory (`git -C ~/.claude diff`) to see exactly
+  — judgment. Diffs root memory (uncommitted changes, or a given commit
+  range, so it also works after the change is merged) to see exactly
   what text changed, greps every repo in `known-downstream-repos.json` for
   the old text, and for each hit reads context to decide: genuine stale
   duplicate (flag it) or coincidental match on the same characters but
@@ -34,15 +35,12 @@ motivating incident.
 
 ## Install (global — one machine-wide install)
 
-1. Copy the script to a fixed, machine-wide location:
-   ```bash
-   mkdir -p "$HOME/.claude/hooks/root-memory-propagation"
-   cp nudge.sh known-downstream-repos.json "$HOME/.claude/hooks/root-memory-propagation/"
-   chmod +x "$HOME/.claude/hooks/root-memory-propagation/nudge.sh"
-   ```
+1. Link this folder into `~/.claude/hooks/root-memory-propagation` with
+   `tools/relink_live.ps1` (see the repo README's Installation section).
+   The agent is linked by the same script, via `~/.claude/agents`.
 2. Merge `settings-snippet.json`'s `hooks.PostToolUse` entry into
-   `~/.claude/settings.json` (append to the existing `PostToolUse` array —
-   don't overwrite the `continual-learning` entry already there).
+   `~/.claude/settings.json` (append to any existing `PostToolUse` array,
+   don't replace it).
 3. No other dependencies — no `jq` needed, same reasoning as
    `hooks/git-guardrails`.
 
@@ -62,5 +60,4 @@ echo '{"tool_input":{"file_path":"C:\\Users\\benha\\OneDrive\\Documents\\GitHub\
   `Edit`/`Write` tools — a direct filesystem edit outside the harness won't
   trigger it. Same layered-defense caveat as `hooks/git-guardrails`.
 - The subagent is read-only — it reports findings, it never edits a
-  downstream repo itself. The session decides what to fix, same as
-  `plan-gate-sync-auditor`.
+  downstream repo itself. The session decides what to fix.

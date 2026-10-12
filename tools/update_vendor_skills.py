@@ -398,10 +398,13 @@ def apply_update(name: str) -> None:
         print("\nReapply ritual for the known edits listed above:")
         print(f"  1. git diff HEAD -- {entry['local_path']}   "
               "(your edits are the removed lines)")
-        print("  2. Reapply each edit by hand — judgment call if upstream "
-              "rewrote that section.")
+        print("  2. Reapply each edit — run the `vendor-sync-reapply` agent "
+              "(it does steps 2-3 and reports any edit it could not "
+              "reapply cleanly).")
         print(f"  3. python tools/update_vendor_skills.py --bless {name}")
-        print("  4. Review the full diff, then commit.")
+        print("  4. If the diff touches `disable-model-invocation` or adds a "
+              "skill, run the `skill-safety-auditor` agent before committing.")
+        print("  5. Review the full diff, then commit.")
 
 
 def bless(name: str) -> None:

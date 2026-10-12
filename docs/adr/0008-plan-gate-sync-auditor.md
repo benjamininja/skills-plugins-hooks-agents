@@ -1,6 +1,9 @@
 # plan-gate-sync-auditor: a third agent, homed here despite auditing a different repo
 
-- Status: accepted
+- Status: superseded (2026-10-12) — the agent is retired. `project-memory-template`'s
+  tiers no longer restate the plan gate (root `~/.claude/CLAUDE.md` supplies it in
+  every session on the owner's machines), so there is nothing left to keep in sync.
+  The agent also had no trigger and was never run. Text below is history.
 - Date: 2026-07-17
 - Scope: `.claude/agents/plan-gate-sync-auditor.md`
 

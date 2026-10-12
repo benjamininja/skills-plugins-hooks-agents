@@ -48,8 +48,8 @@
     "fabric-collection/fabric-skills (manifest-only)"
   ],
   "hooks": [
-    "continual-learning",
     "git-guardrails",
+    "root-memory-propagation",
     "skill-catalog-health"
   ]
 }
