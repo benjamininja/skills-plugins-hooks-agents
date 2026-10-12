@@ -22,6 +22,8 @@ Some skills are authored here; others are vendored from upstream projects and cr
 │   ├── caveman/                                # token-compression communication (prose)
 │   ├── ponytail/                                # YAGNI/minimal-diff discipline for code generation (pairs with caveman)
 │   ├── ponytail-debt/                           # harvest `ponytail:` shortcut comments into a ledger
+│   ├── read-the-damn-docs/                      # web-search official docs before coding against external APIs
+│   ├── stay-within-limits/                      # pace long/parallel work inside 5-hour and weekly usage limits
 │   ├── fantasy-football-python/                # dynasty fantasy football ETL
 │   │   └── references/data-model.md
 │   ├── frontend-design/                        # production-grade frontend UI (+ LICENSE.txt)
@@ -146,6 +148,13 @@ the personal `~/.claude/skills/`.
 |-------|-------------|--------|
 | **ponytail** | YAGNI ladder for any coding task: does this need to exist → reuse what's here → stdlib → native → existing dependency → one line → minimum code. Auto-active every response, default intensity `full`. | [DietrichGebert/ponytail](https://github.com/DietrichGebert/ponytail) |
 | **ponytail-debt** | Harvests `ponytail:` shortcut-comment markers (deliberate simplifications with a named ceiling/upgrade path) into one tracked ledger. | [DietrichGebert/ponytail](https://github.com/DietrichGebert/ponytail) |
+
+**Agent discipline** (cross-cutting; both model-invocable):
+
+| Skill | Description | Source |
+|-------|-------------|--------|
+| **read-the-damn-docs** | Before coding against a third-party API, SDK, framework or CLI: find and read the current official docs, then name the sources used. | [BuilderIO/skills](https://github.com/BuilderIO/skills) |
+| **stay-within-limits** | Runs long or parallel work in waves, checks 5-hour and weekly usage between waves, pauses near the cap. Local edit: `ccusage` pinned to a fixed version. | [BuilderIO/skills](https://github.com/BuilderIO/skills) |
 
 **Idea → ship engineering flow** (see `ask-matt` for the full map):
 
@@ -314,6 +323,8 @@ Vendored skills are static copies of a single skill folder from each upstream re
 | powerbi-authoring-common *(→ `skills/_powerbi-authoring-common/`)* | `microsoft/skills-for-fabric` | `b961296` | `plugins/powerbi-authoring/common/` |
 | ponytail | `DietrichGebert/ponytail` | `14a0d79` | `.openclaw/skills/ponytail/` |
 | ponytail-debt | `DietrichGebert/ponytail` | `14a0d79` | `.openclaw/skills/ponytail-debt/` |
+| read-the-damn-docs | `BuilderIO/skills` | `ee24fb4` | `skills/read-the-damn-docs/` |
+| stay-within-limits | `BuilderIO/skills` | `bc3816f` | `skills/stay-within-limits/` |
 
 Manifest-only entries (`fabric-authoring`, `fabric-operations`, `fabric-skills`) live under a separate `plugin_manifests_only[]` array in `vendor-skills.json` — see `plugins/README.md`.
 

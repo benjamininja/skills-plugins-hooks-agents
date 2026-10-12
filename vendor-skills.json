@@ -374,6 +374,36 @@
       "pinned_commit": "2a1fe842d078cf66ec7f3e6096a8ca4279c2cad7",
       "source_path": ".openclaw/skills/ponytail-debt",
       "local_path": "skills/ponytail-debt"
+    },
+    {
+      "name": "read-the-damn-docs",
+      "repo": "BuilderIO/skills",
+      "branch": "main",
+      "pinned_ref": "ee24fb4",
+      "pinned_commit": "ee24fb470fb54c402a64481308c07848bcfe04d4",
+      "source_path": "skills/read-the-damn-docs",
+      "local_path": "skills/read-the-damn-docs"
+    },
+    {
+      "name": "stay-within-limits",
+      "repo": "BuilderIO/skills",
+      "branch": "main",
+      "pinned_ref": "bc3816f",
+      "pinned_commit": "bc3816f8ed07e4e45c74ba4496be0e19276e0550",
+      "source_path": "skills/stay-within-limits",
+      "local_path": "skills/stay-within-limits",
+      "known_local_edits": [
+        {
+          "file": "SKILL.md",
+          "reason": "ccusage@latest pinned to ccusage@20.0.26: the usage check runs the package on every wave, so an unpinned tag would execute whatever was published last. Bump deliberately.",
+          "local_sha": "0db0df4e73fa97a07eba22e433a4f60c0c3ca61b"
+        },
+        {
+          "file": "README.md",
+          "reason": "ccusage@latest pinned to ccusage@20.0.26: the usage check runs the package on every wave, so an unpinned tag would execute whatever was published last. Bump deliberately.",
+          "local_sha": "fc2878d212d4bc2024ef5fe30118c7fc626d8221"
+        }
+      ]
     }
   ],
   "plugin_manifests_only": [
