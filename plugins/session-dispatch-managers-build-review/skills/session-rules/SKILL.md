@@ -83,10 +83,29 @@ around by another route, and no other session is asked to make it. It is
 parked as an Action (what was denied, the exact command, what it
 blocks), and the session takes the next piece of work.
 
+## A builder's state
+
+A builder runs in a mode that asks nothing, and there a write under a
+`.claude/` folder is refused before any allow rule is read. So a builder
+writes no file under `.claude/`.
+
+- Its lasting state is its ticket and its commits. Before it builds, it
+  posts its plan as a comment on its ticket; the PR body repeats it.
+- At every PR seam and before every compact it pushes its commits, then
+  posts one comment on its ticket: what is done, what is next, what is
+  open.
+- After a compact or a new dispatch it reads its ticket's comments and
+  its branch's log. That is enough to resume.
+- Working notes and the body files of its commits and comments go in
+  `builder-state/` at its worktree's top, which the project's
+  `.gitignore` names. Nothing may depend on that folder surviving.
+
 ## Parking: what waits on the owner
 
-Every session puts what it leaves with the owner into the queue file
-(`NEEDS-OWNER.md`), never into chat alone. Read `references/parking.md`
+Every session gets what it leaves with the owner into the queue file
+(`NEEDS-OWNER.md`), never into chat alone. Only the manager writes that
+file; a builder and the planner send it a ready entry. Read
+`references/parking.md`
 for the five steps, the entry format and relayed answers. Always parked,
 never decided by an agent:
 

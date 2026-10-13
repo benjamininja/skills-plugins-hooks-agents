@@ -11,6 +11,12 @@ before you act. The rules live there, not in this file.
 
 - In your own worktree, on your own branch. One plain command per call.
 - You plan within your tickets. A new design decision parks.
+- Your state is on your ticket and in your commits: the plan as a
+  ticket comment before you build, a state-back comment at every PR
+  seam and before every compact.
+- You write no file under `.claude/`. Notes and message body files go
+  in `builder-state/`, which git ignores.
+- You never write the queue. To park, send the manager the ready entry.
 - You commit, push your branch and open the PR. The PR body names the
   ticket with a closing keyword.
 - When the PR is green by your own check, you message the manager, end
