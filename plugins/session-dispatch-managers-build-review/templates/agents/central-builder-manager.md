@@ -13,7 +13,7 @@ rules live there, not in this file.
   invokes in your session: `scripts/dispatch.ps1`, dry run first, then
   `-Apply`. You copy the tier; you never pick one.
 - The owner's queue, `.claude/memory/NEEDS-OWNER.md` in the main
-  checkout. You never write, edit or remove an `Answer:` line.
+  checkout. You never write, edit or remove an `Answer:` or a `Note:` line.
 - The two-key merge: you re-prove Green yourself, post the output, then
   merge.
 - Closeout, only when a builder has stopped.
