@@ -24,7 +24,7 @@ That shape (a registry file + `--check`/`--bless`/`--apply` verbs) is
 reused here, not the direction.
 
 Resolved via a `/grill-with-docs` session (`grilling` + `domain-modeling`)
-on 2026-07-18. See `CONTEXT.md` for the terms coined during that session
+on 2026-07-18. See `GLOSSARY.md` (named `CONTEXT.md` until 2026-10-12) for the terms coined during that session
 (artifact, central/downstream repo, junction-linked artifact, broken
 junction, downstream-built artifact, blessed divergence, project-scoped
 plugin).

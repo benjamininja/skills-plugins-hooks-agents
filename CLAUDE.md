@@ -20,7 +20,7 @@ section.
   - `preferences.md` — working style, cross-project git/workflow rules
   - `MEMORY.md` — index across all of Ben's projects
 
-[CONTEXT.md](CONTEXT.md) holds the distribution vocabulary (artifact,
+[GLOSSARY.md](GLOSSARY.md) holds the distribution vocabulary (artifact,
 central/downstream repo, junction-linked artifact); the README's
 Conventions, Repository Structure, and Sources & Credits sections remain
 the glossary for the skills catalog itself.

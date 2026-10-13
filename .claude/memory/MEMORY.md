@@ -65,7 +65,7 @@
   all 4 artifact types) is deferred history. Current scope: agents + hooks
   only, via ADR-0003 directory junctions (`~/.claude/agents` and
   `~/.claude/hooks/<name>`); registry/CLI/check-in wait for observed
-  drift; native plugin marketplace evaluated, not adopted. `CONTEXT.md`'s
+  drift; native plugin marketplace evaluated, not adopted. `GLOSSARY.md`'s
   distribution terms match the rescope.
   **Revision 2 (2026-10-12)**: all `~/.claude` links point at a live clone
   pinned to `main` (`C:\Users\benha\claude-live\skills-plugins-hooks-agents`),
