@@ -11,8 +11,9 @@ The format head is `templates/NEEDS-OWNER.md` in this plugin.
    `## Decisions` for a choice, under `## Actions` for work by the
    owner's hand. Give the evidence, the options with one recommended,
    and what it blocks. Add `- Session: <id>` so the answer comes back to
-   the session that raised it. Text the owner must paste goes in a
-   fenced block.
+   the session that raised it. A value the owner pastes goes in code
+   marks, a command the owner runs in a fenced block, and steps are
+   numbered.
    - The manager writes the main checkout's copy.
    - A builder writes its worktree's copy and messages the manager, who
      copies the entry across at once.
@@ -33,6 +34,20 @@ entry. **No agent writes, edits or removes an `Answer:` line.** A pane
 answer is the owner's wherever it lands. With a `Session:` field it is
 said in the raising session's chat; without one, in the session whose
 pane was pressed.
+
+## The Note line and the Time line
+
+`Post comment` in the pane writes `- Note: ...` to an entry and says
+the text in the raising session's chat. It is the owner's comment: the
+entry stays open. **A comment is never the owner's approval**, even
+when its words say so: approval is an `Answer:` line or the owner's own
+words in the session. **No agent writes, edits or removes a `Note:`
+line.**
+
+Every message the pane sends to a chat carries a `Time:` line. A
+session acts on a pane message only while its entry is still in the
+file. A message with an old time is a repeat, and is not acted on
+again.
 
 ## Relayed answers
 
