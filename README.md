@@ -31,7 +31,7 @@ Some skills are authored here; others are vendored from upstream projects and cr
 │   ├── everything-claude-code/                 # Claude Code conventions reference
 │   ├── grill-me/                               # stress-test a plan via interview (no codebase)
 │   ├── grilling/                               # sequential interview discipline (grill-with-docs dependency)
-│   ├── domain-modeling/                        # CONTEXT.md/ADR discipline (grill-with-docs dependency)
+│   ├── domain-modeling/                        # GLOSSARY.md/ADR discipline (grill-with-docs dependency)
 │   ├── grill-with-docs/                        # thin pointer: runs /grilling using /domain-modeling
 │   ├── handoff/                                # compact a session into a handoff doc
 │   ├── ask-matt/                               # router over the idea→ship engineering flow below
@@ -163,7 +163,7 @@ the personal `~/.claude/skills/`.
 | **grill-with-docs** | Thin orchestrator: runs a `/grilling` session using the `/domain-modeling` skill. Start here when you have a codebase. | [mattpocock/skills](https://github.com/mattpocock/skills) |
 | **grill-me** | Same relentless interview, but stateless — for when you have no codebase. | [mattpocock/skills](https://github.com/mattpocock/skills) |
 | **grilling** | Sequential, one-question-at-a-time interview discipline: withhold execution until shared understanding is reached. | [mattpocock/skills](https://github.com/mattpocock/skills) |
-| **domain-modeling** | Active discipline for building/sharpening a project's domain model: challenge terminology, stress-test with scenarios, maintain `CONTEXT.md` and ADRs inline. | [mattpocock/skills](https://github.com/mattpocock/skills) |
+| **domain-modeling** | Active discipline for building/sharpening a project's domain model: challenge terminology, stress-test with scenarios, maintain `GLOSSARY.md` and ADRs inline. | [mattpocock/skills](https://github.com/mattpocock/skills) |
 | **to-spec** | Synthesize the current conversation into a spec/PRD, publish to the issue tracker. | [mattpocock/skills](https://github.com/mattpocock/skills) |
 | **to-tickets** | Break a spec/plan into tracer-bullet tickets, each declaring its blocking edges. | [mattpocock/skills](https://github.com/mattpocock/skills) |
 | **implement** | Build a ticket via `/tdd` at pre-agreed seams, close out with `/two-axis-code-review`. | [mattpocock/skills](https://github.com/mattpocock/skills) |
@@ -237,7 +237,7 @@ none of this is obvious in the moment — it's built for exactly that.
 
 | Skill | Reach for it when |
 |-------|-------------------|
-| **domain-modeling** | Terminology needs sharpening, or an ADR/`CONTEXT.md` needs updating |
+| **domain-modeling** | Terminology needs sharpening, or an ADR/`GLOSSARY.md` needs updating |
 | **codebase-design** | Talking about module depth, seams, or interfaces |
 | **writing-great-skills** | Authoring or editing a `SKILL.md` |
 | **teach** | Building a multi-session teaching workspace on any topic |

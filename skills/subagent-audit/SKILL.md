@@ -84,7 +84,7 @@ conventions.
 *Action:* propose an auditor persona whose system prompt is grounded in
 *this repo's* actual architecture docs (find and name the real ones —
 ADRs, design docs, whatever exists — don't assume a filename like
-`CONTEXT.md` if it isn't there). It should actively look for edge cases,
+`GLOSSARY.md` if it isn't there). It should actively look for edge cases,
 race conditions, and deviations from established patterns, not just
 re-read the diff approvingly.
 
