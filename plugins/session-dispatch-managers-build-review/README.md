@@ -46,7 +46,10 @@ the example settings files deny it.
    the two `*.settings.example.json` files. Add the project's proof
    commands to the builders' allow list. The managers' file needs an
    allow rule for the script; the example has one.
-5. Keep deny rules for every settings file, for `.claude/dispatch.json`
+5. Add the line `builder-state/` to the project's `.gitignore`. A
+   builder keeps its working notes there; its lasting state is its
+   ticket and its commits.
+6. Keep deny rules for every settings file, for `.claude/dispatch.json`
    and for the list of projects in both files, so no session can
    change its own fence.
 
