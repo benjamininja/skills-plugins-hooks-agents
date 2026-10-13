@@ -39,8 +39,10 @@ pane was pressed.
 
 `Post comment` in the pane writes `- Note: ...` to an entry and says
 the text in the raising session's chat. It is the owner's comment: the
-entry stays open, and the comment is acted on as far as its words go.
-**No agent writes, edits or removes a `Note:` line.**
+entry stays open. **A comment is never the owner's approval**, even
+when its words say so: approval is an `Answer:` line or the owner's own
+words in the session. **No agent writes, edits or removes a `Note:`
+line.**
 
 Every message the pane sends to a chat carries a `Time:` line. A
 session acts on a pane message only while its entry is still in the
