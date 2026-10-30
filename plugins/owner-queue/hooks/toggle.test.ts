@@ -79,3 +79,22 @@ test('the band button hides the pane and shows it again', async ($, on) => {
     await ui.unmount()
   }
 })
+
+test('a read of the queue never opens the pane by itself', async ($, on) => {
+  let opened = 0
+  on('fs.read', () => ({ value: FILE }))
+  on('ui.status', () => ({ value: undefined }))
+  on('ui.toast', () => ({ value: undefined }))
+  on('ui.open', () => {
+    opened += 1
+
+    return { value: { isPlaced: true } }
+  })
+
+  // `/owner show` reads the queue and finds its entries new, and opens nothing.
+  await $.command.run({ command: 'owner', args: 'show' })
+  expect(opened).toBe(0)
+
+  await $.command.run({ command: 'owner', args: '' })
+  expect(opened).toBe(1)
+})

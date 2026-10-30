@@ -39,7 +39,7 @@ import {
   waiting,
 } from './parse'
 
-const VERSION = '0.7.1'
+const VERSION = '0.7.2'
 const PANE = 'owner-queue'
 const TITLE = 'Needs owner'
 const FILE = '.claude/memory/NEEDS-OWNER.md'
@@ -255,7 +255,7 @@ async function toggle($: EngineInterface): Promise<void> {
   await (isUp ? hide($) : show($))
 }
 
-/** Re-reads the queue file; redraws, toasts and opens the pane on a change. */
+/** Re-reads the queue file; redraws and toasts on a change. The owner opens the pane. */
 async function refresh($: EngineInterface): Promise<OwnerQueue> {
   const { file, isMain } = await source($)
   let text: string | undefined
@@ -320,7 +320,6 @@ async function refresh($: EngineInterface): Promise<OwnerQueue> {
       const more = fresh.length > 1 ? ` (+${fresh.length - 1} more)` : ''
       $.ui.toast(`Needs you, ${first.kind}: ${first.title}${more}`)
     }
-    void show($)
   }
 
   return now
