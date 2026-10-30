@@ -86,6 +86,14 @@ def test_dry_run_prints_the_start_command_and_changes_nothing(project):
     assert sorted(p.name for p in (project / ".claude").iterdir()) == before
 
 
+def test_the_start_command_names_this_plugin(project):
+    # A --bg session did not get the plugin from CLAUDE_CODE_PLUGIN_DIRS: its
+    # transcript said "Unknown skill: session-rules".
+    out = dispatch(project, "-Tier", "medium").stdout
+    start = next(line for line in out.splitlines() if "--bg" in line)
+    assert str(PLUGIN) in start.split("--plugin-dir", 1)[1].split("--agent", 1)[0]
+
+
 def test_a_turn_cap_and_no_setup_are_taken(project):
     out = dispatch(project, "-Tier", "low", "-TurnCap", "12", "-NoSetup").stdout
 

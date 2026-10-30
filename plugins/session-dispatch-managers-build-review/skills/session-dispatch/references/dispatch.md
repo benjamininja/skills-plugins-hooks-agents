@@ -48,8 +48,8 @@ that starts with a slash into a path.
 
 Only for a builder this session dispatched, on the same ticket.
 `claude stop <id>` first, then, from the builder's worktree,
-`claude --resume <sessionId> --bg <message>` with the same mode and
-settings file. Resuming a session that is still alive starts a copy.
+`claude --resume <sessionId> --bg <message>` with the same mode,
+settings file and `--plugin-dir`. Resuming a session that is still alive starts a copy.
 The message holds no double quote.
 
 ## Close out, only when a builder has stopped
