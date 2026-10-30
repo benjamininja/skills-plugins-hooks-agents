@@ -15,8 +15,9 @@ The format head is `templates/NEEDS-OWNER.md` in this plugin.
    marks, a command the owner runs in a fenced block, and steps are
    numbered.
    - The manager writes the main checkout's copy.
-   - A builder writes its worktree's copy and messages the manager, who
-     copies the entry across at once.
+   - A builder never writes the queue. Its message to the manager
+     holds the ready entry, and the manager writes it at once. The
+     builder adds one line to its ticket: parked, and why.
    - The planner sends the manager a ready entry.
 3. Tell the owner once, by the session's own notification tool if it
    has one, and send one message to the session that started this
