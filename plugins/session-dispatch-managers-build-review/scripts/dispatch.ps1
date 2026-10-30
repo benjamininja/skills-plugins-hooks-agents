@@ -150,6 +150,7 @@ $start = @(
     $claude, '--bg', '-w', $Name, '--name', $Name,
     '--model', $chosen.model, '--effort', $chosen.effort,
     '--permission-mode', $mode, '--settings', $settingsPath,
+    '--plugin-dir', (Split-Path -Parent $PSScriptRoot),
     '--agent', $agent, $prompt, '--disallowedTools'
 ) + $deny
 $check = @($claude, 'agents', '--json')
