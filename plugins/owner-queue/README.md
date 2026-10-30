@@ -74,6 +74,7 @@ entry, as a comment or as the answer.
   session's own copy and says so in bold.
 - `Refresh` reads the file now. It is also read every 5 seconds and after
   each tool call.
+- The pane never opens by itself: `Show queue` or `/owner` opens it, and a new entry only updates the status line and shows a toast.
 - `/owner` opens the pane and prints the counts. `/owner show` prints every
   entry into the transcript, and `/owner show a2` or `/owner show d1` one
   entry. A pane's text cannot be selected with the mouse; the transcript's
