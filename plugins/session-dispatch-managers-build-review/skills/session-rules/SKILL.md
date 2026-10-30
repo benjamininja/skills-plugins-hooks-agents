@@ -1,6 +1,6 @@
 ---
 name: session-rules
-description: Rules for a project run by three kinds of session - a planner, a builder manager and builders. Tiers, briefs, the Never list, a denied call, parking work with the owner, and who may merge. Use when a session runs as a planner, a builder manager or a stage builder, when a ticket needs a tier, or when something must be left with the owner. It starts nothing and merges nothing: dispatch, merging and closeout are in the manual session-dispatch skill.
+description: Rules for a project run by three kinds of session - a planner, a builder manager and builders. Tiers, briefs, the Never list, a denied call, parking work with the owner, and who may merge. Use when a session runs as a planner, a builder manager or a stage builder, when a ticket needs a tier, or when something must be left with the owner. It starts nothing and merges nothing; dispatch, merging and closeout are in the manual session-dispatch skill.
 ---
 
 # Session rules
