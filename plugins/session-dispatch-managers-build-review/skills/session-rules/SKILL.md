@@ -71,17 +71,20 @@ runs it at re-proof. A brief holds no double quote. Template:
 - Starting a builder, merging, or deleting a branch or a worktree on its
   own initiative. Only a manager does these, only for a named ticket,
   and only in a session where the owner has invoked the
-  `session-dispatch` skill.
+  `session-dispatch` skill. The one exception: a session the owner tells
+  directly to merge a named PR or delete a named branch or worktree does
+  that item.
 - Weakening a test, a check or a rule to make work pass.
 - A secret's value in a file, a ticket or a chat. Secrets are named.
 - The project's own "Never" lines, in the project rules file.
 
 ## A denied call
 
-A call the permission system refuses is never retried, never worked
-around by another route, and no other session is asked to make it. It is
-parked as an Action (what was denied, the exact command, what it
-blocks), and the session takes the next piece of work.
+A refused call is not retried unchanged and no other session is asked to make it. 
+If the session’s chat is one the owner is using, ask there in one line: what was 
+refused, the exact command, what it blocks. If the owner approves there, 
+make the call once more. If it is refused again, or the session is unattended, 
+park it as an Action and take the next piece of work.
 
 ## A builder's state
 
