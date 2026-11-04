@@ -25,10 +25,12 @@ session loads on its own: the owner invokes it in a manager's session.
 
 | Tier | Model and effort | For | Turn cap |
 |---|---|---|---|
+| haiku | Haiku, medium | mechanical work only: files, exact edits and proof named up front, and no design | 15 |
 | low | Sonnet, medium | tightly scoped work: files and proof are named up front | 30 |
 | medium | Sonnet, high | work whose first step is to find something out | 80 |
 | high | Opus, medium | a stage, more than one PR, or an ADR | 200 |
 
+- A project's rules file may name the work a haiku tier never takes.
 - **The planner sets the tier** on the ticket: a `Tier:` line at the top
   of its body and the matching label. When torn between two, the higher.
   A ticket worked with the owner (grilling, prototype, a map) is

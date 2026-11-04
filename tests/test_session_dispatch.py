@@ -126,7 +126,15 @@ def test_an_unknown_tier_is_refused(project):
     done = dispatch(project, "-Tier", "max")
 
     assert done.returncode == 2
-    assert "low, medium or high" in done.stderr
+    assert "haiku, low, medium or high" in done.stderr
+
+
+def test_a_haiku_tier_takes_the_haiku_settings(project):
+    out = dispatch(project, "-Tier", "haiku").stdout
+
+    assert "tier:      haiku (claude-haiku-5-5, effort medium, turn cap 15)" in out
+    assert "--model claude-haiku-5-5 --effort medium" in out
+    assert "Or stop after 15 turns." in out
 
 
 def test_no_config_is_refused(project):
