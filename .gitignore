@@ -3,3 +3,7 @@ __pycache__/
 .claude/learnings.db
 .pytest_cache/
 pytest-cache-files-*/
+
+# Builder worktrees (dispatch.ps1) and their venvs
+.claude/worktrees/
+.venv/
