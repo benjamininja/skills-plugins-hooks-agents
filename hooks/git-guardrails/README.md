@@ -23,13 +23,28 @@ this is a behavior adaptation.
     that's `main`/`master`.
   - An explicit non-main branch named (`git push origin my-feature`) →
     always allowed, even if `main` happens to be checked out locally.
-- **`reset --hard` / `clean -f` / `branch -D` / `checkout .` / `restore .`
-  stay blanket-blocked** — these are destructive regardless of branch, so no
+- **`reset --hard` / `clean -f` / `checkout .` / `restore .` stay
+  blanket-blocked** — these are destructive regardless of branch, so no
   branch-aware logic applies (kept per explicit decision when this hook was
   built, 2026-07-11). Matching is by meaning, not by one spelling: any flag
   cluster containing `f` on `clean` (`-df`, `-xdf`, `--force`), `--hard`
   anywhere after `reset`, `checkout -- .`. `git restore --staged .` is
   allowed (it only unstages).
+- **A force branch delete is allowed only after its PR merged** (owner
+  decision 2026-11-03; the repo squash-merges, so plain `-d` always refuses
+  a merged branch). Any spelling counts: `-D`, bundles like `-Dq`, `-df`,
+  `-fd`, `--delete --force`, `-d --force`, `-d -f`. It passes only when
+  every branch it names has a merged PR
+  (`gh pr list --head <branch> --state merged --json headRefOid`, run in the
+  `-C` dir when one is given, 10 s cap) and the branch's local tip
+  (`rev-parse refs/heads/<branch>`) equals that PR's `headRefOid`, so a
+  commit made after the PR's last push stays blocked. It blocks when `gh` is
+  missing, fails or times out, when no branch is named, when a name is a
+  pattern or the segment holds `$` or a backtick, and when `-C` is a network
+  path. The message says why (`no merged PR for 'x'`, `'x' has commits after
+  its merged PR`). Text after a `#` never adds a name. Deleting the checked-out
+  branch stays git's own refusal; `push --delete` is unchanged (the push rules
+  cover it). Needs `gh` on `PATH` and a GitHub remote in the repo.
 - **Global options are stripped before matching** (2026-10-12).
   `git -C <path> push origin main`, `git -c k=v reset --hard` and
   `git --git-dir=<dir> clean -fd` used to pass because the match was on the
@@ -79,6 +94,9 @@ The layer that cannot be bypassed locally is the GitHub ruleset on `main`
 front of it, and the only layer covering the local-only destructive
 commands (`reset --hard`, `clean -f`, ...).
 
+The force-delete exemption trusts `gh`'s answer for the current repo's remote;
+it does not see a branch deleted from a script, an alias or a terminal.
+
 ## Install (global — one machine-wide install, works in every repo)
 
 1. Link this folder into `~/.claude/hooks/git-guardrails` with
@@ -95,7 +113,8 @@ commands (`reset --hard`, `clean -f`, ...).
 
 `tests/test_git_guardrails.py` feeds the hook the JSON a `PreToolUse` hook
 receives and asserts blocked (exit 2) or allowed (exit 0) for every pattern
-and every bypass found so far. It runs in CI on Ubuntu and Windows
+and every bypass found so far; `gh` is a PATH shim there, so no network and no
+branch is touched. It runs in CI on Ubuntu and Windows
 (`.github/workflows/test.yml`). Locally: `pip install pytest pyyaml`, then
 `python -m pytest -q tests`. A new bypass lands as a pinned case alongside
 its fix.

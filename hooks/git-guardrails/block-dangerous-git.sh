@@ -10,8 +10,13 @@
 #     main/master (by explicit refspec, or by falling back to whatever
 #     branch is currently checked out when the command names no branch at
 #     all). Upstream blanket-blocks ALL push.
-#   - reset --hard / clean -f / branch -D / checkout . / restore . stay
-#     blanket-blocked — always destructive regardless of branch.
+#   - reset --hard / clean -f / checkout . / restore . stay blanket-blocked
+#     — always destructive regardless of branch.
+#   - A force branch delete (-D, -d -f, --delete --force, ... any spelling)
+#     is blocked unless every branch it names has a merged PR whose head
+#     commit is the branch's local tip (`gh pr list --head <b> --state merged`,
+#     10 s cap). No branch named, a pattern, `$`, a backtick, or a missing or
+#     failing gh all block.
 #   - No jq dependency: the command string is pulled out of the hook JSON
 #     with sed, honoring escaped quotes (jq isn't reliably on PATH here).
 #
@@ -72,6 +77,69 @@ SWITCHED_TO_MAIN=""
 # for counting what a push names. Blocking patterns never use this.
 uncommented() { echo "$1" | sed -E 's/(^|[[:space:]])#.*$//'; }
 
+GH_CAP=10
+
+# A force branch delete passes only when every branch it names has a merged
+# PR whose head commit is the branch's local tip. $1 = flattened segment,
+# $2 = the segment before quotes and `$` were flattened, $3 = the -C path.
+check_force_branch_delete() {
+  local flat="$1" pre="$2" cdir="$3"
+  local rest="${flat#*git branch}"
+
+  # Delete and force, read from the whole text (a comment can only add to it).
+  local all del="" frc="" t body
+  read -ra all <<< "$rest"
+  for t in "${all[@]}"; do
+    case "$t" in
+      --*)
+        body="${t#--}"; body="${body%%=*}"
+        [[ -n "$body" && "delete" == "$body"* ]] && del=1
+        [[ -n "$body" && "force" == "$body"* ]] && frc=1 ;;
+      -*)
+        [[ "$t" == *[dD]* ]] && del=1
+        [[ "$t" == *[fD]* ]] && frc=1 ;;
+    esac
+  done
+  [[ -n "$del" && -n "$frc" ]] || return 0
+
+  if [[ "$pre" == *'$'* || "$pre" == *'`'* ]]; then
+    block "force branch delete with \$ or a backtick — name each branch literally"
+  fi
+
+  # The branches it names: words that are not flags, comment excluded.
+  local names=() n
+  read -ra all <<< "$(uncommented "$rest")"
+  for n in "${all[@]}"; do
+    [[ "$n" == -* ]] && continue
+    case "$n" in
+      *'*'*|*'?'*|*'['*|*']'*) block "force branch delete of a pattern '$n' — name each branch literally" ;;
+    esac
+    names+=("$n")
+  done
+  [[ ${#names[@]} -eq 0 ]] && block "force branch delete names no branch"
+
+  case "$cdir" in
+    [/\\][/\\]*|[/\\]\?\?[/\\]*) block "force branch delete with -C pointing at a network path" ;;
+  esac
+  local dir="${cdir:-${CLAUDE_PROJECT_DIR:-$PWD}}"
+
+  local out oids tip
+  for n in "${names[@]}"; do
+    out=$(cd "$dir" 2>/dev/null && timeout "$GH_CAP" gh pr list --head "$n" --state merged --json headRefOid 2>/dev/null) \
+      || block "cannot check '$n' against a merged PR: gh is missing, failed or took longer than ${GH_CAP}s"
+    oids=$(printf '%s' "$out" \
+      | grep -oE '"headRefOid"[[:space:]]*:[[:space:]]*"[0-9a-fA-F]+"' \
+      | sed -E 's/.*"([0-9a-fA-F]+)"$/\1/')
+    [[ -z "$oids" ]] && block "no merged PR for '$n'"
+    tip=$(git -C "$dir" rev-parse --verify -q "refs/heads/$n" 2>/dev/null || echo "")
+    [[ -z "$tip" ]] && block "no local branch '$n' to check against its merged PR"
+    if ! printf '%s\n' "$oids" | grep -qxF "$tip"; then
+      block "'$n' has commits after its merged PR (local tip ${tip:0:7} is not the head of any merged PR)"
+    fi
+  done
+  return 0
+}
+
 check_segment() {
   local seg="$1"
 
@@ -86,10 +154,11 @@ check_segment() {
   # `git <subcommand> ...` with global options removed, redirections
   # (`>file`, `2>>file`, `<file`) and backslashes dropped, then every shell
   # delimiter turned into a space and whitespace collapsed.
-  local flat
-  flat=$(echo "$seg" \
+  local pre flat
+  pre=$(echo "$seg" \
     | sed -E "s/git(\.exe)?(${GLOBAL_OPT})+[[:space:]]+/git /g; s/git\.exe([[:space:]]|$)/git /g" \
-    | sed -E 's/[0-9]*(>>?|<)[[:space:]]*[^[:space:]]*/ /g' \
+    | sed -E 's/[0-9]*(>>?|<)[[:space:]]*[^[:space:]]*/ /g')
+  flat=$(echo "$pre" \
     | tr -d '\\' | tr "\"'\`(){}\$\t" '         ' | tr -s ' ')
 
   # --- Blanket-blocked destructive commands ---
@@ -99,8 +168,8 @@ check_segment() {
   if echo "$flat" | grep -qE "git clean${ARGS}(-[[:alnum:]]*f[[:alnum:]]*|--force)${END}"; then
     block "matches blanket-blocked pattern 'git clean -f'"
   fi
-  if echo "$flat" | grep -qE "git branch${ARGS}-[[:alnum:]]*D[[:alnum:]]*${END}"; then
-    block "matches blanket-blocked pattern 'git branch -D'"
+  if echo "$flat" | grep -qE "git branch${END}"; then
+    check_force_branch_delete "$flat" "$pre" "$cdir"
   fi
   # `.` and its other spellings: `./`, `./.`, `./*`, `..`
   if echo "$flat" | grep -qE "git checkout${ARGS}\.[./*]*${END}"; then

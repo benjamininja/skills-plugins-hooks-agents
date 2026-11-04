@@ -70,6 +70,47 @@ def make_repo(path, branch):
     return path
 
 
+GH_SHIM = """#!/bin/bash
+d="$(dirname "$0")"
+head=""; state=""
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --head) head="$2"; shift ;;
+    --state) state="$2"; shift ;;
+  esac
+  shift
+done
+if [[ -f "$d/mode" ]]; then
+  case "$(cat "$d/mode")" in
+    fail) echo "gh: boom" >&2; exit 1 ;;
+    missing) echo "gh: command not found" >&2; exit 127 ;;
+    hang) exec sleep 60 ;;
+  esac
+fi
+if [[ -f "$d/pr.$head.$state" ]]; then cat "$d/pr.$head.$state"; else echo '[]'; fi
+"""
+
+
+@pytest.fixture(autouse=True)
+def gh(tmp_path, monkeypatch):
+    shim_dir = tmp_path / "gh-shim"
+    shim_dir.mkdir()
+    shim = shim_dir / "gh"
+    shim.write_bytes(GH_SHIM.encode("utf-8"))
+    shim.chmod(0o755)
+    monkeypatch.setenv("PATH", f"{shim_dir}{os.pathsep}{os.environ['PATH']}")
+    return shim_dir
+
+
+def set_pr(shim_dir, branch, oid, state="merged"):
+    (shim_dir / f"pr.{branch}.{state}").write_text(json.dumps([{"headRefOid": oid}]))
+
+
+def tip(repo, branch):
+    return subprocess.run(["git", "rev-parse", f"refs/heads/{branch}"], cwd=repo, check=True,
+                          capture_output=True, text=True).stdout.strip()
+
+
 @pytest.fixture
 def on_main(tmp_path):
     return make_repo(tmp_path / "on-main", "main")
@@ -304,3 +345,139 @@ def test_pretty_printed_json_is_parsed(on_feature):
     result = subprocess.run([BASH, str(HOOK)], input=payload.encode(), capture_output=True,
                             cwd=str(on_feature), timeout=30)
     assert result.returncode == 2, result.stderr.decode()
+
+
+# --- force branch delete: allowed only after its PR merged --------------------
+
+FORCE_DELETES = [
+    "git branch -D {b}",
+    "git branch -Dq {b}",
+    "git branch -D -q {b}",
+    "git branch --delete --force {b}",
+    "git branch -d --force {b}",
+    "git branch -d -f {b}",
+    "git branch -df {b}",
+    "git branch -fd {b}",
+    "git branch --force --delete {b}",
+    "git branch --del --forc {b}",
+    "git -C {repo} branch -D {b}",
+    "git --no-pager branch -D {b} 2>&1",
+    'git branch -D "{b}"',
+]
+
+
+@pytest.fixture
+def repo_with_branch(on_feature):
+    git(on_feature, "branch", "done-branch")
+    return on_feature
+
+
+def fmt(command, repo):
+    return command.format(b="done-branch", repo=repo.as_posix())
+
+
+@pytest.mark.parametrize("command", FORCE_DELETES)
+def test_force_delete_allowed_after_merged_pr(command, repo_with_branch, gh):
+    set_pr(gh, "done-branch", tip(repo_with_branch, "done-branch"))
+    result = run_hook(fmt(command, repo_with_branch), project_dir=repo_with_branch)
+    assert result.returncode == 0, result.stderr.decode()
+
+
+@pytest.mark.parametrize("command", FORCE_DELETES)
+def test_force_delete_blocked_without_merged_pr(command, repo_with_branch):
+    result = run_hook(fmt(command, repo_with_branch), project_dir=repo_with_branch)
+    assert result.returncode == 2, result.stderr.decode()
+    assert b"no merged PR for 'done-branch'" in result.stderr
+
+
+def test_force_delete_blocked_when_tip_moved_after_the_pr(repo_with_branch, gh):
+    set_pr(gh, "done-branch", "a" * 40)
+    result = run_hook("git branch -D done-branch", project_dir=repo_with_branch)
+    assert result.returncode == 2
+    assert b"has commits after its merged PR" in result.stderr
+
+
+def test_force_delete_blocked_when_only_a_closed_pr(repo_with_branch, gh):
+    set_pr(gh, "done-branch", tip(repo_with_branch, "done-branch"), state="closed")
+    result = run_hook("git branch -D done-branch", project_dir=repo_with_branch)
+    assert result.returncode == 2
+    assert b"no merged PR" in result.stderr
+
+
+@pytest.mark.parametrize("mode", ["fail", "missing", "hang"])
+def test_force_delete_blocked_when_gh_cannot_answer(mode, repo_with_branch, gh):
+    set_pr(gh, "done-branch", tip(repo_with_branch, "done-branch"))
+    (gh / "mode").write_text(mode)
+    result = run_hook("git branch -D done-branch", project_dir=repo_with_branch)
+    assert result.returncode == 2, result.stderr.decode()
+    assert b"gh is missing, failed or took longer" in result.stderr
+
+
+def test_force_delete_of_two_branches_needs_both(repo_with_branch, gh):
+    git(repo_with_branch, "branch", "other-branch")
+    set_pr(gh, "done-branch", tip(repo_with_branch, "done-branch"))
+    result = run_hook("git branch -D done-branch other-branch", project_dir=repo_with_branch)
+    assert result.returncode == 2
+    assert b"'other-branch'" in result.stderr
+    set_pr(gh, "other-branch", tip(repo_with_branch, "other-branch"))
+    result = run_hook("git branch -D done-branch other-branch", project_dir=repo_with_branch)
+    assert result.returncode == 0, result.stderr.decode()
+
+
+@pytest.mark.parametrize("command", [
+    "git branch -D",
+    "git branch --delete --force",
+    "git branch -D -q",
+    "git branch -D 'done-*'",
+    "git branch -D done-bran?h",
+    "git branch -D [d]one-branch",
+    "git branch -D $BRANCH",
+    "git branch -D `echo done-branch`",
+    "git branch -D $(echo done-branch)",
+    "git branch -D done-branch $OTHER",
+    "git branch -D # done-branch",
+])
+def test_force_delete_blocked_when_branch_is_not_literal(command, repo_with_branch, gh):
+    set_pr(gh, "done-branch", tip(repo_with_branch, "done-branch"))
+    result = run_hook(command, project_dir=repo_with_branch)
+    assert result.returncode == 2, result.stderr.decode()
+
+
+def test_comment_after_a_hash_does_not_add_a_name_or_break_the_exemption(repo_with_branch, gh):
+    set_pr(gh, "done-branch", tip(repo_with_branch, "done-branch"))
+    result = run_hook("git branch -D done-branch # merged in the PR", project_dir=repo_with_branch)
+    assert result.returncode == 0, result.stderr.decode()
+
+
+def test_force_delete_looks_in_the_dash_C_repo(on_main, repo_with_branch, gh):
+    set_pr(gh, "done-branch", tip(repo_with_branch, "done-branch"))
+    ok = run_hook(f'git -C "{repo_with_branch.as_posix()}" branch -D done-branch', project_dir=on_main)
+    assert ok.returncode == 0, ok.stderr.decode()
+    no_branch_here = run_hook("git branch -D done-branch", project_dir=on_main)
+    assert no_branch_here.returncode == 2
+    assert b"no local branch" in no_branch_here.stderr
+
+
+@pytest.mark.parametrize("command", [
+    "git -C //some-host/share branch -D done-branch",
+    r"git -C \\some-host\share branch -D done-branch",
+])
+def test_force_delete_never_opens_a_network_path(command, repo_with_branch, gh):
+    set_pr(gh, "done-branch", tip(repo_with_branch, "done-branch"))
+    result = run_hook(command, project_dir=repo_with_branch)
+    assert result.returncode == 2
+    assert b"network path" in result.stderr
+
+
+@pytest.mark.parametrize("command", [
+    "git branch",
+    "git branch -a",
+    "git branch -d done-branch",
+    "git branch -m done-branch renamed",
+    "git branch -f done-branch HEAD",
+    "git branch --list 'done-*'",
+    "git branch new-branch",
+])
+def test_branch_commands_that_are_not_a_force_delete_pass(command, repo_with_branch):
+    result = run_hook(command, project_dir=repo_with_branch)
+    assert result.returncode == 0, result.stderr.decode()
