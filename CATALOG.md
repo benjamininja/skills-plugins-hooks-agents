@@ -11,7 +11,7 @@
 - **Plugins** (3, manifest-only) — cataloged upstream bundles whose ~30 skills are deliberately not vendored (unused Fabric workloads). See `plugins/README.md` / ADR-0002.
 - **Hooks** (3, all installed on this machine) — deterministic event-triggered scripts under `hooks/`, registered in `~/.claude/settings.json`. See `hooks/README.md`.
 - **Vendor cache** (1) — pristine, never-loaded upstream mirrors of forked skills, for diffing. See ADR-0001.
-- **Agents** (3 here: root-memory-propagation-auditor, skill-safety-auditor, vendor-sync-reapply) — see each agent's own frontmatter `description`, and `docs/adr/` for the decision record behind it.
+- **Agents** (4 here: root-memory-propagation-auditor, skill-safety-auditor, supabase-consultant, vendor-sync-reapply) — see each agent's own frontmatter `description`, and `docs/adr/` for the decision record behind it.
 
 ## Skills
 
