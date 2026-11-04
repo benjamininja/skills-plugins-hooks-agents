@@ -46,6 +46,7 @@ $ErrorActionPreference = 'Stop'
 
 # Tier defaults; a project's dispatch.json may override a tier under "tiers".
 $tiers = @{
+    haiku  = @{ model = 'claude-haiku-5-5'; effort = 'medium'; turnCap = 15 }
     low    = @{ model = 'claude-sonnet-5-5'; effort = 'medium'; turnCap = 30 }
     medium = @{ model = 'claude-sonnet-5-5'; effort = 'high'; turnCap = 80 }
     high   = @{ model = 'claude-opus-5-5'; effort = 'medium'; turnCap = 200 }
@@ -99,7 +100,7 @@ if ($readLine.Contains('"')) { Refuse 'the readLine of the config file holds a d
 # 2. The tier.
 if (-not $Tier) { Refuse 'no tier, no dispatch. Planning sets the tier; pass it with -Tier' }
 $Tier = $Tier.ToLowerInvariant()
-if (-not $tiers.ContainsKey($Tier)) { Refuse "the tier must be low, medium or high: $Tier" }
+if (-not $tiers.ContainsKey($Tier)) { Refuse "the tier must be haiku, low, medium or high: $Tier" }
 $chosen = $tiers[$Tier].Clone()
 $over = Setting 'tiers' $null
 if ($over -and $over.PSObject.Properties[$Tier]) {
