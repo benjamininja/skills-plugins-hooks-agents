@@ -4,6 +4,7 @@ __pycache__/
 .pytest_cache/
 pytest-cache-files-*/
 
-# Builder worktrees (dispatch.ps1) and their venvs
+# Builder worktrees (dispatch.ps1), their venvs and builder notes
 .claude/worktrees/
 .venv/
+builder-state/
