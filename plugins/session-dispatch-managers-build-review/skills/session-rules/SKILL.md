@@ -88,6 +88,34 @@ refused, the exact command, what it blocks. If the owner approves there,
 make the call once more. If it is refused again, or the session is unattended, 
 park it as an Action and take the next piece of work.
 
+## Command forms a builder's mode lets through
+
+A builder's mode asks nothing. A command that matches no allow rule is
+refused, and a deny rule refuses any command that names its pattern,
+not only one that runs it. Most refusals are a near variant of an
+allowed command, so use the plain form first:
+
+- **One command per call, from the worktree's top.** No `cd … &&`
+  prefix, no chain, no variable prefix, no shell loop.
+- **Stage by folder or with `git add -u`, never by a file name a deny
+  rule holds.** The project rules file lists those names. A check runs
+  through the project's hook runner over the branch (for example
+  `pre-commit run --from-ref origin/main --to-ref HEAD`), not on the
+  named file.
+- **Read comments with `gh issue view <n> --comments` or
+  `gh pr view <n> --comments`**, never with `gh api`.
+- **Wait for CI with `gh pr checks <n> --watch`.** No polling loop and
+  no monitor.
+- **Bring the main branch in with `git fetch origin`, then
+  `git merge origin/main`.** Never a rebase.
+- **Python runs a committed script or the tests**, through the
+  project's interpreter. Never `-c`, never `pip install`: an install the
+  brief needs is parked.
+- **Scratch files are made with the Write tool** in `builder-state/`,
+  not with `mkdir` or `cp`.
+
+If the plain form is refused too, it is a denied call (above).
+
 ## A builder's state
 
 A builder runs in a mode that asks nothing, and there a write under a
