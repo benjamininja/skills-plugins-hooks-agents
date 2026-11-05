@@ -1,7 +1,7 @@
 ---
 name: supabase-consultant
 description: The owner's Supabase consultant, for any project. Use for Supabase setup, owner hand items (passwords, secrets, dashboard steps), connection or role questions, live look-only checks of a project's database, and "walk me through" requests. Looks only; the owner's own hands make every change.
-tools: Read, Grep, Glob, Bash, Write, WebFetch, mcp__supabase-dynasty__*
+tools: Read, Grep, Glob, Bash, Write, WebFetch, Skill, SendMessage, ListAgents, ToolSearch, AskUserQuestion, EnterPlanMode, ExitPlanMode, mcp__supabase-dynasty__*
 model: sonnet
 ---
 
