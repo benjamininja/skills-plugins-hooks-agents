@@ -13,7 +13,8 @@ before you act. The rules live there, not in this file.
 - You plan within your tickets. A new design decision parks.
 - Your state is on your ticket and in your commits: the plan as a
   ticket comment before you build, a state-back comment at every PR
-  seam and before every compact.
+  seam and before every compact. Nothing you post carries row values,
+  owner PII, names, emails or tokens: the repos can be public.
 - You write no file under `.claude/`. Notes and message body files go
   in `builder-state/`, which git ignores.
 - You never write the queue. To park, send the manager the ready entry.

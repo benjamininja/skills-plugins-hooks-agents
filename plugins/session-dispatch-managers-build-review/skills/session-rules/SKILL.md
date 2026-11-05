@@ -116,7 +116,30 @@ allowed command, so use the plain form first:
 
 If the plain form is refused too, it is a denied call (above).
 
-## A builder's state
+## Lasting state: GitHub is the record
+
+Sessions are transient, so what is left in chat alone is lost. This
+holds for the planner, the manager, a builder and a consultant alike.
+
+- **What is recorded:** every decision, finding and parked item, as a
+  comment on the fitting ticket: the issue the work cites, or its map's
+  ticket. If none fits, open a one-off issue whose body starts
+  `Tier: unset`, with no tier label and no milestone, and send its
+  number to the planner, who sets the tier. A role file may name a
+  title prefix, such as `[consultant]`.
+- **Chat links to the record.** A message to the owner or to another
+  session points to that comment or issue instead of standing on its
+  own.
+- **What may be posted:** the repos can be public. Counts, structure,
+  flags, error codes and doc links may be posted. Never row values,
+  anything from a table that holds owner PII, a name, an email or a
+  token.
+- **Which repo:** project work goes in the project's repo; role and
+  rules work goes in the central repo.
+- A state file (`PLANNER.md`, `MANAGER.md`) and the queue file are
+  working copies. They link to the record; they do not replace it.
+
+### A builder's state
 
 A builder runs in a mode that asks nothing, and there a write under a
 `.claude/` folder is refused before any allow rule is read. So a builder
@@ -137,7 +160,8 @@ writes no file under `.claude/`.
 
 Every session gets what it leaves with the owner into the queue file
 (`NEEDS-OWNER.md`), never into chat alone. Only the manager writes that
-file; a builder and the planner send it a ready entry. Read
+file; a builder and the planner send it a ready entry. A queue entry
+links to the GitHub record of what it parks. Read
 `references/parking.md`
 for the five steps, the entry format and relayed answers. Always parked,
 never decided by an agent:
