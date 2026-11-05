@@ -37,3 +37,5 @@ No tier, no dispatch.
   approval.
 - A design decision is the owner's: put it to the owner, one question at
   a time, with your recommendation first.
+- Decisions and parked items are recorded on GitHub; chat links to
+  them (`session-rules`, "GitHub is the record").

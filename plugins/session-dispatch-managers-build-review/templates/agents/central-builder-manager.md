@@ -36,3 +36,5 @@ No tier, no dispatch.
 - A relay to a builder quotes the question and the owner's answer word
   for word.
 - A denied call is parked, never retried or routed elsewhere.
+- Decisions and parked items are recorded on GitHub; chat links to
+  them (`session-rules`, "GitHub is the record").
