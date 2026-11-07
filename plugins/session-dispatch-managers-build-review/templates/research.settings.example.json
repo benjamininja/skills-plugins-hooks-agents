@@ -1,10 +1,11 @@
 {
-  "//": "A proposal for a profile's base settings file, named by baseSettings in the profiles file. The project owner copies this text into the real file (for example .claude/research.settings.json) and edits it by hand; no agent creates or changes a settings file. dispatch.ps1 passes it on --settings in place of the shared builders' file, and refuses it unless its deny list holds every deny rule of the shared file: copy that list in whole and keep the two in step. It has no bare Edit or Write, so the profile's Edit(builder-state/**) is the only write. This key is a note: delete it in the real file.",
+  "//": "A proposal for a profile's base settings file, named by baseSettings in the profiles file. The project owner copies this text into the real file (for example .claude/research.settings.json) and edits it by hand; no agent creates or changes a settings file. dispatch.ps1 passes it on --settings in place of the shared builders' file, and refuses it unless its deny list holds every deny rule of the shared file: copy that list in whole and keep the two in step. It has no bare Edit or Write, so the profile's Edit(builder-state/**) is the only write. A base file must allow every tool the project's readLine asks the builder to use. This key is a note: delete it in the real file.",
   "permissions": {
     "allow": [
       "Read",
       "Grep",
       "Glob",
+      "Skill",
       "SendMessage",
       "PushNotification"
     ],
