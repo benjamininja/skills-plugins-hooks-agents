@@ -168,7 +168,9 @@ if ($Profile) {
         Refuse "the profile $Profile has no rule and no baseSettings file"
     }
     foreach ($rule in $profileAllow + $profileDeny) {
-        if ("$rule".Contains('"')) { Refuse "a rule of the profile $Profile holds a double quote: $rule" }
+        if ($rule -isnot [string]) { Refuse "a rule of the profile $Profile is not a string: $rule" }
+        if ($rule.Contains('"')) { Refuse "a rule of the profile $Profile holds a double quote: $rule" }
+        if ($rule.EndsWith('\')) { Refuse "a rule of the profile $Profile ends in a backslash: $rule" }
     }
 
     # A base file takes the shared file's place on --settings, so it must

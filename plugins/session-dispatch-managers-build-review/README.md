@@ -128,8 +128,8 @@ The script refuses, with exit code 2 and one line that begins
 - `-Profile` is given and: the config names no profiles file, the file
   is missing or not JSON, the profile is not in it (the refusal lists
   the profiles that are), the name is not lower-case letters, digits and
-  hyphens, the profile has no rule and no base file, a rule holds a
-  double quote, or its base file is missing, not JSON or lacks a shared
+  hyphens, the profile has no rule and no base file, a rule is not a
+  string, holds a double quote or ends in a backslash, or its base file is missing, not JSON or lacks a shared
   deny rule;
 - `-Apply` is given and the project is not on the owner's list.
 

@@ -342,6 +342,8 @@ def test_a_bad_profile_name_is_refused(project):
         ({"allow": ["--dangerously-skip-permissions"]}, "an allow rule starts with a hyphen"),
         ({"deny": ["-x"]}, "a deny rule starts with a hyphen"),
         ({"allow": ['Bash(echo "hi")']}, "holds a double quote"),
+        ({"allow": [["Read", "--permission-mode", "bypassPermissions"]]}, "is not a string"),
+        ({"allow": ["Bash(ls C:\\some dir\\"]}, "ends in a backslash"),
     ],
 )
 def test_a_profile_rule_that_could_break_the_command_is_refused(project, profile, why):
