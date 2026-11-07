@@ -15,7 +15,7 @@ Windows only in 0.1.0: the script is Windows PowerShell 5.1.
 | `scripts/dispatch.ps1` | Starts one builder. A dry run unless `-Apply` is given. |
 | `skills/session-rules` | The rules every role keeps: tiers, briefs, the "Never" list, a denied call, parking, who may merge. Any session may load it. It starts nothing. |
 | `skills/session-dispatch` | The manager's procedures that change things: dispatch, merging a builder's PR, closeout. Manual only (`disable-model-invocation: true`): the owner invokes it in a manager's session. |
-| `templates/` | Blank files for a new project: three role files, the config, the queue file, the project rules file, two state files, two example settings files, a brief and a gap ticket. |
+| `templates/` | Blank files for a new project: three role files, the config, the queue file, the project rules file, two state files, three example settings files, an example profiles file, a brief and a gap ticket. |
 
 ## Install
 
@@ -49,9 +49,13 @@ the example settings files deny it.
 5. Add the line `builder-state/` to the project's `.gitignore`. A
    builder keeps its working notes there; its lasting state is its
    ticket and its commits.
-6. Keep deny rules for every settings file, for `.claude/dispatch.json`
-   and for the list of projects in both files, so no session can
-   change its own fence.
+6. Keep deny rules for every settings file, for `.claude/dispatch.json`,
+   for the profiles file and for the list of projects in both files, so
+   no session can change its own fence.
+7. Optional: write a profiles file and any base settings file it names,
+   starting from `templates/builder-profiles.example.json` and
+   `templates/research.settings.example.json`, and name the profiles
+   file under `buildersProfiles`. See [Profiles](#profiles).
 
 ## The config, `.claude/dispatch.json`
 
@@ -59,6 +63,7 @@ the example settings files deny it.
 |---|---|
 | `agent` | The agent a builder runs as: a file in `.claude/agents/`, without `.md`. |
 | `buildersSettings` | The builders' settings file, from the main checkout. Its `permissions.deny` list is also passed to the session. |
+| `buildersProfiles` | Optional. The owner's profiles file, from the main checkout, for `-Profile`. See [Profiles](#profiles). |
 | `claude` | The Claude CLI: a name on `PATH` or a full path. |
 | `setup` | PowerShell lines run in the new worktree before the session starts. They run as written, which is why only the owner writes this file. |
 | `readLine` | The first lines of every builder's prompt. No double quote. |
@@ -102,12 +107,12 @@ No tier, no dispatch: the script refuses a run without `-Tier`.
 
 ```
 dispatch.ps1 -Name <name> -Tier <low|medium|high> -PromptFile <file>
-             [-TurnCap <n>] [-NoSetup] [-Project <folder>] [-Apply]
+             [-Profile <name>] [-TurnCap <n>] [-NoSetup] [-Project <folder>] [-Apply]
 ```
 
-Without `-Apply` the script reads the config, the brief and the deny
-list, prints every command it would run, and changes nothing. Read that
-output, then run the same line with `-Apply`.
+Without `-Apply` the script reads the config, the brief, the deny list
+and the profile, prints every command it would run, and changes nothing.
+Read that output, then run the same line with `-Apply`.
 
 The script refuses, with exit code 2 and one line that begins
 `dispatch refused:`, when:
@@ -117,8 +122,15 @@ The script refuses, with exit code 2 and one line that begins
 - the name is not lower-case letters, digits and hyphens;
 - the brief or the read line holds a double quote;
 - the builders' settings file is missing or has no deny rule;
-- the agent, the model, the effort, the prompt or a deny rule starts
-  with a hyphen, so no value can pass for a flag of the CLI;
+- the agent, the model, the effort, the prompt, a deny rule or a
+  profile's allow rule starts with a hyphen, so no value can pass for a
+  flag of the CLI;
+- `-Profile` is given and: the config names no profiles file, the file
+  is missing or not JSON, the profile is not in it (the refusal lists
+  the profiles that are), the name is not lower-case letters, digits and
+  hyphens, the profile has no rule and no base file, a rule holds a
+  double quote, or its base file is missing, not JSON or lacks a shared
+  deny rule;
 - `-Apply` is given and the project is not on the owner's list.
 
 With `-Apply` it makes the worktree `.claude/worktrees/<name>` on branch
@@ -128,6 +140,64 @@ worktree. If the check fails it stops the session and says so.
 
 Follow-up and closeout are not in the script in 0.1.0. Their commands
 are in `skills/session-dispatch/references/dispatch.md`.
+
+## Profiles
+
+A profile is a named list of rules for one kind of ticket, so one
+ticket's wider access is not an edit to the shared builders' file that
+widens it for every builder running at the time. The owner writes the
+profiles file; no agent does.
+
+```json
+{
+  "profiles": {
+    "research": {
+      "baseSettings": ".claude/research.settings.json",
+      "allow": ["WebSearch", "WebFetch", "Edit(builder-state/**)"],
+      "deny": ["Bash(gh pr *)"]
+    }
+  }
+}
+```
+
+With `-Profile <name>`:
+
+- `allow` rules go to the session with `--allowedTools`, after the
+  prompt. They add to the settings file's allow list, not replace it.
+- `deny` rules go with `--disallowedTools`, after the shared deny list.
+- The shared deny list is always passed. A deny wins over any allow, so
+  no profile removes a shared deny.
+- `baseSettings`, optional, names a settings file passed on
+  `--settings` in place of the shared builders' file. A profile needs
+  one to allow *less* than the shared file: the shared file allows bare
+  `Edit` and `Write`, and a profile's rules only add, so an
+  `Edit(builder-state/**)` rule narrows nothing while the shared file is
+  on `--settings`. The script refuses a base file that is missing or
+  whose deny list lacks any shared deny rule, and still passes the
+  shared denies on `--disallowedTools`.
+- The header prints the profile, each of its rules, and which settings
+  file is used. Without `-Profile` it prints `profile: none` and the
+  start command is as before.
+
+Scope a write with `Edit(path)`, never `Write(path)`: a `Write(path)`
+rule matches nothing, and an `Edit(path)` rule covers the Write tool. A
+relative path passed by flag is read from the session's working
+directory, the worktree.
+
+Probes have one profile, `probe`, with exactly one rule:
+`Bash(.venv/Scripts/python.exe builder-state/probe.py)`. No argument,
+no wildcard, never `builder-state/*.py`. The builder writes the script
+at that fixed path, and it enforces its own `ALLOWED_HOSTS` on every
+request and every redirect hop. The brief names the hosts, and the
+manager reads `builder-state/probe.py` against them at closeout. A
+script that changes data is not a probe. The rule never goes in the
+shared builders' file or in another profile.
+
+These points were tested in throwaway sessions (Claude Code 2.1.318),
+recorded on tools issue #83: `--allowedTools` adds to the `--settings`
+allow list under `dontAsk`; a settings-file deny beats an exact
+`--allowedTools` allow; a relative `Edit(builder-state/**)` passed by
+flag anchors at the working directory.
 
 ## The owner's queue
 
@@ -142,8 +212,8 @@ queue is then read and answered in the file.
 `tests/test_session_dispatch.py`, at the repository root, runs the
 script's dry run against a temporary project (Windows only; skipped
 elsewhere). It covers each refusal, the start command for each tier, that a
-dry run creates nothing, and that `-Apply` is refused in a project
-the owner has not listed.
+dry run creates nothing, that `-Apply` is refused in a project
+the owner has not listed, and a profile's rules, base file and header.
 
 ## Not proven
 

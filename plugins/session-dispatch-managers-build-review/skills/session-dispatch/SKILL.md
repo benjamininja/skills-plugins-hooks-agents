@@ -38,7 +38,13 @@ Read `references/dispatch.md` before the first dispatch of a session.
    `scripts/dispatch.ps1 -Name <name> -Tier <tier> -PromptFile <file>`
    (the script is two folders above this skill's base folder). Read
    every line it prints: the tier, the worktree, the settings file, the
-   deny rules, the start command.
+   profile, the deny rules, the start command.
+   **When a brief names a profile** (a `Profile:` line), add
+   `-Profile <name>`, and check that the printed rules are what the
+   ticket needs. A brief with no `Profile:` line gets no profile. A
+   profile the script does not know is refused: ask the owner to add it,
+   never widen the shared settings file instead. A session never writes
+   the profiles file or a base settings file.
 2. Only if the dry run shows what the ticket asked for: the same command
    with `-Apply`.
 3. Watch by events, not by polling. A follow-up (`stop`, then

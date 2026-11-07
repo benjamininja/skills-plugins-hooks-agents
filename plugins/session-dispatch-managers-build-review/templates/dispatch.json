@@ -7,6 +7,9 @@
   "//buildersSettings": "The builders' settings file, from the main checkout. Its permissions.deny list is also passed to the session, so the list is kept in one place.",
   "buildersSettings": ".claude/builders.settings.json",
 
+  "//buildersProfiles": "Optional. The owner's profiles file, from the main checkout, for dispatch.ps1 -Profile <name>. Start it from the plugin's templates/builder-profiles.example.json, for example as .claude/builder-profiles.json. Empty: -Profile is refused.",
+  "buildersProfiles": "",
+
   "//claude": "The Claude CLI. A bare name is found on PATH; a full path also works.",
   "claude": "claude",
 
