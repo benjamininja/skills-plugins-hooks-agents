@@ -6,7 +6,7 @@
 
 ```
 dispatch.ps1 -Name <name> -Tier <low|medium|high> -PromptFile <file>
-             [-TurnCap <n>] [-NoSetup] [-Project <folder>] [-Apply]
+             [-Profile <name>] [-TurnCap <n>] [-NoSetup] [-Project <folder>] [-Apply]
 ```
 
 It is a dry run unless `-Apply` is given. In order:
@@ -20,6 +20,12 @@ It is a dry run unless `-Apply` is given. In order:
    `--disallowedTools`, so the list is kept in one place. The settings
    file stays the fence; the flag can only deny, and it holds even if
    the file is not read.
+   With `-Profile`, it reads that profile from the config's
+   `buildersProfiles` file: its allows go on `--allowedTools`, its
+   denies after the shared ones, and its `baseSettings` file, if any,
+   takes the shared file's place on `--settings` only if it holds every
+   shared deny. An unknown profile is refused. See the plugin README,
+   Profiles.
    With `-Apply` it first checks that the main checkout is on the
    owner's list, `<user profile>/.claude/dispatch-projects.json`, and
    refuses if it is not.
@@ -60,6 +66,11 @@ dispatched.
 1. For each open PR of that builder: re-prove Green, post the output on
    the PR, then squash-merge. A PR that is not green is not merged; it
    is listed for the owner.
+   For a builder dispatched with `-Profile probe`, first read its
+   `builder-state/probe.py` against the hosts its brief names: its
+   `ALLOWED_HOSTS` must hold no other host and be checked on every
+   request and redirect hop, and the script must change no data.
+   Anything else is listed for the owner.
 2. `git pull --ff-only` on the main checkout.
 3. Delete that builder's remaining branches, each only after
    `git cherry` against the main branch shows nothing missing.

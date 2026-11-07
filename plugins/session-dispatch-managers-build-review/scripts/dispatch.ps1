@@ -8,7 +8,8 @@
     1. read <main checkout>\.claude\dispatch.json (no file, no run)
     2. take the tier's model, effort and turn cap (no tier, no dispatch)
     3. read the prompt file (a double quote in it is refused)
-    4. read the deny list from the builders' settings file
+    4. read the deny list from the builders' settings file, and the
+       -Profile's rules from the owner's profiles file (unknown: refused)
     5. make the worktree .claude\worktrees\<Name> on branch worktree-<Name>
     6. run the project's setup commands in it
     7. start the session in the background
@@ -30,6 +31,7 @@
 .EXAMPLE
   .\dispatch.ps1 -Name fix-42 -Tier low -PromptFile C:\briefs\fix-42.txt
   .\dispatch.ps1 -Name fix-42 -Tier low -PromptFile C:\briefs\fix-42.txt -Apply
+  .\dispatch.ps1 -Name find-7 -Tier medium -PromptFile C:\briefs\find-7.txt -Profile research
 #>
 [CmdletBinding()]
 param(
@@ -37,6 +39,7 @@ param(
     [string]$Tier,
     [Parameter(Mandatory = $true)][string]$PromptFile,
     [int]$TurnCap,
+    [string]$Profile,
     [string]$Project = (Get-Location).Path,
     [switch]$NoSetup,
     [switch]$Apply
@@ -133,13 +136,74 @@ try {
 $deny = @($deny | Where-Object { $_ })
 if ($deny.Count -eq 0) { Refuse "the builders' settings file has no deny rule: $settingsPath" }
 
+# 4a. The profile, from the owner's profiles file. It only adds: its allows
+# go on --allowedTools, its denies after the shared ones on --disallowedTools.
+$profileAllow = @()
+$profileDeny = @()
+$sharedSettingsPath = $null
+if ($Profile) {
+    if ($Profile -cnotmatch '^[a-z0-9][a-z0-9-]{0,62}$') {
+        Refuse "the profile name must be lower-case letters, digits and hyphens: $Profile"
+    }
+    $profilesRel = Setting 'buildersProfiles' $null
+    if (-not $profilesRel) { Refuse 'a profile was named, but the config file names no buildersProfiles file' }
+    $profilesPath = Join-Path $main $profilesRel
+    if (-not (Test-Path -LiteralPath $profilesPath -PathType Leaf)) { Refuse "no profiles file: $profilesPath" }
+    try {
+        $profiles = (Get-Content -LiteralPath $profilesPath -Raw -Encoding UTF8 | ConvertFrom-Json).profiles
+    } catch {
+        Refuse "the profiles file is not valid JSON: $profilesPath"
+    }
+    $known = @()
+    if ($profiles) { $known = @($profiles.PSObject.Properties | Where-Object { -not $_.Name.StartsWith('//') }) }
+    $found = $known | Where-Object { $_.Name -ceq $Profile } | Select-Object -First 1
+    if (-not $found) {
+        $names = if ($known.Count) { ($known | ForEach-Object { $_.Name }) -join ', ' } else { 'none' }
+        Refuse "unknown profile: $Profile. The profiles file has: $names"
+    }
+    $profileAllow = @(@($found.Value.allow) | Where-Object { $_ })
+    $profileDeny = @(@($found.Value.deny) | Where-Object { $_ })
+    $baseRel = $found.Value.PSObject.Properties['baseSettings']
+    if ($profileAllow.Count + $profileDeny.Count -eq 0 -and -not ($baseRel -and "$($baseRel.Value)")) {
+        Refuse "the profile $Profile has no rule and no baseSettings file"
+    }
+    foreach ($rule in $profileAllow + $profileDeny) {
+        if ($rule -isnot [string]) { Refuse "a rule of the profile $Profile is not a string: $rule" }
+        if ($rule.Contains('"')) { Refuse "a rule of the profile $Profile holds a double quote: $rule" }
+        if ($rule.EndsWith('\')) { Refuse "a rule of the profile $Profile ends in a backslash: $rule" }
+    }
+
+    # A base file takes the shared file's place on --settings, so it must
+    # hold every shared deny itself; the shared denies are passed on as well.
+    if ($baseRel -and "$($baseRel.Value)") {
+        $basePath = Join-Path $main "$($baseRel.Value)"
+        if (-not (Test-Path -LiteralPath $basePath -PathType Leaf)) {
+            Refuse "no base settings file for the profile ${Profile}: $basePath"
+        }
+        try {
+            $baseDeny = @((Get-Content -LiteralPath $basePath -Raw -Encoding UTF8 | ConvertFrom-Json).permissions.deny)
+        } catch {
+            Refuse "the base settings file of the profile $Profile is not valid JSON: $basePath"
+        }
+        $missing = @($deny | Where-Object { $baseDeny -cnotcontains $_ })
+        if ($missing.Count) {
+            Refuse "the base settings file of the profile $Profile lacks $($missing.Count) shared deny rules, first: $($missing[0])"
+        }
+        $sharedSettingsPath = $settingsPath
+        $settingsPath = $basePath
+    }
+}
+
 # No value may pass for a flag of the CLI: a leading hyphen is refused.
 $values = @{ agent = $agent; model = $chosen.model; effort = $chosen.effort; prompt = $prompt }
 foreach ($key in $values.Keys) {
     if ("$($values[$key])".TrimStart().StartsWith('-')) { Refuse "the $key starts with a hyphen" }
 }
-foreach ($rule in $deny) {
+foreach ($rule in $deny + $profileDeny) {
     if ("$rule".TrimStart().StartsWith('-')) { Refuse "a deny rule starts with a hyphen: $rule" }
+}
+foreach ($rule in $profileAllow) {
+    if ("$rule".TrimStart().StartsWith('-')) { Refuse "an allow rule starts with a hyphen: $rule" }
 }
 
 $worktree = Join-Path $main ".claude\worktrees\$Name"
@@ -152,15 +216,28 @@ $start = @(
     '--model', $chosen.model, '--effort', $chosen.effort,
     '--permission-mode', $mode, '--settings', $settingsPath,
     '--plugin-dir', (Split-Path -Parent $PSScriptRoot),
-    '--agent', $agent, $prompt, '--disallowedTools'
-) + $deny
+    '--agent', $agent, $prompt
+)
+if ($profileAllow.Count) { $start += @('--allowedTools') + $profileAllow }
+$start += @('--disallowedTools') + $deny + $profileDeny
 $check = @($claude, 'agents', '--json')
 
 Write-Output "name:      $Name"
 Write-Output "tier:      $Tier ($($chosen.model), effort $($chosen.effort), turn cap $($chosen.turnCap))"
 Write-Output "main:      $main"
 Write-Output "worktree:  $worktree$(if ($hasWorktree) { ' (already there)' })"
-Write-Output "settings:  $settingsPath ($($deny.Count) deny rules)"
+if ($sharedSettingsPath) {
+    Write-Output "settings:  $settingsPath (the profile's base file, in place of $sharedSettingsPath; it holds all $($deny.Count) shared deny rules)"
+} else {
+    Write-Output "settings:  $settingsPath ($($deny.Count) deny rules)"
+}
+if ($Profile) {
+    Write-Output "profile:   $Profile ($($profileAllow.Count) allow, $($profileDeny.Count) deny; the shared deny rules still apply)"
+    foreach ($rule in $profileAllow) { Write-Output "  allow:   $rule" }
+    foreach ($rule in $profileDeny) { Write-Output "  deny:    $rule" }
+} else {
+    Write-Output 'profile:   none'
+}
 Write-Output "mode:      $mode"
 
 # The owner's list of main checkouts where -Apply may act. The profile
