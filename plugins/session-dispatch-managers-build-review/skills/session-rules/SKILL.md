@@ -88,6 +88,18 @@ refused, the exact command, what it blocks. If the owner approves there,
 make the call once more. If it is refused again, or the session is unattended, 
 park it as an Action and take the next piece of work.
 
+**For builders only:** a refused call is a stop for what it was meant to
+reach. No other tool, subagent or script is used to get the same host,
+file or result. A different command the brief allows, for a result the
+brief asks for, is not a workaround.
+
+**Probe scripts, in every project:** a brief that allows a probe script
+names the hosts it may reach. The script holds an `ALLOWED_HOSTS`
+constant and refuses any request, or redirect hop, to a host not on it.
+The manager reads the script at closeout. This is a rule in the script
+because the Claude Code Bash sandbox, which could limit hosts, does not
+run on native Windows.
+
 ## Command forms a builder's mode lets through
 
 A builder's mode asks nothing. A command that matches no allow rule is
