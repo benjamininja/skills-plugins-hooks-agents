@@ -57,7 +57,9 @@ A brief names its tier, its done condition and its proof command. A low
 brief also names the files. A medium brief names the question, where to
 start and the shape of the answer. Each proof command is one a builder
 may run under the builders' settings file, or the brief says the manager
-runs it at re-proof. A brief holds no double quote. Template:
+runs it at re-proof. A brief names its `Profile:`, or `none`, and for
+`probe` it also names its hosts, as the template does. A brief holds no
+double quote. Template:
 `templates/brief.md` in this plugin.
 
 ## Never, in any role
@@ -98,7 +100,11 @@ names the hosts it may reach. The script holds an `ALLOWED_HOSTS`
 constant and refuses any request, or redirect hop, to a host not on it.
 The manager reads the script at closeout. This is a rule in the script
 because the Claude Code Bash sandbox, which could limit hosts, does not
-run on native Windows.
+run on native Windows. The probe script is always `builder-state/probe.py`,
+run by the one exact rule in the standing `probe` profile, with no
+argument and no wildcard. The planner puts a `Profile:` line on the
+ticket, and the manager dispatches with that profile and no other. A
+script that changes data is not a probe.
 
 ## Command forms a builder's mode lets through
 
