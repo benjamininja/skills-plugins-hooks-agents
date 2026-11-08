@@ -30,8 +30,14 @@ not dispatching, and never a settings file or `.claude/dispatch.json`.
 
 ## Maps
 
-None yet. The backlog is #43 and #47–#58, from the 2026-10-12 grilling
-session, plus #80, #81 and #88.
+The 2026-11-08 dispatch order, sent to the manager:
+- **Wave 1 (owner approved):** #56, #81 and #80, running at the same time.
+- **Vendor lane, one ticket at a time:** #49 → #57 → #52 → #50.
+- **Then #55**, after #50 and #56.
+- **#47** goes in its own lane.
+- **Held for owner-led steps:** #48, then #51, #53 and #54.
+
+Every ticket carries its tier as a label.
 
 ## Milestones
 
@@ -55,10 +61,21 @@ None.
   checkout. They are the owner's to keep or drop before #58 builds.
 - #48: builders are denied edits to `.claude/agents/`, so agent changes
   are owner-led.
+- **Owner-queue only reaches sessions in a project with its own
+  `NEEDS-OWNER.md`.** A session in this repo never learns its id and never
+  gets an answer. The #81 amendment documents this. The installed copy in
+  `~/.claude/mods/owner-queue` is a hand copy that pulls don't update.
+- [docs/handoff/baseball-session-dispatch.md](../../docs/handoff/baseball-session-dispatch.md)
+  is for SpunkyLlama's agent. It is to be updated whenever the plugins or
+  templates it points at change.
 
 ## Asked by the manager
 
-- #81 tier: queued with the owner, medium recommended.
+- #81 tier: the owner chose (a) medium, 2026-11-08 07:13. Recorded on #81.
+- The `--bless` allow rule for tools builders: queued as a Decision; the
+  vendor lane waits on it.
+- Pointing the owner-queue plugin directory at the live clone: queued as an
+  owner Action.
 
 ## Decided since
 
