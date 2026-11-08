@@ -3,7 +3,7 @@
   "//how": "dispatch.ps1 -Profile <name> passes the profile's allow rules with --allowedTools and its deny rules with --disallowedTools, on top of the builders' settings file. A profile only adds: the shared deny list is always passed and a deny always wins, so no profile removes a shared deny. Scope a write with Edit(path), never Write(path): a Write(path) rule matches nothing.",
   "//baseSettings": "Optional, per profile. A settings file, from the main checkout, passed on --settings in place of the shared builders' file. Use one when a profile must allow less than the shared file: the shared file allows bare Edit and Write, and a profile's rules only add. The script refuses a base file that is missing or lacks any shared deny rule. Start it from templates/research.settings.example.json.",
   "profiles": {
-    "//research": "A standing profile for findings-only tickets: web search, any web page, read-only repo tools, issue comments. No probe script, no push, no gh pr, and writes only under builder-state/ (its base file has no bare Edit or Write).",
+    "//research": "A standing profile for findings-only tickets: web search, any web page, read-only repo tools, issue comments. No probe script, no push, no gh pr, and writes only under builder-state/ (its base file has no bare Edit or Write). The session-rules section Reading the web applies: robots.txt in a call of its own first on every host.",
     "research": {
       "baseSettings": ".claude/research.settings.json",
       "allow": [
@@ -26,7 +26,7 @@
         "Bash(gh pr *)"
       ]
     },
-    "//probe": "A standing profile with exactly one probe rule: the fixed path builder-state/probe.py, no argument, no wildcard, never builder-state/*.py. The builder writes that script, and it enforces its own ALLOWED_HOSTS on every request and every redirect hop. The brief names the hosts; the manager reads the script against them at closeout. A script that changes data is not a probe. This rule never goes in the shared builders' file or in the research profile.",
+    "//probe": "A standing profile with exactly one probe rule: the fixed path builder-state/probe.py, no argument, no wildcard, never builder-state/*.py. The builder writes that script, and it enforces its own ALLOWED_HOSTS on every request and every redirect hop. The brief names the hosts; the manager reads the script against them at closeout. A script that changes data is not a probe. The session-rules section Reading the web applies: the script checks robots.txt for each host in ALLOWED_HOSTS and stops on a disallow before its first other request to that host. This rule never goes in the shared builders' file or in the research profile.",
     "probe": {
       "allow": [
         "Bash(.venv/Scripts/python.exe builder-state/probe.py)"
