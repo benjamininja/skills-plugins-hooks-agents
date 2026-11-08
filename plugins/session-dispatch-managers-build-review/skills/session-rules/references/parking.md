@@ -10,7 +10,8 @@ The format head is `templates/NEEDS-OWNER.md` in this plugin.
 2. Write an entry, in the format of the file's head: under
    `## Decisions` for a choice, under `## Actions` for work by the
    owner's hand. Give the evidence, the options with one recommended,
-   and what it blocks. Add `- Session: <id>` so the answer comes back to
+   and what it blocks. Each option stands alone: it says in full what
+   happens, and never refers to another option by its letter. Add `- Session: <id>` so the answer comes back to
    the session that raised it. A value the owner pastes goes in code
    marks, a command the owner runs in a fenced block, and steps are
    numbered.

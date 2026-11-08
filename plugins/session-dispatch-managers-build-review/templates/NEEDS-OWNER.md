@@ -14,6 +14,8 @@ Format:
 - Options are written `- Options: (a) ...; (b) ...` and
   `- Recommended: (a), because ...`. The pane shows one button per
   option.
+  - Each option stands alone: it says in full what happens, and never
+    refers to another option by its letter.
 - Anything the owner types or pastes by hand goes in code marks, one
   value per mark, with no prose inside the marks. The pane draws a Copy
   button for each, under the field that holds it.
