@@ -106,6 +106,26 @@ argument and no wildcard. The planner puts a `Profile:` line on the
 ticket, and the manager dispatches with that profile and no other. A
 script that changes data is not a probe.
 
+## Reading the web
+
+A builder that reads a web host, by WebFetch or by a probe script, reads
+that host's `/robots.txt` in a call of its own, and reads its result
+before any other request to that host. A command or script that fetches
+`robots.txt` together with other pages of the same host does not meet
+the rule.
+
+- If it disallows a Claude or Anthropic agent (ClaudeBot, Claude-User,
+  Claude-SearchBot, anthropic-ai or Claude-Web) for the path, the builder
+  reads nothing more on that host and records the disallow line as a
+  finding.
+- A `robots.txt` that is refused or missing is recorded too. It is not
+  permission.
+- A probe script checks `robots.txt` for each host in `ALLOWED_HOSTS`
+  and stops on a disallow before its first other request to that host.
+  The manager checks this when it reads the script at closeout.
+- A planner who names hosts in a brief checks their `robots.txt` first
+  where it can, and leaves out a host that disallows these agents.
+
 ## Command forms a builder's mode lets through
 
 A builder's mode asks nothing. A command that matches no allow rule is
