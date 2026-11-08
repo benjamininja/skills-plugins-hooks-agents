@@ -294,8 +294,8 @@
       "known_local_edits": [
         {
           "file": "SKILL.md",
-          "reason": "../../common/ -> ../_powerbi-authoring-common/ link rewrites (common/ relocation into skills/)",
-          "local_sha": "6b3fabcfe867d98d25fcb4d2c8dcb95e594b1e70"
+          "reason": "../../common/ -> ../_powerbi-authoring-common/ link rewrites (common/ relocation into skills/); disable-model-invocation: true added to frontmatter (ADR-0006: skill writes to an external system, a Fabric workspace; SKILL.md:264 upstream (265 after this edit) tells the agent to delete same-named models before a deploy with no confirmation step; line 264 left as upstream wrote it; invoke with /semantic-model-authoring; ticket #49)",
+          "local_sha": "7eb291d4cba4af9893131b3dd464e448881461f7"
         },
         {
           "file": "references/semantic-model-rest-api.md",
