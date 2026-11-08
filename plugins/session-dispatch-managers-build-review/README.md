@@ -174,7 +174,8 @@ With `-Profile <name>`:
   `Edit(builder-state/**)` rule narrows nothing while the shared file is
   on `--settings`. The script refuses a base file that is missing or
   whose deny list lacks any shared deny rule, and still passes the
-  shared denies on `--disallowedTools`.
+  shared denies on `--disallowedTools`. A base file must allow every
+  tool the project's `readLine` asks the builder to use.
 - The header prints the profile, each of its rules, and which settings
   file is used. Without `-Profile` it prints `profile: none` and the
   start command is as before.
