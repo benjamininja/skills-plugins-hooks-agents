@@ -8,6 +8,11 @@
 
 ## Active Files
 
+- [Planner state](PLANNER.md) — Tools-central-planner's state-back:
+  start here, gaps, owner decisions, lessons
+- [Project rules](PROJECT-RULES.md) — builder rules for this repo; who
+  plans, dispatches and merges here
+
 - [Program status](program-status.md) — the 3-goal restructure/saturation
   program, all shipped; pointer file to PLAN.md/README/ADRs + one open
   question (agents catalog directory)

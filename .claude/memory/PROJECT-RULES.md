@@ -5,11 +5,21 @@ project shares are in the `session-rules` skill. This file adds to them and
 never loosens its "Never" lines. The project's own rules in `CLAUDE.md` also
 apply.
 
-This repository has no planner or manager of its own. The dynasty project's
-planner writes the tickets and briefs, and its builder manager dispatches
-builders here and merges their PRs. The owner's queue is that project's
-`NEEDS-OWNER.md`: a builder here parks by messaging the manager, never by
-writing a queue file here.
+This repository's planner is the standing session **Tools-central-planner**,
+since 2026-11-07. It writes the tickets, tiers and briefs here, and keeps
+its state in [PLANNER.md](PLANNER.md). The repository has no manager of its
+own. The dynasty project's builder manager
+(`dynastyFantasyFootball-central-builder-manager`) dispatches builders here
+from this planner's `Tier:` and `Profile:` lines, and merges their PRs once
+they are Green. The owner gave that merge approval on 2026-11-07: "Yes, it
+may merge". The owner's queue is the dynasty project's `NEEDS-OWNER.md`.
+Only that manager writes it, so a builder here parks by messaging the
+manager, never by writing a queue file here.
+
+Every ticket carries a `Tier:` line at the top of its body and the matching
+`tier:` label (`tier:low`, `tier:medium`, `tier:high`, `tier:none`, or
+`tier:unset` until the planner sets one). This repository has no
+`tier:haiku` label yet: no ticket here has been haiku-tier.
 
 ## Green means all of
 
