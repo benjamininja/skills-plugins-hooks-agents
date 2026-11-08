@@ -3,6 +3,7 @@ import type { EngineInterface, Register, RenderSurface } from 'claude-code'
 
 import type {
   OwnerAnswers,
+  OwnerComments,
   OwnerItem,
   OwnerNotes,
   OwnerOption,
@@ -10,7 +11,6 @@ import type {
   OwnerStaged,
 } from '../types'
 import {
-  answer,
   answerOf,
   carried,
   carriedDone,
@@ -22,10 +22,10 @@ import {
   here,
   hint,
   idOf,
-  message,
-  note,
+  isMalformed,
   notesOf,
   options,
+  OTHER,
   parse,
   recommended,
   reference,
@@ -39,7 +39,7 @@ import {
   waiting,
 } from './parse'
 
-const VERSION = '0.7.2'
+const VERSION = '0.8.0'
 const PANE = 'owner-queue'
 const TITLE = 'Needs owner'
 const FILE = '.claude/memory/NEEDS-OWNER.md'
@@ -58,6 +58,9 @@ const readAt = atom(readAtRef, '')
 const stagedRef = { plugin: 'owner-queue', key: 'staged' } as const
 const NONE: OwnerStaged = {}
 const staged = atom(stagedRef, NONE)
+const commentsRef = { plugin: 'owner-queue', key: 'comments' } as const
+const NO_COMMENTS: OwnerComments = {}
+const comments = atom(commentsRef, NO_COMMENTS)
 const writing = atom({ plugin: 'owner-queue', key: 'writing' } as const, [])
 const strokes = atom({ plugin: 'owner-queue', key: 'strokes' } as const, 0)
 
@@ -307,6 +310,15 @@ async function refresh($: EngineInterface): Promise<OwnerQueue> {
   )
   if (Object.keys(still).length !== Object.keys(held).length)
     await $.state.set(stagedRef, still)
+  // A staged comment stays on an answered entry; it goes with an entry that
+  // has left the file.
+  const { value: typed = NO_COMMENTS } = await $.state.get(commentsRef)
+  const present = new Set(items.map(idOf))
+  const remaining = Object.fromEntries(
+    Object.entries(typed).filter(([id]) => present.has(id)),
+  )
+  if (Object.keys(remaining).length !== Object.keys(typed).length)
+    await $.state.set(commentsRef, remaining)
   const { value: was = EMPTY } = await $.state.get(ref)
   if (JSON.stringify(was) === JSON.stringify(now)) return now
 
@@ -342,9 +354,12 @@ function stage(
   what: OwnerOption | 'done',
 ): Promise<void> {
   const id = idOf(item)
+  // A typed answer is never taken back by typing it again; it replaces.
   const isSame = (was: OwnerOption | 'done' | undefined) =>
     was !== undefined &&
-    (was === 'done' || what === 'done' ? was === what : was.key === what.key)
+    (was === 'done' || what === 'done'
+      ? was === what
+      : was.key !== OTHER && was.key === what.key)
 
   return update($, staged, held => {
     const { [id]: was, ...rest } = held
@@ -354,13 +369,15 @@ function stage(
 }
 
 /**
- * Submit: everything staged goes into the queue file in one write, the
- * pane's own record of each Answer line into the store, and one message to
- * this session's chat as the owner's words. Nothing is written before it.
+ * Submit: everything staged (chosen options, typed answers, comments, done
+ * marks) goes into the queue file in one write, the pane's own record of each
+ * Answer and Note line into the store, and one message to this session's chat
+ * as the owner's words. Nothing is written before it.
  */
 async function submit($: EngineInterface): Promise<void> {
   const { value: held = NONE } = await $.state.get(stagedRef)
-  if (Object.keys(held).length === 0) return
+  const { value: typed = NO_COMMENTS } = await $.state.get(commentsRef)
+  if (Object.keys(held).length === 0 && Object.keys(typed).length === 0) return
   const { file } = await source($)
   const { day, time } = await clock($)
   let session = 'unknown'
@@ -370,17 +387,38 @@ async function submit($: EngineInterface): Promise<void> {
     // The line still says when and by what it was written.
   }
   const text = await $.fs.read(file)
+  const by = `pane, ${day} ${time}, session ${session}`
   const made = commit(
     text,
     held,
-    chosen =>
-      `(${chosen.key}) ${chosen.text} | pane, ${day} ${time}, session ${session}`,
+    chosen => `(${chosen.key}) ${chosen.text} | ${by}`,
+    typed,
+    words => `${words} | ${by}`,
   )
-  const count = made.answered.length + made.done.length
+  const count = made.answered.length + made.noted.length + made.done.length
   const mine = session === 'unknown' ? undefined : session
   const said = here(made, mine)
-  const away = count - said.answered.length - said.done.length
+  const away =
+    count - said.answered.length - said.noted.length - said.done.length
   if (count > 0) {
+    // The pane's own record of each Note goes first, so no reader sees a line
+    // it cannot place. This session's own are said by Submit, not carried.
+    if (made.noted.length > 0) {
+      const wrote = { ...(await kept<OwnerNotes>($, NOTES, {})) }
+      const told = {
+        ...(mine === undefined
+          ? {}
+          : await kept<OwnerNotes>($, `noted:${mine}`, {})),
+      }
+      for (const { item, line } of made.noted) {
+        const at = `${file}|${idOf(item)}`
+        wrote[at] = [...(wrote[at] ?? []), line]
+        if (mine !== undefined && sessionOf(item) === mine)
+          told[at] = [...(told[at] ?? []), line]
+      }
+      await $.store.set(NOTES, wrote)
+      if (mine !== undefined) await $.store.set(`noted:${mine}`, told)
+    }
     // This session's own entries are said by Submit below, not carried again.
     const self = made.answered.filter(
       ({ item }) => mine !== undefined && sessionOf(item) === mine,
@@ -411,6 +449,7 @@ async function submit($: EngineInterface): Promise<void> {
       })
   }
   await $.state.set(stagedRef, NONE)
+  await $.state.set(commentsRef, NO_COMMENTS)
   await refresh($)
   const lost =
     made.missing.length > 0 ? `; ${made.missing.length} not found` : ''
@@ -510,13 +549,13 @@ function compose($: EngineInterface, id: string, isOpen: boolean): Promise<void>
 }
 
 /**
- * "Post comment": what the owner typed goes out at once, without Submit.
- * As a comment it is a Note line of the entry, which stays open; as an
- * answer it is the Answer line of an open decision. The pane records the
- * line in its store, and the text is said in this session's chat when the
- * entry names it or names no session; else the raising session carries it.
+ * "Send comment" and "Send as answer": what the owner typed is staged, as
+ * one comment beside the entry's other staged things, or as the typed
+ * (`other`) answer of an open decision, which replaces a chosen option. Like
+ * a pressed option it waits for Submit: nothing is written and nothing is
+ * said in a chat before it. The box closes and the draft is emptied.
  */
-async function post(
+async function stageText(
   $: EngineInterface,
   item: OwnerItem,
   typed: string | undefined,
@@ -526,71 +565,20 @@ async function post(
   if (typed === undefined) await pull($)
   const text = clean(typed ?? drafts.get(id) ?? '')
   if (text === '') {
-    $.ui.toast('Nothing typed; nothing sent')
+    $.ui.toast('Nothing typed; nothing staged')
 
     return
   }
-  const { file } = await source($)
-  const { day, time } = await clock($)
-  const mine = await me($)
-  const before = await $.fs.read(file)
-  const now = parse(before).find(one => idOf(one) === id)
-  const isAnswer = as === 'answer'
-  if (now && isAnswer && (now.kind !== 'decision' || answerOf(now) !== undefined)) {
-    $.ui.toast('Already answered; nothing sent. Change answer opens it again')
-    await refresh($)
-
-    return
-  }
-  const line = `${isAnswer ? '(other) ' : ''}${text} | pane, ${day} ${time}, session ${mine ?? 'unknown'}`
-  const after = !now
-    ? before
-    : isAnswer
-      ? answer(before, now, line)
-      : note(before, now, line)
-  if (!now || after === before) {
-    $.ui.toast('That entry is no longer open in the file; nothing sent')
-    await refresh($)
-
-    return
-  }
-  const at = `${file}|${id}`
-  const to = sessionOf(now)
-  const isHere = to === undefined || to === mine
-  // The pane's own record goes first, so no reader sees a line it cannot place.
-  if (isAnswer) {
-    await $.store.set(ANSWERS, { ...(await penned($)), [at]: line })
-    if (mine !== undefined && to === mine)
-      await $.store.set(`delivered:${mine}`, {
-        ...(await kept<OwnerAnswers>($, `delivered:${mine}`, {})),
-        [at]: line,
-      })
-  } else {
-    const wrote = await kept<OwnerNotes>($, NOTES, {})
-    await $.store.set(NOTES, { ...wrote, [at]: [...(wrote[at] ?? []), line] })
-    if (mine !== undefined && to === mine) {
-      const told = await kept<OwnerNotes>($, `noted:${mine}`, {})
-      await $.store.set(`noted:${mine}`, {
-        ...told,
-        [at]: [...(told[at] ?? []), line],
-      })
-    }
-  }
-  await $.fs.write(file, after)
+  if (as === 'answer') await stage($, item, { key: OTHER, text })
+  else
+    await update($, comments, held => ({
+      ...held,
+      [id]: [...(held[id] ?? []), text],
+    }))
   await compose($, id, false)
-  await refresh($)
   $.ui.toast(
-    `${isAnswer ? 'Answer' : 'Comment'} sent${
-      isHere ? '' : '; it goes to the session that raised the entry'
-    }`,
+    `${as === 'answer' ? 'Answer' : 'Comment'} staged; it is written on Submit`,
   )
-  if (isHere)
-    void $.prompt.submit({
-      text: isAnswer
-        ? message(now, { key: 'other', text }, `${day} ${time}`)
-        : comment(now, text, false, `${day} ${time}`),
-      asUser: true,
-    })
 }
 
 /** "Change answer": the Answer line and the pane's record of it are removed. */
@@ -699,10 +687,13 @@ export const register: Register = on => {
     const { Box, Text, Button, Input, Markdown, Link } = $.ui.resolve(e)
     const now = await read($, queue)
     const held = await read($, staged)
+    const typed = await read($, comments)
     const boxes = new Set(await read($, writing))
     await read($, strokes)
     const unpenned = now.unpenned ?? {}
-    const pending = Object.keys(held).length
+    const pending =
+      Object.keys(held).length +
+      Object.values(typed).reduce((sum, list) => sum + list.length, 0)
     const opened = new Set(await read($, open))
     const lastRead = await read($, readAt)
     const all = now.items.map(idOf)
@@ -799,6 +790,11 @@ export const register: Register = on => {
               </Text>
             </Box>
           )}
+          {(typed[id] ?? []).map(words => (
+            <Box paddingLeft={4}>
+              <Text color="green">{`Comment, not submitted: ${words}`}</Text>
+            </Box>
+          ))}
           {!isOpen && given === undefined && about !== '' && (
             <Box paddingLeft={4}>
               <Text dimColor>{about}</Text>
@@ -849,6 +845,14 @@ export const register: Register = on => {
                   </Box>
                 )
               })}
+              {item.kind === 'decision' && given === undefined && isMalformed(item) && (
+                <Box marginTop={1}>
+                  <Text bold>
+                    The Options line is malformed: a key appears twice. No
+                    options are drawn. Fix the line in the file.
+                  </Text>
+                </Box>
+              )}
               {choices.length > 0 && (
                 <Box flexDirection="column" marginTop={1}>
                   <Text dimColor>Options:</Text>
@@ -963,7 +967,7 @@ export const register: Register = on => {
                           void update($, strokes, n => n + 1)
                         }}
                         onSubmit={value => {
-                          void post($, item, value, 'comment')
+                          void stageText($, item, value, 'comment')
                         }}
                       />
                       <Button
@@ -994,20 +998,21 @@ export const register: Register = on => {
                     <Button
                       key={`send:${id}`}
                       label="Send comment"
-                      onPress={() => post($, item, undefined, 'comment')}
+                      onPress={() => stageText($, item, undefined, 'comment')}
                     />
                     {item.kind === 'decision' && given === undefined && (
                       <Button
                         key={`send-answer:${id}`}
                         label="Send as answer"
-                        onPress={() => post($, item, undefined, 'answer')}
+                        onPress={() => stageText($, item, undefined, 'answer')}
                       />
                     )}
                   </Box>
                   <Box marginTop={1}>
                     <Text dimColor>
-                      Sent at once, as one line. A comment leaves the entry
-                      open. Enter sends a comment.
+                      Staged as one line; nothing is written or sent until
+                      Submit. A comment leaves the entry open. Enter stages a
+                      comment.
                     </Text>
                   </Box>
                 </Box>
@@ -1071,7 +1076,10 @@ export const register: Register = on => {
                 <Button
                   key="clear"
                   label="Clear"
-                  onPress={() => update($, staged, () => NONE)}
+                  onPress={() => {
+                    void update($, staged, () => NONE)
+                    void update($, comments, () => NO_COMMENTS)
+                  }}
                 />
                 <Text color="green">
                   {pending} staged; nothing is written until Submit

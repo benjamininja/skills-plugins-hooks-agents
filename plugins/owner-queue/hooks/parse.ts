@@ -1,4 +1,5 @@
 import type {
+  OwnerComments,
   OwnerItem,
   OwnerOption,
   OwnerPart,
@@ -167,7 +168,8 @@ export function reference(item: OwnerItem, at?: number): string {
   return `${kind}${place}: ${item.title}${ticket ? ` (${ticket})` : ''}`
 }
 
-const OTHER = 'other'
+/** The key of an answer the owner typed, not chosen from the options. */
+export const OTHER = 'other'
 
 /** How an answer was given: typed (`other`), or by an option's button. */
 const how = (key: string) =>
@@ -197,36 +199,61 @@ export function message(
   ].join('\n')
 }
 
+/** A key counts only at the start of the value or right after a `;`. */
+const KEY = /(?:^|;)\s*\(([A-Za-z0-9])\)\s*/g
+
+/**
+ * The choices of a decision and whether its Options line is malformed (a key
+ * twice at option boundaries, which draws no options rather than a guess).
+ */
+function choices(item: OwnerItem): { all: OwnerOption[]; isMalformed: boolean } {
+  const value = pick(item, 'options')
+  if (!value) return { all: [], isMalformed: false }
+  const clean = (text: string) => text.trim().replace(/[;,.]+$/, '').trim()
+
+  const keyed = [...value.matchAll(KEY)]
+  if (keyed.length > 0 && keyed[0].index === 0) {
+    const keys = keyed.map(match => match[1].toLowerCase())
+    if (new Set(keys).size !== keys.length) return { all: [], isMalformed: true }
+
+    return {
+      all: keyed
+        .map((match, at) => ({
+          key: match[1].toLowerCase(),
+          text: clean(
+            value.slice(
+              (match.index ?? 0) + match[0].length,
+              keyed[at + 1]?.index ?? value.length,
+            ),
+          ),
+        }))
+        .filter(option => option.text !== ''),
+      isMalformed: false,
+    }
+  }
+
+  return {
+    all: value
+      .split(';')
+      .map(clean)
+      .filter(text => text !== '')
+      .map((text, at) => ({ key: String.fromCharCode(97 + at), text })),
+    isMalformed: false,
+  }
+}
+
 /**
  * The choices of a decision, from its Options field. Written
  * `(a) one; (b) two`, the keys are the letters; written `One; Two`, the
- * keys are a, b, c by place.
+ * keys are a, b, c by place. An `(a)` inside an option's text is text.
  */
 export function options(item: OwnerItem): OwnerOption[] {
-  const value = pick(item, 'options')
-  if (!value) return []
-  const clean = (text: string) => text.trim().replace(/[;,.]+$/, '').trim()
+  return choices(item).all
+}
 
-  const keyed = [...value.matchAll(/\(([A-Za-z0-9])\)\s*/g)]
-  if (keyed.length > 0 && keyed[0].index === 0) {
-    return keyed
-      .map((match, at) => ({
-        key: match[1].toLowerCase(),
-        text: clean(
-          value.slice(
-            (match.index ?? 0) + match[0].length,
-            keyed[at + 1]?.index ?? value.length,
-          ),
-        ),
-      }))
-      .filter(option => option.text !== '')
-  }
-
-  return value
-    .split(';')
-    .map(clean)
-    .filter(text => text !== '')
-    .map((text, at) => ({ key: String.fromCharCode(97 + at), text }))
+/** True when the Options line names one key twice at option boundaries. */
+export function isMalformed(item: OwnerItem): boolean {
+  return choices(item).isMalformed
 }
 
 /** The key of the option the Recommended field names, if it names one. */
@@ -528,35 +555,57 @@ export function shown(items: OwnerItem[], which = ''): string {
 export type Committed = {
   text: string
   answered: { item: OwnerItem; chosen: OwnerOption; line: string }[]
+  /** The comments written as Note lines: the typed text and the line written. */
+  noted: { item: OwnerItem; text: string; line: string }[]
   done: OwnerItem[]
   /** The ids staged whose entry is no longer open in the file. */
   missing: string[]
 }
 
 /**
- * The file with everything staged applied in one pass: an Answer line per
- * chosen option (`line` words it) and a ticked box per item marked done.
+ * The file with everything staged applied in one pass: a Note line per staged
+ * comment (`mark` words it), an Answer line per chosen option (`line` words
+ * it) and a ticked box per item marked done. An entry's notes come first, so
+ * a box ticked in the same pass still takes them.
  */
 export function commit(
   text: string,
   staged: OwnerStaged,
   line: (chosen: OwnerOption) => string,
+  comments: OwnerComments = {},
+  mark: (typed: string) => string = typed => typed,
 ): Committed {
-  const out: Committed = { text, answered: [], done: [], missing: [] }
-  for (const [id, what] of Object.entries(staged)) {
+  const out: Committed = { text, answered: [], noted: [], done: [], missing: [] }
+  const ids = [...new Set([...Object.keys(comments), ...Object.keys(staged)])]
+  for (const id of ids) {
     const item = parse(out.text).find(one => idOf(one) === id)
-    const next = !item
-      ? out.text
-      : what === 'done'
-        ? tick(out.text, item)
-        : answer(out.text, item, line(what))
-    if (!item || next === out.text) {
+    if (!item) {
       out.missing.push(id)
       continue
     }
-    out.text = next
-    if (what === 'done') out.done.push(item)
-    else out.answered.push({ item, chosen: what, line: line(what) })
+    let isLost = false
+    for (const typed of comments[id] ?? []) {
+      const row = mark(typed)
+      const next = note(out.text, item, row)
+      if (next === out.text) {
+        isLost = true
+        continue
+      }
+      out.text = next
+      out.noted.push({ item, text: typed, line: row })
+    }
+    const what = staged[id]
+    if (what !== undefined) {
+      const next =
+        what === 'done' ? tick(out.text, item) : answer(out.text, item, line(what))
+      if (next === out.text) isLost = true
+      else {
+        out.text = next
+        if (what === 'done') out.done.push(item)
+        else out.answered.push({ item, chosen: what, line: line(what) })
+      }
+    }
+    if (isLost) out.missing.push(id)
   }
 
   return out
@@ -578,6 +627,7 @@ export function here(done: Committed, mine: string | undefined): Committed {
   return {
     ...done,
     answered: done.answered.filter(one => isHere(one.item)),
+    noted: done.noted.filter(one => isHere(one.item)),
     done: done.done.filter(isHere),
   }
 }
@@ -614,10 +664,14 @@ export function carriedDone(names: string[]): string {
   ].join('\n')
 }
 
-/** The one chat message a Submit sends: every answer, every item marked done. */
+/**
+ * The one chat message a Submit sends: every answer, every comment, every item
+ * marked done.
+ */
 export function report(done: Committed, when?: string): string {
   return [
     ...done.answered.map(({ item, chosen }) => message(item, chosen, when)),
+    ...done.noted.map(({ item, text }) => comment(item, text, false, when)),
     ...(done.done.length > 0
       ? [
           [

@@ -9,7 +9,9 @@ import {
   comment,
   commit,
   detail,
+  here,
   hint,
+  isMalformed,
   message,
   note,
   notesOf,
@@ -102,7 +104,7 @@ const KEYED = `## Decisions
 
 ### [ ] Who merges
 - Ticket: #166
-- Options: (a) The builder; it is green. (b) Two-key merge;
+- Options: (a) The builder, it is green; (b) Two-key merge;
   (c) The owner
 - Recommended: (b), because two sets of eyes
 
@@ -114,7 +116,7 @@ test('reads options in both written forms', () => {
   const [keyed, plain] = parse(KEYED)
 
   expect(options(keyed)).toEqual([
-    { key: 'a', text: 'The builder; it is green' },
+    { key: 'a', text: 'The builder, it is green' },
     { key: 'b', text: 'Two-key merge' },
     { key: 'c', text: 'The owner' },
   ])
@@ -123,6 +125,54 @@ test('reads options in both written forms', () => {
     { key: 'b', text: 'No' },
   ])
   expect(options(parse(FILE)[1])).toEqual([])
+  expect(isMalformed(keyed)).toBe(false)
+  expect(isMalformed(plain)).toBe(false)
+})
+
+const withOptions = (value: string) =>
+  parse(`## Decisions\n\n### [ ] Pick\n- Options: ${value}\n`)[0]
+
+test('a key counts only at the start of the line or after a semicolon', () => {
+  const same = withOptions('(a) one; (b) the rest as in (a); (c) as (a), but later')
+
+  expect(options(same)).toEqual([
+    { key: 'a', text: 'one' },
+    { key: 'b', text: 'the rest as in (a)' },
+    { key: 'c', text: 'as (a), but later' },
+  ])
+  expect(isMalformed(same)).toBe(false)
+
+  const other = withOptions('(a) as in (b) and (c); (b) two')
+  expect(options(other)).toEqual([
+    { key: 'a', text: 'as in (b) and (c)' },
+    { key: 'b', text: 'two' },
+  ])
+
+  // Spaces, or none, may stand between the semicolon and the key.
+  expect(options(withOptions('(a) one;(b) two;   (c) three'))).toEqual([
+    { key: 'a', text: 'one' },
+    { key: 'b', text: 'two' },
+    { key: 'c', text: 'three' },
+  ])
+
+  // Plain options holding a key-like word are still split on the semicolon.
+  expect(options(withOptions('One as in (a); Two'))).toEqual([
+    { key: 'a', text: 'One as in (a)' },
+    { key: 'b', text: 'Two' },
+  ])
+})
+
+test('a key twice at option boundaries draws no options', () => {
+  const twice = withOptions('(a) one; (b) two; (a) three')
+
+  expect(options(twice)).toEqual([])
+  expect(isMalformed(twice)).toBe(true)
+  expect(recommended(twice)).toBe(undefined)
+  // The same letter in another case is the same key.
+  expect(isMalformed(withOptions('(a) one; (A) two'))).toBe(true)
+  // A key inside an option's text is not a boundary, so it is not a twice.
+  expect(isMalformed(withOptions('(a) one; (b) as in (a)'))).toBe(false)
+  expect(isMalformed(parse(FILE)[1])).toBe(false)
 })
 
 test('finds the recommended option by key or by its text', () => {
@@ -204,6 +254,71 @@ test('everything staged is applied in one pass, and the lost are named', () => {
   expect(sent).toContain('Answer: (b) Two-key merge')
   expect(sent).toContain('- Action: Run it (#9)')
   expect(commit(KEYED, {}, () => '').text).toBe(KEYED)
+})
+
+test('staged comments are written as Note lines in the same pass', () => {
+  const file = KEYED + '\n## Actions\n\n### [ ] Run it\n- Ticket: #9\n- Session: s1\n'
+  const stamp = (words: string) => `${words} | pane, now, session s2`
+  const made = commit(
+    file,
+    {
+      'decision:Who merges': { key: 'other', text: 'neither' },
+      'action:Run it': 'done',
+    },
+    chosen => `(${chosen.key}) ${chosen.text} | pane, now, session s2`,
+    {
+      'decision:Who merges': ['why (b)?', 'and the cost?'],
+      'action:Run it': ['one last thing'],
+      'action:Gone': ['lost'],
+    },
+    stamp,
+  )
+
+  // Nothing is written by a call that is given nothing.
+  expect(commit(file, {}, () => '', {}, stamp).text).toBe(file)
+  expect(made.missing).toEqual(['action:Gone'])
+  expect(made.noted.map(one => one.line)).toEqual([
+    stamp('why (b)?'),
+    stamp('and the cost?'),
+    stamp('one last thing'),
+  ])
+  expect(made.noted.map(one => one.text)).toEqual([
+    'why (b)?',
+    'and the cost?',
+    'one last thing',
+  ])
+  const decision = parse(made.text)[0]
+  expect(notesOf(decision)).toEqual([stamp('why (b)?'), stamp('and the cost?')])
+  expect(answerOf(decision)).toBe('(other) neither | pane, now, session s2')
+  // The Note lines sit in their own entry, before the next one.
+  expect(
+    made.text.indexOf(`- Note: ${stamp('and the cost?')}`),
+  ).toBeLessThan(made.text.indexOf('### [ ] Second'))
+  // The box was ticked after its note was written, so the note is in the file.
+  expect(made.text).toContain('### [x] Run it')
+  expect(made.text).toContain(`- Note: ${stamp('one last thing')}`)
+  expect(made.done.map(one => one.title)).toEqual(['Run it'])
+
+  // A comment alone leaves the entry open and unanswered.
+  const alone = commit(file, {}, () => '', { 'decision:Second one': ['hm'] }, stamp)
+  expect(notesOf(parse(alone.text)[1])).toEqual([stamp('hm')])
+  expect(answerOf(parse(alone.text)[1])).toBe(undefined)
+  expect(alone.answered).toEqual([])
+
+  // The chat message holds every comment, once, and only the pressing
+  // session's own entries (or those naming none) are said there.
+  const sent = report(made, '2026-10-12 12:00:00')
+  expect(sent).toContain('Answer: (other) neither')
+  expect(sent).toContain('Comment: why (b)?')
+  expect(sent).toContain('Comment: and the cost?')
+  expect(sent).toContain('Comment: one last thing')
+  expect(sent).not.toContain('| pane')
+  expect(sent.match(/Time: 2026-10-12 12:00:00/g)).toHaveLength(4)
+  const mine = here(made, 's1')
+  expect(mine.noted.map(one => one.text)).toEqual(['why (b)?', 'and the cost?', 'one last thing'])
+  const theirs = here(made, 's9')
+  expect(theirs.noted.map(one => one.text)).toEqual(['why (b)?', 'and the cost?'])
+  expect(theirs.done).toEqual([])
 })
 
 test('finds each code span of an entry once', () => {

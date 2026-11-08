@@ -2,9 +2,9 @@
 
 A Claude Code mod that shows what is waiting on the owner: the decisions and
 by-hand actions listed in a project's `.claude/memory/NEEDS-OWNER.md`.
-A decision is answered by pressing one of its options and `Submit`.
-`Post comment` sends typed words at once to the session that raised an
-entry, as a comment or as the answer.
+A decision is answered by pressing one of its options, or by typing an
+answer, and `Submit`. `Post comment` stages typed words, as a comment or as
+the answer; nothing is written or sent until `Submit`.
 
 - A band above the prompt gives the counts and a `Show queue` / `Hide queue`
   button.
@@ -34,36 +34,48 @@ entry, as a comment or as the answer.
 - An open decision draws every option in full as text, then one row of
   short `Choose (a)` buttons, the recommended one marked, then a row of
   `Copy: ...` buttons, one for each `code` span of the options.
-- A pressed option or `Mark done` is only staged. The row says so in green,
-  and pressing the same button again takes it back. `Submit (N)` then
-  writes everything staged in one pass: an `Answer:` line per decision, a
-  ticked box per item marked done, and one message to the session's chat
-  as the owner's words. `Clear` drops what is staged.
+- A pressed option, `Mark done`, a typed comment and a typed answer are
+  only staged. The row says so in green, and pressing the same option or
+  `Mark done` again takes it back. `Submit (N)` then writes everything
+  staged in one pass: a `Note:` line per comment, an `Answer:` line per
+  decision, a ticked box per item marked done, and one message to the
+  session's chat as the owner's words. `N` counts each staged option,
+  answer, done mark and comment. `Clear` drops all that is staged. Until
+  `Submit`, the file holds no line for it and no chat has heard of it.
 - Every message the pane sends to a chat has a `Time:` line, the moment
   the owner pressed or typed. A message with an old time is a repeat.
 - An answered decision moves to "Answered, waiting for pickup", where
   `Change answer` opens it again.
 - `Post comment`, on every open entry, sits on the last row beside
   `Mark done` and opens a one-line field under that row, below a line,
-  with `Cancel` beside it and a box that shows what is typed in full. What is typed goes out at once; it does not wait for `Submit`.
+  with `Cancel` beside it and a box that shows what is typed in full. What
+  is typed is staged, as an option is: it waits for `Submit`.
   - `Write in editor`, beside `Post comment`, is for a longer text: it
     opens a draft file in the system's text editor. What is saved there
-    shows in the box within 5 seconds, and the send buttons send it, as one
-    line. The draft files are in the mod's own `drafts` folder, outside
-    any repository; a sent or cancelled draft is emptied. `Copy path` gives
-    the file's path where no editor could be opened.
-  - `Send comment`, or Enter in the field: the pane adds
-    `- Note: <text> | pane, <day> <time>, session <id>` to the entry, which
-    stays open and shows "You said, <time>: <text>". An entry may hold
-    several.
-  - `Send as answer`, on an open decision: the pane writes
+    shows in the box within 5 seconds, and the send buttons stage it, as one
+    line, on the same path as typed text. The draft files are in the mod's
+    own `drafts` folder, outside any repository; a staged or cancelled
+    draft is emptied. `Copy path` gives the file's path where no editor
+    could be opened.
+  - `Send comment`, or Enter in the field: the comment is staged, drawn in
+    green as "Comment, not submitted: <text>", and the box closes. An entry
+    may hold several, beside a chosen option or a done mark. On `Submit` the
+    pane adds `- Note: <text> | pane, <day> <time>, session <id>` to the
+    entry, which stays open and shows "You said, <time>: <text>". The time
+    is that of `Submit`.
+  - `Send as answer`, on an open decision: the typed text is staged as the
+    decision's `(other)` choice, drawn as "Chosen, not submitted: (other)
+    <text>". It replaces a pressed option, and a pressed option or a later
+    typed answer replaces it. On `Submit` the pane writes
     `- Answer: (other) <text> | pane, ...` and the decision moves to
     "Answered, waiting for pickup".
   - `Cancel` closes the field and drops what was typed. Empty text is
-    refused.
-  - The text is said in the pressing session's chat when the entry names
-    that session or names none. Otherwise the session the entry names says
-    it in its own chat at its next read, once, as for an option's answer.
+    refused. A staged comment is dropped by `Clear`, or when its entry
+    leaves the queue file; it stays on an entry that has been answered.
+  - On `Submit` the text is said in the pressing session's chat when the
+    entry names that session or names none. Otherwise the session the entry
+    names says it in its own chat at its next read, once, as for an
+    option's answer.
   - Typed text is kept as one line; a code fence in it is dropped.
 - The pane keeps its own record of the `Answer:` and `Note:` lines it
   wrote. A line it did not write is flagged and is never carried to a
@@ -98,9 +110,15 @@ entry, as a comment or as the answer.
 - Steps: ...
 ```
 
-Options written `One; Two` are read too, lettered a, b, c by place. Only the
-pane writes an `Answer:` or a `Note:` line; no agent writes, edits or
-removes one.
+Options written `One; Two` are read too, lettered a, b, c by place. A key
+such as `(a)` counts only at the start of the Options line or right after a
+`;`; anywhere else it is part of the option's text, so `(b) the rest as in
+(a)` is one option. If one key starts two options, the pane draws no options
+for that entry and says the Options line is malformed. Write each option so
+that it stands alone.
+
+Only the pane writes an `Answer:` or a `Note:` line; no agent writes, edits
+or removes one.
 
 ## Install (one shared copy, read at every launch)
 

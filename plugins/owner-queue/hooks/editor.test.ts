@@ -86,18 +86,31 @@ test('a longer comment is written in the text editor and sent from its file', as
   await ui.press({ key: 'refresh' })
   expect(await ui.find({ type: 'Text', text: /second line/ })).toBeDefined()
   await ui.press({ key: `send:${id}` })
-  expect(disk.get('queue')).toContain('- Note: first line second line | pane, ')
-  expect(sent[0]).toContain('Comment: first line second line')
-  // The sent draft is emptied, and the box is closed.
+  // The text is staged as one line; the file and the chat wait for Submit.
+  expect(disk.get('queue')).toBeUndefined()
+  expect(sent).toHaveLength(0)
+  expect(
+    await ui.find({
+      text: /^Comment, not submitted: first line second line$/,
+    }),
+  ).toBeDefined()
+  // The staged draft is emptied, and the box is closed.
   expect(disk.get(path)).toBe('')
   expect(await ui.find({ key: `path:${id}` })).toBe(undefined)
 
-  // Cancel empties the draft and sends nothing.
+  // Cancel empties the draft and stages nothing.
   await ui.press({ key: `edit:${id}` })
   disk.set(path, 'dropped')
   await ui.press({ key: `cancel:${id}` })
   expect(disk.get(path)).toBe('')
+  expect((await ui.find({ key: 'submit' }))?.text).toBe('Submit (1)')
+
+  // Submit writes the Note line and says the comment in the chat.
+  await ui.press({ key: 'submit' })
+  expect(disk.get('queue')).toContain('- Note: first line second line | pane, ')
   expect(sent).toHaveLength(1)
+  expect(sent[0]).toContain('Comment: first line second line')
+  expect(sent[0]).not.toContain('dropped')
 
   await ui.unmount()
 })

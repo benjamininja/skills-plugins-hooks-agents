@@ -50,6 +50,13 @@ export type OwnerQueue = {
 export type OwnerStaged = Record<string, OwnerOption | 'done'>
 
 /**
+ * The comments the owner has typed and not yet submitted, by item id, in the
+ * order typed. An entry may hold several, beside a chosen option or a done
+ * mark. Each becomes a Note line on Submit, and not before.
+ */
+export type OwnerComments = Record<string, string[]>
+
+/**
  * The mod's own store (`$.store`), key `answers`: the Answer line the pane
  * wrote for each decision, under `<file>|<kind:title>`. No session writes it.
  */
@@ -74,6 +81,8 @@ declare module 'claude-code' {
       readAt: string
       /** Pressed, not yet submitted; nothing is written before Submit. */
       staged: OwnerStaged
+      /** Typed comments, not yet submitted; nothing is written before Submit. */
+      comments: OwnerComments
       /** The ids of the items whose comment box is open. */
       writing: string[]
       /** Counts the key presses in a comment box, to redraw what was typed. */
