@@ -11,6 +11,9 @@ Modes:
   python tools/update_vendor_skills.py --apply NAME    # re-vendor one skill
                                                        # from latest upstream
                                                        # and re-pin the manifest
+                                                       # (NAME may be a
+                                                       # plugin_manifests_only
+                                                       # entry: one file)
   python tools/update_vendor_skills.py --bless NAME    # recompute local_sha
                                                        # for NAME's
                                                        # known_local_edits
@@ -121,6 +124,33 @@ def latest_commit(repo: str, path: str, branch: str) -> dict:
     return {"sha": data[0]["sha"], "date": data[0]["commit"]["committer"]["date"]}
 
 
+def fetch_bytes(url: str) -> bytes:
+    req = urllib.request.Request(url, headers={"User-Agent": "vendor-skill-updater"})
+    with urllib.request.urlopen(req, timeout=30) as resp:
+        return resp.read()
+
+
+def upstream_removed(entry: dict, latest: dict) -> bool:
+    """True when entry's source_path no longer exists on the upstream branch.
+
+    /commits?path= still returns the deleting commit for a removed path, so
+    a sha that differs from the pin proves nothing: confirm with one contents
+    call. A sha equal to the pin means the path is unchanged (no call).
+    """
+    if latest["sha"] is None:
+        return True
+    if latest["sha"] == entry["pinned_commit"]:
+        return False
+    try:
+        api(f"/repos/{entry['repo']}/contents/{entry['source_path']}",
+            {"ref": entry["branch"]})
+    except urllib.error.HTTPError as e:
+        if e.code == 404:
+            return True
+        raise
+    return False
+
+
 # ---------------------------------------------------------------- drift ----
 
 _tree_cache: dict[tuple[str, str], dict[str, str]] = {}
@@ -221,11 +251,13 @@ def check(with_drift: bool = True) -> None:
     print(f"{'skill':42} {'pinned':8} {'latest':8} status")
     print("-" * 78)
     outdated, new_drift, known_drift, stale_notes = [], [], [], []
+    removed = []
     for s in manifest["skills"]:
         try:
             latest = latest_commit(s["repo"], s["source_path"], s["branch"])
-            if latest["sha"] is None:
-                status = "path not found upstream"
+            if upstream_removed(s, latest):
+                status = f"REMOVED upstream: {s['source_path']}"
+                removed.append(s["name"])
             elif latest["sha"] == s["pinned_commit"]:
                 status = "up to date"
             else:
@@ -250,8 +282,13 @@ def check(with_drift: bool = True) -> None:
     print("\n== plugin manifests (manifest-only bundles) ==")
     for p in manifest.get("plugin_manifests_only", []):
         latest = latest_commit(p["repo"], p["source_path"], p["branch"])
-        state = ("up to date" if latest["sha"] == p["pinned_commit"]
-                 else f"UPDATE available ({(latest['date'] or '')[:10]})")
+        if upstream_removed(p, latest):
+            state = f"REMOVED upstream: {p['source_path']}"
+            removed.append(p["name"])
+        elif latest["sha"] == p["pinned_commit"]:
+            state = "up to date"
+        else:
+            state = f"UPDATE available ({(latest['date'] or '')[:10]})"
         print(f"{p['name']:42} {p['pinned_commit'][:7]:8} "
               f"{(latest['sha'] or '')[:7]:8} {state}")
 
@@ -269,6 +306,11 @@ def check(with_drift: bool = True) -> None:
                   f"diff it against {f['local_path']}, port what applies, then "
                   f"update forked_at_commit.")
 
+    if removed:
+        print("\nREMOVED upstream (--apply refuses these; decide to drop the "
+              "entry or repoint source_path):")
+        for name in removed:
+            print(f"  {name}")
     if outdated:
         print("\nCompare links for available updates:")
         for s in outdated:
@@ -307,23 +349,57 @@ def download_tree(repo: str, path: str, ref: str, dest: Path) -> int:
             count += download_tree(repo, item["path"], ref, dest / item["name"])
         elif item["type"] == "file":
             dest.mkdir(parents=True, exist_ok=True)
-            req = urllib.request.Request(
-                item["download_url"], headers={"User-Agent": "vendor-skill-updater"}
-            )
-            with urllib.request.urlopen(req, timeout=30) as resp:
-                (dest / item["name"]).write_bytes(resp.read())
+            (dest / item["name"]).write_bytes(fetch_bytes(item["download_url"]))
             count += 1
     return count
+
+
+def download_file(repo: str, path: str, ref: str) -> bytes:
+    item = api(f"/repos/{repo}/contents/{path}", {"ref": ref})
+    if isinstance(item, list) or item.get("type") != "file":
+        sys.exit(f"{path} is not a single file upstream")
+    return fetch_bytes(item["download_url"])
+
+
+def apply_manifest_update(manifest: dict, entry: dict) -> None:
+    latest = latest_commit(entry["repo"], entry["source_path"], entry["branch"])
+    if upstream_removed(entry, latest):
+        sys.exit(f"REMOVED upstream: {entry['source_path']}")
+    if latest["sha"] == entry["pinned_commit"]:
+        print(f"{entry['name']} already at latest ({latest['sha'][:7]}); "
+              "nothing to do.")
+        return
+    print(f"{entry['name']}: {entry['pinned_commit'][:7]} -> {latest['sha'][:7]} "
+          f"({latest['date']})")
+    content = download_file(entry["repo"], entry["source_path"], latest["sha"])
+    local = REPO_ROOT / entry["local_path"]
+    local.parent.mkdir(parents=True, exist_ok=True)
+    local.write_bytes(content)
+    entry["pinned_commit"] = latest["sha"]
+    entry["pinned_ref"] = latest["sha"][:7]
+    save_manifest(manifest)
+    print(f"wrote {entry['local_path']}, re-pinned manifest to {latest['sha'][:7]}. "
+          "Review `git diff` before committing.")
 
 
 def apply_update(name: str) -> None:
     manifest = load_manifest()
     entry = next((s for s in manifest["skills"] if s["name"] == name), None)
     if entry is None:
-        sys.exit(f"{name!r} is not in vendor-skills.json skills[]")
+        bundle = next((p for p in manifest.get("plugin_manifests_only", [])
+                       if p["name"] == name), None)
+        if bundle is None:
+            sys.exit(f"{name!r} is not in vendor-skills.json skills[] or "
+                     "plugin_manifests_only[]")
+        apply_manifest_update(manifest, bundle)
+        return
     if any(f["name"] == name for f in manifest.get("forks", [])):
         sys.exit(f"{name!r} is a fork — update its vendor-cache mirror instead, "
                  "then hand-merge (see forks[] _comment).")
+
+    latest = latest_commit(entry["repo"], entry["source_path"], entry["branch"])
+    if upstream_removed(entry, latest):
+        sys.exit(f"REMOVED upstream: {entry['source_path']}")
 
     new, known, _ = drift_report(entry)
     if new:
@@ -337,9 +413,6 @@ def apply_update(name: str) -> None:
         for n in known:
             print(f"  - {n}")
 
-    latest = latest_commit(entry["repo"], entry["source_path"], entry["branch"])
-    if latest["sha"] is None:
-        sys.exit(f"source path not found upstream for {name}")
     if latest["sha"] == entry["pinned_commit"] and not (new or known):
         print(f"{name} already at latest ({latest['sha'][:7]}); nothing to do.")
         return
@@ -351,7 +424,12 @@ def apply_update(name: str) -> None:
     # a OneDrive sync root where Python's os.rmdir is persistently denied
     # (WinError 5), so a repo-local staging dir can never be cleaned up.
     staging = Path(tempfile.mkdtemp(prefix=f"vendor-{name}-"))
-    n = download_tree(entry["repo"], entry["source_path"], latest["sha"], staging)
+    try:
+        n = download_tree(entry["repo"], entry["source_path"], latest["sha"], staging)
+    except urllib.error.HTTPError as e:
+        if e.code != 404:
+            raise
+        sys.exit(f"REMOVED upstream: {entry['source_path']}")
     # Sync at FILE level — never delete or rename directories. On this
     # machine the skill folders are junction targets inside a OneDrive
     # sync root: renaming the folder would break ~/.claude/skills/
