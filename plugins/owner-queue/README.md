@@ -104,15 +104,33 @@ removes one.
 
 ## Install (one shared copy, read at every launch)
 
-This folder is the only copy. Name it in the `env` block of
-`~/.claude/settings.json`; every session then loads it straight from here,
-and an edit here reaches each session on its next launch.
+Name the folder in the `env` block of `~/.claude/settings.json`. Point it at
+the live clone of this repository, pinned to `main`, and not at a hand copy
+(ADR-0011, revision 2): `<live clone>\plugins\owner-queue`. A hand copy, such
+as one in `~/.claude/mods/owner-queue`, is never updated by a pull. An edit
+that is merged reaches a session after the owner pulls the clone and starts a
+new session.
 
 ```json
 "env": {
-  "CLAUDE_CODE_PLUGIN_DIRS": "C:\\Users\\<you>\\...\\skills-plugins-hooks-agents\\plugins\\owner-queue"
+  "CLAUDE_CODE_PLUGIN_DIRS": "<live clone>\\plugins\\owner-queue"
 }
 ```
+
+### One queue per project
+
+The mod reads only its own project's `.claude/memory/NEEDS-OWNER.md`, from
+the project's main checkout, and stays hidden in a project without one. A
+session in such a project never learns its id and never receives an answer.
+Every project whose sessions raise entries needs its own `NEEDS-OWNER.md`,
+started from
+`plugins/session-dispatch-managers-build-review/templates/NEEDS-OWNER.md`.
+
+### The `Session:` line
+
+An entry's `- Session:` line is the id of the session that raises it, as
+`/owner id` prints it in that session. A wrong id sends the answer to
+another session.
 
 ## Develop
 
