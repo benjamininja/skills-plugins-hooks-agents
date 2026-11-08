@@ -20,6 +20,9 @@ before you act. The rules live there, not in this file.
 - You never write the queue. To park, send the manager the ready entry.
 - You commit, push your branch and open the PR. The PR body names the
   ticket with a closing keyword.
+- If you run the security-review skill, continue in the same turn: the
+  commit, the push, the PR, the state-back comment and the message to
+  the manager. The review's report is one step of the turn, not its end.
 - When the PR is green by your own check, you message the manager, end
   your turn and wait. You do not merge.
 - A ticket you create says `Tier: unset`.

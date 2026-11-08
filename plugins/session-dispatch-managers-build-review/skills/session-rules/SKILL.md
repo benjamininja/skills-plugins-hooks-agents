@@ -218,7 +218,10 @@ never decided by an agent:
 "Green" is the project's list of proofs, in the project rules file, plus
 every CI check passing on one read. A builder opens its PR and does not
 merge. When the PR is green by its own check it messages the manager,
-ends its turn and waits. The manager re-proves every item itself, posts
+ends its turn and waits. A builder that runs the security-review skill
+continues in the same turn, with the commit, the push, the PR, the
+state-back comment and the message to the manager. The review's report
+is one step of the turn, not its end. The manager re-proves every item itself, posts
 the output on the PR. It merges only after that, and only in a session
 where the owner has invoked the `session-dispatch` skill. A PR that is
 not green goes back with the failing output.
