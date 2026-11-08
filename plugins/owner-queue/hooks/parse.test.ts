@@ -12,15 +12,18 @@ import {
   here,
   hint,
   isMalformed,
+  labelOf,
   message,
   note,
   notesOf,
   options,
   parse,
+  problemLine,
   recommended,
   reference,
   report,
   said,
+  sameFile,
   shown,
   layout,
   spans,
@@ -469,4 +472,20 @@ test('words a comment and a typed answer for the chat', () => {
     'typed in the owner-queue pane and carried',
   )
   expect(carried(first, '(a) x | pane, now')).toContain('given by a button')
+})
+
+test('a queue is labelled by its repo folder, and a log line holds no field value', () => {
+  expect(labelOf('C:/work/dynasty/.claude/memory/NEEDS-OWNER.md')).toBe('dynasty')
+  expect(labelOf('C:\\work\\tools\\.claude\\memory\\NEEDS-OWNER.md')).toBe('tools')
+  expect(labelOf('/home/me/notes/NEEDS-OWNER.md')).toBe('notes')
+  expect(sameFile('C:\\Work\\a\\q.md', 'c:/work/a/q.md')).toBe(true)
+  expect(sameFile('C:/work/a/q.md', 'C:/work/b/q.md')).toBe(false)
+
+  const [item] = parse(
+    '## Decisions\n### [ ] Same | key\n- Options: (a) one; (a) two\n- Context: a secret value\n',
+  )
+  const line = problemLine('2026-11-08 10:00:00', 'C:/w/.claude/q.md', item, 'bad')
+  expect(line).toBe('2026-11-08 10:00:00 | C:/w/.claude/q.md | Same / key | bad')
+  expect(line).not.toContain('secret')
+  expect(line).not.toContain('\n')
 })

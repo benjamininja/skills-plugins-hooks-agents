@@ -131,6 +131,45 @@ export function idOf(item: OwnerItem): string {
   return `${item.kind}:${item.title}`
 }
 
+/** A path with forward slashes and no trailing slash, to compare two by. */
+export function slashed(path: string): string {
+  return path.replaceAll('\\', '/').replace(/\/+$/, '')
+}
+
+/** True when two paths name the same file (case aside, as on Windows). */
+export function sameFile(a: string, b: string): boolean {
+  return slashed(a).toLowerCase() === slashed(b).toLowerCase()
+}
+
+/**
+ * The name a queue's group is headed with: the repo folder of
+ * `<repo>/.claude/memory/NEEDS-OWNER.md`, else the file's own folder, else
+ * the file's name.
+ */
+export function labelOf(file: string): string {
+  const parts = slashed(file).split('/').filter(part => part !== '')
+  const at = parts.lastIndexOf('.claude')
+  if (at > 0) return parts[at - 1]
+  if (parts.length > 1) return parts[parts.length - 2]
+
+  return parts[0] ?? 'this project'
+}
+
+/**
+ * One line of the problems log: when, the queue file, the entry's title and
+ * the kind of problem. No field value of the entry is in it.
+ */
+export function problemLine(
+  at: string,
+  file: string,
+  item: OwnerItem,
+  kind: string,
+): string {
+  const one = (text: string) => text.replace(/\s+/g, ' ').replaceAll('|', '/').trim()
+
+  return `${at} | ${one(file)} | ${one(item.title)} | ${kind}`
+}
+
 /** One line for a collapsed row: its ticket and what it blocks. */
 export function hint(item: OwnerItem): string {
   const ticket = pick(item, 'ticket')

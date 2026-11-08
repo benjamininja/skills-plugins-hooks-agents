@@ -179,7 +179,7 @@ test('presses are staged, and Submit writes them and sends one message', async (
   expect(toasts.at(-1)).toBe(
     'Queue read: Owner: 1 decision, 1 action, 1 answered',
   )
-  expect(await ui.find({ text: /owner-queue 0\.8\.0/ })).toBeDefined()
+  expect(await ui.find({ text: /owner-queue 0\.9\.0/ })).toBeDefined()
 
   await ui.unmount()
 })

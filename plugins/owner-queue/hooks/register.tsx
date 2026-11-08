@@ -8,8 +8,10 @@ import type {
   OwnerNotes,
   OwnerOption,
   OwnerQueue,
+  OwnerQueueFile,
   OwnerStaged,
 } from '../types'
+import type { Committed } from './parse'
 import {
   answerOf,
   carried,
@@ -23,29 +25,36 @@ import {
   hint,
   idOf,
   isMalformed,
+  labelOf,
   notesOf,
   options,
   OTHER,
   parse,
+  problemLine,
   recommended,
   reference,
   report,
   said,
+  sameFile,
   sessionOf,
   shown as printed,
+  slashed,
   spans,
   summary,
   unanswer,
   waiting,
 } from './parse'
 
-const VERSION = '0.8.0'
+const VERSION = '0.9.0'
 const PANE = 'owner-queue'
 const TITLE = 'Needs owner'
 const FILE = '.claude/memory/NEEDS-OWNER.md'
+const PROBLEMS = '.claude/owner-queue/problems.log'
+const PROBLEM_KIND = 'Options line: a key appears twice'
 const EVERY_MS = 5000
 const ANSWERS = 'answers'
 const NOTES = 'notes'
+const LOGGED = 'logged'
 
 const ref = { plugin: 'owner-queue', key: 'queue' } as const
 const EMPTY: OwnerQueue = { isLoaded: false, hasFile: false, items: [] }
@@ -74,6 +83,38 @@ const drafts = new Map<string, string>()
 type Source = { file: string; isMain: boolean }
 
 let found: Promise<Source> | undefined
+
+/** The other queues the owner listed in the plugin's `queues` setting. */
+let listed: string[] = []
+
+/** The session's own project's queue file, once `source` has found it. */
+let own: string | undefined
+
+/** The setting's value as a list of absolute paths; anything else is dropped. */
+function queuesOf(value: unknown): string[] {
+  const list = typeof value === 'string' ? [value] : Array.isArray(value) ? value : []
+
+  return list
+    .filter((one): one is string => typeof one === 'string')
+    .map(one => slashed(one.trim()))
+    .filter(one => /^([A-Za-z]:)?\//.test(one))
+}
+
+/**
+ * The key of an entry in the pane's state and its button keys. The session's
+ * own queue keeps the entry's id; any other queue's key has its path first,
+ * so two queues never share a key.
+ */
+function keyOf(item: OwnerItem): string {
+  return item.queue === undefined || item.queue === own
+    ? idOf(item)
+    : `${item.queue}|${idOf(item)}`
+}
+
+/** The key of an entry in the mod's store: its queue file, then its id. */
+function at(item: OwnerItem, file = item.queue ?? own ?? FILE): string {
+  return `${file}|${idOf(item)}`
+}
 
 /**
  * The queue file every session reads: the main checkout's, so a session in a
@@ -109,9 +150,24 @@ function source($: EngineInterface): Promise<Source> {
     }
 
     return { file: FILE, isMain: false }
-  })()
+  })().then(one => {
+    own = one.file
+
+    return one
+  })
 
   return found
+}
+
+/** Every queue the pane reads: the session's own first, then each listed one. */
+async function every($: EngineInterface): Promise<Source[]> {
+  const first = await source($)
+  const all = [first]
+  for (const file of listed)
+    if (!all.some(one => sameFile(one.file, file)))
+      all.push({ file, isMain: true })
+
+  return all
 }
 
 const two = (n: number) => String(n).padStart(2, '0')
@@ -165,9 +221,8 @@ let isDelivering = false
  */
 async function deliver(
   $: EngineInterface,
-  file: string,
   items: OwnerItem[],
-  own: OwnerAnswers,
+  answered: OwnerAnswers,
   wrote: OwnerNotes,
 ): Promise<void> {
   if (isDelivering) return
@@ -178,38 +233,41 @@ async function deliver(
     const had = await kept<OwnerAnswers>($, `delivered:${mine}`, {})
     const due = items.filter(item => {
       const given = answerOf(item)
-      const at = `${file}|${idOf(item)}`
+      const place = at(item)
 
       return (
         sessionOf(item) === mine &&
         given !== undefined &&
-        own[at] === given &&
-        had[at] !== given
+        answered[place] === given &&
+        had[place] !== given
       )
     })
     const marked = await kept<string[]>($, `done:${mine}`, [])
     const told = await kept<OwnerNotes>($, `noted:${mine}`, {})
     const fresh = items.flatMap(item => {
-      const at = `${file}|${idOf(item)}`
+      const place = at(item)
       if (sessionOf(item) !== mine) return []
 
       return notesOf(item)
         .filter(
-          one => (wrote[at] ?? []).includes(one) && !(told[at] ?? []).includes(one),
+          one =>
+            (wrote[place] ?? []).includes(one) &&
+            !(told[place] ?? []).includes(one),
         )
-        .map(one => ({ item, at, line: one }))
+        .map(one => ({ item, place, line: one }))
     })
     if (due.length === 0 && marked.length === 0 && fresh.length === 0) return
     if (fresh.length > 0) {
       const now = { ...told }
-      for (const { at, line } of fresh) now[at] = [...(now[at] ?? []), line]
+      for (const { place, line } of fresh)
+        now[place] = [...(now[place] ?? []), line]
       await $.store.set(`noted:${mine}`, now)
     }
     if (due.length > 0)
       await $.store.set(`delivered:${mine}`, {
         ...had,
         ...Object.fromEntries(
-          due.map(item => [`${file}|${idOf(item)}`, answerOf(item) ?? '']),
+          due.map(item => [at(item), answerOf(item) ?? '']),
         ),
       })
     if (marked.length > 0) await $.store.set(`done:${mine}`, [])
@@ -258,39 +316,111 @@ async function toggle($: EngineInterface): Promise<void> {
   await (isUp ? hide($) : show($))
 }
 
-/** Re-reads the queue file; redraws and toasts on a change. The owner opens the pane. */
-async function refresh($: EngineInterface): Promise<OwnerQueue> {
-  const { file, isMain } = await source($)
-  let text: string | undefined
+let isLogging = false
+
+/** The user's home folder, where the problems log is kept; undefined if unknown. */
+async function home($: EngineInterface): Promise<string | undefined> {
   try {
-    text = await $.fs.read(file)
+    const path = (await $.env.get('USERPROFILE')) || (await $.env.get('HOME'))
+
+    return path ? slashed(path) : undefined
   } catch {
-    text = undefined
+    return undefined
   }
-  const items = text === undefined ? [] : parse(text)
+}
+
+/**
+ * Adds one line to the problems log for each entry the parser cannot draw.
+ * The same entry with the same problem is logged once: the store keeps what
+ * is already logged, and drops an entry that is fixed, so a return of the
+ * problem is logged again. A failure to log never stops a read.
+ */
+async function log($: EngineInterface, items: OwnerItem[]): Promise<void> {
+  if (isLogging) return
+  isLogging = true
+  try {
+    const bad = items
+      .filter(
+        item =>
+          item.kind === 'decision' &&
+          answerOf(item) === undefined &&
+          isMalformed(item),
+      )
+      .map(item => ({ item, mark: `${at(item)}|${PROBLEM_KIND}` }))
+    const had = await kept<string[]>($, LOGGED, [])
+    const marks = bad.map(({ mark }) => mark)
+    if (marks.length === had.length && marks.every(mark => had.includes(mark)))
+      return
+    await $.store.set(LOGGED, marks)
+    const fresh = bad.filter(({ mark }) => !had.includes(mark))
+    const base = fresh.length > 0 ? await home($) : undefined
+    if (base === undefined) return
+    const path = `${base}/${PROBLEMS}`
+    const { day, time } = await clock($)
+    const before = (await $.fs.exists(path)) ? await $.fs.read(path) : ''
+    const lines = fresh.map(({ item }) =>
+      problemLine(`${day} ${time}`, item.queue ?? FILE, item, PROBLEM_KIND),
+    )
+    await $.fs.write(
+      path,
+      `${before}${before === '' || before.endsWith('\n') ? '' : '\n'}${lines.join('\n')}\n`,
+    )
+  } catch {
+    // The log is a courtesy; the pane still says what it cannot draw.
+  } finally {
+    isLogging = false
+  }
+}
+
+/** The queue's file read as text, or undefined when it is missing. */
+async function slurp($: EngineInterface, file: string): Promise<string | undefined> {
+  try {
+    return await $.fs.read(file)
+  } catch {
+    return undefined
+  }
+}
+
+/** Re-reads every queue file; redraws and toasts on a change. The owner opens the pane. */
+async function refresh($: EngineInterface): Promise<OwnerQueue> {
+  const sources = await every($)
+  const { file, isMain } = sources[0]
+  const queues: OwnerQueueFile[] = []
+  const items: OwnerItem[] = []
+  for (const one of sources) {
+    const text = await slurp($, one.file)
+    queues.push({
+      file: one.file,
+      label: one.file === file && !isMain ? 'this project' : labelOf(one.file),
+      hasFile: text !== undefined,
+    })
+    if (text !== undefined)
+      items.push(...parse(text).map(item => ({ ...item, queue: one.file })))
+  }
   await pull($)
-  const own = await penned($)
+  const answered = await penned($)
   const wrote = await kept<OwnerNotes>($, NOTES, {})
   const now: OwnerQueue = {
     isLoaded: true,
-    hasFile: text !== undefined,
+    hasFile: queues.some(one => one.hasFile),
     items,
+    queues,
     file,
     isMain,
     foreign: items
       .filter(item => {
         const given = answerOf(item)
 
-        return given !== undefined && own[`${file}|${idOf(item)}`] !== given
+        return given !== undefined && answered[at(item)] !== given
       })
-      .map(idOf),
+      .map(keyOf),
     unpenned: Object.fromEntries(
       items
         .map(item => {
-          const mine = wrote[`${file}|${idOf(item)}`] ?? []
+          const mine = wrote[at(item)] ?? []
 
           return [
-            idOf(item),
+            keyOf(item),
             notesOf(item).filter(one => !mine.includes(one)),
           ] as const
         })
@@ -298,12 +428,13 @@ async function refresh($: EngineInterface): Promise<OwnerQueue> {
     ),
   }
   $.ui.status(summary(now.items))
-  await deliver($, file, items, own, wrote)
+  await log($, items)
+  await deliver($, items, answered, wrote)
   await $.state.set(readAtRef, (await clock($)).time)
   // What was staged for an entry that has left the list is dropped.
   const { value: held = NONE } = await $.state.get(stagedRef)
   const live = new Set(
-    items.filter(item => answerOf(item) === undefined).map(idOf),
+    items.filter(item => answerOf(item) === undefined).map(keyOf),
   )
   const still = Object.fromEntries(
     Object.entries(held).filter(([id]) => live.has(id)),
@@ -313,7 +444,7 @@ async function refresh($: EngineInterface): Promise<OwnerQueue> {
   // A staged comment stays on an answered entry; it goes with an entry that
   // has left the file.
   const { value: typed = NO_COMMENTS } = await $.state.get(commentsRef)
-  const present = new Set(items.map(idOf))
+  const present = new Set(items.map(keyOf))
   const remaining = Object.fromEntries(
     Object.entries(typed).filter(([id]) => present.has(id)),
   )
@@ -324,8 +455,8 @@ async function refresh($: EngineInterface): Promise<OwnerQueue> {
 
   await $.state.set(ref, now)
 
-  const known = new Set(was.items.map(idOf))
-  const fresh = now.items.filter(item => !known.has(idOf(item)))
+  const known = new Set(was.items.map(keyOf))
+  const fresh = now.items.filter(item => !known.has(keyOf(item)))
   if (fresh.length > 0) {
     if (was.isLoaded) {
       const first = fresh[0]
@@ -353,7 +484,7 @@ function stage(
   item: OwnerItem,
   what: OwnerOption | 'done',
 ): Promise<void> {
-  const id = idOf(item)
+  const id = keyOf(item)
   // A typed answer is never taken back by typing it again; it replaces.
   const isSame = (was: OwnerOption | 'done' | undefined) =>
     was !== undefined &&
@@ -368,26 +499,33 @@ function stage(
   })
 }
 
+/** What one Submit did in one queue file. */
+type Wrote = { count: number; away: number; said: Committed; lost: number }
+
 /**
- * Submit: everything staged (chosen options, typed answers, comments, done
- * marks) goes into the queue file in one write, the pane's own record of each
- * Answer and Note line into the store, and one message to this session's chat
- * as the owner's words. Nothing is written before it.
+ * Writes what was staged for one queue file, in one write to that file, and
+ * the pane's own record of each Answer and Note line under that file's path.
  */
-async function submit($: EngineInterface): Promise<void> {
-  const { value: held = NONE } = await $.state.get(stagedRef)
-  const { value: typed = NO_COMMENTS } = await $.state.get(commentsRef)
-  if (Object.keys(held).length === 0 && Object.keys(typed).length === 0) return
-  const { file } = await source($)
-  const { day, time } = await clock($)
-  let session = 'unknown'
-  try {
-    session = await $.session.id()
-  } catch {
-    // The line still says when and by what it was written.
+async function write1(
+  $: EngineInterface,
+  file: string,
+  held: OwnerStaged,
+  typed: OwnerComments,
+  by: string,
+  mine: string | undefined,
+  stamp: string,
+): Promise<Wrote> {
+  const text = await slurp($, file)
+  if (text === undefined) {
+    const lost = new Set([...Object.keys(held), ...Object.keys(typed)]).size
+
+    return {
+      count: 0,
+      away: 0,
+      said: { text: '', answered: [], noted: [], done: [], missing: [] },
+      lost,
+    }
   }
-  const text = await $.fs.read(file)
-  const by = `pane, ${day} ${time}, session ${session}`
   const made = commit(
     text,
     held,
@@ -396,7 +534,6 @@ async function submit($: EngineInterface): Promise<void> {
     words => `${words} | ${by}`,
   )
   const count = made.answered.length + made.noted.length + made.done.length
-  const mine = session === 'unknown' ? undefined : session
   const said = here(made, mine)
   const away =
     count - said.answered.length - said.noted.length - said.done.length
@@ -411,10 +548,10 @@ async function submit($: EngineInterface): Promise<void> {
           : await kept<OwnerNotes>($, `noted:${mine}`, {})),
       }
       for (const { item, line } of made.noted) {
-        const at = `${file}|${idOf(item)}`
-        wrote[at] = [...(wrote[at] ?? []), line]
+        const place = at(item, file)
+        wrote[place] = [...(wrote[place] ?? []), line]
         if (mine !== undefined && sessionOf(item) === mine)
-          told[at] = [...(told[at] ?? []), line]
+          told[place] = [...(told[place] ?? []), line]
       }
       await $.store.set(NOTES, wrote)
       if (mine !== undefined) await $.store.set(`noted:${mine}`, told)
@@ -427,7 +564,7 @@ async function submit($: EngineInterface): Promise<void> {
       await $.store.set(`delivered:${mine}`, {
         ...(await kept<OwnerAnswers>($, `delivered:${mine}`, {})),
         ...Object.fromEntries(
-          self.map(({ item, line }) => [`${file}|${idOf(item)}`, line]),
+          self.map(({ item, line }) => [at(item, file), line]),
         ),
       })
     // An item marked done has left the file: its raiser is told by the store.
@@ -436,7 +573,7 @@ async function submit($: EngineInterface): Promise<void> {
       if (to === undefined || to === mine) continue
       await $.store.set(`done:${to}`, [
         ...(await kept<string[]>($, `done:${to}`, [])),
-        `${reference(item)}, marked done ${day} ${time}`,
+        `${reference(item)}, marked done ${stamp}`,
       ])
     }
     await $.fs.write(file, made.text)
@@ -444,20 +581,88 @@ async function submit($: EngineInterface): Promise<void> {
       await $.store.set(ANSWERS, {
         ...(await penned($)),
         ...Object.fromEntries(
-          made.answered.map(({ item, line }) => [`${file}|${idOf(item)}`, line]),
+          made.answered.map(({ item, line }) => [at(item, file), line]),
         ),
       })
+  }
+
+  return { count, away, said, lost: made.missing.length }
+}
+
+/**
+ * Submit: everything staged (chosen options, typed answers, comments, done
+ * marks) goes into the queue file each entry came from, one write to each,
+ * the pane's own record of each Answer and Note line into the store, and one
+ * message to this session's chat as the owner's words. Nothing is written
+ * before it.
+ */
+async function submit($: EngineInterface): Promise<void> {
+  const { value: held = NONE } = await $.state.get(stagedRef)
+  const { value: typed = NO_COMMENTS } = await $.state.get(commentsRef)
+  if (Object.keys(held).length === 0 && Object.keys(typed).length === 0) return
+  const { value: now = EMPTY } = await $.state.get(ref)
+  const places = new Map(now.items.map(item => [keyOf(item), item]))
+  const { day, time } = await clock($)
+  let session = 'unknown'
+  try {
+    session = await $.session.id()
+  } catch {
+    // The line still says when and by what it was written.
+  }
+  const by = `pane, ${day} ${time}, session ${session}`
+  const mine = session === 'unknown' ? undefined : session
+  const stamp = `${day} ${time}`
+  // Each staged thing goes under the id it has in its own queue's file.
+  const files = new Map<string, { held: OwnerStaged; typed: OwnerComments }>()
+  const unplaced = new Set<string>()
+  const into = (key: string) => {
+    const item = places.get(key)
+    if (item?.queue === undefined) {
+      unplaced.add(key)
+
+      return undefined
+    }
+    const slot = files.get(item.queue) ?? { held: {}, typed: {} }
+    files.set(item.queue, slot)
+
+    return { slot, id: idOf(item) }
+  }
+  for (const [key, what] of Object.entries(held)) {
+    const to = into(key)
+    if (to) to.slot.held[to.id] = what
+  }
+  for (const [key, list] of Object.entries(typed)) {
+    const to = into(key)
+    if (to) to.slot.typed[to.id] = list
+  }
+  let count = 0
+  let away = 0
+  let lost = unplaced.size
+  const said: Committed = {
+    text: '',
+    answered: [],
+    noted: [],
+    done: [],
+    missing: [],
+  }
+  for (const [file, slot] of files) {
+    const one = await write1($, file, slot.held, slot.typed, by, mine, stamp)
+    count += one.count
+    away += one.away
+    lost += one.lost
+    said.answered.push(...one.said.answered)
+    said.noted.push(...one.said.noted)
+    said.done.push(...one.said.done)
   }
   await $.state.set(stagedRef, NONE)
   await $.state.set(commentsRef, NO_COMMENTS)
   await refresh($)
-  const lost =
-    made.missing.length > 0 ? `; ${made.missing.length} not found` : ''
+  const notFound = lost > 0 ? `; ${lost} not found` : ''
   const gone = away > 0 ? `; ${away} go to the session that raised them` : ''
-  $.ui.toast(`Submitted: ${count}${lost}${gone}`)
+  $.ui.toast(`Submitted: ${count}${notFound}${gone}`)
   if (count - away > 0)
     void $.prompt.submit({
-      text: report(said, `${day} ${time}`),
+      text: report(said, stamp),
       asUser: true,
     })
 }
@@ -494,8 +699,8 @@ async function write($: EngineInterface, id: string): Promise<void> {
   const name = id
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, '-')
+    .slice(-60)
     .replace(/^-+|-+$/g, '')
-    .slice(0, 60)
   const path = `${$.plugin.root.replaceAll('\\', '/')}/drafts/${name}.txt`
   try {
     await $.fs.write(path, drafts.get(id) ?? '')
@@ -561,7 +766,7 @@ async function stageText(
   typed: string | undefined,
   as: 'comment' | 'answer',
 ): Promise<void> {
-  const id = idOf(item)
+  const id = keyOf(item)
   if (typed === undefined) await pull($)
   const text = clean(typed ?? drafts.get(id) ?? '')
   if (text === '') {
@@ -583,12 +788,12 @@ async function stageText(
 
 /** "Change answer": the Answer line and the pane's record of it are removed. */
 async function reopen($: EngineInterface, item: OwnerItem): Promise<void> {
-  const { file } = await source($)
+  const file = item.queue ?? (await source($)).file
   const text = await $.fs.read(file)
   await $.fs.write(file, unanswer(text, item))
-  const own = { ...(await penned($)) }
-  delete own[`${file}|${idOf(item)}`]
-  await $.store.set(ANSWERS, own)
+  const written = { ...(await penned($)) }
+  delete written[at(item, file)]
+  await $.store.set(ANSWERS, written)
   $.ui.toast(`Open again: ${item.title}`)
   await refresh($)
 }
@@ -604,7 +809,11 @@ async function copy(
   $.ui.toast(isCopied ? `Copied: ${what}` : 'Could not copy here')
 }
 
-export const register: Register = on => {
+export const register: Register = (on, settings) => {
+  found = undefined
+  own = undefined
+  listed = queuesOf(settings?.queues)
+
   on('session.start', async ($, e, next) => {
     await $.command.register({
       name: 'owner',
@@ -696,12 +905,12 @@ export const register: Register = on => {
       Object.values(typed).reduce((sum, list) => sum + list.length, 0)
     const opened = new Set(await read($, open))
     const lastRead = await read($, readAt)
-    const all = now.items.map(idOf)
+    const all = now.items.map(keyOf)
     const foreign = new Set(now.foreign ?? [])
     const isAnswered = (item: OwnerItem) => answerOf(item) !== undefined
 
     const row = (item: OwnerItem, at: number) => {
-      const id = idOf(item)
+      const id = keyOf(item)
       const isOpen = opened.has(id)
       const about = hint(item)
       const given = answerOf(item)
@@ -1023,17 +1232,55 @@ export const register: Register = on => {
       )
     }
 
-    const part = (mine: OwnerItem[], heading: string, none: string) => (
+    // An entry is numbered by its place among all queues' waiting entries, so
+    // `d2` names the same entry in the pane and in `/owner show d2`.
+    const part = (
+      mine: OwnerItem[],
+      heading: string,
+      none: string,
+      numbered: OwnerItem[] = mine,
+    ) => (
       <Box flexDirection="column" marginBottom={1}>
         <Text bold>
           {heading} ({mine.length})
         </Text>
         {mine.length === 0 && <Text dimColor>{none}</Text>}
-        {mine.map(row)}
+        {mine.map(item => row(item, numbered.indexOf(item)))}
       </Box>
     )
 
+    const decisions = waiting(now.items, 'decision')
+    const actions = waiting(now.items, 'action')
     const answered = now.items.filter(isAnswered)
+    const groups = now.queues ?? []
+    const isMany = groups.length > 1
+    const shelves = (queue?: string) => {
+      const here = (one: OwnerItem) => queue === undefined || one.queue === queue
+
+      return (
+        <Box flexDirection="column">
+          {part(
+            decisions.filter(here),
+            'Decisions for you',
+            'Nothing to decide.',
+            decisions,
+          )}
+          {part(
+            actions.filter(here),
+            'Actions by your hand',
+            'Nothing to do by hand.',
+            actions,
+          )}
+          {answered.filter(here).length > 0 &&
+            part(
+              answered.filter(here),
+              'Answered, waiting for pickup',
+              '',
+              answered,
+            )}
+        </Box>
+      )
+    }
 
     return (
       <Box flexDirection="column">
@@ -1086,27 +1333,41 @@ export const register: Register = on => {
                 </Text>
               </Box>
             )}
-            {part(
-              waiting(now.items, 'decision'),
-              'Decisions for you',
-              'Nothing to decide.',
-            )}
-            {part(
-              waiting(now.items, 'action'),
-              'Actions by your hand',
-              'Nothing to do by hand.',
-            )}
-            {answered.length > 0 &&
-              part(answered, 'Answered, waiting for pickup', '')}
+            {!isMany && shelves()}
+            {isMany &&
+              groups.map(queue => (
+                <Box flexDirection="column" marginBottom={1}>
+                  <Text bold underline>
+                    {queue.label}
+                  </Text>
+                  {queue.hasFile ? (
+                    shelves(queue.file)
+                  ) : (
+                    <Text dimColor>No queue file at {queue.file}.</Text>
+                  )}
+                </Box>
+              ))}
           </Box>
         )}
         <Text dimColor>
-          Source: {now.file ?? FILE}. Last read {lastRead || 'not yet'}; it is
-          read again every 5 seconds. Press a row for its context.
+          Source:{' '}
+          {groups.length > 0
+            ? groups.map(one => one.file).join(', ')
+            : (now.file ?? FILE)}
+          . Last read {lastRead || 'not yet'}; it is read again every 5
+          seconds. Press a row for its context.
         </Text>
-        {now.isMain && now.file && (
-          <Link href={`file:///${now.file}`} label="Open the queue file" />
-        )}
+        {groups
+          .filter(one => one.hasFile && (one.file !== now.file || now.isMain))
+          .map(one => (
+            <Link
+              key={`file:${one.file}`}
+              href={`file:///${one.file}`}
+              label={
+                isMany ? `Open the ${one.label} queue file` : 'Open the queue file'
+              }
+            />
+          ))}
         <Text dimColor>
           To select text with the mouse, type /owner show (or /owner show
           a2).
