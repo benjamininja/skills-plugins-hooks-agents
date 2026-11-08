@@ -81,9 +81,11 @@ the answer; nothing is written or sent until `Submit`.
   wrote. A line it did not write is flagged and is never carried to a
   session, so text typed into the file by anything else is not taken for
   the owner's.
-- One queue for every session: from a git worktree the pane reads the main
-  checkout's file. When it cannot find the main checkout it reads the
-  session's own copy and says so in bold.
+- One queue for every session of a project: from a git worktree the pane
+  reads the main checkout's file. When it cannot find the main checkout it
+  reads the session's own copy and says so in bold. Other projects' queues
+  the owner lists are read too (see "One queue per project, many in one
+  pane").
 - `Refresh` reads the file now. It is also read every 5 seconds and after
   each tool call.
 - The pane never opens by itself: `Show queue` or `/owner` opens it, and a new entry only updates the status line and shows a toast.
@@ -91,7 +93,8 @@ the answer; nothing is written or sent until `Submit`.
   entry into the transcript, and `/owner show a2` or `/owner show d1` one
   entry. A pane's text cannot be selected with the mouse; the transcript's
   can.
-- In a project with no `NEEDS-OWNER.md` the mod stays hidden.
+- With no `NEEDS-OWNER.md` anywhere, the project's own and every listed
+  one, the mod stays hidden.
 - A session loads the mod once, at launch. A session started before an
   update keeps the old copy; the version line shows which one is drawing.
 
@@ -135,14 +138,53 @@ new session.
 }
 ```
 
-### One queue per project
+### One queue per project, many in one pane
 
-The mod reads only its own project's `.claude/memory/NEEDS-OWNER.md`, from
-the project's main checkout, and stays hidden in a project without one. A
-session in such a project never learns its id and never receives an answer.
-Every project whose sessions raise entries needs its own `NEEDS-OWNER.md`,
-started from
+Each project has one queue, `.claude/memory/NEEDS-OWNER.md` in its main
+checkout, and one writer: that project's builder manager. Every project whose
+sessions raise entries needs its own, started from
 `plugins/session-dispatch-managers-build-review/templates/NEEDS-OWNER.md`.
+
+The pane reads its own project's queue and, beside it, every queue the owner
+lists in the plugin's `queues` setting. A session in a project with no queue
+of its own, such as this repository's, shows the listed queues, is told its
+id, and receives an answer to an entry that names it. The mod stays hidden
+only when none of the files exists.
+
+- **The setting.** It is the plugin's `userConfig` field `queues`: a list of
+  absolute paths, each to one `NEEDS-OWNER.md`. The owner sets it, in
+  `/config` as `owner-queue.queues` or in `~/.claude/settings.json`; no
+  agent writes it. A path that is not absolute is ignored, and so is a
+  path that names the session's own queue again. For example:
+
+  ```json
+  "pluginConfigs": {
+    "owner-queue": {
+      "options": {
+        "queues": ["C:/Users/you/path/to/dynasty/.claude/memory/NEEDS-OWNER.md"]
+      }
+    }
+  }
+  ```
+
+- **Grouped by project.** With more than one queue the pane puts a heading
+  on each group, the queue's repo folder name (the folder above `.claude`),
+  and numbers entries across all groups, so `d2` is the same entry in the
+  pane and in `/owner show d2`.
+- **Written where it came from.** Submit, `Change answer` and `Mark done`
+  write into the file the entry was read from. The pane's record of the lines
+  it wrote is kept under the file's path plus the entry, so a line in one
+  queue is never taken for a line in another.
+
+### The problems log
+
+When the parser cannot draw an entry (today: an Options line that uses a key
+twice), the pane adds one line to `~/.claude/owner-queue/problems.log`:
+`<day> <time> | <queue file> | <entry title> | <kind of problem>`. It holds
+no field value. An entry with the same problem is logged once, not on every
+5-second read; it is logged again if it is fixed and then breaks again. The
+mod creates the file when it first has a line to write. It is the owner's, to
+read or delete.
 
 ### The `Session:` line
 
@@ -159,5 +201,8 @@ claude plugin validate plugins/owner-queue
 ```bash
 claude plugin test plugins/owner-queue
 ```
+
+Every render bug the owner reports becomes a test fixture in
+`hooks/*.test.ts`, holding structure only, in the PR that fixes it.
 
 `.claude-plugin/types/` is written by the engine at load and is not tracked.

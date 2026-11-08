@@ -6,6 +6,8 @@ export type OwnerItem = {
   fields: OwnerField[]
   /** Each fenced block of the entry, whole: one chunk to copy and paste. */
   blocks?: string[]
+  /** The queue file the entry was read from; set by the pane, not the parser. */
+  queue?: string
 }
 
 /**
@@ -27,12 +29,25 @@ export type OwnerPart = {
 /** One choice of a decision: its key (`a`) and its text as written. */
 export type OwnerOption = { key: string; text: string }
 
+/** One queue the pane reads: the session's own project's, or a listed one. */
+export type OwnerQueueFile = {
+  /** The path read: absolute for a main checkout and for every listed queue. */
+  file: string
+  /** The repo folder name the group is headed with. */
+  label: string
+  /** False when the file is missing or could not be read. */
+  hasFile: boolean
+}
+
 export type OwnerQueue = {
   /** False until the queue file has been read once in this session. */
   isLoaded: boolean
-  /** False when the project has no queue file. */
+  /** False when no queue file, the session's own or a listed one, exists. */
   hasFile: boolean
+  /** The entries of every queue read, each carrying its `queue`. */
   items: OwnerItem[]
+  /** Every queue the pane reads, the session's own first. */
+  queues?: OwnerQueueFile[]
   /** The file read: the main checkout's by absolute path when it was found. */
   file?: string
   /** The ids of answered decisions whose Answer line the pane did not write. */
