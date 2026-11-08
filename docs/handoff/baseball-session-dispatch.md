@@ -61,10 +61,9 @@ Both were read at their tips on 2026-11-08.
 - **Daily Actions job** (`.github/workflows/savant_etl.yml`): Baseball
   Savant through `pybaseball` (`savant_extract.py`, then
   `load_savant_to_supabase.py`). Secret: `SUPABASE_ANON_KEY`.
-- **Local scripts** with hard-coded Windows paths (`C:\Users\James\...`):
-  `load_supabase.py`, `load_local.py`, `direct_transfer.py`,
-  `diagnose_cols.py`, `verify_counts.py`. There's also a stray top-level
-  `savant_etl.yml` and a folder named `git`.
+- **Several local-only scripts** that are run by hand, some with
+  hard-coded Windows paths. There's also a stray top-level `savant_etl.yml`
+  and a folder named `git`.
 - **No tests, no lint, no `CLAUDE.md`, no `.claude/`.** Generated
   `batches/*.sql` files are committed.
 
@@ -77,26 +76,23 @@ Both were read at their tips on 2026-11-08.
   Supabase in the browser with the anon key.
 - **No tests, no `.claude/`.** It is updated by uploading files on GitHub.
 
-## Step 0, before anything else: a credential is public
+## Step 0, before anything else: check for plaintext credentials
 
-`fantasy-baseball-etl/load_supabase.py` holds the Supabase Postgres
-**database password in plain text**, with the project ref and pooler
-host. The repo is public, so the password is in its history for good.
-The owner must:
+Both repos are public, so anything committed to them is public for good,
+history included. Before any other work, the owner:
 
-1. Reset the database password in the Supabase dashboard (Project Settings,
-   then Database).
-2. Change every local script to read it from the environment. The weekly
-   Actions job already passes it in as `SUPABASE_PASSWORD`. Update that
-   secret to the new value.
-3. Optionally, rewrite history. Rotating the password is what matters;
-   rewriting history doesn't un-leak it.
+1. Checks both repos, history included, for plaintext credentials:
+   database passwords, connection strings, API keys and tokens.
+2. Rotates any credential found, in the service's own dashboard.
+   Rewriting history alone doesn't un-leak a credential; rotating it does.
+3. Changes every script to read credentials from the environment (a
+   local `.env` that git ignores, or Actions secrets), as the existing
+   workflows already do.
+4. Checks that every Supabase table the browser app's anon key can reach
+   has row-level security with read-only policies. An anon key is public
+   by design, so RLS is what protects the data.
 
-Also check that every table the `hod-decision-engine` anon key can reach
-has row-level security, with read-only policies. An anon key is public by
-design, so RLS is what protects the data.
-
-An agent never handles the password itself. These are the owner's steps.
+An agent never handles a credential itself. These are the owner's steps.
 
 ## Setup per repo
 
@@ -185,8 +181,8 @@ Put each one to him with the context and a recommendation, through his
 own `NEEDS-OWNER.md` once it exists, and record the answer on a GitHub
 issue.
 
-1. Step 0: rotate the password and check RLS. **Recommended: now, before
-   any other work.**
+1. Step 0: the credential check, rotation and RLS check. **Recommended:
+   now, before any other work.**
 2. Keep `main` or `master` in the ETL repo; `main` or `pybaseball` in the
    app repo.
 3. The memory tier for each repo. Recommended: standard for the ETL repo,
