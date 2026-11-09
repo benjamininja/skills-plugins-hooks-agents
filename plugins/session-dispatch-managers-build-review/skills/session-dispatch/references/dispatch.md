@@ -36,8 +36,14 @@ It is a dry run unless `-Apply` is given. In order:
 7. Starts the session in the background from the main checkout, in
    `dontAsk` mode, with the config's agent. The prompt is the config's
    read line, the brief, then "Or stop after N turns."
-8. Checks that the session has a pid and runs in its worktree. If not,
-   it stops the session and says so. Look before a second try.
+8. Reads `claude agents --json` every 2 seconds, for up to 30 seconds,
+   until the session's row has a pid, a status and the worktree as its
+   cwd. (A new row names the main checkout, with no status, for the
+   first few seconds.) If 30 seconds pass without that, it runs
+   `claude stop <short id>` (the row's `id`, not its `sessionId`),
+   reads the list once more, and refuses: either stopped and gone, or
+   the stop failed, naming the short id. Look before a second try.
+   On a good dispatch it prints `started: <name>, pid <n>, session <id>`.
 
 Run it from PowerShell, never from Git Bash: Git Bash rewrites a prompt
 that starts with a slash into a path.
@@ -58,6 +64,9 @@ builder's worktree, run `claude --resume <sessionId> --bg <message>`
 with no flags. Never resume a builder that is still running, and never
 pass flags: either one starts a copy without the builder settings.
 The message holds no double quote.
+If a resume starts a copy anyway, stop that copy at once with
+`claude stop <its short id>`, check that it is gone, and record it on
+the ticket.
 
 ## Close out, only when a builder has stopped
 
