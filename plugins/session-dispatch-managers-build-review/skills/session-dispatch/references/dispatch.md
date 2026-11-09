@@ -89,6 +89,10 @@ dispatched.
 1. For each open PR of that builder: re-prove Green, post the output on
    the PR, then squash-merge. A PR that is not green is not merged; it
    is listed for the owner.
+   On a PR the repo's ruleset reviews, start the reviewer before the
+   re-proof is posted, and run the one round (`session-rules`,
+   `references/code-review.md`). Green waits for the round. The builder
+   answers through Follow up, above.
    For a builder dispatched with `-Profile probe`, first read its
    `builder-state/probe.py` against the hosts its brief names: its
    `ALLOWED_HOSTS` must hold no other host and be checked on every

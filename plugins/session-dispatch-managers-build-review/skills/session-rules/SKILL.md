@@ -228,6 +228,19 @@ where the owner has invoked the `session-dispatch` skill. A PR that is
 not green goes back with the failing output.
 Nothing reaches the main branch on one session's own report.
 
+**The code review.** Before it posts the re-proof of a builder's PR that
+touches code (or, where the repo's ruleset asks, only rule or skill
+text), the manager starts a read-only reviewer with a packet,
+and posts what it finds. One round follows: the builder answers each
+finding once (fixed at a commit, or disputed with a reason), a fresh
+reviewer re-checks, and the manager decides each finding still open,
+asking the planner on a design question. Only when they disagree does it
+go to the owner, as a Decision. Green then has one more item: no
+blocking finding the manager upheld is still open. Findings that are not
+blocking are posted and never hold a merge. Read
+`references/code-review.md` for which PRs, the packet, the effort per
+tier, the finding classes and the record.
+
 ## The planner
 
 - Keeps the maps, tickets, tiers and stages; the stage table in the

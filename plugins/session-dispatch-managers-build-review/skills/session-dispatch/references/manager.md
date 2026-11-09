@@ -28,7 +28,10 @@ when the PR:
 - adds a design choice the ticket did not make;
 - outgrew its tier.
 
-The read does not replace the re-proof of Green; both are done. A "plan
+The read does not replace the re-proof of Green; both are done. It reads
+the PR against its ticket's design, and only when asked; the code review
+(`session-rules`, `references/code-review.md`) reads every reviewed PR's
+code against the repo's ruleset, and neither stands in for the other. A "plan
 breach" holds the merge until planner and manager agree or the owner
 rules. A design choice the read turns up goes to the owner as a
 Decision; the planner's advice is not the owner's answer.
