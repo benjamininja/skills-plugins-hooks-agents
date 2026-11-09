@@ -101,6 +101,12 @@ is also this session's to keep current.
   `plugins/session-dispatch-managers-build-review/templates/agents/stage-builder.md`
   over `.claude/agents/stage-builder.md` (the bullet from #98, PR #102).
 - **The owner's go on #101**, to relay to the manager.
+- **Deleting and renaming files.** Builders can't delete or rename a tracked file: neither project's builder settings allow `git rm` or `git mv`. The dynasty planner sent the owner a Decision (dynasty #459, issuecomment-6724928260):
+  - (a) a standing `git rm *` allow, with the brief naming each file;
+  - (b) a per-ticket profile;
+  - (c) the owner deletes by hand.
+
+  Here, #52 deletes files, #54 retires four skills, and #51 renames a skill folder. The dynasty planner will relay the answer. If it is (a), ticket a session-rules `Command forms` line ("delete with `git rm <path>`, only for files the brief names"), and a matching tools allow line for the owner, covering `git mv` too.
 
 ## Queue entries raised
 
