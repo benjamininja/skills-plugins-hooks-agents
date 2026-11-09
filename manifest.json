@@ -39,6 +39,7 @@
     { "name": "teach", "tags": ["crystallize", "reference"] },
     { "name": "to-spec", "tags": ["plan", "engineering-flow"] },
     { "name": "to-tickets", "tags": ["plan", "engineering-flow"] },
+    { "name": "tools-code-review", "tags": ["execute", "engineering-flow"] },
     { "name": "triage", "tags": ["plan", "engineering-flow"] },
     { "name": "two-axis-code-review", "tags": ["execute", "engineering-flow"] },
     { "name": "wayfinder", "tags": ["plan", "engineering-flow"] },
