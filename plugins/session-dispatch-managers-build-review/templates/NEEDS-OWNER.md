@@ -25,6 +25,10 @@ Format:
   draws one step per row, with that step's Copy buttons under it.
 - `- Session: <id>` is optional: the id of the session the answer goes
   back to. `/owner id` prints a session's id.
+  - A `/clear` gives a session a new id; a compaction keeps it. The
+    raising session sends the manager its new id, and the entries it
+    raised are re-keyed (`references/parking.md`, "The Session line
+    across a clear").
 - Secrets are named, never written. No personal details of the owner,
   and no name the project keeps private.
 

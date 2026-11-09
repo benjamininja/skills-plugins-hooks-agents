@@ -22,7 +22,10 @@ the answer; nothing is written or sent until `Submit`.
   answer goes back to. That session's own copy of the mod sees the
   pane-written `Answer:` line (or the item marked done) at its next read
   and says it in its own chat as the owner's words, once; a closed session
-  gets it when it is next opened. Submit says in the pressing session only
+  gets it when it is next opened. A `/clear` gives a session a new id (a
+  compaction keeps it), and a cleared session is not opened again: its old
+  entries are re-keyed to the new id under `parking.md`'s rule in the
+  `session-rules` skill, not delivered on reopen. Submit says in the pressing session only
   the entries that name it or name no session. The mod tells each session
   its id in the system prompt, and `/owner id` prints it.
 - A fenced code block inside an entry is one chunk: the pane draws it

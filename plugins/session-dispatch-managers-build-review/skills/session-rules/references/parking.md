@@ -20,6 +20,8 @@ The format head is `templates/NEEDS-OWNER.md` in this plugin.
      holds the ready entry, and the manager writes it at once. The
      builder adds one line to its ticket: parked, and why.
    - The planner sends the manager a ready entry.
+   - A `/clear` changes the session's id. Keep the `Session:` line
+     current as in "The Session line across a clear", below.
 3. Tell the owner once, by the session's own notification tool if it
    has one, and send one message to the session that started this
    one, naming the entry. No public post.
@@ -28,6 +30,27 @@ The format head is `templates/NEEDS-OWNER.md` in this plugin.
 5. On the answer: record it where it belongs (ADR, ticket, state file),
    remove the entry in the same turn, and put the ticket back in the
    queue. An action found done is removed at once.
+
+## The Session line across a clear
+
+A `/clear` gives a session a new id. A compaction, manual or automatic,
+keeps it. An answer that names the old id is never said in any chat,
+because the cleared session is not opened again. So a session that keeps
+a state file (the planner and the manager) does this:
+
+- **Before a clear:** list each open entry it raised under
+  `## Queue entries raised` in its state file (`templates/PLANNER.md`,
+  `templates/MANAGER.md`): the entry's title and the `Session:` id it
+  names.
+- **After a clear:** read its new id (`/owner id`, or the id the
+  `owner-queue` mod gives it) and compare it with the ids in that
+  section. If they differ, send the manager one message with the new id
+  and the titles of the entries to re-key, then update the section.
+- **The manager** re-keys its own entries itself, and the entries the
+  message names, by changing their `- Session:` line to the new id. It
+  never touches an `Answer:` or `Note:` line.
+- The mod does not re-key entries. Whether it should is the owner's
+  decision, parked on the ticket.
 
 ## The Answer line
 
