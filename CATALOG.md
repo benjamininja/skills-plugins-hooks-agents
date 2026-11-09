@@ -7,7 +7,7 @@
 
 ## What's in this repo
 
-- **Skills** (38 loadable: 4 authored, 33 vendored, 1 forked) — one folder per skill under `skills/`, each with a `SKILL.md`; junctioned into `~/.claude/skills/` per machine.
+- **Skills** (39 loadable: 5 authored, 33 vendored, 1 forked) — one folder per skill under `skills/`, each with a `SKILL.md`; junctioned into `~/.claude/skills/` per machine.
 - **Plugins** (3, manifest-only) — cataloged upstream bundles whose ~30 skills are deliberately not vendored (unused Fabric workloads). See `plugins/README.md` / ADR-0002.
 - **Hooks** (3, all installed on this machine) — deterministic event-triggered scripts under `hooks/`, registered in `~/.claude/settings.json`. See `hooks/README.md`.
 - **Vendor cache** (1) — pristine, never-loaded upstream mirrors of forked skills, for diffing. See ADR-0001.
@@ -53,6 +53,7 @@ Tags follow the routing-map axes (see README "Routing: which skill, when"): stag
 | **teach** | crystallize | reference | model | [mattpocock/skills](https://github.com/mattpocock/skills) | Teach the user a new skill or concept, within this workspace. |
 | **to-spec** | plan | engineering-flow | user | [mattpocock/skills](https://github.com/mattpocock/skills) | Turn the current conversation into a spec and publish it to the project issue tracker: no interview, just synthesis of what you've already discussed. |
 | **to-tickets** | plan | engineering-flow | user | [mattpocock/skills](https://github.com/mattpocock/skills) | Break a plan, spec, or the current conversation into a set of tracer-bullet tickets, each declaring its blocking edges, published to the configured tracker (edges as text in one file per ticket locally, or native blocki… |
+| **tools-code-review** | execute | engineering-flow | model | authored here | The code-review ruleset for the skills-plugins-hooks-agents repo, for the pr-code-reviewer agent at the builder manager's re-proof only. |
 | **triage** | plan | engineering-flow | user | [mattpocock/skills](https://github.com/mattpocock/skills) | Move issues and external PRs through a state machine of triage roles, categorise, verify, grill if needed, and write agent-ready briefs. |
 | **two-axis-code-review** | execute | engineering-flow | model | forked from [mattpocock/skills](https://github.com/mattpocock/skills) | Review the changes since a fixed point (commit, branch, tag, or merge-base) along two axes: Standards (does the code follow this repo's documented coding standards?) and Spec (does the code match what the originating is… |
 | **wayfinder** | plan | engineering-flow | user | [mattpocock/skills](https://github.com/mattpocock/skills) | Plan a huge chunk of work (more than one agent session can hold) as a shared map of decision tickets on your issue tracker, and resolve them one at a time until the way to the destination is clear. |
