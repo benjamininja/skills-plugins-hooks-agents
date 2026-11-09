@@ -13,7 +13,8 @@
     5. make the worktree .claude\worktrees\<Name> on branch worktree-<Name>
     6. run the project's setup commands in it
     7. start the session in the background
-    8. check it has a pid and runs in that worktree; stop it if not
+    8. wait up to 30 s (a look every 2 s) for a pid, a status and the
+       worktree as cwd; if not, stop it by its short id and confirm it is gone
 
   Dry run by default: steps 1 to 4 are done, every command of steps 5 to 8
   is printed, and nothing is changed. Pass -Apply to act.
@@ -306,15 +307,36 @@ try {
 }
 
 # 8. Check the pid and the folder.
-Start-Sleep -Seconds 3
-$listed = (& $claude agents --json) -join "`n" | ConvertFrom-Json
-$session = @($listed | Where-Object { $_.name -eq $Name }) | Select-Object -Last 1
-$isHome = $session -and $session.pid -and
-    ([string]$session.cwd).TrimEnd('\') -ieq $worktree.TrimEnd('\')
+function Get-Row {
+    $listed = (& $claude agents --json) -join "`n" | ConvertFrom-Json
+    @($listed | Where-Object { $_.name -eq $Name }) | Select-Object -Last 1
+}
+function Test-Home($row) {
+    $row -and $row.pid -and $null -ne $row.status -and
+        ([string]$row.cwd).TrimEnd('\') -ieq $worktree.TrimEnd('\')
+}
+
+$session = $null
+$isHome = $false
+$deadline = (Get-Date).AddSeconds(30)
+while ($true) {
+    $session = Get-Row
+    $isHome = Test-Home $session
+    if ($isHome -or (Get-Date) -ge $deadline) { break }
+    Start-Sleep -Seconds 2
+}
 if (-not $isHome) {
-    if ($session -and $session.sessionId) { & $claude stop $session.sessionId }
     $where = if ($session) { [string]$session.cwd } else { 'not listed' }
-    Refuse "the session is not running in its worktree (it is: $where). It was stopped; look before a second try"
+    $shortId = if ($session) { [string]$session.id } else { '' }
+    if (-not $shortId) {
+        Refuse "no session row for $Name with an id after 30 seconds (cwd: $where). Nothing could be stopped; look at claude agents --json"
+    }
+    & $claude stop $shortId
+    $after = Get-Row
+    if ($after -and [string]$after.id -eq $shortId) {
+        Refuse "the session is not running in its worktree after 30 seconds (cwd: $where). The stop failed: claude stop $shortId did not remove it. Stop it by hand"
+    }
+    Refuse "the session is not running in its worktree after 30 seconds (cwd: $where). It was stopped (id $shortId) and is gone; look before a second try"
 }
 
 Write-Output ''
