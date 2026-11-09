@@ -45,13 +45,16 @@ import {
   waiting,
 } from './parse'
 
-const VERSION = '0.9.0'
+const VERSION = '0.10.0'
 const PANE = 'owner-queue'
 const TITLE = 'Needs owner'
 const FILE = '.claude/memory/NEEDS-OWNER.md'
 const PROBLEMS = '.claude/owner-queue/problems.log'
 const PROBLEM_KIND = 'Options line: a key appears twice'
 const EVERY_MS = 5000
+const GIVE_UP_MS = 60000
+const BY_HAND =
+  'The queue was not re-keyed after the /clear: change the Session lines by hand (session-rules, parking.md, "The Session line across a clear")'
 const ANSWERS = 'answers'
 const NOTES = 'notes'
 const LOGGED = 'logged'
@@ -381,8 +384,156 @@ async function slurp($: EngineInterface, file: string): Promise<string | undefin
   }
 }
 
+/**
+ * The id a `/clear` ended in this session, and when. Kept here and not in the
+ * store, which every session's copy of the mod shares. A clear neither
+ * reloads the mod nor fires `session.start`, so the variable lives on; the
+ * next read that finds another id under `$.session.id()` re-keys from it.
+ */
+let cleared: { from: string; at: number } | undefined
+
+let isRekeying = false
+
+/** The engine's time in milliseconds; the environment's will do. */
+async function stamp($: EngineInterface): Promise<number> {
+  try {
+    return await $.clock.now()
+  } catch {
+    return Date.now()
+  }
+}
+
+/**
+ * The queue text with the id each `- Session:` field names changed from
+ * `from` to `to`, and how many fields changed. Only a field the parser reads
+ * is touched: under a Decisions or Actions heading, under a `###` title and
+ * outside a fenced block. Any other line, an Answer or a Note among them, and
+ * the words after the id, stay as written.
+ */
+function rekeyed(
+  text: string,
+  from: string,
+  to: string,
+): { text: string; count: number } {
+  let count = 0
+  let isListed = false
+  let hasEntry = false
+  let isFenced = false
+  const lines = text.split('\n').map(raw => {
+    const line = raw.trimEnd()
+    if (hasEntry && line.trim().startsWith('```')) {
+      isFenced = !isFenced
+
+      return raw
+    }
+    if (isFenced) return raw
+    const section = /^##\s+(.+)$/.exec(line)
+    if (section) {
+      isListed = /^(decision|action)/i.test(section[1].trim())
+      hasEntry = false
+      isFenced = false
+
+      return raw
+    }
+    if (/^###\s+(?:\[( |x|X)\]\s*)?(.+)$/.test(line)) {
+      hasEntry = isListed
+      isFenced = false
+
+      return raw
+    }
+    if (!hasEntry) return raw
+    const field = /^(\s*[-*]\s+\**Session\**:\**\s*)(\S+)/i.exec(line)
+    if (!field || field[2] !== from) return raw
+    count++
+
+    return `${field[1]}${to}${line.slice(field[0].length)}${raw.slice(line.length)}`
+  })
+
+  return { text: lines.join('\n'), count }
+}
+
+/** Moves the record `<name>:<from>` to `<name>:<to>`, joined with one already there. */
+async function shift<T>(
+  $: EngineInterface,
+  name: string,
+  from: string,
+  to: string,
+  none: T,
+  join: (into: T, was: T) => T,
+): Promise<void> {
+  const was = await kept<T>($, `${name}:${from}`, none)
+  if (JSON.stringify(was) === JSON.stringify(none)) return
+  await $.store.set(
+    `${name}:${to}`,
+    join(await kept<T>($, `${name}:${to}`, none), was),
+  )
+  await $.store.delete(`${name}:${from}`)
+}
+
+/**
+ * After a `/clear`: at the first read where `$.session.id()` answers an id
+ * other than the one the clear ended, the records of the old id move to the
+ * new one and each queue's `Session:` lines that name the old id are
+ * rewritten to it. With no clear seen it does nothing, since a resume also
+ * moves the process to another id. If the old id still answers after
+ * `GIVE_UP_MS`, it gives up and says the manual rule applies.
+ */
+async function rekey($: EngineInterface): Promise<void> {
+  if (cleared === undefined || isRekeying) return
+  isRekeying = true
+  try {
+    const { from, at: since } = cleared
+    const to = await me($)
+    if (to === undefined) return
+    if (to === from) {
+      if ((await stamp($)) - since >= GIVE_UP_MS) {
+        cleared = undefined
+        $.ui.toast(BY_HAND)
+      }
+
+      return
+    }
+    cleared = undefined
+    await shift<OwnerAnswers>($, 'delivered', from, to, {}, (into, was) => ({
+      ...into,
+      ...was,
+    }))
+    await shift<OwnerNotes>($, 'noted', from, to, {}, (into, was) => ({
+      ...into,
+      ...Object.fromEntries(
+        Object.entries(was).map(([place, lines]) => [
+          place,
+          [...new Set([...(into[place] ?? []), ...lines])],
+        ]),
+      ),
+    }))
+    await shift<string[]>($, 'done', from, to, [], (into, was) => [
+      ...new Set([...into, ...was]),
+    ])
+    let count = 0
+    for (const one of await every($)) {
+      const text = await slurp($, one.file)
+      if (text === undefined) continue
+      const made = rekeyed(text, from, to)
+      if (made.count === 0) continue
+      await $.fs.write(one.file, made.text)
+      count += made.count
+    }
+    if (count > 0)
+      $.ui.toast(
+        `Re-keyed ${count} ${count === 1 ? 'entry' : 'entries'} to this session's new id`,
+      )
+  } catch {
+    cleared = undefined
+    $.ui.toast(BY_HAND)
+  } finally {
+    isRekeying = false
+  }
+}
+
 /** Re-reads every queue file; redraws and toasts on a change. The owner opens the pane. */
 async function refresh($: EngineInterface): Promise<OwnerQueue> {
+  await rekey($)
   const sources = await every($)
   const { file, isMain } = sources[0]
   const queues: OwnerQueueFile[] = []
@@ -813,6 +964,7 @@ export const register: Register = (on, settings) => {
   found = undefined
   own = undefined
   listed = queuesOf(settings?.queues)
+  cleared = undefined
 
   on('session.start', async ($, e, next) => {
     await $.command.register({
@@ -825,6 +977,16 @@ export const register: Register = (on, settings) => {
 
     return next(e)
   })
+
+  // A `/clear` ends the session's id and fires no `session.start` for the new
+  // one. The hook reads no id and writes no store: it keeps the ending id, and
+  // the next read re-keys once `$.session.id()` answers another.
+  on('session.end', async ($, e, next) => {
+    if (e.reason === 'clear' && e.sessionId)
+      cleared = { from: cleared?.from ?? e.sessionId, at: await stamp($) }
+
+    return next(e)
+  }).catch(($, e, next) => next(e))
 
   on('command.run', { command: 'owner' }, async ($, e) => {
     const now = await refresh($)

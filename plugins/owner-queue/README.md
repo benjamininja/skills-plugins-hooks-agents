@@ -23,9 +23,17 @@ the answer; nothing is written or sent until `Submit`.
   pane-written `Answer:` line (or the item marked done) at its next read
   and says it in its own chat as the owner's words, once; a closed session
   gets it when it is next opened. A `/clear` gives a session a new id (a
-  compaction keeps it), and a cleared session is not opened again: its old
-  entries are re-keyed to the new id under `parking.md`'s rule in the
-  `session-rules` skill, not delivered on reopen. Submit says in the pressing session only
+  compaction keeps it), and a cleared session is not opened again, so the
+  mod re-keys at a clear: at the first read after it that finds another id,
+  it changes each `- Session:` line that names the old id to the new one, in
+  every queue the pane reads (never an `Answer:` or `Note:` line, and never
+  an entry that names a third id), moves the session's records of what it
+  was already told to the new id, and toasts how many entries it re-keyed.
+  Only a `/clear` starts this: a changed id with no clear seen re-keys
+  nothing. If the old id still answers 60 seconds after the clear, the mod
+  toasts that it did not re-key. `parking.md`'s rule in the `session-rules`
+  skill is the fallback for a session without the mod, or when it gave up.
+  Submit says in the pressing session only
   the entries that name it or name no session. The mod tells each session
   its id in the system prompt, and `/owner id` prints it.
 - A fenced code block inside an entry is one chunk: the pane draws it

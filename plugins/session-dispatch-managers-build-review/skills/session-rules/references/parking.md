@@ -49,8 +49,14 @@ a state file (the planner and the manager) does this:
 - **The manager** re-keys its own entries itself, and the entries the
   message names, by changing their `- Session:` line to the new id. It
   never touches an `Answer:` or `Note:` line.
-- The mod does not re-key entries. Whether it should is the owner's
-  decision, parked on the ticket.
+- **The `owner-queue` mod re-keys at a clear.** At the first read after a
+  `/clear` that finds another id, it changes each `- Session:` line that
+  names the old id to the new id, in every queue it reads, and moves its
+  records of what the session was already told. It toasts how many entries
+  it re-keyed. It never touches an `Answer:` or `Note:` line, and it leaves
+  an entry that names a third id. The steps above stay as the fallback for a
+  session without the mod, or when its toast says it did not re-key (the old
+  id still answered 60 seconds after the clear).
 
 ## The Answer line
 
