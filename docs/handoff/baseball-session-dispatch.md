@@ -11,6 +11,10 @@ at the commits named below. Nothing was written to either repo. This file
 is kept current when the pieces it points at change. Read it from `main`,
 not from a copy.
 
+Updated 2026-11-09: the piece versions, the queue setup (setup step 5),
+one more carried-over rule, and the queue recommendation (decision 6).
+The two baseball repos were not read again.
+
 ## What this setup is
 
 A project is worked by three kinds of Claude Code session, each with its
@@ -35,9 +39,9 @@ It is used in production on `benjamininja/Python-PowerBI-DynastyFantasyFootball`
 
 | Piece | Where | Version at writing | What it gives you |
 |---|---|---|---|
-| Session-dispatch plugin | [`plugins/session-dispatch-managers-build-review/`](../../plugins/session-dispatch-managers-build-review/) | 0.3.0 | `dispatch.ps1`, the `session-rules` and `session-dispatch` skills, role files, settings examples, profiles, brief template |
-| Owner-queue mod | [`plugins/owner-queue/`](../../plugins/owner-queue/) | 0.7.2 (a version that holds pane comments until Submit is in progress, #81) | The queue pane, `/owner`, `/owner id`, answers carried back to the session that asked |
-| Skills, agents and hooks | [`skills/`](../../skills/), [`.claude/agents/`](../../.claude/agents/), [`hooks/`](../../hooks/) | `main` at `11069b3` | The skill catalog ([CATALOG.md](../../CATALOG.md)) and the git guardrail hook |
+| Session-dispatch plugin | [`plugins/session-dispatch-managers-build-review/`](../../plugins/session-dispatch-managers-build-review/) | 0.3.0, with its rules and script as on `main` at `76b8c89` (the version number has not moved since #84; take `main`) | `dispatch.ps1`, the `session-rules` and `session-dispatch` skills, role files, settings examples, profiles, brief template |
+| Owner-queue mod | [`plugins/owner-queue/`](../../plugins/owner-queue/) | 0.9.0 | The queue pane, `/owner`, `/owner id`, answers carried back to the session that asked. One pane reads its own project's queue plus every queue listed in its `queues` setting. A typed answer or comment waits for Submit. |
+| Skills, agents and hooks | [`skills/`](../../skills/), [`.claude/agents/`](../../.claude/agents/), [`hooks/`](../../hooks/) | `main` at `76b8c89` | The skill catalog ([CATALOG.md](../../CATALOG.md)) and the git guardrail hook |
 | Memory template | [`benjamininja/project-memory-template`](https://github.com/benjamininja/project-memory-template) | `1fe3df5` | `CLAUDE.md` plus `.claude/memory/` tiers (minimal, standard, full), and the `check-in-hygiene` pre-commit hook |
 
 Take each piece from a **clone that only ever holds merged `main`**, never
@@ -133,13 +137,23 @@ Each step is a PR in that repo, except the owner's local steps.
 
    Put the repo's proof commands in the builders' allow list, exactly as
    they will be typed: one command per call, no chains.
-5. **The queue in every repo.** The owner-queue mod reads only the session's
-   own project's `.claude/memory/NEEDS-OWNER.md`, from the main checkout,
-   and **stays hidden in a project without one**. A session there never
-   learns its id and never gets an answer. So each of the two repos needs
-   its own `NEEDS-OWNER.md`, from the plugin's `templates/`. Every entry's
-   `- Session:` line is the raising session's id, as `/owner id` prints it
-   in that session. A wrong id delivers the answer to the wrong session.
+5. **The queue.** The owner-queue mod reads the session's own project's
+   `.claude/memory/NEEDS-OWNER.md`, from the main checkout, plus every
+   queue listed in its `queues` setting: absolute paths, set by the owner
+   in `/config` or `~/.claude/settings.json`, never by an agent. See the
+   mod's README, "One queue per project, many in one pane". The mod
+   **stays hidden only when none of those files exists**. A session
+   there never learns its id and never gets an answer. There are two
+   ways to set it up:
+   - a `NEEDS-OWNER.md` in each repo, from the plugin's `templates/`; or
+   - one queue in the ETL repo, listed in the `queues` setting, so that
+     sessions in the app repo read it too. This is how our two repos
+     share one queue.
+
+   Every entry's `- Session:` line is the raising session's id, as
+   `/owner id` prints it in that session. The id changes at every
+   `/clear`, so open entries are re-keyed after one. A wrong id delivers
+   the answer to the wrong session.
 6. **Install, on the owner's machine.**
    - Clone `benjamininja/skills-plugins-hooks-agents` as a live clone.
    - Name `<live clone>\plugins\owner-queue` and
@@ -150,7 +164,8 @@ Each step is a PR in that repo, except the owner's local steps.
    - After every pull, start a new session; a session loads plugins once,
      at launch.
    - Don't copy the plugin folders. A copy never gets updates. (Our own
-     install had this problem, and it's being fixed.)
+     install had this problem; it now loads both plugins from its live
+     clone.)
 
 ## Rules that carry over unchanged
 
@@ -174,6 +189,10 @@ They are in the `session-rules` skill. Read it rather than this summary.
     builder reads them.
 - **Secrets.** Builders never read `.env` (the settings examples deny it),
   and no agent writes a password, key or token anywhere.
+- **A builder that runs the security-review skill keeps going in the same
+  turn.** The commit, the push, the PR, the state-back comment and the
+  message to the manager all follow. The review's report is one step of
+  the turn, not its end.
 
 ## Decisions that are SpunkyLlama's
 
@@ -191,7 +210,8 @@ issue.
 5. Whether agent sessions may read Fantrax pages, given its `robots.txt`
    and terms, or only the owner's scheduled pipeline does.
 6. One planner across both repos, or one each. Recommended: one planner
-   that covers both, and a queue file in each repo (setup step 5).
+   that covers both, with one queue that sessions in both repos read
+   (setup step 5).
 7. Whether the two repos stay public, given the committed SQL batch files
    of league data.
 
