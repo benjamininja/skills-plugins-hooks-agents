@@ -70,7 +70,8 @@ is also this session's to keep current.
 - **Ready for dispatch, with the owner's go:**
   - #99 (medium): "Yes, go 99", relayed 2026-11-08.
 - **Waiting for the owner's go:**
-  - #101 (low): the owner answered its Decision (a).
+  - #101 (low): the owner answered its Decision (a); amendment 2 adds stopping a resume copy at once.
+  - #108 (low): the git rm command form.
 - **In flight:** PR #103 (#49): manager re-proof done; it waits on the
   owner's Decision on the auditor's table.
 - **Vendor lane, one ticket at a time:** #49 → #57 → #52 → #50.
@@ -101,12 +102,10 @@ is also this session's to keep current.
   `plugins/session-dispatch-managers-build-review/templates/agents/stage-builder.md`
   over `.claude/agents/stage-builder.md` (the bullet from #98, PR #102).
 - **The owner's go on #101**, to relay to the manager.
-- **Deleting and renaming files.** Builders can't delete or rename a tracked file: neither project's builder settings allow `git rm` or `git mv`. The dynasty planner sent the owner a Decision (dynasty #459, issuecomment-6724928260):
-  - (a) a standing `git rm *` allow, with the brief naming each file;
-  - (b) a per-ticket profile;
-  - (c) the owner deletes by hand.
-
-  Here, #52 deletes files, #54 retires four skills, and #51 renames a skill folder. The dynasty planner will relay the answer. If it is (a), ticket a session-rules `Command forms` line ("delete with `git rm <path>`, only for files the brief names"), and a matching tools allow line for the owner, covering `git mv` too.
+- **Deleting and renaming files.** The owner chose (a) for dynasty (dynasty #459 issuecomment-6729399851) and, on 2026-11-09, the same for tools: "Yes, add it (Recommended)".
+  - **The owner's Action, sent to the manager to queue:** add `"Bash(git rm *)",` after `"Bash(git add *)",` on line 6 of this repo's `.claude/builders.settings.json`. It blocks the delete steps of #52, #54 and #51.
+  - **#108 (low)** adds the session-rules `Command forms` bullet: delete with `git rm <path>`, only paths the brief names; a rename is the new file plus `git rm` of the old one. It needs the owner's go.
+  - **Not yet asked:** `git merge origin/main`, the form the session-rules give for bringing `main` into a branch, isn't in this repo's builder allow list. No builder has hit it yet. Offer the owner the line if one does.
 
 ## Queue entries raised
 
