@@ -13,8 +13,12 @@
     5. make the worktree .claude\worktrees\<Name> on branch worktree-<Name>
     6. run the project's setup commands in it
     7. start the session in the background
-    8. wait up to 30 s (a look every 2 s) for a pid, a status and the
-       worktree as cwd; if not, stop it by its short id and confirm it is gone
+    8. before step 5, read claude agents --json and set aside the ids of
+       rows already named <Name>; after step 7, wait up to 30 s (a look
+       every 2 s) for a new row (the default list holds live rows only)
+       with a pid, a status and the worktree as cwd; if not, stop each new
+       row by its short id, wait up to 10 s for it to leave the list, and
+       report what the list shows
 
   Dry run by default: steps 1 to 4 are done, every command of steps 5 to 8
   is printed, and nothing is changed. Pass -Apply to act.
@@ -222,6 +226,9 @@ $start = @(
 if ($profileAllow.Count) { $start += @('--allowedTools') + $profileAllow }
 $start += @('--disallowedTools') + $deny + $profileDeny
 $check = @($claude, 'agents', '--json')
+$waitSeconds = 30
+$lookSeconds = 2
+$stopWaitSeconds = 10
 
 Write-Output "name:      $Name"
 Write-Output "tier:      $Tier ($($chosen.model), effort $($chosen.effort), turn cap $($chosen.turnCap))"
@@ -259,6 +266,7 @@ Write-Output "apply:     $(if ($isListed) { 'this project is on the list' } else
 if (-not $Apply) {
     Write-Output ''
     Write-Output 'DRY RUN. Nothing was changed. These would run, in this order:'
+    Write-Output "  [first; if it cannot be read, nothing is started. Rows already named $Name are set aside] $(Show $check)"
     if (-not $hasWorktree) { Write-Output "  $(Show $addWorktree)" }
     if ($NoSetup) {
         Write-Output '  (no setup: -NoSetup)'
@@ -266,7 +274,9 @@ if (-not $Apply) {
         foreach ($command in $setup) { Write-Output "  [in the worktree] $command" }
     }
     Write-Output "  [in $main] $(Show $start)"
-    Write-Output "  $(Show $check)"
+    Write-Output "  [every $lookSeconds s, up to $waitSeconds s, until a new row named $Name has a pid, a status and the worktree as cwd] $(Show $check)"
+    Write-Output "  [if none does, for each new row] $(Show @($claude, 'stop', '<short-id>'))"
+    Write-Output "  [then every $lookSeconds s, up to $stopWaitSeconds s, until the row is gone] $(Show $check)"
     Write-Output ''
     Write-Output 'Pass -Apply to act.'
     exit 0
@@ -275,6 +285,40 @@ if (-not $Apply) {
 if (-not $isListed) {
     Refuse "this project is not on the owner's list. The owner adds $main to $listPath"
 }
+
+function Get-Rows {
+    $listArgs = $check[1..($check.Count - 1)]
+    try {
+        $text = (& $claude @listArgs) -join "`n"
+        if ($LASTEXITCODE -ne 0) {
+            return [pscustomobject]@{ Ok = $false; Why = "claude agents --json exited $LASTEXITCODE"; Rows = @() }
+        }
+        if (-not $text.Trim()) {
+            return [pscustomobject]@{ Ok = $false; Why = 'claude agents --json printed nothing'; Rows = @() }
+        }
+        $parsed = $text | ConvertFrom-Json
+        $rows = @($parsed | Where-Object { $_.name -eq $Name })
+        return [pscustomobject]@{ Ok = $true; Why = ''; Rows = $rows }
+    } catch {
+        return [pscustomobject]@{ Ok = $false; Why = "claude agents --json could not be read: $($_.Exception.Message)"; Rows = @() }
+    }
+}
+function Get-ShortId($row) {
+    if ($row.id) { return [string]$row.id }
+    if ($row.sessionId -and ([string]$row.sessionId).Length -ge 8) { return ([string]$row.sessionId).Substring(0, 8) }
+    return ''
+}
+function Get-Folder([string]$Path) {
+    ($Path -replace '/', '\').TrimEnd('\')
+}
+function Test-Home($row) {
+    $row -and $row.pid -and $null -ne $row.status -and $row.state -ne 'stopped' -and
+        (Get-Folder ([string]$row.cwd)) -ieq (Get-Folder $worktree)
+}
+
+$first = Get-Rows
+if (-not $first.Ok) { Refuse "nothing was started: $($first.Why)" }
+$before = @($first.Rows | ForEach-Object { Get-ShortId $_ })
 
 # 5. The worktree.
 if (-not $hasWorktree) {
@@ -306,39 +350,67 @@ try {
     Pop-Location
 }
 
-# 8. Check the pid and the folder.
-function Get-Row {
-    $listed = (& $claude agents --json) -join "`n" | ConvertFrom-Json
-    @($listed | Where-Object { $_.name -eq $Name }) | Select-Object -Last 1
-}
-function Test-Home($row) {
-    $row -and $row.pid -and $null -ne $row.status -and
-        ([string]$row.cwd).TrimEnd('\') -ieq $worktree.TrimEnd('\')
-}
-
+# 8. Check the pid and the folder, on rows that were not there before the start.
+$fresh = @()
+$unread = ''
 $session = $null
-$isHome = $false
-$deadline = (Get-Date).AddSeconds(30)
+$deadline = (Get-Date).AddSeconds($waitSeconds)
 while ($true) {
-    $session = Get-Row
-    $isHome = Test-Home $session
-    if ($isHome -or (Get-Date) -ge $deadline) { break }
-    Start-Sleep -Seconds 2
-}
-if (-not $isHome) {
-    $where = if ($session) { [string]$session.cwd } else { 'not listed' }
-    $shortId = if ($session) { [string]$session.id } else { '' }
-    if (-not $shortId) {
-        Refuse "no session row for $Name with an id after 30 seconds (cwd: $where). Nothing could be stopped; look at claude agents --json"
+    $now = Get-Rows
+    if ($now.Ok) {
+        $unread = ''
+        $fresh = @($now.Rows | Where-Object { $before -notcontains (Get-ShortId $_) })
+        $session = $fresh | Where-Object { Test-Home $_ } | Select-Object -First 1
+    } else {
+        $unread = $now.Why
     }
-    & $claude stop $shortId
-    $after = Get-Row
-    if ($after -and [string]$after.id -eq $shortId) {
-        Refuse "the session is not running in its worktree after 30 seconds (cwd: $where). The stop failed: claude stop $shortId did not remove it. Stop it by hand"
-    }
-    Refuse "the session is not running in its worktree after 30 seconds (cwd: $where). It was stopped (id $shortId) and is gone; look before a second try"
+    if ($session -or (Get-Date) -ge $deadline) { break }
+    Start-Sleep -Seconds $lookSeconds
 }
 
+if (-not $session) {
+    $lastLook = if ($unread) { " The last look failed: $unread." } else { '' }
+    if ($fresh.Count -eq 0) {
+        Refuse "no new session row named $Name after $waitSeconds seconds.$lastLook The start succeeded, so a session may be running and nothing was stopped. Read claude agents --json --all and stop it by its short id (the start printed it above) with claude stop <id>"
+    }
+    $seen = ($fresh | ForEach-Object {
+        "id $(Get-ShortId $_), cwd $($_.cwd), state $($_.state), status $($_.status), pid $($_.pid)"
+    }) -join '; '
+    $results = @()
+    foreach ($row in $fresh) {
+        $shortId = Get-ShortId $row
+        if (-not $shortId) {
+            $results += "a row with pid $($row.pid) has no id and no sessionId, so it was not stopped: stop it by hand"
+            continue
+        }
+        & $claude stop $shortId
+        $stopExit = $LASTEXITCODE
+        $stopDeadline = (Get-Date).AddSeconds($stopWaitSeconds)
+        while ($true) {
+            $after = Get-Rows
+            $left = @()
+            if ($after.Ok) { $left = @($after.Rows | Where-Object { (Get-ShortId $_) -eq $shortId }) }
+            if (($after.Ok -and $left.Count -eq 0) -or (Get-Date) -ge $stopDeadline) { break }
+            Start-Sleep -Seconds $lookSeconds
+        }
+        $stopWas = if ($stopExit -eq 0) { "claude stop $shortId exited 0" } else { "claude stop $shortId failed (exit $stopExit)" }
+        if (-not $after.Ok) {
+            $results += "$stopWas, and the list could not be read after it ($($after.Why)): look, and stop it by hand if it runs"
+        } elseif ($left.Count -gt 0) {
+            $results += "$stopWas, and the row is still listed (state $($left[0].state), status $($left[0].status)): stop it by hand if it runs"
+        } elseif ($stopExit -eq 0) {
+            $results += "stopped (id $shortId) and gone"
+        } else {
+            $results += "$stopWas, and the row is not listed: it is gone (exit 1 with No job matching above means it was already gone)"
+        }
+    }
+    Refuse "the session is not running in its worktree after $waitSeconds seconds ($seen).$lastLook $($results -join '; '). Look before a second try"
+}
+
+$copies = @($fresh | Where-Object { (Get-ShortId $_) -ne (Get-ShortId $session) })
 Write-Output ''
+if ($copies.Count) {
+    Write-Output "warning:   $($copies.Count) other new row(s) named ${Name}: id $((($copies | ForEach-Object { Get-ShortId $_ }) -join ', ')). Look; stop a copy with claude stop <id>"
+}
 Write-Output "started:   $Name, pid $($session.pid), session $($session.sessionId)"
 Write-Output "watch:     $(Show $check)"

@@ -36,14 +36,24 @@ It is a dry run unless `-Apply` is given. In order:
 7. Starts the session in the background from the main checkout, in
    `dontAsk` mode, with the config's agent. The prompt is the config's
    read line, the brief, then "Or stop after N turns."
-8. Reads `claude agents --json` every 2 seconds, for up to 30 seconds,
-   until the session's row has a pid, a status and the worktree as its
-   cwd. (A new row names the main checkout, with no status, for the
-   first few seconds.) If 30 seconds pass without that, it runs
-   `claude stop <short id>` (the row's `id`, not its `sessionId`),
-   reads the list once more, and refuses: either stopped and gone, or
-   the stop failed, naming the short id. Look before a second try.
-   On a good dispatch it prints `started: <name>, pid <n>, session <id>`.
+8. Before step 5 it reads `claude agents --json` and sets aside the ids
+   of rows already named `<name>`; if that read fails, nothing is
+   started. After step 7 it reads the list every 2 seconds, for up to
+   30 seconds, until a row that is not one of those has a pid, a status
+   and the worktree as its cwd. (A new row names the main checkout, with
+   no status, for the first few seconds. The default list holds live
+   rows only: an exited or stopped session leaves it.) A list that
+   fails to read, or is empty, counts as a look that failed; the next
+   look follows. If 30 seconds pass without a good row, it runs
+   `claude stop <short id>` (the row's `id`, not its `sessionId`) on
+   each new row, then reads the list every 2 seconds, for up to 10
+   seconds, until the row has left it, and refuses with what it saw:
+   stopped and gone, or the row still listed, or the list unreadable,
+   with the short id and what to do by hand. If it never read the list,
+   or saw no new row, it says the session may be running and that
+   nothing was stopped. Look before a second try.
+   On a good dispatch it prints `started: <name>, pid <n>, session <id>`,
+   and a `warning:` line if another new row has the same name.
 
 Run it from PowerShell, never from Git Bash: Git Bash rewrites a prompt
 that starts with a slash into a path.
@@ -66,7 +76,10 @@ pass flags: either one starts a copy without the builder settings.
 The message holds no double quote.
 If a resume starts a copy anyway, stop that copy at once with
 `claude stop <its short id>`, check that it is gone, and record it on
-the ticket.
+the ticket. The copy and the builder can share a name, so tell them
+apart by id: the builder's is the first 8 characters of the session id
+on the `started:` line, and the copy is the other row. Never stop by
+name.
 
 ## Close out, only when a builder has stopped
 
