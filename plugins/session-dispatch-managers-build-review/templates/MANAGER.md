@@ -16,6 +16,8 @@ alone. Rules are in the `session-rules` skill and in
 
 ## Waiting on the owner (pointer to NEEDS-OWNER.md)
 
+## Queue entries raised
+
 ## Decided since
 
 ## Lessons

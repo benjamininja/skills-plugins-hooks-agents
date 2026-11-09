@@ -53,7 +53,11 @@ Fresh output of:
 
 ## State-back
 
-One PR per check-in, one commit per topic. Before a compaction the
-session writes where it stands into its own state file
+One PR per check-in, one commit per topic. Before a compaction or a
+`/clear` the session writes where it stands into its own state file
 (`templates/MANAGER.md`, `templates/PLANNER.md`), so a new session can
-resume from the repository alone.
+resume from the repository alone. The state-back includes the
+`## Queue entries raised` section: each open entry the session raised,
+with its title and the `Session:` id it names. A `/clear` gives a new
+id, so a session re-keys its entries after one (`references/parking.md`
+in `session-rules`, "The Session line across a clear").

@@ -16,6 +16,8 @@ alone. Rules are in the `session-rules` skill and in
 
 ## Gaps
 
+## Queue entries raised
+
 ## Asked by the manager
 
 ## Decided since
