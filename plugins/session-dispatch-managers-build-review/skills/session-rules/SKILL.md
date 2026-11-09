@@ -140,6 +140,7 @@ allowed command, so use the plain form first:
   through the project's hook runner over the branch (for example
   `pre-commit run --from-ref origin/main --to-ref HEAD`), not on the
   named file.
+- **Delete with `git rm <path>` and rename with `git mv <old> <new>`, only paths the brief names.** A rename that also changes the file is `git mv` first, then the edit at the new path. Where the project's builder settings have no allow rule for the one a step needs, that step parks.
 - **Read comments with `gh issue view <n> --comments` or
   `gh pr view <n> --comments`**, never with `gh api`.
 - **Wait for CI with `gh pr checks <n> --watch`.** No polling loop and
