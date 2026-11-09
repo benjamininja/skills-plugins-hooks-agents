@@ -18,12 +18,19 @@ after it).
 
 ## 1. What is reviewed
 
-**Code paths:** anything under `plugins/` (scripts, the owner-queue mod,
-templates), `hooks/`, `tools/`, `tests/`, `.github/workflows/`,
-`.claude/agents/`, or any `SKILL.md` frontmatter or `manifest.json` /
-`vendor-skills.json`.
+**Code:** any changed file that is not Markdown (scripts, the
+owner-queue mod's source and tests, `hooks/`, `tools/`, `tests/`,
+`.github/workflows/`, and every `.json`, including `manifest.json`,
+`vendor-skills.json`, `plugin.json` and the settings and profile
+examples under `templates/`), and any edited frontmatter block of a
+Markdown file (a `SKILL.md`'s or an agent file's, its `tools:` line
+included).
 
-- **A builder PR that touches a code path:** the full review, at its
+**Rule or skill text:** the Markdown body outside frontmatter: a
+`SKILL.md` body and its `references/`, agent bodies, the Markdown
+templates, READMEs and `docs/`.
+
+- **A builder PR that touches code:** the full review, at its
   tier's effort. The reviewer reads the diff and the code each hunk
   calls; for a script, the whole step it edits. Rule and skill text in
   the same PR is checked against P10 and P2.
@@ -64,7 +71,7 @@ issuecomment-6730448396), so the manager runs one process in both repos:
 | P6 | A path no test or CI runs | #66, #109, #96, #65 | The PR names which changed lines no test runs and how they were proven. A version bump greps every pinned copy (`VERSION`, `plugin.json`, test regexes). CI runs pytest only, never `claude plugin test`, so a mod change names its `claude plugin test plugins/owner-queue` run; until that is a Green item, the reviewer flags a mod change with no mod-test run. | Advisory; blocking for a guard |
 | P7 | Windows, OneDrive and junction filesystem behaviour | #26, #28 | No `rmtree`, `rename` or `move` of a directory that may be a junction target; staging outside OneDrive; path compares normalise `/` and `\`, a trailing separator and case. | Blocking |
 | P8 | Uneven error handling across sibling paths | #96 | Every network call handles the same errors as its sibling, and the code exits before its first write. | Blocking where a manifest could be half-written |
-| P9 | CLI JSON parsed with no error handling | #116 (open; a review finding, not yet a fix) | A parse of `claude ... --json` output is wrapped, checks `$LASTEXITCODE`, and on failure reports the session as started but unchecked; the same file's config parses already do this. | Blocking |
+| P9 | CLI JSON parsed with no error handling | #116, PR #120 | A parse of `claude ... --json` output is wrapped, checks `$LASTEXITCODE`, and on failure reports the session as started but unchecked; the same file's config parses already do this. | Blocking |
 | P10 | Rule text that contradicts or quietly loosens another file | #67 then #86, #66 then #102, #6, #103 | Grep session-rules, the stage-builder template, dispatch.md, manager.md, PROJECT-RULES and the READMEs for the same claim. A deleted never or denied-call phrase needs a stated reason. | Blocking if a Never or denied-call line is loosened, unless the PR cites the owner's decision on its ticket; else advisory |
 | P11 | A parser of owner-written text guesses at ambiguous input | #100, #97 | Delimiters count only at boundaries; ambiguous input is flagged malformed, not guessed; each owner-reported render bug gets a fixture. | Blocking |
 | P12 | Vendored upstream text changes a skill's safety tier | #103, #41 | On a re-vendor diff, grep the new text for delete, deploy or permission verbs; if the skill is model-invocable, skill-safety-auditor runs (an Always-park). | Blocking |
