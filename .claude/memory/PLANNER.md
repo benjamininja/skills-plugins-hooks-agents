@@ -42,18 +42,15 @@ Last state-back: 2026-11-08, at a second context clear. `main` was at
   A bare one-line ask is useless to the owner.
 - **Ask the owner** with the context, then the pros, the cons and the
   recommendation, written above the question (root `preferences.md`).
-- **After every merge**, the owner pulls both checkouts:
+- **After every merge**, the manager pulls both checkouts at closeout
+  ([PROJECT-RULES.md](PROJECT-RULES.md), "Closeout pulls"; #112):
   - **the main checkout:** `~/.claude/agents`, `~/.claude/skills/*` and
     `~/.claude/hooks/*` link here;
   - **the live clone** `C:\Users\benha\claude-live\skills-plugins-hooks-agents`:
     the plugins load from here.
 
-  Give both commands:
-  `git -C C:/Users/benha/OneDrive/Documents/GitHub/skills-plugins-hooks-agents pull --ff-only`
-  and
-  `git -C C:/Users/benha/claude-live/skills-plugins-hooks-agents pull --ff-only`.
-  Before giving them, check with `git diff --name-only <old> origin/main`
-  that nothing incoming touches the main checkout's local changes.
+  Check the heads the manager reports against `origin/main`. Hand the
+  owner pull commands only for a pull the manager has parked.
 - **Your own PRs** (state-backs) come from a worktree under
   `.claude/worktrees/`, never by switching branches in the main checkout.
 
