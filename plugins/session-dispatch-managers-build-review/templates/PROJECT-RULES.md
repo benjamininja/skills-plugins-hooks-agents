@@ -12,7 +12,10 @@ builders' settings file, or marked "manager runs it".
 - every CI check passing on one read of
   `gh pr view <n> --json mergeStateStatus,statusCheckRollup`;
 - `<the project's test command>`;
-- `<each further check, one per line>`.
+- `<each further check, one per line>`;
+- on a PR the code review covers: no blocking finding the manager
+  upheld is still open (`session-rules`, `references/code-review.md`).
+  Manager runs it. The ruleset skill is `<this repo's ruleset skill>`.
 
 ## Never, in this project
 
