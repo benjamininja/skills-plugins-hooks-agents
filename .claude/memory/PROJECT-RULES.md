@@ -40,7 +40,31 @@ Every ticket carries a `Tier:` line at the top of its body and the matching
   `~/.claude/hooks/*` and `~/.claude/skills/*` are links into this
   repository's main checkout, so a change here goes live only when the main
   checkout is updated after merge. A builder never touches the main checkout.
-- Switching branches, committing or pulling in the main checkout.
+- Switching branches or committing in the main checkout, or pulling it
+  outside closeout (below).
+
+## Closeout pulls, in this project
+
+After each merge here, at closeout, the manager brings both tools
+checkouts up to date (#112, the owner's answer of 2026-11-09). Live
+behaviour comes from these two, so they stay at the same commit:
+
+- **the main checkout**,
+  `C:/Users/benha/OneDrive/Documents/GitHub/skills-plugins-hooks-agents`:
+  the `~/.claude` skill, agent and hook links point here;
+- **the live clone**, `C:/Users/benha/claude-live/skills-plugins-hooks-agents`:
+  plugins load from here.
+
+1. Run `git -C <main checkout> fetch origin`, then
+   `git -C <main checkout> diff --name-only HEAD origin/main` and
+   `git -C <main checkout> status --short`. If an incoming file is one the
+   status lists, park an Action with both lists and pull neither checkout.
+2. Otherwise run `git -C <path> pull --ff-only` on each. If one refuses or
+   fails, park an Action with its output and its `status --short`. A
+   OneDrive lock can stop a pull halfway, and the repair is the owner's.
+3. Report both new heads (`git -C <path> log -1 --oneline`). If a plugin
+   changed, name it and say that running sessions need a new session to
+   load it.
 
 ## Always parks, in this project
 
