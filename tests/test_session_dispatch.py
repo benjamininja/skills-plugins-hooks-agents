@@ -94,6 +94,20 @@ def test_the_start_command_names_this_plugin(project):
     assert str(PLUGIN) in start.split("--plugin-dir", 1)[1].split("--agent", 1)[0]
 
 
+def test_the_dry_run_prints_the_whole_of_step_8(project):
+    out = dispatch(project, "-Tier", "medium").stdout
+    lines = [line for line in out.splitlines() if "agents --json" in line]
+
+    assert len(lines) == 3, out
+    first, poll, again = lines
+    assert out.index(first) < out.index("worktree add") < out.index("--bg") < out.index(poll)
+    assert "nothing is started" in first
+    assert "every 2 s, up to 30 s" in poll and "a pid, a status and the worktree as cwd" in poll
+    assert "up to 10 s" in again and "the row is gone" in again
+    stop = next(line for line in out.splitlines() if " stop " in line and "<short-id>" in line)
+    assert out.index(poll) < out.index(stop) < out.index(again)
+
+
 def test_a_turn_cap_and_no_setup_are_taken(project):
     out = dispatch(project, "-Tier", "low", "-TurnCap", "12", "-NoSetup").stdout
 
@@ -226,8 +240,9 @@ def with_profiles(project, profiles, key=".claude/builder-profiles.json"):
 
 
 def start_line(out):
-    # The prompt spans lines, so the start command runs from --bg to the check.
-    return out[out.index("--bg"):out.index("agents --json")]
+    # The prompt spans lines, so the start command runs from --bg to the poll line.
+    begin = out.index("--bg")
+    return out[begin:out.index("\n  [every", begin)]
 
 
 def test_a_profile_adds_its_allows_and_denies_to_the_start_command(project):
