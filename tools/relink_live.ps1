@@ -8,9 +8,10 @@
     ~/.claude/agents         ->  <Source>\.claude\agents    (one junction)
     ~/.claude/hooks/<name>   ->  <Source>\hooks\<name>      (one per hook)
 
-  <Source> should be the live clone: a checkout that only ever holds merged
-  main and is never edited by hand (docs/adr/0011, Revision 2), so nothing
-  unfinished goes live.
+  <Source> is the main checkout (docs/adr/0011, Revision 3): the closeout
+  pulls hold it and the live clone at one merged commit, so nothing
+  unfinished goes live. Plugins load from the live clone, not from these
+  links.
 
   Dry run by default: prints what it would do and changes nothing. Pass -Apply
   to act. Existing junctions are re-pointed. A real directory in the way is
@@ -20,8 +21,8 @@
   (a skill or hook removed from main) are reported, and removed with -Prune.
 
 .EXAMPLE
-  .\tools\relink_live.ps1 -Source C:\Users\benha\claude-live\skills-plugins-hooks-agents
-  .\tools\relink_live.ps1 -Source C:\Users\benha\claude-live\skills-plugins-hooks-agents -Apply -Prune
+  .\tools\relink_live.ps1 -Source C:\Users\benha\OneDrive\Documents\GitHub\skills-plugins-hooks-agents
+  .\tools\relink_live.ps1 -Source C:\Users\benha\OneDrive\Documents\GitHub\skills-plugins-hooks-agents -Apply -Prune
 #>
 [CmdletBinding()]
 param(

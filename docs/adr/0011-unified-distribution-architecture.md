@@ -1,6 +1,6 @@
 # Unified bidirectional distribution architecture (skills, plugins, hooks, agents)
 
-- Status: under revision (2026-10-12) — see "Revision" below; original text kept as history
+- Status: revised (2026-11-11) — Revision 3 below is current; the original text, "Revision" and "Revision 2" are kept as history
 - Date: 2026-07-18
 - Scope: repo-wide; introduces `distribution-registry.json`,
   `tools/manage_distribution.py`, and a junction-based install path for
@@ -204,3 +204,57 @@ diffs only and was reachable only from this repo. The fixes: real `model:`
 aliases, the tool's notice names both agents, `CLAUDE.md` states when each
 runs, and the auditor accepts a commit range. `plan-gate-sync-auditor` is
 retired (ADR-0008).
+
+## Revision 3 (2026-11-11) — `~/.claude` links stay on the main checkout; closeout pulls hold both checkouts at one commit
+
+**Where each kind of link points now** (read 2026-11-11, #134):
+
+- **Skills, agents and hooks**: the `~/.claude` links point into the
+  **main checkout**,
+  `C:\Users\benha\OneDrive\Documents\GitHub\skills-plugins-hooks-agents`.
+  `~/.claude/agents`, `~/.claude/skills/grilling` and
+  `~/.claude/hooks/git-guardrails` are junctions into it, not into the live
+  clone.
+- **Plugins**: load from the **live clone**,
+  `C:\Users\benha\claude-live\skills-plugins-hooks-agents`, named in
+  `CLAUDE_CODE_PLUGIN_DIRS` in the owner's settings.
+
+**Decision.** The ADR is revised to match; the links are not re-pointed.
+The owner chose this on 2026-11-11, word for word: *#5, yes, approved.* The
+planner recommended it: with both checkouts held at one commit, re-pointing
+the links buys nothing.
+
+**Why Revision 2's risk is closed by other means.** Revision 2's goal was
+that nothing unfinished goes live. It is now met without a separate link
+target:
+
+- **Closeout pulls** (#112, PR #114): after each merge the manager pulls
+  both checkouts with `git pull --ff-only`, so both sit at the same merged
+  commit. If an incoming file is dirty in the main checkout, the manager
+  parks and pulls neither.
+- **The main-checkout Never lines** in `.claude/memory/PROJECT-RULES.md`:
+  no agent switches branches, commits in, or pulls the main checkout
+  outside closeout, and a builder never touches it. Agents work in their
+  own worktrees.
+- **A commit-only `main`**: `main` changes only through a merged PR,
+  protected by the repository ruleset and CI. What the closeout pull
+  brings in has been reviewed.
+
+**What is still at risk.**
+
+- **An owner hand edit in the main checkout goes live** at once, in every
+  session, reviewed or not. Revision 2's separate clone guarded against
+  exactly this; Revision 3 accepts it, and the closeout pull's dirty-file
+  check stops a pull from mixing with such an edit but does not stop the
+  edit going live.
+- **A OneDrive lock can stop a pull halfway** in the main checkout, which
+  sits inside OneDrive. The checkout is then left part-updated. The
+  manager parks the output; the repair is the owner's.
+
+**When to reconsider.** Re-open this choice, and re-point the skill, agent
+and hook links at the live clone with `tools/relink_live.ps1`, if:
+
+- a **second machine** uses these tools, so the closeout pulls on one
+  machine no longer hold every checkout at one commit; or
+- an owner **hand edit goes live unreviewed**, the failure Revision 2
+  recorded.
