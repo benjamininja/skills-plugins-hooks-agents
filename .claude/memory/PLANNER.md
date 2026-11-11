@@ -5,8 +5,9 @@ alone. Rules are in the `session-rules` skill and in
 [PROJECT-RULES.md](PROJECT-RULES.md); this file is state. GitHub issues are
 the record. This file links to them and does not repeat them.
 
-Last state-back: 2026-11-10, at a fourth context clear. `main` was at
-`21ce308`.
+Last state-back: 2026-11-10, at a fourth context clear, amended
+2026-11-11 after the restart's Do-first work. `main` was at `2090367`
+(#126), and both tools checkouts were at it.
 
 ## START HERE
 
@@ -62,19 +63,10 @@ Last state-back: 2026-11-10, at a fourth context clear. `main` was at
 
 ## Do first after this clear
 
-1. **Land the live reviewer agent in PR #126.** The owner said *Yes, no
-   model line* (2026-11-10, recorded on #113 issuecomment-6782715357). In
-   the worktree: `git switch docs/planner-113-green`, then copy
-   `plugins/session-dispatch-managers-build-review/templates/agents/pr-code-reviewer.md`
-   to `.claude/agents/pr-code-reviewer.md` unchanged. Run
-   `tests/test_agents_frontmatter.py`, the full suite in the background,
-   `tools/build_catalog.py` and `git diff --exit-code -- CATALOG.md`.
-   Commit (the hook runs), `/security-review`, push, and update #126's
-   body: the agent file is now in it, and the code-review Green item
-   applies once #126 merges (PR B is on `main`).
-2. **Ask the owner to approve #126's new head**, then relay the approval to
-   the manager with the words, and post it on #126.
-3. **Learn your queue id** (above), and send it to the manager only if an
+1. **Relay the owner's approval of #128, #130 and this PR (#127)** to the
+   manager, word for word, and post it on each PR, if the owner has given
+   it and it isn't recorded yet. Read each PR's comments first.
+2. **Learn your queue id** (above), and send it to the manager only if an
    open entry names an old one.
 
 ## What this session answers for
@@ -95,11 +87,16 @@ Not building, not dispatching, and never a settings file or
 
 ## Open PRs and in-flight work
 
-- **PR #126** (planner, Refs #113): `PROJECT-RULES.md` Green gains the
-  mod-test item and the code-review item, plus the plugin README line
-  naming the fourth agent file. CI green. Branch `docs/planner-113-green`.
-  Waits on step 1 above, then the owner's approval.
-- **This state-back's PR**: needs the owner's approval too.
+- **PR #128** (planner, Refs #113): the live
+  `.claude/agents/pr-code-reviewer.md`, copied from the template, no model
+  line. Split from #126 on the owner's *Separate PR* (2026-11-11), since
+  the owner had approved #126 at `fc290a0` without it (#113
+  issuecomment-6783382194). CI green. Waits on the owner's approval. Its
+  merge turns on #126's code-review Green item.
+- **PR #130** (planner, Refs #98): the live `stage-builder.md` gains #98's
+  three-line bullet, on the owner's *sync stage-builder* (2026-11-11).
+  Waits on the owner's approval.
+- **This state-back's PR (#127)**: needs the owner's approval too.
 - **PR #121** (#110, owner-queue 0.10.0, the mod re-keys `Session:` lines
   at a `/clear`): CI green; waits on the owner's live-check Action, then
   the manager's re-proof. When it merges, the manager and the dynasty
@@ -113,36 +110,26 @@ Not building, not dispatching, and never a settings file or
   - after it merges, tell the owner the handoff is ready to share.
 - **#124** (low): `tools/reproof.py` gives its export a git index before
   pytest. Found by the manager's first real run (#117
-  issuecomment-6732532982). Waits on the owner's go (the manager asked).
-  After it merges and a real re-proof with the script is GREEN, add
+  issuecomment-6732532982). The owner gave the go; builder
+  `t124-reproofindex` opened PR #129. After it merges and a real re-proof with the script is GREEN, add
   #117's `PROJECT-RULES.md` line (*the manager re-proves with
   `tools/reproof.py` from the live clone, or with direct commands, never
   with a scratch script*) in a planner PR. Until then the manager uses its
   scratchpad `tgreen.sh`, which that line would forbid.
 - **#117**: open until the #124 fix, a GREEN real run and the line above.
   The owner chose the dynasty `.venv` for the interpreter (pane,
-  2026-11-10 18:17). Its allow rule wasn't yet in dynasty's
-  `managers.settings.json`; the manager is asking the owner.
-- **#113**: both builder PRs merged (PR #123 `620815e`, PR #125 `21ce308`).
-  Open for #126 (Green items and the live agent) and the first live
-  review run. Dynasty #490 (low) waited for PR A and can go now.
+  2026-11-10 18:17) and added its allow rule to dynasty's
+  `managers.settings.json` (line 24, 2026-11-11).
+- **#113**: PR #123 `620815e`, PR #125 `21ce308` and PR #126 `2090367`
+  merged. Open for #128 (the live agent) and the first live review run. Dynasty #490 (low) waited for PR A and can go now.
 - **#116** closed (PR #120 `94c8ca9`). The manager owes one more real
   dispatch with the new step 8, and the exit code of the first `claude
   stop` that succeeds.
 
 ## Waiting on the owner
 
-- Approve #126 (after step 1) and this state-back.
-- The `tools/reproof.py` allow rule in dynasty's `managers.settings.json`
-  (the dynasty `.venv` was chosen; the manager asked where it went).
-- The go on #124 (the manager asked).
-- The #121 live check (pane, when the manager queues it).
-- **`sync stage-builder`.** The live `.claude/agents/stage-builder.md`
-  still lacks #98's three-line bullet (template lines 23 to 25). On those
-  words, open the one-file PR from the worktree. The pane Action was
-  ticked but the copy never happened.
-- Delete the stray branch `pr109` (queue Action):
-  `git -C C:/Users/benha/OneDrive/Documents/GitHub/skills-plugins-hooks-agents branch -D pr109`.
+- Approve #128, #130 and this state-back (#127).
+- The #121 live check (queue Action, open).
 - The owner-queue `queues` setting: add `pluginConfigs` →
   `owner-queue` → `options` → `queues` (dynasty's `NEEDS-OWNER.md` path)
   to `~/.claude/settings.json` (line 5, before `permissions`), then a new
@@ -242,6 +229,9 @@ Owner decisions, each recorded on its ticket:
   has no model line (*Yes, no model line*, 2026-11-10).
 - *Approve both*: PRs #118 and #119 (2026-11-09).
 - *Go 110 and 116; 117 after 116* (2026-11-09).
+- *Approve 126*, and *Merge fc290a0 now* (to the manager); the live
+  reviewer agent goes in a *Separate PR* (#128) (2026-11-11).
+- *sync stage-builder* (2026-11-11, PR #130).
 
 ## Lessons
 
@@ -271,3 +261,11 @@ Owner decisions, each recorded on its ticket:
 - **Read a ruleset's path list against the owner's later answers.** PR B's
   "anything under `plugins/`" would have given session-rules text the full
   review against the owner's light-review word (#125 ruling).
+- **An approval given elsewhere can overtake a Do-first step.** The owner
+  approved #126 in another chat before this session pushed to it; check
+  the PR's head and any relay before moving an approved head (#128).
+- **The worktree commits with the private email,** and a push of it is
+  declined. Commit with
+  `git -c user.email=38588919+benjamininja@users.noreply.github.com commit ...`.
+- **A worktree session can't `git -C` the main checkout.** To check the
+  checkouts' heads, Read each one's `.git/refs/heads/main`.
