@@ -40,6 +40,14 @@ Every ticket carries a `Tier:` line at the top of its body and the matching
   once `skills/tools-code-review/` (#113 PR B) and the live
   `.claude/agents/pr-code-reviewer.md` are both on `main`.
 
+The manager re-proves with `tools/reproof.py <pr> <head sha>` from the
+live clone (`C:/Users/benha/claude-live/skills-plugins-hooks-agents`), run
+with the dynasty `.venv`'s interpreter under the one allow rule in dynasty's
+`managers.settings.json`, or with the commands above run directly. Never
+with a scratch script (#117). The script runs the merge, pytest and the
+`CATALOG.md` check; CI's one read, the `check-in-hygiene` report, the
+owner-queue mod test and the code review stay with the manager.
+
 ## Never, in this project
 
 - Running `tools/update_vendor_skills.py --apply` (a re-vendor). The owner
