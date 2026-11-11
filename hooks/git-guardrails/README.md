@@ -20,7 +20,18 @@ this is a behavior adaptation.
   - No explicit branch named at all (`git push`, `git push origin`,
     `git push -u origin`) → implicitly targets whatever's checked out;
     falls back to `git rev-parse --abbrev-ref HEAD` and blocks only if
-    that's `main`/`master`.
+    that's `main`/`master`. The branch is read in this order: the
+    command's own `-C` path; then the `cwd` field of the hook input, which
+    is the folder the command runs in (the worktree, in a worktree
+    session); then `CLAUDE_PROJECT_DIR` (the main checkout in a worktree
+    session), then `$PWD`. So a plain push from a worktree on a feature
+    branch passes while the main checkout sits on `main`, and the same
+    push from a worktree on `main` still blocks. A missing or empty `cwd`,
+    or one that is not a repo, falls through to `CLAUDE_PROJECT_DIR`. A
+    `cwd` on a network path blocks, as a network `-C` path does, and is
+    never given to git. Source: the Claude Code docs,
+    [worktrees](https://code.claude.com/docs/en/worktrees.md) and
+    [hooks](https://code.claude.com/docs/en/hooks.md) (#135).
   - An explicit non-main branch named (`git push origin my-feature`) →
     always allowed, even if `main` happens to be checked out locally.
 - **`reset --hard` / `clean -f` / `checkout .` / `restore .` stay
@@ -85,8 +96,9 @@ It does not see:
 
 - git run from inside a script, a Makefile, or a shell alias/function
 - `gh api` or any other tool that writes to the remote without `git push`
-- a `cd` in an earlier tool call (a bare `git push` is judged against the
-  session's repo unless `-C <path>` is given)
+- a `cd` in the same command, before the push (a bare `git push` is judged
+  against the folder the hook input's `cwd` names, which is where the tool
+  call starts, unless `-C <path>` is given)
 - a direct terminal `git push`, or another machine
 
 The layer that cannot be bypassed locally is the GitHub ruleset on `main`
