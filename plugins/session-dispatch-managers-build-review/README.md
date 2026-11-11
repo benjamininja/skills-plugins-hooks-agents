@@ -15,7 +15,7 @@ Windows only in 0.1.0: the script is Windows PowerShell 5.1.
 | `scripts/dispatch.ps1` | Starts one builder. A dry run unless `-Apply` is given. |
 | `skills/session-rules` | The rules every role keeps: tiers, briefs, the "Never" list, a denied call, parking, who may merge. Any session may load it. It starts nothing. |
 | `skills/session-dispatch` | The manager's procedures that change things: dispatch, merging a builder's PR, closeout. Manual only (`disable-model-invocation: true`): the owner invokes it in a manager's session. |
-| `templates/` | Blank files for a new project: three role files, the config, the queue file, the project rules file, two state files, three example settings files, an example profiles file, a brief and a gap ticket. |
+| `templates/` | Blank files for a new project: three role files and the code reviewer agent, the config, the queue file, the project rules file, two state files, three example settings files, an example profiles file, a brief and a gap ticket. |
 
 ## Install
 
@@ -37,8 +37,11 @@ the example settings files deny it.
 2. Copy `templates/dispatch-projects.json` to
    `<user profile>/.claude/dispatch-projects.json` and list the main
    checkout in it. `-Apply` acts only in a listed project.
-3. Copy the three role files from `templates/agents/` to
-   `.claude/agents/`, and `PROJECT-RULES.md`, `NEEDS-OWNER.md`,
+3. Copy the four agent files from `templates/agents/` to
+   `.claude/agents/`: the three role files, and `pr-code-reviewer.md`,
+   the read-only reviewer the manager starts at re-proof
+   (`session-rules`, `references/code-review.md`). Copy
+   `PROJECT-RULES.md`, `NEEDS-OWNER.md`,
    `PLANNER.md` and `MANAGER.md` to `.claude/memory/`. Fill in
    `PROJECT-RULES.md`: the project's list of proofs ("Green"), its own
    "Never" lines, its stages.
