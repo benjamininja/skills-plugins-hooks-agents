@@ -120,8 +120,9 @@ Not building, not dispatching, and never a settings file or
   with a scratch script*) in a planner PR. Until then the manager uses its
   scratchpad `tgreen.sh`, which that line would forbid.
 - **#117**: open until the #124 fix, a GREEN real run and the line above.
-  The owner's interpreter Decision (dynasty `.venv`, recommended, or a
-  tools-only venv) is at the top of the queue's Decisions.
+  The owner chose the dynasty `.venv` for the interpreter (pane,
+  2026-11-10 18:17). Its allow rule wasn't yet in dynasty's
+  `managers.settings.json`; the manager is asking the owner.
 - **#113**: both builder PRs merged (PR #123 `620815e`, PR #125 `21ce308`).
   Open for #126 (Green items and the live agent) and the first live
   review run. Dynasty #490 (low) waited for PR A and can go now.
@@ -132,7 +133,8 @@ Not building, not dispatching, and never a settings file or
 ## Waiting on the owner
 
 - Approve #126 (after step 1) and this state-back.
-- The interpreter Decision for `tools/reproof.py` (pane).
+- The `tools/reproof.py` allow rule in dynasty's `managers.settings.json`
+  (the dynasty `.venv` was chosen; the manager asked where it went).
 - The go on #124 (the manager asked).
 - The #121 live check (pane, when the manager queues it).
 - **`sync stage-builder`.** The live `.claude/agents/stage-builder.md`
