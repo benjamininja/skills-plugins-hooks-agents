@@ -5,8 +5,8 @@ alone. Rules are in the `session-rules` skill and in
 [PROJECT-RULES.md](PROJECT-RULES.md); this file is state. GitHub issues are
 the record. This file links to them and does not repeat them.
 
-Last state-back: 2026-11-09, at a third context clear. `main` was at
-`76b8c89`.
+Last state-back: 2026-11-10, at a fourth context clear. `main` was at
+`21ce308`.
 
 ## START HERE
 
@@ -25,14 +25,14 @@ Last state-back: 2026-11-09, at a third context clear. `main` was at
 - **Your own ids.** The app session id is
   `local_9830794b-c1e9-400a-ba66-e6abb9432396` and stays the same. The
   queue id changes at every `/clear`: it was `4dcde8eb`, then `ca5b616a`,
-  then `2dd6e973`. After a clear, learn the new one and send it to the
-  manager for any open entry that names the old one (see "Queue entries
+  then `2dd6e973`, then unknown (the owner hadn't run `/owner id` by the
+  2026-11-10 clear). After a clear, learn the new one and send it to the
+  manager for any open entry that names an old one (see "Queue entries
   raised"). You learn it either way:
   - the owner-queue mod tells you in the system prompt, but only once a
     queue is read. This repo has no queue of its own, so the line needs
-    the owner's `queues` setting to list dynasty's queue. On 2026-11-09 it
-    wasn't set yet, and the dynasty planner was giving the owner the
-    block;
+    the owner's `queues` setting to list dynasty's queue. On 2026-11-10 it
+    still wasn't set (no `pluginConfigs` in `~/.claude/settings.json`);
   - or the owner runs `/owner id`.
 - **The owner's queue** is dynasty's
   `C:\Users\benha\OneDrive\Documents\GitHub\Python-PowerBI-DynastyFantasyFootball\.claude\memory\NEEDS-OWNER.md`.
@@ -47,246 +47,225 @@ Last state-back: 2026-11-09, at a third context clear. `main` was at
 - **Ask the owner** with the context, then the pros, the cons and the
   recommendation, written above the question (root `preferences.md`).
 - **After every merge**, the manager pulls both checkouts at closeout
-  ([PROJECT-RULES.md](PROJECT-RULES.md), "Closeout pulls"; #112):
-  - **the main checkout:** `~/.claude/agents`, `~/.claude/skills/*` and
-    `~/.claude/hooks/*` link here;
-  - **the live clone** `C:\Users\benha\claude-live\skills-plugins-hooks-agents`:
-    the plugins load from here.
+  ([PROJECT-RULES.md](PROJECT-RULES.md), "Closeout pulls"; #112). Check
+  the heads it reports against `origin/main` before relaying them.
+- **Your own PRs** (state-backs, syncs, rule lines) come from the worktree
+  `.claude/worktrees/t112-closeout-pulls`, on a fresh branch from
+  `origin/main` once `git status` shows it clean. Enter it with
+  `EnterWorktree` (path), so `/security-review` and the git guardrail see
+  its branch. In a worktree session, run one plain git command per call:
+  compound commands are refused.
+- **Run pytest with the dynasty venv**
+  (`C:/Users/benha/OneDrive/Documents/GitHub/Python-PowerBI-DynastyFantasyFootball/.venv/Scripts/python.exe -m pytest -q tests`):
+  neither tools checkout has a `.venv`. The full suite takes about 15
+  minutes; run it in the background.
 
-  Check the heads the manager reports against `origin/main`. Hand the
-  owner pull commands only for a pull the manager has parked.
-- **Your own PRs** (state-backs, syncs, rule lines) come from a worktree
-  under `.claude/worktrees/`, never by switching branches in the main
-  checkout. Use `EnterWorktree`, so that the session's folder is the
-  worktree, and `/security-review` and the git guardrail see its branch.
-  The worktree `t112-closeout-pulls` holds merged or open-PR branches
-  only: make each new PR there on a fresh branch from `origin/main`, after
-  `git status` shows it clean.
+## Do first after this clear
+
+1. **Land the live reviewer agent in PR #126.** The owner said *Yes, no
+   model line* (2026-11-10, recorded on #113 issuecomment-6782715357). In
+   the worktree: `git switch docs/planner-113-green`, then copy
+   `plugins/session-dispatch-managers-build-review/templates/agents/pr-code-reviewer.md`
+   to `.claude/agents/pr-code-reviewer.md` unchanged. Run
+   `tests/test_agents_frontmatter.py`, the full suite in the background,
+   `tools/build_catalog.py` and `git diff --exit-code -- CATALOG.md`.
+   Commit (the hook runs), `/security-review`, push, and update #126's
+   body: the agent file is now in it, and the code-review Green item
+   applies once #126 merges (PR B is on `main`).
+2. **Ask the owner to approve #126's new head**, then relay the approval to
+   the manager with the words, and post it on #126.
+3. **Learn your queue id** (above), and send it to the manager only if an
+   open entry names an old one.
 
 ## What this session answers for
 
 - Tickets, tiers, `Profile:` lines and briefs for this repository.
+- Rulings on builder PRs when the manager asks ("no breach" or "plan
+  breach", and readings).
 - Gaps found in the session-dispatch plugin and in this repo.
 - This repo's `PROJECT-RULES.md`.
 - The baseball handoff doc.
 
-**Not the owner-queue mod.** Since 2026-11-09 the dynasty planner plans
-it (#99, #110, #111, and #104's held decision). Send it anything about the
-mod. It sends you each new mod version for the handoff's owner-queue row.
+**Not the owner-queue mod.** The dynasty planner plans it (#99, #110,
+#111, and #104's held decision). It sends you each new mod version for the
+handoff's owner-queue row.
 
 Not building, not dispatching, and never a settings file or
 `.claude/dispatch.json`.
 
-## Maps
+## Open PRs and in-flight work
 
-- **In flight:**
-  - #108 (low, the git rm and git mv command form): builder `t108-gitrm`,
-    PR #115, green on CI; manager re-proof queued.
-  - #99 (the dynasty planner's): PR #107; manager re-proof queued.
-  - #112: Part 1 merged (PR #114, `76b8c89`). Part 2, six allow rules in
-    dynasty's `managers.settings.json`, is queued for the owner. Close #112
-    when both are in.
-- **#113 (high), code review at re-proof.** The owner's go is given.
-  - Step 0: issuecomment-6730548975.
-  - The brief: issuecomment-6730589750.
-  - The ruleset:
-    - the manager's draft: issuecomment-6730689017;
-    - my read: issuecomment-6730710094;
-    - the owner's light review: issuecomment-6730815633;
-    - amendments 1 to 3: issuecomment-6730858927, -6730867839,
-      -6730905864;
-    - the dynasty planner's owner-queue rows (P11, P13, P14):
-      issuecomment-6730846724.
-  - Dispatch after PR #115, PR #107 and #116 (if it is still open) merge.
-  - After PR A merges, my planner PR:
-    - `PROJECT-RULES.md` Green items: no upheld blocking finding left
-      open; `claude plugin test plugins/owner-queue` after a mod change;
-      #117's re-proof line, if ready;
-    - the live `.claude/agents/pr-code-reviewer.md`, on the owner's word.
-  - Dynasty #490 (low) waits for PR A.
-- **Waiting for the owner's go:**
-  - #116 (medium): the `dispatch.ps1` step 8 bugs from Step 0's review.
-  - #117 (medium): commit the manager's re-proof script and run it from the
-    live clone. The manager was asked to post its `tgreen.sh` there.
-- **Vendor lane, one ticket at a time:** #49 closed (PR #103), then #57
-  (medium) → #52 → #50.
-  - #52's delete steps are no longer blocked: the git rm and git mv allow
-    lines are in.
-  - #50 is high and needs the owner's word. It also carries the ADR-0006
-    tightening line (comment on #50).
-- **Then #55**, once #50 has merged.
-- **#47** has a lane of its own: high, needs the owner's word, and can't
-  run beside #54 (both edit `README.md`).
-- **Held for owner-led steps:**
-  - #48 first, then #51, #53 and #54;
-  - those three also need the owner's `--apply` run and junction changes;
-  - #54's builder checks whether `powerbi-report-cli` hands off to
-    `semantic-model-authoring` (#49 comment).
-- **Any time:** #58 (low). It waits on the owner keeping or dropping the
-  untracked `GEMINI.md` and `.agents/` in the main checkout.
+- **PR #126** (planner, Refs #113): `PROJECT-RULES.md` Green gains the
+  mod-test item and the code-review item, plus the plugin README line
+  naming the fourth agent file. CI green. Branch `docs/planner-113-green`.
+  Waits on step 1 above, then the owner's approval.
+- **This state-back's PR**: needs the owner's approval too.
+- **PR #121** (#110, owner-queue 0.10.0, the mod re-keys `Session:` lines
+  at a `/clear`): CI green; waits on the owner's live-check Action, then
+  the manager's re-proof. When it merges, the manager and the dynasty
+  planner message you. Then:
+  - tell the owner 0.10.0 is checked in and live (check both heads);
+  - open one handoff PR changing the owner-queue row (line 43 of
+    `docs/handoff/baseball-session-dispatch.md`) to 0.10.0 and the
+    session-dispatch and skills rows to the new `main`; the #108 git rm and
+    git mv rule and #113's code review may each earn a line under "Rules
+    that carry over"; owner approves;
+  - after it merges, tell the owner the handoff is ready to share.
+- **#124** (low): `tools/reproof.py` gives its export a git index before
+  pytest. Found by the manager's first real run (#117
+  issuecomment-6732532982). Waits on the owner's go (the manager asked).
+  After it merges and a real re-proof with the script is GREEN, add
+  #117's `PROJECT-RULES.md` line (*the manager re-proves with
+  `tools/reproof.py` from the live clone, or with direct commands, never
+  with a scratch script*) in a planner PR. Until then the manager uses its
+  scratchpad `tgreen.sh`, which that line would forbid.
+- **#117**: open until the #124 fix, a GREEN real run and the line above.
+  The owner's interpreter Decision (dynasty `.venv`, recommended, or a
+  tools-only venv) is at the top of the queue's Decisions.
+- **#113**: both builder PRs merged (PR #123 `620815e`, PR #125 `21ce308`).
+  Open for #126 (Green items and the live agent) and the first live
+  review run. Dynasty #490 (low) waited for PR A and can go now.
+- **#116** closed (PR #120 `94c8ca9`). The manager owes one more real
+  dispatch with the new step 8, and the exit code of the first `claude
+  stop` that succeeds.
 
 ## Waiting on the owner
 
-- The go on #116 and #117.
-- Delete the stray branch `pr109`, which #113's Step 0 left in this repo
-  (the manager asked too):
+- Approve #126 (after step 1) and this state-back.
+- The interpreter Decision for `tools/reproof.py` (pane).
+- The go on #124 (the manager asked).
+- The #121 live check (pane, when the manager queues it).
+- **`sync stage-builder`.** The live `.claude/agents/stage-builder.md`
+  still lacks #98's three-line bullet (template lines 23 to 25). On those
+  words, open the one-file PR from the worktree. The pane Action was
+  ticked but the copy never happened.
+- Delete the stray branch `pr109` (queue Action):
   `git -C C:/Users/benha/OneDrive/Documents/GitHub/skills-plugins-hooks-agents branch -D pr109`.
-- **`sync stage-builder`.** The owner ticked the Action on 2026-11-08 at
-  19:31, but the live file still lacks the #98 bullet (the correction is on
-  #98, issuecomment-6730128372). On those words, open the one-file PR, from
-  a worktree, that copies
-  `plugins/session-dispatch-managers-build-review/templates/agents/stage-builder.md`
-  over `.claude/agents/stage-builder.md`. Until it merges, the manager
-  keeps the line in every brief.
-- The six-rule Action (#112 Part 2), in the pane.
-- #58: keep or drop `GEMINI.md` and `.agents/`.
-- The ADR-0011 links finding (see Gaps): a ticket was offered, and the
-  owner hasn't answered yet.
-- The owner's approval of PR #118, the handoff refresh, and then of this
-  state-back's PR. Once #118 merges, tell the owner the handoff is ready
-  to share with SpunkyLlama.
+- The owner-queue `queues` setting: add `pluginConfigs` →
+  `owner-queue` → `options` → `queues` (dynasty's `NEEDS-OWNER.md` path)
+  to `~/.claude/settings.json` (line 5, before `permissions`), then a new
+  session; or `/owner id` here.
+- Offered, not answered: a low ticket for a `claude plugin test` step in
+  `tools/reproof.py` that runs only when the merge diff touches
+  `plugins/owner-queue/` (PR #122 read, issuecomment-6732270477).
+- #58: keep or drop the untracked `GEMINI.md` (a 36-line copy of the
+  rules, not the thin pointer #58 asks for; recommended: drop) and
+  `.agents/` (unread).
+- The ADR-0011 links finding (see Gaps). Recommended: revise the ADR,
+  since #112's closeout pulls keep both checkouts at one commit.
 
 ## Queue entries raised
 
 Open entries in dynasty's `NEEDS-OWNER.md` that name this session's
 queue id. After a clear, re-key each one through the manager.
 
-- None open that name `2dd6e973`. The entries sent this session (the tools
-  git rm and git mv line, and #112's six rules) carry no Session line.
+- None. The interpreter Decision (#117) carries the manager's id, not
+  this session's.
+
+## Vendor lane and held tickets
+
+- **Vendor lane, one ticket at a time:** #57 (medium) → #52 → #50.
+  #50 is high, needs the owner's word, and carries the ADR-0006 tightening
+  line (comment on #50). Then #55, once #50 has merged.
+- **#47** has a lane of its own: high, needs the owner's word, and can't
+  run beside #54 (both edit `README.md`).
+- **Held for owner-led steps:** #48 first, then #51, #53 and #54 (they also
+  need the owner's `--apply` run and junction changes). #54's builder
+  checks whether `powerbi-report-cli` hands off to
+  `semantic-model-authoring` (#49 comment).
+- **Any time:** #58 (low), after the owner's keep-or-drop.
 
 ## Milestones
 
-- 2026-11-07: builder profiles shipped (#83 → PR #84).
-- 2026-11-07/08: session-rules gained several rules:
-  - a refused call ends a builder's attempt, and probe hosts are named
-    (#82 → PR #86);
-  - the probe path and the `Profile:` line (#87 → PR #90);
-  - reading the web, robots.txt first (#88 → PR #92);
-  - an option never refers to another option by its letter (#94 → PR #97).
-- 2026-11-08:
-  - the research base template allows `Skill` (#85 → PR #89);
-  - the planner state file and the planner line in PROJECT-RULES (PR #91);
-  - the baseball handoff (PR #93);
-  - the planner's first state-back (PR #95);
-  - the vendor tool handles paths removed upstream and plugin manifests
-    (#56 → PR #96).
-- 2026-11-08, owner-queue:
-  - comments and typed answers wait for Submit, and option keys are read
-    only at boundaries (#81 → PR #100);
-  - one pane reads many queues, and a problems log
-    (`~/.claude/owner-queue/problems.log`) records what the pane can't draw
-    (#104 → PR #105).
-- 2026-11-08: a builder continues after the security-review skill, and
-  the resume steps take no flags (#98 → PR #102).
-- 2026-11-08: #80 closed, not planned, with a reopen condition.
-- 2026-11-09:
-  - semantic-model-authoring is manual-only (#49 → PR #103);
-  - step 8 waits up to 30 s for the worktree and stops by short id
-    (#101 → PR #109);
-  - the manager pulls both tools checkouts at closeout (#112 → PR #114);
-  - the git rm and git mv allow lines are in both repos' builder
-    settings;
-  - the baseball handoff was refreshed for owner-queue 0.9.0 (PR #118,
-    open at this state-back).
-
-## Sweeps
-
-None.
+- 2026-11-07: builder profiles (#83 → PR #84).
+- 2026-11-07/08: session-rules rules: a refused call ends a builder's
+  attempt (#82 → PR #86); the probe path and `Profile:` line (#87 → PR
+  #90); robots.txt first (#88 → PR #92); options never refer to each other
+  by letter (#94 → PR #97).
+- 2026-11-08: research base allows `Skill` (#85 → PR #89); the planner
+  state file (PR #91); the baseball handoff (PR #93); first state-back (PR
+  #95); vendor tool handles removed paths (#56 → PR #96); owner-queue
+  Submit and boundaries (#81 → PR #100), many queues and a problems log
+  (#104 → PR #105); a builder continues after security-review (#98 → PR
+  #102); #80 closed, not planned.
+- 2026-11-09: semantic-model-authoring manual-only (#49 → PR #103); step 8
+  waits 30 s (#101 → PR #109); closeout pulls (#112 → PR #114); git rm and
+  git mv (#108 → PR #115); Session lines across a clear (#99 → PR #107);
+  the handoff refresh for owner-queue 0.9.0 (PR #118 `c30ce8e`); the
+  third state-back (PR #119 `29d6908`); step 8 fixes (#116 → PR #120);
+  `tools/reproof.py` (#117 → PR #122 `81afaf0`); the code review at
+  re-proof, process (#113 → PR #123) and ruleset `tools-code-review`
+  (PR #125).
 
 ## Gaps
 
 - **#48:** builders are denied edits to `.claude/agents/`, so agent changes
-  are owner-led. The stage-builder sync and the #113 reviewer agent are two
-  of these.
+  are owner-led: the stage-builder sync and the live reviewer agent.
 - **The `~/.claude` links point at the OneDrive main checkout,** not at the
-  live clone that ADR-0011 revision 2 names. Checked 2026-11-09: agents,
-  all 38 skills and the 4 hooks. Only the plugins load from the live
-  clone. The owner was offered a ticket to re-point them, or to revise the
-  ADR.
-- **The baseball handoff.**
-  [docs/handoff/baseball-session-dispatch.md](../../docs/handoff/baseball-session-dispatch.md)
-  is for SpunkyLlama's agent. It was refreshed 2026-11-09. Update it when
-  what it points at changes:
-  - the owner-queue version (the dynasty planner sends each one);
-  - the session-dispatch version, which hasn't moved since #84;
-  - template commits;
-  - the #108 command form and #113's review, once they merge.
-
-  Its credential step stays generic: no file, ref or host in a public
-  repo.
-- **`CLAUDE.md`'s CI sentence is out of date.** CI runs all of `tests/`
-  plus the `CATALOG.md` check (`.github/workflows/test.yml`). It is small,
-  and has no ticket yet.
-- **Builder pushes.** A builder's `git push origin <branch>` is refused,
-  because only `git push` and `git push -u origin *` are allowed. Plain
-  `git push` works, so this needs no ticket.
-- **Not yet asked:** `git merge origin/main`, the form the session-rules
-  give for bringing `main` into a branch, isn't in this repo's builder
-  allow list. No builder has hit it yet. Offer the owner the line if one
-  does.
+  live clone that ADR-0011 revision 2 names. Only plugins load from the
+  live clone. The owner was offered a ticket to re-point them, or to revise
+  the ADR.
+- **The baseball handoff**
+  ([docs/handoff/baseball-session-dispatch.md](../../docs/handoff/baseball-session-dispatch.md))
+  is for SpunkyLlama's agent. Update it when the owner-queue version, the
+  session-dispatch version, template commits or carried-over rules change.
+  Its credential step stays generic.
+- **`CLAUDE.md` is out of date** in two places: its CI sentence (CI runs
+  all of `tests/` plus the `CATALOG.md` check) and "Three agents live in
+  `.claude/agents/`". Small; no ticket yet.
+- **Builder pushes.** `git push origin <branch>` is refused for builders;
+  plain `git push` works. No ticket needed.
+- **Not yet asked:** `git merge origin/main` isn't in this repo's builder
+  allow list. Offer the owner the line if a builder hits it.
 
 ## Decided since
 
 Owner decisions, each recorded on its ticket:
 
-- Builders only: a refused call ends the attempt (#82).
-- The probe-host control applies in every project (#82).
-- A profile's own base file, option A (#83).
-- One fixed probe path (#83).
-- robots.txt first, in every project, read in a call of its own (#88).
+- Builders only: a refused call ends the attempt (#82). Probe hosts in
+  every project (#82). A profile's own base file; one fixed probe path
+  (#83). robots.txt first, in a call of its own (#88).
 - The manager may merge Green PRs here (2026-11-07).
-- #81: comments and Send as answer wait for Submit; builders run the pane
-  tests (2026-11-08).
-- The baseball handoff is merged only after SpunkyLlama has been told
-  privately (#93, 2026-11-08).
-- `--bless`: builders run it themselves; the allow line is in
-  (2026-11-08).
-- The owner-queue developer's view: one pane reads many queues, the pane
-  logs what it can't draw, and every render bug becomes a test fixture.
-  Checking an entry before it is saved is held (#104, 2026-11-08). This is
-  now the dynasty planner's.
-- #101: after the wait, the script stops the builder and confirms that it
-  is gone (2026-11-08).
-- Builders in both repos delete with git rm and rename with git mv, and
-  every brief names the paths (#108, 2026-11-09).
-- The manager pulls both tools checkouts at closeout (#112, 2026-11-09).
+- #81: comments and Send as answer wait for Submit (2026-11-08).
+- The baseball handoff merged only after SpunkyLlama was told privately
+  (#93).
+- `--bless`: builders run it themselves (2026-11-08).
+- #104's developer view (now the dynasty planner's).
+- #101: after the wait, stop the builder and confirm it is gone.
+- Builders delete with git rm and rename with git mv (#108).
+- The manager pulls both tools checkouts at closeout (#112).
 - The dynasty planner plans the owner-queue mod (2026-11-09).
-- #113: code review at re-proof, per Q1 to Q15. In this repo, a
-  rule-text-only builder PR gets a light review (2026-11-09).
-- #117 opened at the owner's word (2026-11-09).
+- #113: code review at re-proof, per Q1 to Q15; a rule-text-only builder
+  PR gets a light review (*Yes, light review*); the live reviewer agent
+  has no model line (*Yes, no model line*, 2026-11-10).
+- *Approve both*: PRs #118 and #119 (2026-11-09).
+- *Go 110 and 116; 117 after 116* (2026-11-09).
 
 ## Lessons
 
-- A probe rule's exact name never limited what the script does. What
-  limits a probe is the hosts named in its brief, its `ALLOWED_HOSTS`
-  check and the manager's read at closeout.
+- A probe is limited by its brief's hosts, its `ALLOWED_HOSTS` check and
+  the manager's read at closeout, not by a rule's name.
 - A `Write(path)` rule matches nothing. Scope writes with `Edit(path)`.
-- A base settings file must allow every tool the project's `readLine`
-  uses (`Skill`, #85).
-- A builder can't start a test session or run `claude`. Put CLI-behavior
-  checks on the manager, as #101's and #113's first steps did.
-- The vendor tool has no `--check` flag. The check is the no-argument run,
-  which uses the network, so the manager runs it.
-- Never name the file, ref or host of someone else's leaked credential in
-  a public repo or PR. Keep the text generic, and pass the exact location
-  privately (#93).
-- A queue id changes at every `/clear`, but the app session id doesn't.
-  Address sessions by app id, and re-key `Session:` lines by queue id
-  (#99).
-- Check the state of the checkouts before relaying a manager's claim
-  about them. The manager's view of the checkouts went stale twice on
-  2026-11-08.
-- Builders finish fast: #104 went from ticket to merge in about two hours.
-  Before amending a ticket's scope, check whether its PR is already open
-  or merged.
-- A ticked pane Action isn't proof that its steps happened. Check the
-  file before relaying "done" (the stage-builder sync, 2026-11-09).
-- `code-review` forks a general-purpose agent. It starts in the session's
-  primary folder, not the caller's, so give it the full PR URL. It may run
-  `git fetch` wherever it lands (#113 Step 0).
+- A base settings file must allow every tool `readLine` uses (#85).
+- A builder can't run `claude`; CLI-behavior checks are the manager's.
+- The vendor tool's check is the no-argument run (network), so the
+  manager runs it.
+- Never name the location of someone else's leaked credential in a public
+  repo (#93).
+- Address sessions by app id; re-key `Session:` lines by queue id (#99).
+- Check the checkouts before relaying a manager's claim about them.
+- Before amending a ticket, check whether its PR is already open or
+  merged.
+- A ticked pane Action isn't proof its steps happened.
+- `code-review` forks a general-purpose agent that starts in the session's
+  primary folder: give it the full PR URL (#113 Step 0).
 - A script run as one Bash call hides its inner commands from the
-  permission rules: one approval covers all of them (#117).
-- In a worktree-isolated session, `git -C` to the main checkout and
-  compound commands are refused, and so is `gh … --body` text with
-  backticks. Use `--body-file`, and read files outside the worktree with
-  the Read or Grep tools.
+  permission rules (#117).
+- **Before recommending a hold, read the PR's comments:** an approval
+  given before a clear is recorded there (#118, 2026-11-09).
+- **A note that a step exists "only for X" can hide a second purpose.**
+  `tgreen.sh`'s `git init` also gave the tests a repo; the committed
+  script dropped it and failed its first real run (#124).
+- **Read a ruleset's path list against the owner's later answers.** PR B's
+  "anything under `plugins/`" would have given session-rules text the full
+  review against the owner's light-review word (#125 ruling).
