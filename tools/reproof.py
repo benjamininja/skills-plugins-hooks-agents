@@ -21,8 +21,10 @@ or a working-tree file. CI's read and the check-in-hygiene report are not run.
 from __future__ import annotations
 
 import difflib
+import os
 import re
 import shutil
+import stat
 import subprocess
 import sys
 import tarfile
@@ -74,6 +76,16 @@ def long_path(path: Path | str) -> str:
     if sys.platform == "win32" and not text.startswith("\\\\?\\"):
         return "\\\\?\\" + text
     return text
+
+
+def remove_tree(path: Path) -> None:
+    for folder, _, names in os.walk(long_path(path)):
+        for name in names:
+            try:
+                os.chmod(os.path.join(folder, name), stat.S_IWRITE)
+            except OSError:
+                pass
+    shutil.rmtree(long_path(path), ignore_errors=True)
 
 
 def tail(text: str, count: int) -> str:
@@ -191,6 +203,13 @@ def main(argv: list[str], repo: Path = ROOT) -> int:
             return finish()
         record("export", PASS)
 
+        for step in (("init", "-q"), ("add", "-A")):
+            code, _, err = git(dest, "-c", "core.longpaths=true", *step)
+            if code != 0:
+                record("index", FAIL, tail(err, 5) or f"git {step[0]} exited {code}")
+                return finish()
+        record("index", PASS)
+
         catalog = dest / "CATALOG.md"
         before = catalog.read_bytes() if catalog.exists() else None
 
@@ -207,7 +226,7 @@ def main(argv: list[str], repo: Path = ROOT) -> int:
         status, text = check_catalog(dest, before, build_ok)
         record("catalog diff", status, text)
     finally:
-        shutil.rmtree(long_path(work), ignore_errors=True)
+        remove_tree(work)
         print("export removed" if not work.exists() else f"export NOT removed: {work}")
     return finish()
 

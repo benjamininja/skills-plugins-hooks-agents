@@ -181,6 +181,25 @@ def test_green_run_exits_zero_and_changes_nothing_in_the_clone(tmp_path, export_
     assert list(export_area.iterdir()) == []
 
 
+LS_FILES_TEST = (
+    "import subprocess\n"
+    "def test_export_has_an_index():\n"
+    "    out = subprocess.run(['git', 'ls-files'], capture_output=True, text=True, check=True).stdout\n"
+    "    assert 'shared.txt' in out.split()\n"
+)
+
+
+def test_the_export_has_a_git_index_for_tests_that_list_files(tmp_path, export_area, capsys):
+    clone, head, _ = scenario(tmp_path, pr_files={"tests/test_ls_files.py": LS_FILES_TEST})
+    before = snapshot(clone)
+    code, out = reproof_run(clone, head, capsys)
+    assert code == 0, out
+    assert "RESULT: GREEN" in out
+    assert "PASS  index" in out
+    assert snapshot(clone) == before
+    assert list(export_area.iterdir()) == []
+
+
 def test_failing_pytest_exits_nonzero_and_the_other_steps_still_run(tmp_path, export_area, capsys):
     clone, head, _ = scenario(
         tmp_path, pr_files={"tests/test_fail.py": "def test_fail():\n    assert False\n"}
