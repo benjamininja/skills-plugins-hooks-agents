@@ -55,6 +55,8 @@ const EVERY_MS = 5000
 const GIVE_UP_MS = 60000
 const BY_HAND =
   'The queue was not re-keyed after the /clear: change the Session lines by hand (session-rules, parking.md, "The Session line across a clear")'
+const HALF =
+  'The re-key stopped part way after the /clear: some records or queue files may still name the old id; check the Session lines by hand (session-rules, parking.md, "The Session line across a clear")'
 const ANSWERS = 'answers'
 const NOTES = 'notes'
 const LOGGED = 'logged'
@@ -405,10 +407,14 @@ async function stamp($: EngineInterface): Promise<number> {
 
 /**
  * The queue text with the id each `- Session:` field names changed from
- * `from` to `to`, and how many fields changed. Only a field the parser reads
- * is touched: under a Decisions or Actions heading, under a `###` title and
- * outside a fenced block. Any other line, an Answer or a Note among them, and
- * the words after the id, stay as written.
+ * `from` to `to`, and how many entries changed. An entry is judged as the
+ * parser routes it, by its first Session field: if that names `from`, every
+ * Session field of the entry that names `from` is changed; an entry whose
+ * first Session field names another id is left whole. A field is read as the
+ * parser reads it (a space before the colon, or the id on the next line).
+ * Only an entry under a Decisions or Actions heading and `###` title is
+ * touched, outside a fenced block. Any other line, an Answer or a Note among
+ * them, and the words after the id, stay as written.
  */
 function rekeyed(
   text: string,
@@ -419,8 +425,20 @@ function rekeyed(
   let isListed = false
   let hasEntry = false
   let isFenced = false
+  let first: boolean | undefined
+  let isBare = false
+  let isCounted = false
+  const change = (id: string): boolean => {
+    first ??= id === from
+    if (!first || id !== from) return false
+    if (!isCounted) count++
+    isCounted = true
+
+    return true
+  }
   const lines = text.split('\n').map(raw => {
     const line = raw.trimEnd()
+    const tail = raw.slice(line.length)
     if (hasEntry && line.trim().startsWith('```')) {
       isFenced = !isFenced
 
@@ -438,15 +456,36 @@ function rekeyed(
     if (/^###\s+(?:\[( |x|X)\]\s*)?(.+)$/.test(line)) {
       hasEntry = isListed
       isFenced = false
+      first = undefined
+      isBare = false
+      isCounted = false
 
       return raw
     }
-    if (!hasEntry) return raw
-    const field = /^(\s*[-*]\s+\**Session\**:\**\s*)(\S+)/i.exec(line)
-    if (!field || field[2] !== from) return raw
-    count++
+    if (!hasEntry || line.trim() === '') return raw
+    const field = /^(\s*[-*]\s+\**)([A-Za-z][A-Za-z ]{0,24}?)(\**:\**\s*)(.*)$/.exec(
+      line,
+    )
+    if (field) {
+      if (isBare) first ??= false
+      isBare = false
+      if (field[2].trim().toLowerCase() !== 'session') return raw
+      const value = /^(\S+)(.*)$/.exec(field[4])
+      if (!value) {
+        isBare = true
 
-    return `${field[1]}${to}${line.slice(field[0].length)}${raw.slice(line.length)}`
+        return raw
+      }
+
+      return change(value[1])
+        ? `${field[1]}${field[2]}${field[3]}${to}${value[2]}${tail}`
+        : raw
+    }
+    if (!isBare) return raw
+    isBare = false
+    const word = /^(\s*)(\S+)(.*)$/.exec(line)
+
+    return word && change(word[2]) ? `${word[1]}${to}${word[3]}${tail}` : raw
   })
 
   return { text: lines.join('\n'), count }
@@ -475,17 +514,17 @@ async function shift<T>(
  * other than the one the clear ended, the records of the old id move to the
  * new one and each queue's `Session:` lines that name the old id are
  * rewritten to it. With no clear seen it does nothing, since a resume also
- * moves the process to another id. If the old id still answers after
- * `GIVE_UP_MS`, it gives up and says the manual rule applies.
+ * moves the process to another id. If the old id still answers, or no id
+ * does, after `GIVE_UP_MS`, it gives up and says the manual rule applies.
  */
 async function rekey($: EngineInterface): Promise<void> {
   if (cleared === undefined || isRekeying) return
   isRekeying = true
+  let isStarted = false
   try {
     const { from, at: since } = cleared
     const to = await me($)
-    if (to === undefined) return
-    if (to === from) {
+    if (to === undefined || to === from) {
       if ((await stamp($)) - since >= GIVE_UP_MS) {
         cleared = undefined
         $.ui.toast(BY_HAND)
@@ -494,6 +533,7 @@ async function rekey($: EngineInterface): Promise<void> {
       return
     }
     cleared = undefined
+    isStarted = true
     await shift<OwnerAnswers>($, 'delivered', from, to, {}, (into, was) => ({
       ...into,
       ...was,
@@ -511,21 +551,26 @@ async function rekey($: EngineInterface): Promise<void> {
       ...new Set([...into, ...was]),
     ])
     let count = 0
+    let left = 0
     for (const one of await every($)) {
       const text = await slurp($, one.file)
       if (text === undefined) continue
       const made = rekeyed(text, from, to)
-      if (made.count === 0) continue
-      await $.fs.write(one.file, made.text)
+      if (made.count > 0) await $.fs.write(one.file, made.text)
       count += made.count
+      left += parse(made.text).filter(item => sessionOf(item) === from).length
     }
     if (count > 0)
       $.ui.toast(
         `Re-keyed ${count} ${count === 1 ? 'entry' : 'entries'} to this session's new id`,
       )
+    if (left > 0)
+      $.ui.toast(
+        `${left} ${left === 1 ? 'entry still names' : 'entries still name'} the old id: change ${left === 1 ? 'its' : 'their'} Session ${left === 1 ? 'line' : 'lines'} by hand (session-rules, parking.md, "The Session line across a clear")`,
+      )
   } catch {
     cleared = undefined
-    $.ui.toast(BY_HAND)
+    $.ui.toast(isStarted ? HALF : BY_HAND)
   } finally {
     isRekeying = false
   }
@@ -980,9 +1025,12 @@ export const register: Register = (on, settings) => {
 
   // A `/clear` ends the session's id and fires no `session.start` for the new
   // one. The hook reads no id and writes no store: it keeps the ending id, and
-  // the next read re-keys once `$.session.id()` answers another.
+  // the next read re-keys once `$.session.id()` answers another. Any other end
+  // (a resume into an older conversation) drops it, so that id is never taken
+  // for the cleared session's.
   on('session.end', async ($, e, next) => {
-    if (e.reason === 'clear' && e.sessionId)
+    if (e.reason !== 'clear') cleared = undefined
+    else if (e.sessionId)
       cleared = { from: cleared?.from ?? e.sessionId, at: await stamp($) }
 
     return next(e)

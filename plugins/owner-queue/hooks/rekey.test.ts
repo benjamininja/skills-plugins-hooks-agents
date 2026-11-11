@@ -53,12 +53,12 @@ const PANE = {
   props: {},
 } as const
 
-const ENDED ={ reason: 'clear', sessionId: 'session-1', resume: { id: 'session-1' } } as const
+const ENDED = { reason: 'clear', sessionId: 'session-1', resume: { id: 'session-1' } } as const
 
 function world(
   on: On,
   files: Map<string, string>,
-  ids: { now: string },
+  ids: { now: string; isFailing?: boolean },
   store: Record<string, unknown> = {},
 ) {
   const sent: string[] = []
@@ -79,6 +79,7 @@ function world(
     return { value: text }
   })
   on('fs.write', ($$, e) => {
+    if (ids.isFailing) throw new Error('the disk is gone')
     files.set(key(e.path), e.text)
 
     return { value: undefined }
@@ -257,5 +258,148 @@ test('after 60 s with the old id still answering, it says the manual rule and re
   await $.command.run({ command: 'owner', args: '' })
   expect(files.get(OWN)).toBe(OWN_FILE)
   expect(toasts.filter(one => one.includes('not re-keyed'))).toHaveLength(1)
+  expect(toasts.filter(one => one.startsWith('Re-keyed'))).toHaveLength(0)
+})
+
+test('a clear followed by a resume into another conversation re-keys nothing', async ($, on) => {
+  const files = new Map([[OWN, OWN_FILE]])
+  const ids = { now: 'session-1' }
+  const who = place(OWN, 'decision:Who merges')
+  const { sent, toasts } = world(on, files, ids, {
+    answers: { [who]: GIVEN },
+    'delivered:session-1': { [who]: GIVEN },
+  })
+
+  await $.command.run({ command: 'owner', args: '' })
+  const ui = await $.ui.mount({ ...PANE, surface: 'terminal' })
+  await $.session.end(ENDED)
+  await $.session.end({
+    reason: 'resume',
+    sessionId: 'session-2',
+    resume: { id: 'session-2' },
+  })
+  ids.now = 'session-9'
+  await ui.press({ key: 'refresh' })
+  await ui.press({ key: 'refresh' })
+
+  expect(files.get(OWN)).toBe(OWN_FILE)
+  expect(toasts.filter(one => one.startsWith('Re-keyed'))).toHaveLength(0)
+  // The record stayed under the old id: back there, the answer is not said again.
+  ids.now = 'session-1'
+  await ui.press({ key: 'refresh' })
+  expect(sent).toHaveLength(0)
+  await ui.unmount()
+})
+
+test('with no id answering, it gives up after 60 s and says the manual rule', async ($, on) => {
+  const files = new Map([[OWN, OWN_FILE]])
+  const ids = { now: '' }
+  const { toasts, time } = world(on, files, ids)
+
+  await $.session.end(ENDED)
+  await time.advance(59000)
+  await $.command.run({ command: 'owner', args: '' })
+  expect(toasts.filter(one => one.includes('not re-keyed'))).toHaveLength(0)
+
+  await time.advance(2000)
+  await $.command.run({ command: 'owner', args: '' })
+  expect(toasts.filter(one => one.includes('not re-keyed'))).toHaveLength(1)
+
+  ids.now = 'session-2'
+  await $.command.run({ command: 'owner', args: '' })
+  expect(files.get(OWN)).toBe(OWN_FILE)
+  expect(toasts.filter(one => one.startsWith('Re-keyed'))).toHaveLength(0)
+})
+
+test('an entry is judged by its first Session line, and counted once', async ($, on) => {
+  const files = new Map([
+    [
+      OWN,
+      `## Decisions
+
+### [ ] Two lines
+- Session: session-1
+- Session: session-1 (again)
+
+### [ ] Third id first
+- Session: session-3
+- Session: session-1
+`,
+    ],
+  ])
+  const ids = { now: 'session-1' }
+  const { toasts } = world(on, files, ids)
+
+  await $.session.end(ENDED)
+  ids.now = 'session-2'
+  await $.command.run({ command: 'owner', args: '' })
+
+  expect(files.get(OWN)).toBe(`## Decisions
+
+### [ ] Two lines
+- Session: session-2
+- Session: session-2 (again)
+
+### [ ] Third id first
+- Session: session-3
+- Session: session-1
+`)
+  expect(toasts).toContain("Re-keyed 1 entry to this session's new id")
+})
+
+test('a Session field is read as the parser reads it: a space before the colon, the id on the next line, marks', async ($, on) => {
+  const files = new Map([
+    [
+      OWN,
+      `## Decisions
+
+### [ ] Space before the colon
+- Session : session-1
+
+### [ ] Id on the next line
+- Session:
+  session-1 (planner)
+
+### [ ] Marked
+* **Session:** session-1
+`,
+    ],
+  ])
+  const ids = { now: 'session-1' }
+  const { toasts } = world(on, files, ids)
+
+  await $.session.end(ENDED)
+  ids.now = 'session-2'
+  await $.command.run({ command: 'owner', args: '' })
+
+  expect(files.get(OWN)).toBe(`## Decisions
+
+### [ ] Space before the colon
+- Session : session-2
+
+### [ ] Id on the next line
+- Session:
+  session-2 (planner)
+
+### [ ] Marked
+* **Session:** session-2
+`)
+  expect(toasts).toContain("Re-keyed 3 entries to this session's new id")
+  expect(toasts.filter(one => one.includes('still name'))).toHaveLength(0)
+})
+
+test('a failed write says the re-key stopped part way, once', async ($, on) => {
+  const files = new Map([[OWN, OWN_FILE]])
+  const ids = { now: 'session-1', isFailing: false }
+  const { toasts } = world(on, files, ids)
+
+  await $.session.end(ENDED)
+  ids.now = 'session-2'
+  ids.isFailing = true
+  await $.command.run({ command: 'owner', args: '' })
+  await $.command.run({ command: 'owner', args: '' })
+
+  expect(files.get(OWN)).toBe(OWN_FILE)
+  expect(toasts.filter(one => one.includes('stopped part way'))).toHaveLength(1)
   expect(toasts.filter(one => one.startsWith('Re-keyed'))).toHaveLength(0)
 })
