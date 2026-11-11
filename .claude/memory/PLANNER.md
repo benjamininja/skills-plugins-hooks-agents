@@ -5,9 +5,8 @@ alone. Rules are in the `session-rules` skill and in
 [PROJECT-RULES.md](PROJECT-RULES.md); this file is state. GitHub issues are
 the record. This file links to them and does not repeat them.
 
-Last state-back: 2026-11-10, at a fourth context clear, amended
-2026-11-11 after the restart's Do-first work. `main` was at `2090367`
-(#126), and both tools checkouts were at it.
+Last state-back: 2026-11-11, at a fifth context clear. `main` was at
+`11a9eff` (#127), and both tools checkouts were at it.
 
 ## START HERE
 
@@ -26,8 +25,8 @@ Last state-back: 2026-11-10, at a fourth context clear, amended
 - **Your own ids.** The app session id is
   `local_9830794b-c1e9-400a-ba66-e6abb9432396` and stays the same. The
   queue id changes at every `/clear`: it was `4dcde8eb`, then `ca5b616a`,
-  then `2dd6e973`, then unknown (the owner hadn't run `/owner id` by the
-  2026-11-10 clear). After a clear, learn the new one and send it to the
+  then `2dd6e973`, then unknown at the 2026-11-10 and 2026-11-11 clears
+  (the owner hadn't run `/owner id`). After a clear, learn the new one and send it to the
   manager for any open entry that names an old one (see "Queue entries
   raised"). You learn it either way:
   - the owner-queue mod tells you in the system prompt, but only once a
@@ -55,7 +54,12 @@ Last state-back: 2026-11-10, at a fourth context clear, amended
   `origin/main` once `git status` shows it clean. Enter it with
   `EnterWorktree` (path), so `/security-review` and the git guardrail see
   its branch. In a worktree session, run one plain git command per call:
-  compound commands are refused.
+  compound commands are refused. Push with the branch named
+  (`git push origin <branch>`): the guardrail hook reads the main
+  checkout's branch, `main`, and blocks a bare `git push`. Commit with
+  `git -c user.email=38588919+benjamininja@users.noreply.github.com commit ...`,
+  since the worktree's own email is the private one and a push of it is
+  declined.
 - **Run pytest with the dynasty venv**
   (`C:/Users/benha/OneDrive/Documents/GitHub/Python-PowerBI-DynastyFantasyFootball/.venv/Scripts/python.exe -m pytest -q tests`):
   neither tools checkout has a `.venv`. The full suite takes about 15
@@ -63,10 +67,13 @@ Last state-back: 2026-11-10, at a fourth context clear, amended
 
 ## Do first after this clear
 
-1. **Relay the owner's approval of #128, #130 and this PR (#127)** to the
-   manager, word for word, and post it on each PR, if the owner has given
-   it and it isn't recorded yet. Read each PR's comments first.
-2. **Learn your queue id** (above), and send it to the manager only if an
+1. **This state-back's PR** needs the owner's approval. If the owner gives
+   it, relay the words to the manager and post them on the PR. Read its
+   comments first: the approval may already be recorded.
+2. **#131** (Closes #117) was approved, *Approve 131*, relayed and posted
+   (issuecomment-6808844335). Check that it merged and that #117 closed;
+   the manager then retires `tgreen.sh`.
+3. **Learn your queue id** (above), and send it to the manager only if an
    open entry names an old one.
 
 ## What this session answers for
@@ -87,16 +94,11 @@ Not building, not dispatching, and never a settings file or
 
 ## Open PRs and in-flight work
 
-- **PR #128** (planner, Refs #113): the live
-  `.claude/agents/pr-code-reviewer.md`, copied from the template, no model
-  line. Split from #126 on the owner's *Separate PR* (2026-11-11), since
-  the owner had approved #126 at `fc290a0` without it (#113
-  issuecomment-6783382194). CI green. Waits on the owner's approval. Its
-  merge turns on #126's code-review Green item.
-- **PR #130** (planner, Refs #98): the live `stage-builder.md` gains #98's
-  three-line bullet, on the owner's *sync stage-builder* (2026-11-11).
-  Waits on the owner's approval.
-- **This state-back's PR (#127)**: needs the owner's approval too.
+- **PR #131** (planner, Closes #117): `PROJECT-RULES.md` names
+  `tools/reproof.py` as the manager's re-proof, never a scratch script.
+  Approved (*Approve 131*) and relayed, 2026-11-11; the manager re-proves
+  and merges.
+- **This state-back's PR**: needs the owner's approval.
 - **PR #121** (#110, owner-queue 0.10.0, the mod re-keys `Session:` lines
   at a `/clear`): CI green; waits on the owner's live-check Action, then
   the manager's re-proof. When it merges, the manager and the dynasty
@@ -108,38 +110,45 @@ Not building, not dispatching, and never a settings file or
     git mv rule and #113's code review may each earn a line under "Rules
     that carry over"; owner approves;
   - after it merges, tell the owner the handoff is ready to share.
-- **#124** (low): `tools/reproof.py` gives its export a git index before
-  pytest. Found by the manager's first real run (#117
-  issuecomment-6732532982). The owner gave the go; builder
-  `t124-reproofindex` opened PR #129. After it merges and a real re-proof with the script is GREEN, add
-  #117's `PROJECT-RULES.md` line (*the manager re-proves with
-  `tools/reproof.py` from the live clone, or with direct commands, never
-  with a scratch script*) in a planner PR. Until then the manager uses its
-  scratchpad `tgreen.sh`, which that line would forbid.
-- **#117**: open until the #124 fix, a GREEN real run and the line above.
-  The owner chose the dynasty `.venv` for the interpreter (pane,
-  2026-11-10 18:17) and added its allow rule to dynasty's
-  `managers.settings.json` (line 24, 2026-11-11).
-- **#113**: PR #123 `620815e`, PR #125 `21ce308` and PR #126 `2090367`
-  merged. Open for #128 (the live agent) and the first live review run. Dynasty #490 (low) waited for PR A and can go now.
+- **#124** closed by PR #129 (`9797d53`): `tools/reproof.py` gives its
+  export a git index. The manager's first real run with it was GREEN, no
+  prompt (#117 issuecomment-6784205339); every tools re-proof since uses
+  it.
+- **#117**: closes when #131 merges. Its allow rule is in dynasty's
+  `managers.settings.json` (line 24).
+- **#113**: PR #123 `620815e`, #125 `21ce308`, #126 `2090367` and #128
+  `75bc9b3` merged. The live reviewer agent is in place and the
+  code-review Green item is on. Open only for the first live review run,
+  which is the manager's. Dynasty #490 (low) waited for PR A and can go
+  now.
+- **#98**: the live `stage-builder.md` now carries its bullet (PR #130
+  `e7ec6e1`). The manager removed the queue entry and drops the brief
+  line.
 - **#116** closed (PR #120 `94c8ca9`). The manager owes one more real
   dispatch with the new step 8, and the exit code of the first `claude
   stop` that succeeds.
 
 ## Waiting on the owner
 
-- Approve #128, #130 and this state-back (#127).
-- The #121 live check (queue Action, open).
+- Approve this state-back.
+- The #121 live check (queue Action, open). Recommended: now; it gates
+  0.10.0 and the handoff PR.
 - The owner-queue `queues` setting: add `pluginConfigs` →
   `owner-queue` → `options` → `queues` (dynasty's `NEEDS-OWNER.md` path)
   to `~/.claude/settings.json` (line 5, before `permissions`), then a new
-  session; or `/owner id` here.
+  session; or `/owner id` here (recommended).
 - Offered, not answered: a low ticket for a `claude plugin test` step in
   `tools/reproof.py` that runs only when the merge diff touches
   `plugins/owner-queue/` (PR #122 read, issuecomment-6732270477).
+  Recommended: yes, low. #129 has merged, so nothing else edits the script.
 - #58: keep or drop the untracked `GEMINI.md` (a 36-line copy of the
-  rules, not the thin pointer #58 asks for; recommended: drop) and
-  `.agents/` (unread).
+  rules) and `.agents/AGENTS.md` (a 31-line copy that links to the old
+  `CONTEXT.md` name), both in the main checkout. Neither is the thin
+  pointer #58 asks for. Recommended: the owner deletes both; then #58 goes
+  to a builder.
+- Offered: a ticket for the git-guardrail hook reading the main checkout's
+  branch from a worktree (it blocks a bare `git push` there). It is too
+  strict, not unsafe, and a change to its blocking rules always parks.
 - The ADR-0011 links finding (see Gaps). Recommended: revise the ADR,
   since #112's closeout pulls keep both checkouts at one commit.
 
@@ -185,11 +194,17 @@ queue id. After a clear, re-key each one through the manager.
   `tools/reproof.py` (#117 → PR #122 `81afaf0`); the code review at
   re-proof, process (#113 → PR #123) and ruleset `tools-code-review`
   (PR #125).
+- 2026-11-10/11: Green gains the mod test and the code review (PR #126
+  `2090367`); the export's git index (#124 → PR #129 `9797d53`), then the
+  first GREEN `reproof.py` run; the live reviewer agent (PR #128
+  `75bc9b3`); the stage-builder sync (#98 → PR #130 `e7ec6e1`); the fourth
+  state-back (PR #127 `11a9eff`); the re-proof line (#117 → PR #131,
+  approved).
 
 ## Gaps
 
 - **#48:** builders are denied edits to `.claude/agents/`, so agent changes
-  are owner-led: the stage-builder sync and the live reviewer agent.
+  are owner-led planner PRs (as #128 and #130 were).
 - **The `~/.claude` links point at the OneDrive main checkout,** not at the
   live clone that ADR-0011 revision 2 names. Only plugins load from the
   live clone. The owner was offered a ticket to re-point them, or to revise
@@ -201,7 +216,8 @@ queue id. After a clear, re-key each one through the manager.
   Its credential step stays generic.
 - **`CLAUDE.md` is out of date** in two places: its CI sentence (CI runs
   all of `tests/` plus the `CATALOG.md` check) and "Three agents live in
-  `.claude/agents/`". Small; no ticket yet.
+  `.claude/agents/`" (seven now, with `pr-code-reviewer`). Small; no
+  ticket yet.
 - **Builder pushes.** `git push origin <branch>` is refused for builders;
   plain `git push` works. No ticket needed.
 - **Not yet asked:** `git merge origin/main` isn't in this repo's builder
@@ -232,6 +248,8 @@ Owner decisions, each recorded on its ticket:
 - *Approve 126*, and *Merge fc290a0 now* (to the manager); the live
   reviewer agent goes in a *Separate PR* (#128) (2026-11-11).
 - *sync stage-builder* (2026-11-11, PR #130).
+- *Approve all three (Recommended)*: PRs #128, #130 and #127; and
+  *Approve 131* (2026-11-11).
 
 ## Lessons
 
@@ -264,8 +282,8 @@ Owner decisions, each recorded on its ticket:
 - **An approval given elsewhere can overtake a Do-first step.** The owner
   approved #126 in another chat before this session pushed to it; check
   the PR's head and any relay before moving an approved head (#128).
-- **The worktree commits with the private email,** and a push of it is
-  declined. Commit with
-  `git -c user.email=38588919+benjamininja@users.noreply.github.com commit ...`.
+- **The worktree commits with the private email, and the guardrail reads
+  the main checkout's branch.** Both workarounds are in START HERE, "Your
+  own PRs".
 - **A worktree session can't `git -C` the main checkout.** To check the
   checkouts' heads, Read each one's `.git/refs/heads/main`.
