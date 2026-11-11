@@ -273,6 +273,62 @@ def test_a_path_past_260_characters_exports_and_is_removed(tmp_path, export_area
     assert list(export_area.iterdir()) == []
 
 
+OWNER_QUEUE_FILE = {"plugins/owner-queue/note.txt": "x\n"}
+
+
+def stub_claude(monkeypatch, result):
+    calls = []
+    real = reproof.run
+
+    def fake(cmd, cwd=None):
+        if cmd[0] == "claude":
+            calls.append((cmd, cwd))
+            return result
+        return real(cmd, cwd)
+
+    monkeypatch.setattr(reproof, "run", fake)
+    return calls
+
+
+def test_no_owner_queue_path_records_no_plugin_test(tmp_path, export_area, monkeypatch, capsys):
+    calls = stub_claude(monkeypatch, (1, "", "should not run"))
+    clone, head, _ = scenario(tmp_path)
+    code, out = reproof_run(clone, head, capsys)
+    assert code == 0, out
+    assert "RESULT: GREEN" in out
+    assert "plugin test" not in out
+    assert calls == []
+
+
+def test_owner_queue_path_and_exit_zero_passes(tmp_path, export_area, monkeypatch, capsys):
+    calls = stub_claude(monkeypatch, (0, "ok\n", ""))
+    clone, head, _ = scenario(tmp_path, pr_files=OWNER_QUEUE_FILE)
+    code, out = reproof_run(clone, head, capsys)
+    assert code == 0, out
+    assert "PASS  plugin test" in out
+    assert "RESULT: GREEN" in out
+    assert [c for c, _ in calls] == [["claude", "plugin", "test", "plugins/owner-queue"]]
+
+
+def test_owner_queue_path_and_exit_one_fails(tmp_path, export_area, monkeypatch, capsys):
+    stub_claude(monkeypatch, (1, "", "bad manifest\n"))
+    clone, head, _ = scenario(tmp_path, pr_files=OWNER_QUEUE_FILE)
+    code, out = reproof_run(clone, head, capsys)
+    assert code == 1
+    assert "FAIL  plugin test" in out
+    assert "bad manifest" in out
+    assert "RESULT: NOT GREEN" in out
+
+
+def test_owner_queue_path_and_claude_missing_fails(tmp_path, export_area, monkeypatch, capsys):
+    stub_claude(monkeypatch, (127, "", "[WinError 2] The system cannot find the file"))
+    clone, head, _ = scenario(tmp_path, pr_files=OWNER_QUEUE_FILE)
+    code, out = reproof_run(clone, head, capsys)
+    assert code == 1
+    assert "FAIL  plugin test" in out
+    assert "SKIP  plugin test" not in out
+
+
 def test_an_export_folder_inside_onedrive_is_refused(tmp_path, monkeypatch, capsys):
     area = tmp_path / "OneDrive" / "tmp"
     area.mkdir(parents=True)
