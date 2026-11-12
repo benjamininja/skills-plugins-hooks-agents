@@ -45,9 +45,10 @@ matches. See its own README for install steps and the registry format.
 ## Population status
 
 All three hooks above are installed and active on this machine, wired
-into `~/.claude/settings.json` and linked from the live clone by
-`tools/relink_live.ps1` (see the repo README's Installation section and
-[ADR-0011](../docs/adr/0011-unified-distribution-architecture.md)).
+into `~/.claude/settings.json` and linked from this repo's main checkout
+by `tools/relink_live.ps1` (see the repo README's Installation section and
+[ADR-0011](../docs/adr/0011-unified-distribution-architecture.md),
+Revision 3).
 
 `continual-learning` was retired on 2026-10-12 — see
 [ADR-0012](../docs/adr/0012-retire-continual-learning.md).

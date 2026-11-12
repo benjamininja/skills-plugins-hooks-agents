@@ -1,6 +1,6 @@
 {
   "name": "owner-queue",
-  "version": "0.9.0",
+  "version": "0.10.0",
   "description": "A live pane of the decisions and hands-on actions waiting on the owner, read from the main checkout's .claude/memory/NEEDS-OWNER.md and from any other project's queue the owner lists; a decision is answered by pressing one of its options, or by typing an answer, and Submit; a typed comment is staged the same way and written as a Note line on Submit",
   "types": "./types/index.d.ts",
   "userConfig": {

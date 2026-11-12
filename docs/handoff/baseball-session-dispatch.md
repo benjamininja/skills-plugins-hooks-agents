@@ -15,6 +15,11 @@ Updated 2026-11-09: the piece versions, the queue setup (setup step 5),
 one more carried-over rule, and the queue recommendation (decision 6).
 The two baseball repos were not read again.
 
+Updated 2026-11-11: owner-queue 0.10.0 (Session lines re-keyed at a
+`/clear`), the session-dispatch rules and the skills at `main` `e754faa`,
+and two more carried-over rules (git rm and git mv; the code review at
+re-proof). The two baseball repos were not read again.
+
 ## What this setup is
 
 A project is worked by three kinds of Claude Code session, each with its
@@ -39,9 +44,9 @@ It is used in production on `benjamininja/Python-PowerBI-DynastyFantasyFootball`
 
 | Piece | Where | Version at writing | What it gives you |
 |---|---|---|---|
-| Session-dispatch plugin | [`plugins/session-dispatch-managers-build-review/`](../../plugins/session-dispatch-managers-build-review/) | 0.3.0, with its rules and script as on `main` at `76b8c89` (the version number has not moved since #84; take `main`) | `dispatch.ps1`, the `session-rules` and `session-dispatch` skills, role files, settings examples, profiles, brief template |
-| Owner-queue mod | [`plugins/owner-queue/`](../../plugins/owner-queue/) | 0.9.0 | The queue pane, `/owner`, `/owner id`, answers carried back to the session that asked. One pane reads its own project's queue plus every queue listed in its `queues` setting. A typed answer or comment waits for Submit. |
-| Skills, agents and hooks | [`skills/`](../../skills/), [`.claude/agents/`](../../.claude/agents/), [`hooks/`](../../hooks/) | `main` at `76b8c89` | The skill catalog ([CATALOG.md](../../CATALOG.md)) and the git guardrail hook |
+| Session-dispatch plugin | [`plugins/session-dispatch-managers-build-review/`](../../plugins/session-dispatch-managers-build-review/) | 0.3.0, with its rules and script as on `main` at `e754faa` (the version number has not moved since #84; take `main`) | `dispatch.ps1`, the `session-rules` and `session-dispatch` skills, role files, settings examples, profiles, brief template, and the `pr-code-reviewer` agent template |
+| Owner-queue mod | [`plugins/owner-queue/`](../../plugins/owner-queue/) | 0.10.0 | The queue pane, `/owner`, `/owner id`, answers carried back to the session that asked. One pane reads its own project's queue plus every queue listed in its `queues` setting. A typed answer or comment waits for Submit. After a `/clear`, open entries' `Session:` lines are re-keyed to the new id. |
+| Skills, agents and hooks | [`skills/`](../../skills/), [`.claude/agents/`](../../.claude/agents/), [`hooks/`](../../hooks/) | `main` at `e754faa` | The skill catalog ([CATALOG.md](../../CATALOG.md)) and the git guardrail hook |
 | Memory template | [`benjamininja/project-memory-template`](https://github.com/benjamininja/project-memory-template) | `1fe3df5` | `CLAUDE.md` plus `.claude/memory/` tiers (minimal, standard, full), and the `check-in-hygiene` pre-commit hook |
 
 Take each piece from a **clone that only ever holds merged `main`**, never
@@ -152,8 +157,10 @@ Each step is a PR in that repo, except the owner's local steps.
 
    Every entry's `- Session:` line is the raising session's id, as
    `/owner id` prints it in that session. The id changes at every
-   `/clear`, so open entries are re-keyed after one. A wrong id delivers
-   the answer to the wrong session.
+   `/clear`. Since 0.10.0 the mod re-keys open entries itself after a
+   clear and toasts how many it changed. If it toasts that it did not
+   re-key, the session follows the session-rules fallback (parking.md).
+   A wrong id delivers the answer to the wrong session.
 6. **Install, on the owner's machine.**
    - Clone `benjamininja/skills-plugins-hooks-agents` as a live clone.
    - Name `<live clone>\plugins\owner-queue` and
@@ -193,6 +200,15 @@ They are in the `session-rules` skill. Read it rather than this summary.
   turn.** The commit, the push, the PR, the state-back comment and the
   message to the manager all follow. The review's report is one step of
   the turn, not its end.
+- **Builders delete with `git rm` and rename with `git mv`**, and only
+  the paths their brief names. A step the builders' settings don't allow
+  is parked.
+- **A code review at re-proof.** Before merging a builder PR that touches
+  code, the manager starts a read-only reviewer with a packet, under the
+  repo's own ruleset skill. The builder answers each finding once, a fresh
+  reviewer re-checks, and the manager decides. No upheld blocking finding
+  may stay open at merge. Each repo writes its own ruleset; this repo's is
+  `tools-code-review`, a model to copy from.
 
 ## Decisions that are SpunkyLlama's
 

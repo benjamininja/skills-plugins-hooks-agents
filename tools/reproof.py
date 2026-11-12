@@ -12,6 +12,8 @@ interpreter (sys.executable), and it must have pytest.
   3. export the merged tree to a temp folder outside OneDrive
   4. in the export: pytest -q tests, tools/build_catalog.py, and a check that
      the build left CATALOG.md as committed
+     then, only if the merge changes a path under plugins/owner-queue/:
+     claude plugin test plugins/owner-queue
   5. remove the export, print one summary, exit non-zero if any step failed
 
 The repository it runs in gains objects and FETCH_HEAD, never a ref, a branch
@@ -37,6 +39,7 @@ PR_RE = re.compile(r"[1-9][0-9]{0,8}")
 SHA_RE = re.compile(r"[0-9a-f]{40}")
 GIT_OPTS = ["-c", "gc.auto=0", "-c", "maintenance.auto=false", "-c", "core.autocrlf=false"]
 TIMEOUT = 1800
+PLUGIN_DIR = "plugins/owner-queue"
 PASS, FAIL, SKIP = "PASS", "FAIL", "SKIP"
 
 
@@ -192,6 +195,12 @@ def main(argv: list[str], repo: Path = ROOT) -> int:
         return finish()
     record("merge", PASS, f"tree={tree[:12]}")
 
+    code, _, err = git(repo, "diff", "--quiet", base, tree, "--", PLUGIN_DIR)
+    plugin_changed = code != 0
+    plugin_note = ""
+    if code not in (0, 1):
+        plugin_note = f"git diff exited {code}, ran as a precaution: {tail(err, 3)}\n"
+
     work = Path(tempfile.mkdtemp(prefix="rp-")).resolve()
     try:
         if "onedrive" in str(work).lower():
@@ -225,6 +234,15 @@ def main(argv: list[str], repo: Path = ROOT) -> int:
 
         status, text = check_catalog(dest, before, build_ok)
         record("catalog diff", status, text)
+
+        if plugin_changed:
+            code, out, err = run(["claude", "plugin", "test", PLUGIN_DIR], str(dest))
+            text = out + err
+            record(
+                "plugin test",
+                PASS if code == 0 else FAIL,
+                plugin_note + tail(text, 3 if code == 0 else 40),
+            )
     finally:
         remove_tree(work)
         print("export removed" if not work.exists() else f"export NOT removed: {work}")
