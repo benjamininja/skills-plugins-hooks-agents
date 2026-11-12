@@ -239,21 +239,29 @@ check_segment() {
   fi
 
   # --- Remember a switch to main/master for a later bare push ---
-  if echo "$flat" | grep -qE "git (checkout|switch)${END}"; then
+  # The text here has its quotes and backslashes deleted, not turned into
+  # spaces, so a split name (`ma''in`) reads as `main`. `sw_all` keeps a
+  # comment: text after a `#` can set the switch, never clear it. `sw_code`
+  # drops the comment and is the only text a create flag may clear from.
+  local sw_all sw_code
+  sw_all=$(echo "$pre" | tr -d "\"'\`\\\\" | tr '(){}$\t' '      ' | tr -s ' ')
+  sw_code=$(uncommented "$sw_all")
+  if echo "$sw_all" | grep -qE "git (checkout|switch)${END}"; then
     local create='(-[[:alpha:]]*[bBcC]|--create|--force-create|--orphan)'
-    if echo "$flat" | grep -qE "git (checkout|switch)${ARGS}(${create}|-[bBcC][^[:space:]]+|--(create|force-create|orphan)=[^[:space:]]*)${END}"; then
-      # A new branch is created. If it is named main or master (`-c main`,
-      # `-B main`, `-bmain`, `--create=main`, a flag cluster such as `-fb main`,
-      # any other option in between), a later push is on main: set the switch.
-      # Any other new branch clears it, as before.
-      if echo "$flat" | grep -qE "git (checkout|switch)${ARGS}${create}[[:space:]]+(main|master)${END}" \
-         || echo "$flat" | grep -qE "git (checkout|switch)${ARGS}(-[bBcC](main|master)|--(create|force-create|orphan)=(main|master))${END}"; then
-        SWITCHED_TO_MAIN=$(echo "$flat" | sed -nE 's/.*git ((checkout|switch).*)/\1/p' | sed -E 's/[[:space:]]+$//')
-      else
-        SWITCHED_TO_MAIN=""
-      fi
-    elif echo "$flat" | grep -qE "git (checkout|switch)${ARGS}(main|master)${END}"; then
-      SWITCHED_TO_MAIN=$(echo "$flat" | sed -nE 's/.*git ((checkout|switch).*)/\1/p' | sed -E 's/[[:space:]]+$//')
+    local named='(main|master)'
+    local set_switch
+    set_switch=$(echo "$sw_all" | sed -nE 's/.*git ((checkout|switch).*)/\1/p' | sed -E 's/[[:space:]]+$//')
+    # A new branch named main or master: `-c main`, `-B main`, `-bmain`, a
+    # cluster such as `-fb main` or `-fbmain`, `--create=main`, any option
+    # spelled short with `=` (`--cre=main`, `--force-c=main`, `--orph=main`),
+    # any other option in between: a later push is on main. Set the switch.
+    if echo "$sw_all" | grep -qE "git (checkout|switch)${ARGS}(${create}[[:space:]]+${named}${END}|-[[:alpha:]]*[bBcC]${named}${END}|--[[:alpha:]-]+=${named}${END})"; then
+      SWITCHED_TO_MAIN="$set_switch"
+    # Any other new branch clears it, as before (a comment cannot clear it).
+    elif echo "$sw_code" | grep -qE "git (checkout|switch)${ARGS}(${create}|-[bBcC][^[:space:]]+|--(create|force-create|orphan)=[^[:space:]]*)${END}"; then
+      SWITCHED_TO_MAIN=""
+    elif echo "$sw_all" | grep -qE "git (checkout|switch)${ARGS}${named}${END}"; then
+      SWITCHED_TO_MAIN="$set_switch"
     fi
   fi
 
@@ -303,7 +311,13 @@ check_segment() {
         [[ -n "$cdir" ]] && break   # a -C path is final, as before
       done
       if [[ "$branch" == "main" || "$branch" == "master" ]]; then
-        block "current checked-out branch is '$branch' and the command names no other target — push a feature branch and open a PR instead"
+        local why=""
+        # Say why the hook input's cwd was not read, so a feature worktree is
+        # not told its own branch is main.
+        if [[ -z "$cdir" && -n "$HOOK_CWD" && -z "$USE_HOOK_CWD" ]]; then
+          why=" (read from CLAUDE_PROJECT_DIR or the hook's folder, not the hook input's cwd, because the command is not exactly a plain push)"
+        fi
+        block "current checked-out branch is '$branch'${why} and the command names no other target — push a feature branch and open a PR instead"
       fi
     fi
   fi

@@ -529,6 +529,20 @@ SWITCH_TO_MAIN_BY_CREATE = [
     "git switch -c main --track && git push",
     "git checkout -b main && git merge feat && git push origin HEAD",
     "(git checkout -B main && git push)",
+    # review F1: an attached cluster, short long options with =, a split name
+    "git checkout -fbmain && git push -u origin",
+    "git checkout -fBmain && git push -u origin",
+    "git switch --cre=main && git push -u origin",
+    "git switch --force-c=main && git push -u origin",
+    "git switch --orph=main && git push -u origin",
+    "git switch --create=master && git push -u origin",
+    "git switch -c ma''in && git push -u origin",
+    'git switch -c "ma"in && git push -u origin',
+    "git switch -c 'main' && git push -u origin",
+    'git checkout -b "master" && git push -u origin',
+    # review F2: a create flag in a comment cannot clear the switch
+    "git checkout main # -b x\ngit push -u origin",
+    "git checkout main # --create=x\ngit push",
 ]
 
 
@@ -538,12 +552,30 @@ def test_a_create_flag_naming_main_sets_the_switch(command, tool, on_feature, on
     result = run_hook(command, project_dir=on_feature, tool=tool)
     assert result.returncode == 2, result.stderr.decode()
     assert b"an earlier 'git" in result.stderr
+    # review F7: in a feature worktree the project-dir fallback would block anyway,
+    # so only the message shows that the switch itself was seen
     result = run_hook(command, project_dir=on_main, hook_cwd=worktree_on_feature, tool=tool)
     assert result.returncode == 2, result.stderr.decode()
+    assert b"an earlier 'git" in result.stderr
+
+
+def test_the_block_message_says_why_the_cwd_was_not_read(on_main, worktree_on_feature):
+    result = run_hook("git push origin HEAD", project_dir=on_main, hook_cwd=worktree_on_feature)
+    assert result.returncode == 2, result.stderr.decode()
+    assert b"current checked-out branch is 'main'" in result.stderr
+    assert b"not exactly a plain push" in result.stderr
+    # a plain push in a main checkout session has nothing to explain
+    result = run_hook("git push", project_dir=on_main)
+    assert result.returncode == 2
+    assert b"not exactly a plain push" not in result.stderr
 
 
 @pytest.mark.parametrize("command", [
     "git switch -c next && git push",
+    "git switch -c ne''xt && git push",
+    "git checkout -fbnext && git push",
+    "git switch --cre=next && git push",
+    "git checkout main && git switch -c next # main\ngit push",
     "git switch -c next main && git push",
     "git checkout -b next main && git push",
     "git checkout -B next origin/main && git push",

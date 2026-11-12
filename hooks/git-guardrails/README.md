@@ -92,14 +92,20 @@ this is a behavior adaptation.
 - **Every spelling of the whole tree is blocked** for `checkout` / `restore`:
   `.`, `./`, `./.`, `./*`, `..`.
 - **`HEAD` and `@` count as "whatever is checked out"**, so
-  `git push origin HEAD` gets the same branch lookup as a bare `git push`.
+  `git push origin HEAD` gets a branch lookup like a bare `git push`. It is
+  not a plain push (rule B), so the lookup reads the `-C` path, then
+  `CLAUDE_PROJECT_DIR`, then `$PWD`, never the hook input's `cwd`. The block
+  message says so when the hook input has a `cwd` that was not read.
 - **A switch to `main` earlier in the same command blocks a later bare
   push** (`git checkout main && git merge x && git push`), because the
   lookup would otherwise see the branch from before the command ran. So
   does a create flag whose new branch is `main` or `master`
-  (`git switch -c main`, `git checkout -B main`, `-bmain`, `--create=main`,
-  `--ignore-other-worktrees -C main`); a create flag for any other branch
-  clears it.
+  (`git switch -c main`, `git checkout -B main`, `-bmain`, `-fbmain`,
+  `--create=main`, a long option abbreviated with `=` such as `--cre=main`,
+  a split name such as `ma''in`, `--ignore-other-worktrees -C main`); a
+  create flag for any other branch clears it, but never one that is only in
+  a `#` comment. A create that fails (the branch already exists) still
+  clears it: the hook cannot see the result.
 - **When in doubt it blocks.** Text after a `#` still counts toward a
   block and never toward an exemption, so
   `git push origin my-feature # not main` is blocked. Reword the comment.
