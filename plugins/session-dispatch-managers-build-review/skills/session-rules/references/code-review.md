@@ -5,7 +5,9 @@ posts the re-proof. The reviewer finds, the builder answers once, a
 fresh reviewer re-checks, and the manager decides. The reviewer is the
 `pr-code-reviewer` agent (`templates/agents/pr-code-reviewer.md` in this
 plugin). Each repo has its own ruleset skill, which the packet names.
-Why it is built this way: tools ADR-0015.
+The reviewer reads the diff itself; it runs no other review tool and
+starts no agent. Why it is built this way: tools ADR-0015 (Revision 2
+dropped the code-review fork).
 
 ## Which PRs
 
@@ -24,22 +26,20 @@ Why it is built this way: tools ADR-0015.
 | medium | `high` | `low` |
 | high | `high` | `low` |
 
-- `medium` is not used until a run shows code-review applies it. In
-  tools #113's Step 0 (issuecomment-6730548975) it ran the `high` recipe.
-- The level is always passed first, before the target:
-  `code-review <level> <full PR URL>`. Without it, code-review reuses the
-  last level typed.
+- The effort is how deep the reviewer reads. At `low` it applies every
+  ruleset pattern to the diff and reads the code each hunk calls. At
+  `high` it also traces each changed path's callers and inputs, and
+  looks for the concrete input that breaks it.
 - A light review checks the diff only against the rules the ruleset
-  names for it, at `low`, and does not run code-review.
+  names for it, at `low`.
 
 ## The packet
 
 The manager writes one for each review, and the reviewer sees only the
 packet, never the builder's reasoning.
 
-- **PR:** the full PR URL, never a bare number. The code-review fork
-  starts in the session's primary folder, where a bare number can
-  resolve to another repo's issue.
+- **PR:** the full PR URL, never a bare number, which can resolve to
+  another repo's issue.
 - **Head:** the PR's head commit sha.
 - **Ticket:** the full issue URL.
 - **Tier**, and the **kind** (full or light) and **effort** it sets.
@@ -52,32 +52,26 @@ packet, never the builder's reasoning.
 - **Round:** first, or re-check. A re-check also carries the first
   findings, the builder's answer to each and the new head.
 - **Returns:** the findings, as below. Nothing else is posted or written.
-- **Limits**, copied into every packet. They bind the code-review fork
-  too, because that fork is a general-purpose agent the reviewer's
-  `tools:` line may not limit:
+- **Limits**, copied into every packet:
   - read with `gh pr view` and `gh pr diff` on the PR URL; with
     `git -C <worktree>` for `show`, `log`, `grep`, `ls-tree` and `diff`;
     and with Read, Grep and Glob in the worktree;
-  - the Skill tool loads only the ruleset skill the packet names and
-    code-review, and no other skill;
-  - code-review is given two arguments, the effort and the PR URL, and
-    nothing else: it posts no comment, applies no fix and posts nothing
-    to the PR. These limits name no flag, so that code-review does not
-    read one in them (#164);
+  - the Skill tool loads only the ruleset skill the packet names, and
+    no other skill; no other agent is started;
   - every Bash call begins with `gh` or `git -C <worktree>`; one that
     begins with `cd` is a stray;
   - no `git fetch`, no `cd` into any checkout, no script and no test;
   - no write of any kind: no file, ref, branch, comment, commit or push.
 
-If the fork strays from the limits, the reviewer drops code-review and
-applies the ruleset itself at the same effort. The manager checks every
-review's output for the fallback note, and for any fetch, `cd` or write,
-and records each stray on the PR's ticket.
+The reviewer's output closes with one line on its own calls: none
+outside the limits, or each one that was. The manager checks every
+review's output for that line, and for any fetch, `cd`, script or
+write, and records each stray on the PR's ticket.
 
 ## A finding
 
 Each finding has an id (`F1`, `F2`…), the file and line, the ruleset
-pattern it falls under (or `code-review` for one outside the ruleset),
+pattern it falls under (or `general` for one outside the ruleset),
 its class, and one sentence on the defect.
 
 - **Blocking** names the concrete input or state that triggers it. A
