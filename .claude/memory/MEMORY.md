@@ -77,6 +77,11 @@
   created by `tools/relink_live.ps1`; pull it after every merge. Reason: an
   uncommitted 2026-08-02 re-vendor in the working checkout was live for ten
   weeks with four skills' `disable-model-invocation` wrongly restored.
+  **Revision 3 (2026-11-11, #134)**: on this machine the skill, agent and
+  hook links stay on the main checkout; only plugins load from the live
+  clone. The manager's closeout pulls (#112) hold both checkouts at one
+  merged commit. A machine without closeout pulls uses Revision 2's live
+  clone.
 - `docs/adr/0012-retire-continual-learning.md` — hook removed: its only
   output was "tool X frequently fails", injected every session
 - `docs/adr/0013-session-dispatch-plugin.md` — plugin

@@ -18,10 +18,12 @@ def test_inserts_before_first_marker(tmp_path):
     block = tmp_path / "block.md"
     block.write_bytes(b"- **CURRENT STATE, new.** Fresh.\n- Second line.\n")
     out = tmp_path / "out.md"
-    r = run(FIXTURE, block, out)
+    state = tmp_path / "state.md"
+    state.write_bytes(FIXTURE.read_bytes().replace(b"\r\n", b"\n"))
+    r = run(state, block, out)
     assert r.returncode == 0, r.stderr
     assert "inserted 2 lines at line 5" in r.stdout
-    old = FIXTURE.read_bytes().decode("utf-8").split("\n")
+    old = state.read_bytes().decode("utf-8").split("\n")
     new = out.read_bytes().decode("utf-8").split("\n")
     assert new[:4] == old[:4]
     assert new[4:6] == ["- **CURRENT STATE, new.** Fresh.", "- Second line."]

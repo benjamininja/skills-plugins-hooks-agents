@@ -20,7 +20,33 @@ this is a behavior adaptation.
   - No explicit branch named at all (`git push`, `git push origin`,
     `git push -u origin`) → implicitly targets whatever's checked out;
     falls back to `git rev-parse --abbrev-ref HEAD` and blocks only if
-    that's `main`/`master`.
+    that's `main`/`master`. The branch is read in this order: the
+    command's own `-C` path; then the top-level `cwd` field of the hook
+    input, which is the folder the tool call starts in (the worktree, in a
+    worktree session); then `CLAUDE_PROJECT_DIR` (the main checkout in a
+    worktree session), then `$PWD`. So a plain push from a worktree on a
+    feature branch passes while the main checkout sits on `main`, and the
+    same push from a worktree on `main` still blocks.
+  - **Rule A (fail-closed, owner's decision on #135).** The `cwd` is used,
+    and so the `CLAUDE_PROJECT_DIR` lookup skipped, only when the whole
+    command (every segment) holds none of: `cd`, `pushd`, `popd`, `chdir`,
+    `Set-Location`, `sl`, `Push-Location`, `Pop-Location`, `env -C`,
+    `env --chdir`, `--chdir`, `--git-dir`, `--work-tree`, `GIT_DIR`,
+    `GIT_WORK_TREE`, `core.worktree`. Any of them as a word, even inside
+    quotes, a comment or a subshell, falls back to the old lookup (`-C`,
+    then `CLAUDE_PROJECT_DIR`, then `$PWD`); quotes and backslashes are
+    also removed before a second look, so `c''d` counts. A directory change
+    is never parsed, and a false match only makes the hook stricter. A
+    name built at run time (`eval`, a variable) is out of reach, like the
+    other cases in the layered-defense note.
+  - Only a string-valued `cwd` directly inside the outermost JSON object
+    counts, not one nested in `tool_input`. JSON `\\` decodes to a
+    backslash. A missing or empty `cwd`, or one that is not a repo, falls
+    through to `CLAUDE_PROJECT_DIR`. A `cwd` that is used and is on a
+    network path blocks, as a network `-C` path does, and is never given
+    to git. Needs `awk` (Git Bash and Linux have it). Source: the Claude
+    Code docs, [worktrees](https://code.claude.com/docs/en/worktrees.md)
+    and [hooks](https://code.claude.com/docs/en/hooks.md) (#135).
   - An explicit non-main branch named (`git push origin my-feature`) →
     always allowed, even if `main` happens to be checked out locally.
 - **`reset --hard` / `clean -f` / `checkout .` / `restore .` stay
@@ -85,8 +111,11 @@ It does not see:
 
 - git run from inside a script, a Makefile, or a shell alias/function
 - `gh api` or any other tool that writes to the remote without `git push`
-- a `cd` in an earlier tool call (a bare `git push` is judged against the
-  session's repo unless `-C <path>` is given)
+- a `cd` in an earlier tool call, or one built at run time. A bare
+  `git push` is judged against the folder the hook input's `cwd` names
+  (where the tool call starts) unless `-C <path>` is given or the command
+  holds a directory change or git-dir override (rule A above), which
+  falls back to `CLAUDE_PROJECT_DIR`
 - a direct terminal `git push`, or another machine
 
 The layer that cannot be bypassed locally is the GitHub ruleset on `main`
@@ -107,7 +136,7 @@ it does not see a branch deleted from a script, an alias or a terminal.
    matcher is `Bash|PowerShell`: both tools pass the command as
    `tool_input.command`.
 3. No other dependencies — works with the shell tools already present in
-   Claude Code's Bash environment (GNU `sed`, `grep`).
+   Claude Code's Bash environment (`sed`, `grep`, `awk`).
 
 ## Tests
 

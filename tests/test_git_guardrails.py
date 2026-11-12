@@ -40,12 +40,19 @@ def find_bash():
 BASH = find_bash()
 
 
-def run_hook(command, project_dir=None, tool="Bash"):
-    payload = json.dumps({
+def run_hook(command, project_dir=None, tool="Bash", hook_cwd=None):
+    body = {
         "hook_event_name": "PreToolUse",
         "tool_name": tool,
         "tool_input": {"command": command, "description": "test"},
-    })
+    }
+    if hook_cwd is not None:
+        # the real key order: session fields and the top-level cwd come before tool_input
+        body = {"session_id": "s", "transcript_path": "t.jsonl", "cwd": str(hook_cwd), **body}
+    return run_payload(json.dumps(body), project_dir)
+
+
+def run_payload(payload, project_dir=None):
     env = {**os.environ, **GIT_ENV}
     if project_dir is not None:
         env["CLAUDE_PROJECT_DIR"] = str(project_dir)
@@ -312,6 +319,173 @@ def test_bare_push_uses_the_dash_C_repo_not_the_session_repo(on_main, on_feature
     assert result.returncode == 2, result.stderr.decode()
     # and the reverse: session on main, push targets a feature-branch repo
     result = run_hook(f'git -C "{on_feature.as_posix()}" push', project_dir=on_main)
+    assert result.returncode == 0, result.stderr.decode()
+
+
+@pytest.fixture
+def worktree_on_feature(on_main):
+    wt = on_main.parent / "wt-feature"
+    git(on_main, "worktree", "add", "-q", "-b", "wt-branch", str(wt))
+    return wt
+
+
+@pytest.mark.parametrize("command", ["git push", "git push origin", "git push -u origin", "git push origin HEAD"])
+def test_bare_push_from_a_worktree_on_a_feature_branch_passes(command, on_main, worktree_on_feature):
+    # CLAUDE_PROJECT_DIR names the main checkout (on main); the hook input's
+    # cwd names the worktree, whose branch is the one that gets pushed.
+    result = run_hook(command, project_dir=on_main, hook_cwd=worktree_on_feature)
+    assert result.returncode == 0, result.stderr.decode()
+
+
+@pytest.mark.parametrize("command", ["git push", "git push -u origin", "git push origin HEAD"])
+def test_bare_push_from_a_worktree_on_main_blocks(command, on_main, tmp_path):
+    other_main = make_repo(tmp_path / "wt-on-main", "main")
+    result = run_hook(command, project_dir=on_main, hook_cwd=other_main)
+    assert result.returncode == 2, result.stderr.decode()
+    assert b"current checked-out branch is 'main'" in result.stderr
+    # and the cwd, not the project dir, decides when the project dir is on a feature branch
+    feature_project = make_repo(tmp_path / "project-on-feature", "my-feature")
+    result = run_hook(command, project_dir=feature_project, hook_cwd=other_main)
+    assert result.returncode == 2, result.stderr.decode()
+
+
+def test_bare_push_in_the_main_checkout_still_blocks_with_its_cwd(on_main):
+    result = run_hook("git push", project_dir=on_main, hook_cwd=on_main)
+    assert result.returncode == 2, result.stderr.decode()
+    assert b"current checked-out branch is 'main'" in result.stderr
+
+
+def test_bare_push_without_a_cwd_field_reads_the_project_dir(on_main, on_feature):
+    assert run_hook("git push", project_dir=on_main).returncode == 2
+    assert run_hook("git push", project_dir=on_feature).returncode == 0
+
+
+@pytest.mark.parametrize("hook_cwd", ["", "/no/such/folder"])
+def test_bare_push_with_an_empty_or_unusable_cwd_falls_through_to_the_project_dir(hook_cwd, on_main, on_feature):
+    assert run_hook("git push", project_dir=on_main, hook_cwd=hook_cwd).returncode == 2
+    assert run_hook("git push", project_dir=on_feature, hook_cwd=hook_cwd).returncode == 0
+
+
+def test_dash_C_path_still_wins_over_the_cwd(on_main, on_feature, worktree_on_feature):
+    result = run_hook(f'git -C "{on_main.as_posix()}" push', project_dir=on_feature, hook_cwd=worktree_on_feature)
+    assert result.returncode == 2, result.stderr.decode()
+
+
+def test_explicit_main_target_still_blocks_from_a_feature_worktree(on_main, worktree_on_feature):
+    result = run_hook("git push origin main", project_dir=on_main, hook_cwd=worktree_on_feature)
+    assert result.returncode == 2, result.stderr.decode()
+
+
+def test_switch_to_main_still_blocks_a_bare_push_from_a_feature_worktree(on_main, worktree_on_feature):
+    result = run_hook("git checkout main && git push", project_dir=on_main, hook_cwd=worktree_on_feature)
+    assert result.returncode == 2, result.stderr.decode()
+
+
+MOVES_GIT_COMMANDS = [
+    # a directory change anywhere in the command
+    "cd {main} && git push",
+    "git status && cd {main} && git push",
+    "(cd {main} && git push)",
+    "bash -c 'cd {main} && git push'",
+    'bash -c "cd {main} && git push"',
+    "git push; cd {main}",
+    "pushd {main} && git push",
+    "popd && git push",
+    "chdir {main} && git push",
+    "Set-Location {main}; git push",
+    "set-location {main}; git push",
+    "sl {main}; git push",
+    "Push-Location {main}; git push",
+    "Pop-Location; git push",
+    "env -C {main} git push",
+    "env --chdir {main} git push",
+    "env --chdir={main} git push",
+    "echo cd # not a real cd\ngit push",
+    "c''d {main} && git push",
+    'c"d" {main} && git push',
+    # a git-dir or work-tree override
+    "git --git-dir={main}/.git push",
+    "git --git-dir {main}/.git push",
+    "git --work-tree={main} push",
+    "GIT_DIR={main}/.git git push",
+    "GIT_WORK_TREE={main} git push",
+    "export GIT_DIR={main}/.git; git push",
+    "$env:GIT_DIR='{main}/.git'; git push",
+    "git -c core.worktree={main} push",
+]
+
+
+@pytest.mark.parametrize("command", MOVES_GIT_COMMANDS)
+def test_cwd_is_not_used_when_the_command_moves_git(command, on_main, worktree_on_feature):
+    # cwd (the worktree, on a feature branch) would allow the push, but the
+    # command may push from somewhere else: fall back to CLAUDE_PROJECT_DIR (main)
+    result = run_hook(command.format(main=on_main.as_posix()), project_dir=on_main, hook_cwd=worktree_on_feature)
+    assert result.returncode == 2, result.stderr.decode()
+    assert b"current checked-out branch is 'main'" in result.stderr
+
+
+@pytest.mark.parametrize("command", [
+    "git fetch && git push",
+    "git push -u origin HEAD",
+    "git status; git log --oneline -1; git push",
+    "echo abcd && git push",                # contains the letters cd, not the word
+    "git push # from the worktree",
+])
+def test_cwd_is_used_when_nothing_moves_git(command, on_main, worktree_on_feature):
+    result = run_hook(command, project_dir=on_main, hook_cwd=worktree_on_feature)
+    assert result.returncode == 0, result.stderr.decode()
+
+
+def test_a_cwd_with_spaces(on_main):
+    wt = on_main.parent / "my work tree"
+    git(on_main, "worktree", "add", "-q", "-b", "spaced", str(wt))
+    assert run_hook("git push", project_dir=on_main, hook_cwd=wt).returncode == 0
+    spaced_main = make_repo(on_main.parent / "main with spaces", "main")
+    result = run_hook("git push", project_dir=on_main, hook_cwd=spaced_main)
+    assert result.returncode == 2, result.stderr.decode()
+
+
+@pytest.mark.skipif(sys.platform == "win32", reason="a backslash cannot be part of a Windows folder name")
+def test_a_posix_cwd_with_a_literal_backslash(on_main):
+    odd = make_repo(on_main.parent / "back\\slash", "my-feature")
+    assert run_hook("git push", project_dir=on_main, hook_cwd=odd).returncode == 0
+
+
+def test_only_the_top_level_cwd_key_counts(on_main, worktree_on_feature):
+    def payload(top_first):
+        tool_input = {"command": "git push", "cwd": on_main.as_posix()}
+        top = {"cwd": str(worktree_on_feature)}
+        rest = {"tool_name": "Bash", "tool_input": tool_input}
+        return json.dumps({**top, **rest} if top_first else {**rest, **top})
+    # a cwd key inside tool_input must not stand in for the real one, before or after it
+    for top_first in (True, False):
+        result = run_payload(payload(top_first), project_dir=on_main)
+        assert result.returncode == 0, result.stderr.decode()
+
+
+def test_text_that_looks_like_a_cwd_key_inside_the_command_is_not_one(on_main, on_feature):
+    # no cwd field at all: the lookup must read CLAUDE_PROJECT_DIR (a feature
+    # branch), not the main checkout the command text names
+    decoy = json.dumps({"tool_name": "Bash",
+                        "tool_input": {"command": f'echo "cwd": "{on_main.as_posix()}"; git push'}})
+    result = run_payload(decoy, project_dir=on_feature)
+    assert result.returncode == 0, result.stderr.decode()
+
+
+@pytest.mark.parametrize("hook_cwd", [
+    "//some-host/share",
+    r"\\some-host\share",
+    r"\\?\UNC\some-host\share",
+    "/??/UNC/some-host/share",
+])
+def test_bare_push_never_opens_a_network_cwd(hook_cwd, on_feature):
+    result = run_hook("git push", project_dir=on_feature, hook_cwd=hook_cwd)
+    assert result.returncode == 2, result.stderr.decode()
+    assert b"network path" in result.stderr
+
+
+def test_a_network_cwd_does_not_block_a_push_that_names_its_branch(on_feature):
+    result = run_hook("git push origin my-feature", project_dir=on_feature, hook_cwd="//some-host/share")
     assert result.returncode == 0, result.stderr.decode()
 
 

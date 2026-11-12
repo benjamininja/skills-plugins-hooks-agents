@@ -8,10 +8,13 @@
     ~/.claude/agents         ->  <Source>\.claude\agents    (one junction)
     ~/.claude/hooks/<name>   ->  <Source>\hooks\<name>      (one per hook)
 
-  <Source> is the main checkout (docs/adr/0011, Revision 3): the closeout
-  pulls hold it and the live clone at one merged commit, so nothing
-  unfinished goes live. Plugins load from the live clone, not from these
-  links.
+  <Source> is the checkout the links point at, in one of two setups:
+    - this machine: the main checkout (docs/adr/0011, Revision 3). The
+      closeout pulls hold it and the live clone at one merged commit, so
+      nothing unfinished goes live. Plugins load from the live clone, not
+      from these links.
+    - a machine without closeout pulls: a live clone that only ever holds
+      merged main and is never edited by hand (docs/adr/0011, Revision 2).
 
   Dry run by default: prints what it would do and changes nothing. Pass -Apply
   to act. Existing junctions are re-pointed. A real directory in the way is

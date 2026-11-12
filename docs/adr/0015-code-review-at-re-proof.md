@@ -1,6 +1,7 @@
 # A code review at re-proof
 
-- Status: accepted
+- Status: accepted; revised 2026-11-11 (Revision 1 below records the
+  first live run; the earlier text is kept as history)
 - Date: 2026-11-09
 - Scope: `plugins/session-dispatch-managers-build-review/` (`session-rules`
   `references/code-review.md`, the close out in `dispatch.md`, the
@@ -131,3 +132,31 @@ PR #109 at three efforts (issuecomment-6730548975):
 - Not yet proven: a live run of the reviewer under the manager's
   settings, and whether code-review keeps to the packet's limits. The
   manager checks the first live run.
+
+## Revision 1 (2026-11-11)
+
+The first live run is done, so the check the Step 0 notes and the
+Consequences leave pending has been made. Tickets: tools #136, #144.
+
+- **The first live run**, on PR #121 (the manager's record is PR #121
+  issuecomment-6809442189; notes on #113 issuecomment-6809450573): the
+  code-review fork ran a `cd` against the limits. The reviewer's
+  fallback held: it dropped the fork's output and applied the ruleset
+  itself at the same effort.
+- **The check is now standing** (#136, PR #143). The manager checks every
+  review's output for the fallback note, and for any fetch, `cd` or
+  write, and records each stray on the PR's ticket. The ruleset is read
+  from `origin/main`, never from the PR branch, since a branch cut before
+  the ruleset existed does not hold it.
+- **Three limits added** by #136's amendment 1, from the next two live
+  runs (the #121 re-check and #138's first round):
+  - `diff` joins the read-only `git -C <worktree>` verbs: `show`, `log`,
+    `grep`, `ls-tree` and `diff`;
+  - the Skill tool loads only the ruleset skill the packet names and
+    code-review, and no other skill;
+  - code-review is run with the effort and the PR URL only, never
+    `--comment`, `--fix` or `--post`.
+
+The limits as they now stand are in `session-rules`
+`references/code-review.md`. Dropping the code-review fork altogether
+stays open for the planner if strays recur.
