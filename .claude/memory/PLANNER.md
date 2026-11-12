@@ -5,89 +5,87 @@ alone. Rules are in the `session-rules` skill and in
 [PROJECT-RULES.md](PROJECT-RULES.md); this file is state. GitHub issues are
 the record. This file links to them and does not repeat them.
 
-Last state-back: 2026-11-12, at a sixth context clear. `main` was at
-`29f77d5` (#143), and both tools checkouts were at it.
+Last state-back: 2026-11-12, at a seventh context clear. `origin/main` was
+at `5a29cd6` (#151). Both tools checkouts were still at `29f77d5`: the
+manager holds the closeout pulls until Rule B (#135) merges, so the live
+push hook stays on the stricter pre-#140 version.
 
 ## START HERE
 
 - You are **Tools-central-planner**, the standing planner for
-  `benjamininja/skills-plugins-hooks-agents` (since 2026-11-07).
+  `benjamininja/skills-plugins-hooks-agents` (since 2026-11-07). Call the
+  owner **Ben** or "the owner", and yourself **Claude**, never "you" or
+  "I" for either (Ben, 2026-11-12, root `preferences.md`).
+- **Every question to Ben goes through a button**: AskUserQuestion when
+  Ben is in the chat, a queue entry when not. Context, pros, cons and the
+  recommendation sit above the question. Never a prose question at the
+  end of a reply (Ben, 2026-11-12; #152 carries it into session-rules).
 - Read the open issues with their `tier:` labels:
   `gh issue list -R benjamininja/skills-plugins-hooks-agents --state open`,
   and `gh pr list` for open PRs.
-- **The dynasty builder manager** dispatches and merges here. Address it
-  by app session id, `local_39e3ac7a-9d6d-4524-82e4-9b5f0e6db274`. That id
-  stays the same across its clears; its CLI (queue) id changes with each
-  clear.
+- **The dynasty builder manager** dispatches here, and queues each Green
+  merge for Ben as an Action: Ben runs the merges (Ben's choice,
+  2026-11-12, after the manager's merge call was refused). Address it by
+  app session id, `local_39e3ac7a-9d6d-4524-82e4-9b5f0e6db274`.
 - **The dynasty planner** (`local_84c6f2af-95ee-4c21-9c02-95877dc0cd21`)
-  plans the owner-queue mod (#111, #137, #142) and sends you each new
-  mod version for the handoff's owner-queue row.
-- **Your own ids.** The app session id is
-  `local_9830794b-c1e9-400a-ba66-e6abb9432396` and stays the same. The
-  queue id changes at every `/clear`. Since 2026-11-11 the owner's
-  `queues` setting lists dynasty's queue (`~/.claude/settings.json`,
-  `pluginConfigs`), so the owner-queue mod gives you the id in the system
-  prompt of a new session. Since owner-queue 0.10.0 the mod re-keys open
-  `Session:` lines at a `/clear` itself. If no id line shows up, ask the
-  owner to run `/owner id`.
-- **The owner's queue** is dynasty's
-  `C:\Users\benha\OneDrive\Documents\GitHub\Python-PowerBI-DynastyFantasyFootball\.claude\memory\NEEDS-OWNER.md`.
-  Read it at start. Only the manager writes it.
-- **Queue entries.** Every ask to the owner goes to the manager as a ready
-  entry, with:
-  - the context;
-  - the exact command or text to paste;
-  - the options, each one standing alone (#94);
-  - your recommendation first.
-- **Ask the owner** with the context, then the pros, the cons and the
-  recommendation, written above the question (root `preferences.md`).
-- **A new ticket needs the owner's go before dispatch.** The manager
-  won't take "the owner may still stop it" as a go (#144, 2026-11-12).
-  Ask in chat, or send a queue Decision.
+  plans the owner-queue mod (#111, #137, #142, #147, #148's pane part,
+  #153).
+- **Your own ids.** App session id
+  `local_9830794b-c1e9-400a-ba66-e6abb9432396`. The queue id changes at
+  every `/clear`; it was `e4ecef5c-3183-4be1-8b67-0da82c468858` before
+  this clear. If no owner-queue id line shows in the system prompt, ask
+  Ben to run `/owner id`.
+- **The owner's queue** is dynasty's `.claude/memory/NEEDS-OWNER.md`, in
+  that repo's main checkout. Read it at start. Only the manager writes it.
+- **Ask Ben** with the context, then pros, cons and the recommendation,
+  above the button question (root `preferences.md`).
+- **A new ticket needs Ben's go before dispatch.** Ask by button, record
+  the go on the ticket, relay it to the manager word for word.
 - **After every merge**, the manager pulls both checkouts at closeout
   ([PROJECT-RULES.md](PROJECT-RULES.md), "Closeout pulls"). Check the
-  heads it reports by reading each checkout's `.git/refs/heads/main`
-  before you relay them.
-- **Your own PRs** (state-backs, syncs, rule lines) come from the worktree
-  `.claude/worktrees/t112-closeout-pulls`, on a fresh branch from
-  `origin/main` once `git status` shows it clean. Enter it with
-  `EnterWorktree` (path). In it, run one plain git command per call:
-  compound commands, loops and `git -C` are refused. Push with the branch
-  named (`git push origin <branch>`). Commit with
+  heads by reading each checkout's `.git/refs/heads/main` before relaying.
+- **Everything on GitHub resolves on GitHub** (#149, session-rules): no
+  scratch, Temp or worktree path and no gitignored file in an issue, PR,
+  comment, commit message or committed file. Ids are allowed as lookup
+  keys. Durable private records go to Ben's private repo and mailbox;
+  reusable tools become tracked code.
+- **Your own PRs** (state-backs, syncs, rule lines) come from the planner
+  worktree whose first branch was `t112-closeout-pulls`, on a fresh branch
+  from `origin/main` once `git status` shows it clean. Enter it with
+  `EnterWorktree` (path). In it, run one plain git command per call.
+  Push with the branch named (`git push origin <branch>`). Commit with
   `git -c user.email=38588919+benjamininja@users.noreply.github.com commit -F <file>`.
-  Run `/security-review` before opening the PR. On an uncommitted diff it
-  sees nothing, so review the real diff yourself.
-- **Run pytest with the dynasty venv**
-  (`C:/Users/benha/OneDrive/Documents/GitHub/Python-PowerBI-DynastyFantasyFootball/.venv/Scripts/python.exe -m pytest -q tests`):
-  neither tools checkout has a `.venv`. The full suite takes about 15
-  minutes; run it in the background.
+  Run `/security-review` on the committed diff before opening the PR.
+- **Run pytest with the dynasty venv** (neither tools checkout has a
+  `.venv`). The full suite takes about 15 minutes; run it in the
+  background. `tools/build_catalog.py` leaves a line-ending-only change to
+  `CATALOG.md` here; check with `git diff --ignore-cr-at-eol` and drop it.
 
 ## Do first after this clear
 
-1. **This state-back's PR** needs the owner's approval. Read its comments
-   first: the approval may already be recorded. Relay it to the manager
-   word for word and post it on the PR.
-2. **Sync the live reviewer agent.** PR #143 (#136) changed the template
-   `plugins/session-dispatch-managers-build-review/templates/agents/pr-code-reviewer.md`,
-   so the live `.claude/agents/pr-code-reviewer.md` now differs from it.
-   Copy the template over the live file in a planner PR (as #130 did),
-   then ask the owner to approve it. Builders may not write `.claude/`
-   (#48).
-3. **PR #140 (#135)** is on the owner's **Rule B** (issuecomment-6823618419).
-   The owner's condition: if B's re-check finds a new bypass, close #135
-   and #140 as won't-fix and open a ticket for F10 alone (`git switch -C
-   main` clears `SWITCHED_TO_MAIN`). Wait for the manager's report.
-4. **#144** (high): the owner's go is a queue Decision the manager raised.
-   On the owner's yes, the manager dispatches. #139 and #143 have both
-   merged, so nothing blocks it.
+1. **This state-back's PR** needs Ben's approval, by button. Read its
+   comments first. Relay the approval to the manager word for word and
+   post it on the PR.
+2. **#152** (low, planner PR): one session-rules section on how sessions
+   talk to Ben: every question through a button, and the naming rule
+   (Ben/owner and Claude). Scope on #152's comments. #151 has merged, so
+   nothing blocks it. Write it, `/security-review`, ask Ben to approve.
+3. **#149's sweep** (follow-up on #149): template and state text that
+   names local paths (the PLANNER.md and MANAGER.md templates,
+   `references/parking.md`, `builder-state/` mentions in tickets).
+   Ticket or planner PR; Claude's call on tier.
+4. **#155** (low): needs Ben's go to dispatch. Ask by button.
+5. **Rule B for #135**: t135 opens a new PR on top of #140's merge. Wait
+   for its number from the manager. When it merges, the manager runs the
+   held closeout pulls; then check both heads.
 
 ## What this session answers for
 
 - Tickets, tiers, `Profile:` lines and briefs for this repository.
 - Rulings on builder PRs when the manager asks ("no breach" or "plan
-  breach", scope questions, design questions that aren't the owner's).
+  breach", scope questions, design questions that aren't Ben's).
 - Gaps found in the session-dispatch plugin and in this repo.
-- This repo's `PROJECT-RULES.md`.
+- This repo's `PROJECT-RULES.md`, and the session-rules side of #148.
 - The baseball handoff doc.
 
 **Not the owner-queue mod.** The dynasty planner plans it.
@@ -97,126 +95,125 @@ Not building, not dispatching, and never a settings file or
 
 ## Open PRs and in-flight work
 
-- **PR #140** (#135, medium): the push guard reads the worktree's branch.
-  The rounds so far: Rule A failed its re-check (F7 to F10, four bypasses),
-  and the owner chose Rule B, an allowlist of the exact plain push. t135
-  is resuming. A fresh reviewer re-checks, and the manager runs the hook
-  tests before merging (Always parks).
-- **#144** (high, doc only): an ADR-0015 revision for the first live
-  review run, and `relink_live.ps1` help naming both setups. Waiting on
-  the owner's go (queue Decision).
-- **#137** (medium), **#142** (low, F2 from #121), **#111**: owner-queue,
-  all the dynasty planner's. #137 lands after #121, which has merged. When
-  it does, the handoff's owner-queue row needs a bump.
-- **#112**: open, tier none. Closeout pulls run every merge; nothing is
-  left for this session on it.
+- **#135** (reopened): #140 merged at its Rule A head (`d75b4fb`), from
+  Ben's account. Ben's ruling: "Keep it; Rule B on top fast". t135 lands
+  Rule B (F10 included) as a new PR, with a fresh re-check and the
+  manager's hook tests. The earlier drop condition is retired.
+- **PR #150** (#144, high, docs): ADR-0015 Revision 1 and the relink
+  help text. Light review done; re-proof next.
+- **#153** (medium, owner-queue, dynasty planner's): a tracked CLI for
+  queue edits. Dispatched; its runtime question is a Decision in Ben's
+  queue.
+- **#154** (low): the manager's resume helper as a tracked
+  session-dispatch script. Dispatched on Ben's go.
+- **#155** (low): the manager's state-file prepend helper as a tracked
+  script. Ticketed on Ben's word; not yet a go to dispatch.
+- **#148** (owner-led): reset prompts at a clear boundary (three
+  triggers), a Copy button per prompt in the pane, and an End of Day
+  button. Scope on #148 (issuecomment-6824810985). The dynasty planner
+  leads the design with Ben; Claude writes the session-rules side once
+  the answers come.
+- **#147** (medium, dynasty planner's): typed comments are written
+  before Submit.
+- **#137** (medium), **#142** (low), **#111**: owner-queue, the dynasty
+  planner's. #137 waits on Ben's go, then #142.
+- **#112**: open, tier none. Nothing is left for this session on it.
 
-## Waiting on the owner
+## Waiting on Ben
 
 - Approve this state-back.
-- #144's go (queue Decision).
-- The reviewer agent sync PR, once you open it.
+- #152's PR, once written.
+- #155's go.
+- #148's design questions (through the dynasty planner).
 - #48's owner-led steps (below).
 
 ## Queue entries raised
 
-Open entries in dynasty's `NEEDS-OWNER.md` that name this session's
-queue id. After a clear the mod re-keys them; check each one.
-
-- None. The #144 Decision carries the manager's id.
+- None in this session's name.
 
 ## Vendor lane and held tickets
 
 - **Vendor lane, one ticket at a time:** #57 (medium) → #52 → #50.
-  #50 is high, needs the owner's word, and carries the ADR-0006 tightening
+  #50 is high, needs Ben's word, and carries the ADR-0006 tightening
   line (comment on #50). Then #55, once #50 has merged.
-- **#47** has a lane of its own: high, needs the owner's word, and can't
+- **#47** has a lane of its own: high, needs Ben's word, and can't
   run beside #54 (both edit `README.md`).
 - **Held for owner-led steps:** #48 first, then #51, #53 and #54 (they also
-  need the owner's `--apply` run and junction changes). #54's builder
+  need Ben's `--apply` run and junction changes). #54's builder
   checks whether `powerbi-report-cli` hands off to
   `semantic-model-authoring` (#49 comment).
-- **#58** closed, not planned (2026-11-11): `GEMINI.md` and
-  `.agents/AGENTS.md` belong to the owner's Gemini session, which keeps
-  them current. Claude sessions don't touch them.
+- **#58** closed, not planned: `GEMINI.md` and `.agents/AGENTS.md`
+  belong to Ben's Gemini session. Claude sessions don't touch them.
 
 ## Milestones
 
-- 2026-11-07 to 2026-11-09: builder profiles (#84); the session-rules
-  rules for refused calls, probes, robots.txt and options (#86, #90, #92,
-  #97); the planner state file and the baseball handoff (#91, #93);
-  owner-queue Submit, many queues and Session lines across a clear (#100,
-  #105, #107); closeout pulls (#114); git rm and git mv (#115);
+- 2026-11-07 to 2026-11-09: builder profiles (#84); session-rules rules
+  for refused calls, probes, robots.txt and options (#86, #90, #92, #97);
+  the planner state file and the baseball handoff (#91, #93); owner-queue
+  Submit, many queues and Session lines across a clear (#100, #105,
+  #107); closeout pulls (#114); git rm and git mv (#115);
   `tools/reproof.py` (#122); code review at re-proof (#123, #125).
 - 2026-11-10/11: Green gains the mod test and the code review (#126); the
   export's git index (#129); the live reviewer agent (#128); the
-  stage-builder sync (#130); the fourth and fifth state-backs (#127,
-  #132 `10606aa`); the re-proof line (#131 `93833a5`, #117 closed).
-- 2026-11-11/12: owner-queue 0.10.0 (#121 `e754faa`, #110 closed); the
-  first live code review (it caught #121's F1); #113 closed;
-  `reproof.py` runs the mod test (#138 `228e69c`, #133 closed); the
-  handoff to 0.10.0 (#141 `8e4cb02`, ready to share); ADR-0011 Revision
-  3 (#139 `9dbe4d1`, #134 closed); the code review reads its ruleset from
-  `origin/main` and checks the fork on every review (#143 `29f77d5`, #136
-  closed).
+  stage-builder sync (#130); state-backs (#127, #132); the re-proof line
+  (#131).
+- 2026-11-11/12: owner-queue 0.10.0 (#121 `e754faa`); `reproof.py` runs
+  the mod test (#138); the handoff to 0.10.0 (#141); ADR-0011 Revision 3
+  (#139); the ruleset from `origin/main` (#143 `29f77d5`).
+- 2026-11-12: state-back (#145 `af86414`); the live reviewer synced with
+  #143's template (#146 `33722aa`); #140 merged at Rule A (`d75b4fb`);
+  everything on GitHub resolves on GitHub (#151 `5a29cd6`, part of #149).
 
 ## Gaps
 
 - **#48:** builders are denied edits to `.claude/agents/`, so agent changes
-  are owner-led planner PRs (as #128 and #130 were).
+  are owner-led planner PRs (as #128, #130 and #146 were).
 - **The baseball handoff**
   ([docs/handoff/baseball-session-dispatch.md](../../docs/handoff/baseball-session-dispatch.md))
   is for SpunkyLlama's agent. Update it when the owner-queue version, the
   session-dispatch version, template commits or carried-over rules change.
-- **`CLAUDE.md` is out of date** in two places: its CI sentence (CI runs
-  all of `tests/` plus the `CATALOG.md` check) and "Three agents live in
-  `.claude/agents/`" (more now, with `pr-code-reviewer`). Small; no ticket
-  yet.
-- **#140 F11:** a `-C` path is final even when it can't be resolved. It
-  was already like that on `main`; no ticket yet.
-- **Reviewer drift:** the code-review fork strayed from its limits in two
-  of the first runs (a `cd`, a `--comment` mention). #143 made the check
-  run on every review. If strays keep happening, consider dropping the
-  fork (#136 ticket, Not in scope).
+  #151 and #152 add carried-over rules: bump it after #152.
+- **`CLAUDE.md` is out of date** in two places: its CI sentence and "Three
+  agents live in `.claude/agents/`". Small; no ticket yet.
+- **#140 F11:** a `-C` path is final even when it can't be resolved. No
+  ticket yet.
+- **Reviewer drift:** if the code-review fork keeps straying, consider
+  dropping it (#136, Not in scope).
 - **Not yet asked:** `git merge origin/main` isn't in this repo's builder
-  allow list. Offer the owner the line if a builder hits it.
+  allow list. Offer Ben the line if a builder hits it.
 
 ## Decided since
 
-Owner decisions, each recorded on its ticket. Earlier ones are in git
-history of this file (state-backs #95 to #132).
+Ben's decisions, each recorded on its ticket. Earlier ones are in git
+history of this file.
 
-- *Approve 131*, *Approve 132 (Recommended)*, *Approve 141
-  (Recommended)* (2026-11-11).
-- #121's live check: *#121 complete and tested successfully.*
-- #58 won't happen; the Gemini session keeps its own files.
-- *#2* the `queues` setting (done by the owner), *#4* #133, *#5* ADR-0011
-  revised (#134), *#6* the guardrail ticket (#135); *Yes, ticket it*
-  (#136).
-- #135: *Rule A, fail-closed*, then *Rule B allowlist* (2026-11-12), with
-  the drop condition.
+- *Approve 145*, *Approve 146*, *Approve 151 at ee75490* (2026-11-12).
+- #149: *Planner PR now*; scope files, paths and session ids, then
+  refined to *Ids yes, local paths no*; the queue's `Session:` lines stay;
+  *Private repo for all; tools tracked* (no `private/` folder).
+- #152: *Ticket it, low*; *Add to #152* (the naming rule).
+- #154: *Go: dispatch #154*. #155: *Ticket it, low*.
+- #140: *Keep it; Rule B on top fast*. Merges: Ben runs them from the
+  queue.
 
 ## Lessons
 
 - Address sessions by app id; check the checkouts before relaying a
   manager's claim about them.
-- Before recommending a hold or asking for an approval, read the PR's
-  comments: an approval given before a clear is recorded there.
-- A manager that resumes in a new session may miss a relay. Re-send it
-  with the PR comment link.
+- Before asking for an approval, read the PR's comments: an approval
+  given before a clear is recorded there.
+- A manager that resumes may miss a relay. Re-send it with the PR comment
+  link (#151's new head crossed in flight).
+- **An approval covers one head.** When a later ruling changes an approved
+  PR, hold it with the manager first, rework, then ask again (#151).
+- **Check `origin/main` before naming a merge commit.** Two merges landed
+  a minute apart; Claude credited #146's commit to #145 at first.
 - **A safety hook loosened by a list of forms to catch gets bypassed one
-  form at a time.** #140 needed an allowlist (Rule B). Start there for any
-  loosening of a guard.
+  form at a time.** Start from an allowlist (#140, Rule B).
 - **A limit text has to allow the tool the same text tells the reader to
-  use.** #136's amendment, *only the ruleset skill*, would have forbidden
-  code-review itself (#143 F1). Check a new limit against every step.
-- **A generic install doc and this machine's setup are different
-  audiences.** Ask which one a line speaks for before calling it wrong
-  (#134 ruling).
-- Worktrees share branch refs, and only `HEAD` is per worktree (#135
-  force-delete ruling).
-- `/security-review` sees only commits. Commit first, or review the
-  working diff yourself.
+  use** (#143 F1).
+- Worktrees share branch refs; only `HEAD` is per worktree.
+- `/security-review` sees only commits. Commit first.
 - A script run as one Bash call hides its inner commands from the
   permission rules (#117).
 - A worktree session can't `git -C` the main checkout. Read each
