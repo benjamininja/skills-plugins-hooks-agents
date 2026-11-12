@@ -1,7 +1,8 @@
 # A code review at re-proof
 
 - Status: accepted; revised 2026-11-11 (Revision 1 below records the
-  first live run; the earlier text is kept as history)
+  first live run) and 2026-11-12 (Revision 2 drops the code-review
+  fork); the earlier text is kept as history
 - Date: 2026-11-09
 - Scope: `plugins/session-dispatch-managers-build-review/` (`session-rules`
   `references/code-review.md`, the close out in `dispatch.md`, the
@@ -160,3 +161,38 @@ Consequences leave pending has been made. Tickets: tools #136, #144.
 The limits as they now stand are in `session-rules`
 `references/code-review.md`. Dropping the code-review fork altogether
 stays open for the planner if strays recur.
+
+## Revision 2 (2026-11-12): the code-review fork is dropped
+
+Strays recurred: three on one day, one of them running code. Ticket:
+tools #164.
+
+- **#157's and #163's reviews:** the fork said `--fix` was passed,
+  though the packet passed only the effort and the PR URL. The likely
+  cause was the limits naming the flags. Separately, on #163 the
+  reviewer itself began a Bash call with a `cd`.
+- **#159's review (#135):** the fork ran the PR's hook against a scratch
+  repo. The limits forbid any script. The reviewer dropped the output
+  and found F1 to F9 with the ruleset alone, at high.
+
+A limit's wording can't stop a general-purpose fork from running code,
+and the reviewer's `tools:` line can't hold it.
+
+Ben's ruling, in the Tools planner's chat, by button: "Drop the fork
+(Recommended)", then "Go as planned (Recommended)" for this revision.
+
+- **The reviewer runs no code-review and starts no agent.** It applies
+  the ruleset to the diff itself at the packet's effort. At `low` it
+  reads the code each hunk calls. At `high` it also traces callers and
+  inputs and looks for the breaking input. A defect outside the ruleset
+  is reported as `general`.
+- **The fallback becomes the method.** The alternative this ADR first
+  rejected, "the ruleset applied by the reviewer alone", is now the
+  decision. Q2's "code-review" is withdrawn.
+- **The stray check stays.** The reviewer's output closes with a line on
+  its own calls, and the manager records any fetch, `cd`, script or
+  write on the PR's ticket.
+- **Cost:** code-review's general bug recipe is gone. The `high` read
+  and the `general` class carry its part. If reviews start missing bugs
+  that land as fixes, the "Updating a ruleset" loop is the place to add
+  them.
