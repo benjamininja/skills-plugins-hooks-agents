@@ -134,6 +134,36 @@ that it stands alone.
 Only the pane writes an `Answer:` or a `Note:` line; no agent writes, edits
 or removes one.
 
+## Edit the queue from a script
+
+The builder manager, the only writer of a queue, edits it with a command line
+that uses this plugin's parser (`hooks/parse.ts`), so a script cannot break
+the format the pane reads. It needs Node 22 or later (it runs the TypeScript
+file as it is). The first argument is the queue file.
+
+```bash
+node plugins/owner-queue/hooks/queue-cli.ts <queue file> add decision --block-file <file>
+node plugins/owner-queue/hooks/queue-cli.ts <queue file> remove --title "<title>"
+node plugins/owner-queue/hooks/queue-cli.ts <queue file> prune --keep "<text>"
+```
+
+- `add decision|action --block-file <file>` puts one new open entry at the top
+  of that section. The file holds exactly one `### [ ] Title` entry. It is
+  refused if it holds an `Answer:` or `Note:` line, a `##` heading, an unclosed
+  code fence, or a title already in that section.
+- `remove --title "<title>"` removes one entry, from its title line to the next
+  heading, whatever its box. It is refused if the title is missing or not
+  unique, or if the entry holds a `Note:` line. With `--with-notes` the Notes
+  leave with the entry; that is the only way a `Note:` or `Answer:` line is
+  ever removed.
+- `prune [--keep "<text>"]...` removes the ticked `[x]` Actions, except those
+  whose title holds a `--keep` text. A ticked Action that holds a `Note:` line
+  stays, and is listed, unless `--with-notes` is given.
+- Line endings (CRLF too) and every other byte stay as they were. An edit is
+  checked after it is made: if any `Answer:` or `Note:` line outside the
+  removed entry would differ, or the open entries would not be as expected,
+  nothing is written. A refusal prints `refused: <why>` and exits 1.
+
 ## Install (one shared copy, read at every launch)
 
 Name the folder in the `env` block of `~/.claude/settings.json`. Point it at
