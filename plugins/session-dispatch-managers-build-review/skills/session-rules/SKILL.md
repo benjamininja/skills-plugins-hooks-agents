@@ -65,7 +65,11 @@ double quote. Template:
 ## Never, in any role
 
 - A push to the main branch, a force push, `--no-verify`.
-- `gh pr merge --admin`, `gh workflow run`, `gh secret`.
+- `gh pr merge --admin`, `gh secret`.
+- Dispatching a workflow, by any route: `gh workflow run`, `gh api` on
+  a workflow's `dispatches` endpoint, or the GitHub web page. A dispatch
+  is the owner's. An agent acts through the owner's token, so a check
+  on who started the run can't tell them apart; this rule is the guard.
 - Writing or editing a settings file, a permission file,
   `.claude/dispatch.json` or the owner's list of projects for the
   dispatch script. They are the owner's; an agent proposes text
