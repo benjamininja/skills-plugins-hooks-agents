@@ -81,27 +81,33 @@ Claude Code discovers skills **one level deep only** — `~/.claude/skills/<name
 
 Link each skill individually instead, as a **directory junction** (no admin or Developer Mode needed, unlike `-ItemType SymbolicLink`; see [ADR-0003](docs/adr/0003-junction-vs-symlink-fallback.md)). Agents and hooks are linked the same way.
 
-**Link from a live clone, not from the checkout you edit.** Whatever the links point at is what every session runs, immediately. Pointing them at a working checkout once left a half-finished re-vendor live for ten weeks (see [ADR-0011](docs/adr/0011-unified-distribution-architecture.md), Revision 2). So keep a second clone that only ever holds merged `main` and is never edited by hand:
+**Whatever the links point at is what every session runs, immediately.** Pointing them at a checkout with unfinished work once left a half-finished re-vendor live for ten weeks (see [ADR-0011](docs/adr/0011-unified-distribution-architecture.md), Revision 2). There are two setups that keep unfinished work from going live; [ADR-0011 Revision 3](docs/adr/0011-unified-distribution-architecture.md) records which one this machine uses and why.
+
+- **This machine: links on the main checkout, held by closeout pulls.** The skill, agent and hook links point into the main checkout (`C:\Users\benha\OneDrive\Documents\GitHub\skills-plugins-hooks-agents`). Agents never switch branches or commit there, and after each merge the closeout pulls (#112) bring it and the live clone (`C:\Users\benha\claude-live\skills-plugins-hooks-agents`, where plugins load from) to the same merged commit. A hand edit in the main checkout goes live at once.
+- **A machine without closeout pulls: links from a live clone.** Keep a second clone that only ever holds merged `main` and is never edited by hand, and point the links at it. Keep it outside OneDrive so files are never evicted or locked mid-read.
 
 ```powershell
+# a machine without closeout pulls: make the live clone
 git clone https://github.com/benjamininja/skills-plugins-hooks-agents.git C:\Users\benha\claude-live\skills-plugins-hooks-agents
 
 # dry run: prints every link it would create or re-point, changes nothing
-.\tools\relink_live.ps1 -Source C:\Users\benha\claude-live\skills-plugins-hooks-agents
+.\tools\relink_live.ps1 -Source <checkout the links point at>
 
 # act; -Prune also removes links to skills/hooks that no longer exist on main
-.\tools\relink_live.ps1 -Source C:\Users\benha\claude-live\skills-plugins-hooks-agents -Apply -Prune
+.\tools\relink_live.ps1 -Source <checkout the links point at> -Apply -Prune
 ```
+
+`-Source` is the main checkout on this machine, or the live clone on a machine without closeout pulls.
 
 `tools/relink_live.ps1` links `~/.claude/skills/<name>` (one per folder under `skills/`), `~/.claude/agents` (one junction to `.claude/agents`) and `~/.claude/hooks/<name>` (one per folder under `hooks/`). It never deletes a real directory, and it removes links without recursing into their targets.
 
-**After every merge to `main`**, update the live clone, then re-run the script only if a skill or hook was added or removed:
+**After every merge to `main`**, update the checkout the links point at, then re-run the script only if a skill or hook was added or removed. On this machine the closeout pulls do this for both checkouts; elsewhere:
 
 ```powershell
 git -C C:\Users\benha\claude-live\skills-plugins-hooks-agents pull --ff-only
 ```
 
-**Junction caveat**: junctions pin an absolute local path baked in at creation time. If the live clone is moved or renamed, every junction breaks silently (skills stop resolving, hook commands are not found) — re-run the script with the new path. Keep the live clone outside OneDrive so files are never evicted or locked mid-read. Each `skills/<name>/SKILL.md` is also self-contained and loadable on its own if you only want one.
+**Junction caveat**: junctions pin an absolute local path baked in at creation time. If the checkout the links point at is moved or renamed, every junction breaks silently (skills stop resolving, hook commands are not found) — re-run the script with the new path. Each `skills/<name>/SKILL.md` is also self-contained and loadable on its own if you only want one.
 
 ### Cross-tool discovery (VS Code Agents window / GitHub Copilot)
 
