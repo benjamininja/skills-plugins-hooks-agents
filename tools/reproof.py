@@ -195,10 +195,11 @@ def main(argv: list[str], repo: Path = ROOT) -> int:
         return finish()
     record("merge", PASS, f"tree={tree[:12]}")
 
-    code, out, err = git(repo, "diff", "--name-only", base, tree)
-    plugin_changed = code != 0 or any(
-        line.startswith(PLUGIN_DIR + "/") for line in out.splitlines()
-    )
+    code, _, err = git(repo, "diff", "--quiet", base, tree, "--", PLUGIN_DIR)
+    plugin_changed = code != 0
+    plugin_note = ""
+    if code not in (0, 1):
+        plugin_note = f"git diff exited {code}, ran as a precaution: {tail(err, 3)}\n"
 
     work = Path(tempfile.mkdtemp(prefix="rp-")).resolve()
     try:
@@ -240,7 +241,7 @@ def main(argv: list[str], repo: Path = ROOT) -> int:
             record(
                 "plugin test",
                 PASS if code == 0 else FAIL,
-                tail(text, 3 if code == 0 else 40),
+                plugin_note + tail(text, 3 if code == 0 else 40),
             )
     finally:
         remove_tree(work)
