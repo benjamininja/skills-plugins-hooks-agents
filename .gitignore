@@ -8,3 +8,6 @@ pytest-cache-files-*/
 .claude/worktrees/
 .venv/
 builder-state/
+
+# The owner's local-only store: never committed, never named on GitHub
+private/
