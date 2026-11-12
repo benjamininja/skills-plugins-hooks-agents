@@ -120,7 +120,7 @@ test('add reaches a heading with no blank line after it, or none at all', () => 
   )
   expect(tight.line).toBe(2)
   expect(add('## Actions', 'action', BLOCK).text).toBe(
-    '## Actions\n\n### [ ] New\n- Context: y\n',
+    '## Actions\n\n### [ ] New\n- Context: y',
   )
   expect(add('## Actions\n', 'action', BLOCK).text).toBe(
     '## Actions\n\n### [ ] New\n- Context: y\n',
@@ -249,6 +249,98 @@ test('prune lays the file out as it was, and a file with nothing ticked is uncha
   )
 })
 
+const lone = (text: string) => ({
+  cr: (text.match(/\r(?!\n)/g) ?? []).length,
+  lf: (text.match(/(?<!\r)\n/g) ?? []).length,
+})
+
+test('F1: a label with a space or marks around it is still an Answer or Note line', () => {
+  for (const line of [
+    '- Answer : (a) one',
+    '- **Answer** : (a) one',
+    '* Answer **: x',
+    '- Note : said',
+    '- **Note**: said',
+  ])
+    expect(failure(() => add(SMALL, 'decision', `### [ ] New\n${line}`))).toContain(
+      'Answer or Note',
+    )
+  const spaced = SMALL.replace('- Context: x', '- Context: x\n- Note : by hand')
+  expect(failure(() => remove(spaced, 'Old'))).toContain('holds a Note')
+  const action = '## Actions\n\n### [x] A\n- Steps: a\n- **Note** : by hand\n'
+  expect(prune(action).held).toEqual(['A'])
+  expect(prune(action).text).toBe(action)
+})
+
+test('F2: a code fence that is never closed stops every command', () => {
+  const stray = `## Actions\n\n### [x] A\n- Steps: a\n${F}\n\n### [ ] B\n- Steps: b\n\n## Decisions\n\n### [ ] D\n- Context: d\n`
+
+  expect(failure(() => remove(stray, 'A'))).toContain('opened at line 5 is never closed')
+  expect(failure(() => remove(stray, 'B', true))).toContain('never closed')
+  expect(failure(() => prune(stray))).toContain('never closed')
+  expect(failure(() => add(stray, 'decision', BLOCK))).toContain('never closed')
+  const m = memory({ 'q.md': stray })
+  expect(run(['q.md', 'prune'], m.io)).toBe(1)
+  expect(m.writes).toEqual([])
+})
+
+test('F3: add to a CRLF file that ends on its heading keeps every line end', () => {
+  const ended = add('## Actions\r\n', 'action', BLOCK).text
+  const mid = add('## Decisions\r\n\r\n## Actions\r\n', 'action', BLOCK).text
+  const open = add('## Decisions\r\n\r\n## Actions', 'action', BLOCK).text
+
+  expect(ended).toBe('## Actions\r\n\r\n### [ ] New\r\n- Context: y\r\n')
+  expect(mid).toBe('## Decisions\r\n\r\n## Actions\r\n\r\n### [ ] New\r\n- Context: y\r\n')
+  expect(open).toBe('## Decisions\r\n\r\n## Actions\r\n\r\n### [ ] New\r\n- Context: y')
+  for (const text of [ended, mid, open]) expect(lone(text)).toEqual({ cr: 0, lf: 0 })
+  const pruned = prune('## Actions\r\n\r\n### [x] A\r\n- Steps: a\r\n').text
+  expect(pruned).toBe('## Actions\r\n')
+  expect(add(pruned, 'action', BLOCK).text).toBe(ended)
+})
+
+test('F4: removing the last entry of a CRLF file with no final line break leaves no stray CR', () => {
+  const two = '## Actions\r\n\r\n### [ ] A\r\n- Steps: a\r\n\r\n### [ ] B\r\n- Steps: b'
+  const left = '## Actions\r\n\r\n### [ ] A\r\n- Steps: a'
+
+  expect(remove(two, 'B').text).toBe(left)
+  expect(prune(two.replace('### [ ] B', '### [x] B')).text).toBe(left)
+  expect(lone(left)).toEqual({ cr: 0, lf: 0 })
+})
+
+test('F5: a block with any "##" heading is refused, Decisions and Actions or not', () => {
+  const bad = (block: string) => failure(() => add(SMALL, 'action', block))
+
+  expect(bad('### [ ] New\n- Context: y\n## Notes')).toContain('exactly one entry')
+  expect(bad('### [ ] New\n- Context: y\n## Decisions')).toContain('exactly one entry')
+})
+
+test('F6: add refuses a section that holds text ahead of its first entry', () => {
+  const before = '## Actions\n\nSome intro.\n\n### [ ] A\n- Steps: s\n'
+  const alone = '## Actions\n\nIntro only.\n'
+
+  expect(failure(() => add(before, 'action', BLOCK))).toContain('between its heading')
+  expect(failure(() => add(alone, 'action', BLOCK))).toContain('between its heading')
+})
+
+test('F7: a title used in both sections is removed by naming its kind', () => {
+  const both =
+    '## Decisions\n\n### [ ] Same\n- Context: x\n\n## Actions\n\n### [x] Same\n- Steps: a\n'
+
+  expect(failure(() => remove(both, 'Same'))).toContain('--kind')
+  expect(remove(both, 'Same', false, 'action').text).toBe(
+    '## Decisions\n\n### [ ] Same\n- Context: x\n\n## Actions\n',
+  )
+  expect(remove(both, 'Same', false, 'decision').text).toBe(
+    '## Decisions\n\n## Actions\n\n### [x] Same\n- Steps: a\n',
+  )
+})
+
+test('F11: every entry the parser lists is found by title and kind, in LF and CRLF', () => {
+  for (const text of [FILE, FILE.replaceAll('\n', '\r\n')])
+    for (const item of parse(text))
+      expect(remove(text, item.title, true, item.kind).count > 0).toBe(true)
+})
+
 const memory = (files: Record<string, string>) => {
   const out: string[] = []
   const writes: string[] = []
@@ -301,4 +393,32 @@ test('the command line refuses without writing, and says why', () => {
   expect(m.out[m.out.length - 1]).toContain('no file missing.md')
   expect(m.writes).toEqual([])
   expect(m.files['q.md']).toBe(FILE)
+})
+
+test('F7 and F8: the command line names a kind, and does not write over a file that changed', () => {
+  const both =
+    '## Decisions\n\n### [ ] Same\n- Context: x\n\n## Actions\n\n### [x] Same\n- Steps: a\n'
+  const m = memory({ 'q.md': both })
+
+  expect(run(['q.md', 'remove', '--title', 'Same'], m.io)).toBe(1)
+  expect(run(['q.md', 'remove', '--title', 'Same', '--kind', 'both'], m.io)).toBe(1)
+  expect(run(['q.md', 'remove', '--title', 'Same', '--kind', 'action'], m.io)).toBe(0)
+  expect(m.files['q.md']).toBe('## Decisions\n\n### [ ] Same\n- Context: x\n\n## Actions\n')
+
+  let reads = 0
+  const out: string[] = []
+  const writes: string[] = []
+  const io: Io = {
+    read: path => {
+      if (path === 'q.md') return ++reads === 1 ? FILE : `${FILE}- Note: late\n`
+
+      return BLOCK
+    },
+    write: path => writes.push(path),
+    print: line => out.push(line),
+  }
+
+  expect(run(['q.md', 'add', 'action', '--block-file', 'b.md'], io)).toBe(1)
+  expect(out[0]).toContain('changed while it was being edited')
+  expect(writes).toEqual([])
 })
