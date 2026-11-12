@@ -273,8 +273,8 @@ check_segment() {
     sw_opts=$(echo "$sw_code" | sed -E 's/[[:space:]]--([[:space:]].*)?$//')
     if [[ -n "$set_hit" ]]; then
       SWITCHED_TO_MAIN="$set_switch"
-    elif echo "$sw_opts" | grep -qE "git checkout${ARGS}(-[qfmtld]*[bB][^[:space:]]*|--orphan|--orphan=[^[:space:]]*)${END}" \
-       || echo "$sw_opts" | grep -qE "git switch${ARGS}(-[dfmqt]*[cC][^[:space:]]*|--create|--force-create|--orphan|--(create|force-create|orphan)=[^[:space:]]*)${END}"; then
+    elif echo "$sw_opts" | grep -qE "git checkout${ARGS}(-[qfmtl]*[bB][^[:space:]]*|--orphan|--orphan=[^[:space:]]*)${END}" \
+       || echo "$sw_opts" | grep -qE "git switch${ARGS}(-[fmqt]*[cC][^[:space:]]*|--create|--force-create|--orphan|--(create|force-create|orphan)=[^[:space:]]*)${END}"; then
       SWITCHED_TO_MAIN=""
     else
       for t in "$sw_all" "$flat"; do

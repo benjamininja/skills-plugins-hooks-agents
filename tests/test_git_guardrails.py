@@ -555,6 +555,11 @@ SWITCH_TO_MAIN_BY_CREATE = [
     "git checkout main; git checkout -xb next; git push -u origin",
     "git checkout main; git switch -bx; git push -u origin",
     "git checkout main; git switch -- -c; git push -u origin",
+    # re-check F14: git refuses -d (--detach) with a create, so the create fails and
+    # the switch to main stands
+    "git checkout main; git checkout -dbx; git push -u origin",
+    "git checkout main; git switch -dcx; git push -u origin",
+    "git checkout main; git checkout -qdbx; git push -u origin",
 ]
 
 
