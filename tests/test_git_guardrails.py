@@ -329,15 +329,29 @@ def worktree_on_feature(on_main):
     return wt
 
 
-@pytest.mark.parametrize("command", ["git push", "git push origin", "git push -u origin", "git push origin HEAD"])
-def test_bare_push_from_a_worktree_on_a_feature_branch_passes(command, on_main, worktree_on_feature):
+PLAIN_PUSHES = [
+    "git push",
+    "git push -u",
+    "git push --set-upstream",
+    "git push origin",
+    "git push -u origin",
+    "git push --set-upstream origin",
+    "git push upstream",
+    "git push my-remote.v2_x",
+    "  git push   origin  ",
+]
+
+
+@pytest.mark.parametrize("tool", ["Bash", "PowerShell"])
+@pytest.mark.parametrize("command", PLAIN_PUSHES)
+def test_plain_push_from_a_worktree_on_a_feature_branch_passes(command, tool, on_main, worktree_on_feature):
     # CLAUDE_PROJECT_DIR names the main checkout (on main); the hook input's
     # cwd names the worktree, whose branch is the one that gets pushed.
-    result = run_hook(command, project_dir=on_main, hook_cwd=worktree_on_feature)
+    result = run_hook(command, project_dir=on_main, hook_cwd=worktree_on_feature, tool=tool)
     assert result.returncode == 0, result.stderr.decode()
 
 
-@pytest.mark.parametrize("command", ["git push", "git push -u origin", "git push origin HEAD"])
+@pytest.mark.parametrize("command", ["git push", "git push -u origin"])
 def test_bare_push_from_a_worktree_on_main_blocks(command, on_main, tmp_path):
     other_main = make_repo(tmp_path / "wt-on-main", "main")
     result = run_hook(command, project_dir=on_main, hook_cwd=other_main)
@@ -381,7 +395,51 @@ def test_switch_to_main_still_blocks_a_bare_push_from_a_feature_worktree(on_main
     assert result.returncode == 2, result.stderr.decode()
 
 
-MOVES_GIT_COMMANDS = [
+NOT_A_PLAIN_PUSH = [
+    # F7: another way to run in a different folder
+    "Start-Process -WorkingDirectory {main} -Wait -NoNewWindow pwsh -ArgumentList '-c','git push'",
+    "pwsh -wd {main} -c 'git push'",
+    "pwsh -WorkingDirectory {main} -Command 'git push'",
+    "$ExecutionContext.SessionState.Path.SetLocation('{main}'); git push",
+    "find . -maxdepth 0 -execdir git push \\;",
+    # F8: a cd spelled so that no word list finds it
+    "$'\\x63d' {main} && git push",
+    "$(printf c)d {main} && git push",
+    "v=c; ${{v}}d {main} && git push",
+    # F9: a config or flag that sends the push to main
+    "git -c remote.origin.push=HEAD:main push",
+    "git -c push.default=upstream push",
+    "git push --mirror",
+    # close to a plain push, but not one
+    "git push origin HEAD",
+    "git push -u origin HEAD",
+    "git push -f",
+    "git push --force-with-lease",
+    "git push --tags",
+    "git push --all",
+    "git push --follow-tags",
+    "git push -u -f origin",
+    "git push origin -u",
+    "git push -- origin",
+    "git push ./origin",
+    "git push --repo origin",
+    "git push 2>&1",
+    "git push > log",
+    "git push # comment",
+    "git push;",
+    "git push &",
+    "git push | cat",
+    "git fetch && git push",
+    "git status; git push",
+    "(git push)",
+    "`git push`",
+    "echo $(git push)",
+    "bash -c 'git push'",
+    "env GIT_DIR={main}/.git git push",
+    "git.exe push",
+    "git -C . push",
+    "git --no-pager push",
+    "git push\ngit status",
     # a directory change anywhere in the command
     "cd {main} && git push",
     "git status && cd {main} && git push",
@@ -415,24 +473,87 @@ MOVES_GIT_COMMANDS = [
 ]
 
 
-@pytest.mark.parametrize("command", MOVES_GIT_COMMANDS)
-def test_cwd_is_not_used_when_the_command_moves_git(command, on_main, worktree_on_feature):
+@pytest.mark.parametrize("command", NOT_A_PLAIN_PUSH)
+def test_cwd_is_not_used_unless_the_command_is_exactly_a_plain_push(command, on_main, worktree_on_feature):
     # cwd (the worktree, on a feature branch) would allow the push, but the
-    # command may push from somewhere else: fall back to CLAUDE_PROJECT_DIR (main)
+    # command is not a plain push and may push from somewhere else, or to
+    # main: fall back to CLAUDE_PROJECT_DIR (main)
     result = run_hook(command.format(main=on_main.as_posix()), project_dir=on_main, hook_cwd=worktree_on_feature)
     assert result.returncode == 2, result.stderr.decode()
     assert b"current checked-out branch is 'main'" in result.stderr
 
 
 @pytest.mark.parametrize("command", [
-    "git fetch && git push",
-    "git push -u origin HEAD",
-    "git status; git log --oneline -1; git push",
-    "echo abcd && git push",                # contains the letters cd, not the word
-    "git push # from the worktree",
+    "Start-Process -WorkingDirectory {main} -Wait -NoNewWindow pwsh -ArgumentList '-c','git push'",
+    "pwsh -wd {main} -c 'git push'",
+    "$ExecutionContext.SessionState.Path.SetLocation('{main}'); git push",
+    "Set-Location {main}; git push",
+    "Push-Location {main}; git push",
+    "$env:GIT_DIR='{main}/.git'; git push",
+    "git push origin HEAD",
+    "git push --mirror",
+    "git push; Write-Output done",
 ])
-def test_cwd_is_used_when_nothing_moves_git(command, on_main, worktree_on_feature):
-    result = run_hook(command, project_dir=on_main, hook_cwd=worktree_on_feature)
+def test_the_powershell_tool_gets_the_same_rule(command, on_main, worktree_on_feature):
+    result = run_hook(command.format(main=on_main.as_posix()), project_dir=on_main,
+                      hook_cwd=worktree_on_feature, tool="PowerShell")
+    assert result.returncode == 2, result.stderr.decode()
+    assert b"current checked-out branch is 'main'" in result.stderr
+
+
+@pytest.mark.parametrize("tool", ["Bash", "PowerShell"])
+def test_a_plain_push_from_a_worktree_on_main_blocks_for_both_tools(tool, on_main, tmp_path):
+    other_main = make_repo(tmp_path / "wt-on-main", "main")
+    result = run_hook("git push -u origin", project_dir=on_main, hook_cwd=other_main, tool=tool)
+    assert result.returncode == 2, result.stderr.decode()
+
+
+# F10: a create flag whose new branch is main or master sets the switch, and a
+# later push is on main, whatever is checked out or named by cwd
+SWITCH_TO_MAIN_BY_CREATE = [
+    "git switch -c main && git push",
+    "git switch -C main && git push",
+    "git checkout -b main && git push",
+    "git checkout -B main && git push",
+    "git switch -c master && git push",
+    "git checkout -B master; git push -u origin",
+    "git switch --ignore-other-worktrees -C main && git push",
+    "git checkout --ignore-other-worktrees -B main && git push",
+    "git switch --ignore-other-worktrees -c main && git push",
+    "git switch --create main && git push",
+    "git switch --force-create main && git push",
+    "git switch --create=main && git push",
+    "git checkout -bmain && git push",
+    "git checkout -fb main && git push",
+    "git switch -c main origin/main && git push",
+    "git switch -c main --track && git push",
+    "git checkout -b main && git merge feat && git push origin HEAD",
+    "(git checkout -B main && git push)",
+]
+
+
+@pytest.mark.parametrize("tool", ["Bash", "PowerShell"])
+@pytest.mark.parametrize("command", SWITCH_TO_MAIN_BY_CREATE)
+def test_a_create_flag_naming_main_sets_the_switch(command, tool, on_feature, on_main, worktree_on_feature):
+    result = run_hook(command, project_dir=on_feature, tool=tool)
+    assert result.returncode == 2, result.stderr.decode()
+    assert b"an earlier 'git" in result.stderr
+    result = run_hook(command, project_dir=on_main, hook_cwd=worktree_on_feature, tool=tool)
+    assert result.returncode == 2, result.stderr.decode()
+
+
+@pytest.mark.parametrize("command", [
+    "git switch -c next && git push",
+    "git switch -c next main && git push",
+    "git checkout -b next main && git push",
+    "git checkout -B next origin/main && git push",
+    "git switch -c maintenance && git push",
+    "git switch --create=next && git push",
+    "git checkout main && git switch -c next && git push",
+    "git switch -c main && git switch -c next && git push",
+])
+def test_a_create_flag_for_another_branch_does_not_set_the_switch(command, on_feature):
+    result = run_hook(command, project_dir=on_feature)
     assert result.returncode == 0, result.stderr.decode()
 
 
