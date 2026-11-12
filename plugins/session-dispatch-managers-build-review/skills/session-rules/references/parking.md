@@ -61,7 +61,9 @@ a state file (the planner and the manager) does this:
 ## The Answer line
 
 A button in the pane writes `- Answer: ...` as the last field of an
-entry. **No agent writes, edits or removes an `Answer:` line.** A pane
+entry. **No agent writes, edits or removes an `Answer:` line on its
+own.** It leaves only with its whole entry, once the answer is recorded
+(step 5 above), as a `Note:` line does. A pane
 answer is the owner's wherever it lands. With a `Session:` field it is
 said in the raising session's chat; without one, in the session whose
 pane was pressed.

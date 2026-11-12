@@ -35,7 +35,8 @@ Format:
 Answers:
 
 - A button in the pane writes `- Answer: ...` as the last field.
-  **No agent writes, edits or removes an `Answer:` line.**
+  **No agent writes, edits or removes an `Answer:` line on its own**;
+  it leaves with its whole entry, once the answer is recorded.
 - `Post comment` in the pane writes `- Note: ...`: the owner's comment.
   The entry stays open, and may hold several. **No agent writes, edits
   or removes a `Note:` line**; notes leave with the entry.
