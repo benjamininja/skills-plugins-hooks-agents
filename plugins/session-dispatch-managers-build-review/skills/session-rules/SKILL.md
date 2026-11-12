@@ -212,6 +212,52 @@ writes no file under `.claude/`.
   `builder-state/` at its worktree's top, which the project's
   `.gitignore` names. Nothing may depend on that folder surviving.
 
+### A role session's clear boundary
+
+A session run with a main-agent role (planner, manager, consultant,
+dispatch) prepares before every clear. A stage builder keeps the rules
+above instead.
+
+**When.** Any of three triggers: it has been idle about 45 minutes; its
+context nears about 255K tokens; or the owner asks, in chat or from the
+`owner-queue` pane. The mod measures the first two and sends the
+instruction. At about 255K the prep is a must: the session finishes its
+current step and prepares before it takes new work.
+
+**The prep, in order:**
+
+1. **Close the step.** No edit is left half done. Commit and push what
+   is meant to last. Park or comment on its ticket what cannot finish.
+2. **Record.** Every decision, finding and open item since the last prep
+   goes on its GitHub record, as above. What is in chat alone is lost at
+   the clear.
+3. **State-back.** Update the role's state file on a branch, with a PR.
+4. **Flush memory**, only on a real signal.
+5. **Reset prompt, written last**, to the `owner-queue` mod's store by
+   the mod's own route. If the session works on after the prep, it
+   repeats steps 2 to 5 before it ends the turn, so the stored prompt is
+   never older than the session's last turn.
+
+**A reset prompt holds**, in this order:
+
+1. the role's name and repository, and how to name the parties;
+2. the skills to load, then the files to read in order: the owner's
+   preferences, `CLAUDE.md`, the project rules file, the state file. If
+   the state-back PR has not merged, read the file from its branch, with
+   the exact `git show` command;
+3. the worktree to enter, then the first commands, one per call;
+4. the owner's queue file to read, and the issue and PR lists to run;
+5. the peers' app session ids;
+6. the **Do first** list, in order, each item with its record (issue,
+   PR or comment) and its next action;
+7. what waits on the owner.
+
+It never holds a secret's value or an item with no GitHub record: it
+points to the record and does not stand in for it. Keep it to about 400
+words. It may name local paths, because it is stored outside every
+repository and never committed. Take them out before pasting it into a
+GitHub record.
+
 ## Parking: what waits on the owner
 
 Every session gets what it leaves with the owner into the queue file
