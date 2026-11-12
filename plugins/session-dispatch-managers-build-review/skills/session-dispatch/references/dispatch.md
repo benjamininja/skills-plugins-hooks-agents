@@ -71,7 +71,10 @@ that starts with a slash into a path.
 Only for a builder this session dispatched, on the same ticket.
 While the builder is listed, use SendMessage. Otherwise, from the
 builder's worktree, run `claude --resume <sessionId> --bg <message>`
-with no flags. Never resume a builder that is still running, and never
+with no flags, through `scripts/resume_plain.ps1 -Worktree <worktree>
+-SessionId <sessionId> -MessageFile <file>` (it also takes an optional
+`-Claude <path>`; it refuses a missing worktree and a message with a
+double quote, and prints `exit: <code>`). Never resume a builder that is still running, and never
 pass flags: either one starts a copy without the builder settings.
 The message holds no double quote.
 If a resume starts a copy anyway, stop that copy at once with
