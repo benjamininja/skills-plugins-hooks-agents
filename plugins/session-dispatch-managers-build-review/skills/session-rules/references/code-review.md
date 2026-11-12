@@ -58,8 +58,8 @@ packet, never the builder's reasoning.
   - read with `gh pr view` and `gh pr diff` on the PR URL; with
     `git -C <worktree>` for `show`, `log`, `grep`, `ls-tree` and `diff`;
     and with Read, Grep and Glob in the worktree;
-  - the Skill tool loads only the ruleset skill the packet names, and no
-    other skill;
+  - the Skill tool loads only the ruleset skill the packet names and
+    code-review, and no other skill;
   - code-review is run with the effort and the PR URL only, never
     `--comment`, `--fix` or `--post`;
   - no `git fetch`, no `cd` into any checkout, no script and no test;

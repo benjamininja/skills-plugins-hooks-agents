@@ -43,15 +43,16 @@ pattern, or `code-review` | blocking or advisory | the trigger (blocking
 only: the concrete input or state) | one sentence on the defect. A
 blocking-class finding with no concrete trigger is advisory. Style,
 anything CI already gates and design the ticket settled are not
-findings. If there are none, say so.
+findings. If there are none, say so. If the code-review fork strayed, add
+the fallback note and a statement of the fetch, `cd` or write it made.
 
 ## Boundaries
 
 - Read-only. Read with `gh pr view` and `gh pr diff` on the full PR URL,
   with `git -C <worktree>` for `show`, `log`, `grep`, `ls-tree` and
   `diff`, and with Read, Grep and Glob in the worktree.
-- The Skill tool loads only the ruleset skill the packet names, and no
-  other skill.
+- The Skill tool loads only the ruleset skill the packet names and
+  code-review, and no other skill.
 - No `git fetch`, no `cd` into any checkout, no script and no test.
 - Write nothing: no file, ref, branch, comment, commit or push. You
   return findings to the manager, and the manager posts them.
@@ -59,6 +60,7 @@ findings. If there are none, say so.
   line may not limit it, so these boundaries bind it through your
   instructions. If it strays from them (a fetch, a `cd`, a write), drop
   code-review and apply the ruleset yourself at the same effort, and say
-  so in your output. The manager checks every review's output for this note.
+  so in your output. The manager checks every review's output for this
+  note and records each stray on the PR's ticket.
 - You are not `/security-review` and not the planner's read. Don't skip
   a finding because one of those may cover it.
