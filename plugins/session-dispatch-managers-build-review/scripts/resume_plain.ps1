@@ -13,7 +13,8 @@
     3. run  claude --resume <SessionId> --bg <message>  with the worktree
        as the working directory, and no other flag
     4. wait up to 60 s for the claude process to exit, then print
-       "exit: <code>"
+       "exit: <code>" and exit with that code; if it is still running,
+       print its pid and exit 3 (the process is left running)
 
   No other flag is ever passed: a resume with a flag starts a copy of the
   builder without the builder settings. Use it only for a builder that
@@ -51,6 +52,7 @@ if (-not $Claude) {
     $Claude = $cmd.Source
 }
 if (-not (Test-Path -LiteralPath $Worktree)) { throw "no worktree $Worktree" }
+if ($SessionId.Contains('"')) { throw 'session id holds a double quote' }
 $msg = (Get-Content -LiteralPath $MessageFile -Raw -Encoding UTF8).Trim()
 if ($msg.Contains('"')) { throw 'message holds a double quote' }
 
@@ -60,5 +62,9 @@ $psi.Arguments = '"--resume" "' + $SessionId + '" "--bg" "' + $msg + '"'
 $psi.WorkingDirectory = $Worktree
 $psi.UseShellExecute = $false
 $p = [System.Diagnostics.Process]::Start($psi)
-$p.WaitForExit(60000) | Out-Null
+if (-not $p.WaitForExit(60000)) {
+    Write-Output "still running after 60 s: pid $($p.Id)"
+    exit 3
+}
 Write-Output "exit: $($p.ExitCode)"
+exit $p.ExitCode
