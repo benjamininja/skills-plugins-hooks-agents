@@ -132,7 +132,44 @@ for that entry and says the Options line is malformed. Write each option so
 that it stands alone.
 
 Only the pane writes an `Answer:` or a `Note:` line; no agent writes, edits
-or removes one.
+or removes one. (The queue command line below removes a whole entry, and its
+`Answer:` line goes with it; with `--with-notes` its Notes too.)
+
+## Edit the queue from a script
+
+The builder manager, the only writer of a queue, edits it with a command line
+that uses this plugin's parser (`hooks/parse.ts`), so a script cannot break
+the format the pane reads. It needs Node 22.18 or later, which runs the
+TypeScript file as it is. The first argument is the queue file.
+
+```bash
+node plugins/owner-queue/hooks/queue-cli.ts <queue file> add decision --block-file <file>
+node plugins/owner-queue/hooks/queue-cli.ts <queue file> remove --title "<title>"
+node plugins/owner-queue/hooks/queue-cli.ts <queue file> prune --keep "<text>"
+```
+
+- `add decision|action --block-file <file>` puts one new open entry at the top
+  of that section. The file holds exactly one `### [ ] Title` entry. It is
+  refused if it holds an `Answer:` or `Note:` line, any `##` heading, an
+  unclosed code fence, or a title already in that section, or if that section
+  holds text between its heading and its first entry.
+- `remove --title "<title>"` removes one whole entry, from its title line to
+  the next heading, whatever its box, and an answered entry goes with its
+  `Answer:` line. It is refused if the title is missing or not unique (a title
+  used in both sections needs `--kind decision` or `--kind action`), or if the
+  entry holds a `Note:` line. With `--with-notes` the Notes leave with the
+  entry. Removing a whole entry is the only way the CLI ever removes an
+  `Answer:` or `Note:` line; it never writes or edits one.
+- `prune [--keep "<text>"]...` removes the ticked `[x]` Actions, except those
+  whose title holds a `--keep` text. A ticked Action that holds a `Note:` line
+  stays, and is listed, unless `--with-notes` is given.
+- Line endings (CRLF too) and every other byte stay as they were. An edit is
+  checked after it is made: if any `Answer:` or `Note:` line outside the
+  removed entry would differ, the open entries would not be as expected, or a
+  line end would break, nothing is written. A queue with a code fence that is
+  never closed is refused. The file is read again just before the write, and a
+  change in between stops the write. A refusal prints `refused: <why>` and
+  exits 1.
 
 ## Install (one shared copy, read at every launch)
 

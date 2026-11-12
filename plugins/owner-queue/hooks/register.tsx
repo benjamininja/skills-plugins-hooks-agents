@@ -45,7 +45,7 @@ import {
   waiting,
 } from './parse'
 
-const VERSION = '0.10.0'
+const VERSION = '0.11.0'
 const PANE = 'owner-queue'
 const TITLE = 'Needs owner'
 const FILE = '.claude/memory/NEEDS-OWNER.md'
