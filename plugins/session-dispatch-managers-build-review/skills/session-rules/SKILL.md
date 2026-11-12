@@ -231,6 +231,26 @@ never decided by an agent:
 - closing a map or a stage;
 - the project's own checkpoints, in the project rules file.
 
+## Asking the owner
+
+- **Every question to the owner goes through a button.** When the owner
+  is in the chat, ask in the `AskUserQuestion` pop-up. When the owner is
+  not, or the question can wait, it is a queue entry (a Decision or an
+  Action, sent to the manager by a session that may not write the
+  queue). This covers yes/no checks, confirmations, commit offers and
+  the ask after a denied call. A list of questions at the end of a
+  reply is the failure mode.
+- **Each option is a real alternative** with its trade-off, never a
+  single option.
+- **Context sits above the question**, in this order: a short summary,
+  the pros, the cons, then the recommendation. The pop-up may be all the
+  owner sees, so put it in the message right above the call, per option
+  where the options differ.
+- **Name the parties.** Call the owner by name or "the owner", and the
+  agent "Claude" or its role name, in chat, queue entries and records.
+  Never "you" or "I" for either: across relays they are read the wrong
+  way round.
+
 ## Green, and the two-key merge
 
 "Green" is the project's list of proofs, in the project rules file, plus
