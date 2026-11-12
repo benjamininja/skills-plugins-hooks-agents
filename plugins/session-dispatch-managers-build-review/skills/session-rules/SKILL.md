@@ -173,6 +173,23 @@ holds for the planner, the manager, a builder and a consultant alike.
   flags, error codes and doc links may be posted. Never row values,
   anything from a table that holds owner PII, a name, an email or a
   token.
+- **Everything on GitHub resolves on GitHub.** An issue, a PR, a
+  comment, a commit message or a committed file never points at
+  something that exists only on one machine: a scratchpad or Temp path,
+  a worktree path, `builder-state/` or any other gitignored file. Put
+  what it holds in the record, or a summary safe to post, or say only
+  that the owner keeps a private copy, with no path. Name a worktree by
+  its branch.
+- **Ids are lookup keys, not pointers.** A session id, an issue or PR
+  number and a commit hash may stand in the queue file's `Session:`
+  lines and in a committed state file, so a session can rebuild its
+  context. In an issue, a PR or a comment, name the ticket, PR or
+  commit rather than a session id.
+- **What must outlast a session, and is private,** goes to the owner's
+  private repository and mailbox, never to a gitignored folder in a
+  project. A reusable script is made generic and becomes tracked code.
+  Secrets stay in `.env` or a credential store. Throwaway work stays in
+  the session's scratchpad.
 - **Which repo:** project work goes in the project's repo; role and
   rules work goes in the central repo.
 - A state file (`PLANNER.md`, `MANAGER.md`) and the queue file are
