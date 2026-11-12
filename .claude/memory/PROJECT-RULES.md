@@ -33,12 +33,12 @@ Every ticket carries a `Tier:` line at the top of its body and the matching
 - the `check-in-hygiene` pre-commit hook passes on the commit;
 - after any change under `plugins/owner-queue/`:
   `claude plugin test plugins/owner-queue` passes on the merged tree.
-  Manager runs it at re-proof (#113, amendment 1);
+  `tools/reproof.py` runs it as its `plugin test` step whenever the merge
+  touches that folder (#133); a missing `claude` is a FAIL;
 - on a PR the code review covers: no blocking finding the manager upheld
   is still open (`session-rules`, `references/code-review.md`). Manager
-  runs it. The ruleset skill is `tools-code-review`. This item applies
-  once `skills/tools-code-review/` (#113 PR B) and the live
-  `.claude/agents/pr-code-reviewer.md` are both on `main`.
+  runs it. The ruleset skill is `tools-code-review`, read from
+  `origin/main` (#136).
 
 The manager re-proves with `tools/reproof.py <pr> <head sha>` from the
 live clone (`C:/Users/benha/claude-live/skills-plugins-hooks-agents`), run
