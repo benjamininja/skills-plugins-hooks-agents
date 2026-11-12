@@ -249,19 +249,39 @@ check_segment() {
   if echo "$sw_all" | grep -qE "git (checkout|switch)${END}"; then
     local create='(-[[:alpha:]]*[bBcC]|--create|--force-create|--orphan)'
     local named='(main|master)'
-    local set_switch
+    local set_switch t set_hit=""
     set_switch=$(echo "$sw_all" | sed -nE 's/.*git ((checkout|switch).*)/\1/p' | sed -E 's/[[:space:]]+$//')
+    # Setting reads the text both ways, quotes deleted (`ma''in`) and quotes
+    # spaced (`"$x"main`, where deleting the quotes first would fuse `$x` and
+    # `main`): either one matching sets the switch, which fails closed.
     # A new branch named main or master: `-c main`, `-B main`, `-bmain`, a
     # cluster such as `-fb main` or `-fbmain`, `--create=main`, any option
     # spelled short with `=` (`--cre=main`, `--force-c=main`, `--orph=main`),
     # any other option in between: a later push is on main. Set the switch.
-    if echo "$sw_all" | grep -qE "git (checkout|switch)${ARGS}(${create}[[:space:]]+${named}${END}|-[[:alpha:]]*[bBcC]${named}${END}|--[[:alpha:]-]+=${named}${END})"; then
+    for t in "$sw_all" "$flat"; do
+      if echo "$t" | grep -qE "git (checkout|switch)${ARGS}(${create}[[:space:]]+${named}${END}|-[[:alpha:]]*[bBcC]${named}${END}|--[[:alpha:]-]+=${named}${END})"; then
+        set_hit=1
+      fi
+    done
+    # Any other new branch clears it, as before. Clearing is the loosening
+    # side: it reads only the quote-deleted text with the comment dropped and
+    # everything from `--` on cut off (a pathspec is not an option), and
+    # accepts only the create letters each subcommand really has: checkout
+    # -b and -B, switch -c and -C, each with the flags that can share a
+    # cluster (`-fb`).
+    local sw_opts
+    sw_opts=$(echo "$sw_code" | sed -E 's/[[:space:]]--([[:space:]].*)?$//')
+    if [[ -n "$set_hit" ]]; then
       SWITCHED_TO_MAIN="$set_switch"
-    # Any other new branch clears it, as before (a comment cannot clear it).
-    elif echo "$sw_code" | grep -qE "git (checkout|switch)${ARGS}(${create}|-[bBcC][^[:space:]]+|--(create|force-create|orphan)=[^[:space:]]*)${END}"; then
+    elif echo "$sw_opts" | grep -qE "git checkout${ARGS}(-[qfmtld]*[bB][^[:space:]]*|--orphan|--orphan=[^[:space:]]*)${END}" \
+       || echo "$sw_opts" | grep -qE "git switch${ARGS}(-[dfmqt]*[cC][^[:space:]]*|--create|--force-create|--orphan|--(create|force-create|orphan)=[^[:space:]]*)${END}"; then
       SWITCHED_TO_MAIN=""
-    elif echo "$sw_all" | grep -qE "git (checkout|switch)${ARGS}${named}${END}"; then
-      SWITCHED_TO_MAIN="$set_switch"
+    else
+      for t in "$sw_all" "$flat"; do
+        if echo "$t" | grep -qE "git (checkout|switch)${ARGS}${named}${END}"; then
+          SWITCHED_TO_MAIN="$set_switch"
+        fi
+      done
     fi
   fi
 

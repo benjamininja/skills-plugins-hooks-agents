@@ -543,6 +543,18 @@ SWITCH_TO_MAIN_BY_CREATE = [
     # review F2: a create flag in a comment cannot clear the switch
     "git checkout main # -b x\ngit push -u origin",
     "git checkout main # --create=x\ngit push",
+    # re-check F10: an unset variable between quotes and the name
+    'git checkout "$x"main && git push -u origin',
+    "git checkout $x''main && git push -u origin",
+    'git checkout $x"main" && git push -u origin',
+    # re-check F11: a pathspec after --, or a letter the subcommand does not have,
+    # is not a create, so it cannot clear the switch to main
+    "git checkout main; git checkout -- -cx; git push -u origin",
+    "git checkout main; git checkout -- -b; git push -u origin",
+    "git checkout main; git checkout -cx; git push -u origin",
+    "git checkout main; git checkout -xb next; git push -u origin",
+    "git checkout main; git switch -bx; git push -u origin",
+    "git checkout main; git switch -- -c; git push -u origin",
 ]
 
 
@@ -575,6 +587,13 @@ def test_the_block_message_says_why_the_cwd_was_not_read(on_main, worktree_on_fe
     "git switch -c ne''xt && git push",
     "git checkout -fbnext && git push",
     "git switch --cre=next && git push",
+    # the real create letters still clear the switch to main
+    "git checkout main && git checkout -b next && git push -u origin",
+    "git checkout main && git checkout -fb next && git push -u origin",
+    "git checkout main && git checkout -B next -- && git push -u origin",
+    "git checkout main && git switch -fc next && git push -u origin",
+    "git checkout main && git switch -C next && git push -u origin",
+    "git checkout main && git switch --create next && git push -u origin",
     "git checkout main && git switch -c next # main\ngit push",
     "git switch -c next main && git push",
     "git checkout -b next main && git push",
