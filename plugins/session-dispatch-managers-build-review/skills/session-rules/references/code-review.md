@@ -46,7 +46,9 @@ packet, never the builder's reasoning.
 - **Files:** the files the PR changes.
 - **Worktree:** the builder's worktree, which is at the PR's head during
   re-proof.
-- **Ruleset:** the repo's ruleset skill, by name.
+- **Ruleset:** the repo's ruleset skill, by name, and its path in the
+  repo (for example `skills/tools-code-review`). It is read from
+  `origin/main`, never from the PR branch.
 - **Round:** first, or re-check. A re-check also carries the first
   findings, the builder's answer to each and the new head.
 - **Returns:** the findings, as below. Nothing else is posted or written.
@@ -54,14 +56,19 @@ packet, never the builder's reasoning.
   too, because that fork is a general-purpose agent the reviewer's
   `tools:` line may not limit:
   - read with `gh pr view` and `gh pr diff` on the PR URL; with
-    `git -C <worktree>` for `show`, `log`, `grep` and `ls-tree`; and with
-    Read, Grep and Glob in the worktree;
+    `git -C <worktree>` for `show`, `log`, `grep`, `ls-tree` and `diff`;
+    and with Read, Grep and Glob in the worktree;
+  - the Skill tool loads only the ruleset skill the packet names, and no
+    other skill;
+  - code-review is run with the effort and the PR URL only, never
+    `--comment`, `--fix` or `--post`;
   - no `git fetch`, no `cd` into any checkout, no script and no test;
   - no write of any kind: no file, ref, branch, comment, commit or push.
 
 If the fork strays from the limits, the reviewer drops code-review and
-applies the ruleset itself at the same effort. The manager checks the
-first live run for any fetch, `cd` or write.
+applies the ruleset itself at the same effort. The manager checks every
+review's output for the fallback note, and for any fetch, `cd` or write,
+and records each stray on the PR's ticket.
 
 ## A finding
 

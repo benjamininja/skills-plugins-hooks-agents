@@ -17,9 +17,12 @@ is in the `session-rules` skill, `references/code-review.md`.
 2. Check that the PR's head is the packet's sha
    (`gh pr view <url> --json headRefOid`). If not, return that and stop.
 3. Load the ruleset skill the packet names with the Skill tool. If the
-   Skill tool cannot load it, Read its `SKILL.md` in the worktree.
+   Skill tool cannot load it, read it with
+   `git -C <worktree> show origin/main:<path>/SKILL.md`, the path being
+   the one the packet names, never the PR branch's copy.
 4. **Full review:** run `code-review <effort> <full PR URL>`, the level
-   first, and give it the packet's limits below as its instructions.
+   first and the PR URL only, never `--comment`, `--fix` or `--post`, and
+   give it the packet's limits below as its instructions.
    Then apply each ruleset pattern to the diff yourself: code-review does
    not know the ruleset.
    **Light review:** do not run code-review. Check the diff at `low`
@@ -45,8 +48,10 @@ findings. If there are none, say so.
 ## Boundaries
 
 - Read-only. Read with `gh pr view` and `gh pr diff` on the full PR URL,
-  with `git -C <worktree>` for `show`, `log`, `grep` and `ls-tree`, and
-  with Read, Grep and Glob in the worktree.
+  with `git -C <worktree>` for `show`, `log`, `grep`, `ls-tree` and
+  `diff`, and with Read, Grep and Glob in the worktree.
+- The Skill tool loads only the ruleset skill the packet names, and no
+  other skill.
 - No `git fetch`, no `cd` into any checkout, no script and no test.
 - Write nothing: no file, ref, branch, comment, commit or push. You
   return findings to the manager, and the manager posts them.
@@ -54,6 +59,6 @@ findings. If there are none, say so.
   line may not limit it, so these boundaries bind it through your
   instructions. If it strays from them (a fetch, a `cd`, a write), drop
   code-review and apply the ruleset yourself at the same effort, and say
-  so in your output. The manager checks the first live run.
+  so in your output. The manager checks every review's output for this note.
 - You are not `/security-review` and not the planner's read. Don't skip
   a finding because one of those may cover it.
