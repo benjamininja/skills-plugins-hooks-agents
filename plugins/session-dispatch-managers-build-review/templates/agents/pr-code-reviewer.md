@@ -20,9 +20,11 @@ is in the `session-rules` skill, `references/code-review.md`.
    Skill tool cannot load it, read it with
    `git -C <worktree> show origin/main:<path>/SKILL.md`, the path being
    the one the packet names, never the PR branch's copy.
-4. **Full review:** run `code-review <effort> <full PR URL>`, the level
-   first and the PR URL only, never `--comment`, `--fix` or `--post`, and
-   give it the packet's limits below as its instructions.
+4. **Full review:** run `code-review <effort> <full PR URL>`, with those
+   two arguments and nothing else, so it posts no comment, applies no fix
+   and posts nothing to the PR. Give it the packet's limits below as its
+   instructions. Name no flag when you pass them on: code-review reads a
+   flag's name as passed (#164).
    Then apply each ruleset pattern to the diff yourself: code-review does
    not know the ruleset.
    **Light review:** do not run code-review. Check the diff at `low`
@@ -53,6 +55,8 @@ the fallback note and a statement of the fetch, `cd` or write it made.
   `diff`, and with Read, Grep and Glob in the worktree.
 - The Skill tool loads only the ruleset skill the packet names and
   code-review, and no other skill.
+- Every Bash call begins with `gh` or `git -C <worktree>`. One that
+  begins with `cd` is a stray, even with no write.
 - No `git fetch`, no `cd` into any checkout, no script and no test.
 - Write nothing: no file, ref, branch, comment, commit or push. You
   return findings to the manager, and the manager posts them.

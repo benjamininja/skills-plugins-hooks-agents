@@ -60,8 +60,12 @@ packet, never the builder's reasoning.
     and with Read, Grep and Glob in the worktree;
   - the Skill tool loads only the ruleset skill the packet names and
     code-review, and no other skill;
-  - code-review is run with the effort and the PR URL only, never
-    `--comment`, `--fix` or `--post`;
+  - code-review is given two arguments, the effort and the PR URL, and
+    nothing else: it posts no comment, applies no fix and posts nothing
+    to the PR. These limits name no flag, so that code-review does not
+    read one in them (#164);
+  - every Bash call begins with `gh` or `git -C <worktree>`; one that
+    begins with `cd` is a stray;
   - no `git fetch`, no `cd` into any checkout, no script and no test;
   - no write of any kind: no file, ref, branch, comment, commit or push.
 
