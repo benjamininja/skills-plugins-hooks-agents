@@ -194,6 +194,8 @@ def on_feature(tmp_path):
     "git checkout main 2>&1 && git push",
     "git checkout main -q && git push",
     "(git checkout main && git merge feat && git push)",
+    # a create after the switch no longer clears it (owner's ruling on #135, F15)
+    "git checkout main && git pull && git switch -c next && git push",
     # a line continuation must not separate a push from its refspec
     "git push --force-with-lease \\\n  origin main",
     "git push --force-with-lease `\n  origin main",
@@ -278,7 +280,6 @@ def test_blocked_from_the_powershell_tool(command, on_feature):
     "git push -u origin HEAD",               # on a feature branch
     "(git fetch && git push)",               # on a feature branch
     "git checkout main && git pull && git checkout -b next && git push -u origin next",
-    "git checkout main && git pull && git switch -c next && git push",
     "ls -la",
     "echo git is great",
     "",
@@ -560,6 +561,32 @@ SWITCH_TO_MAIN_BY_CREATE = [
     "git checkout main; git checkout -dbx; git push -u origin",
     "git checkout main; git switch -dcx; git push -u origin",
     "git checkout main; git checkout -qdbx; git push -u origin",
+    # F14 and F15, owner's ruling "Remove clear path": nothing clears the switch once an
+    # earlier segment switched to main. Cluster forms with d (git refuses -d with a create):
+    "git checkout main; git checkout -fdbx; git push -u origin",
+    "git checkout main; git checkout -dfbx; git push -u origin",
+    "git checkout main; git switch -fdcx; git push -u origin",
+    # separate -d or --detach token, before or after the create flag
+    "git checkout main; git checkout -d -b x; git push -u origin",
+    "git checkout main; git checkout --detach -b x; git push -u origin",
+    "git checkout main; git switch --detach -c x; git push -u origin",
+    "git checkout main; git switch -c x --detach; git push -u origin",
+    "git checkout main; git switch -d -c x; git push -u origin",
+    # a real create followed by a bare push is held too
+    "git checkout main; git checkout -b x; git push -u origin",
+    "git checkout main; git switch -c x; git push -u origin",
+    "git checkout main && git checkout -b next && git push -u origin",
+    "git checkout main && git checkout -fb next && git push -u origin",
+    "git checkout main && git checkout -B next -- && git push -u origin",
+    "git checkout main && git switch -fc next && git push -u origin",
+    "git checkout main && git switch -C next && git push -u origin",
+    "git checkout main && git switch --create next && git push -u origin",
+    "git checkout main && git switch -c next # main\ngit push",
+    "git checkout main && git switch -c next && git push",
+    "git switch -c main && git switch -c next && git push",
+    # a start point named main is a word named main: held too (fails closed)
+    "git switch -c next main && git push",
+    "git checkout -b next main && git push",
 ]
 
 
@@ -592,24 +619,23 @@ def test_the_block_message_says_why_the_cwd_was_not_read(on_main, worktree_on_fe
     "git switch -c ne''xt && git push",
     "git checkout -fbnext && git push",
     "git switch --cre=next && git push",
-    # the real create letters still clear the switch to main
-    "git checkout main && git checkout -b next && git push -u origin",
-    "git checkout main && git checkout -fb next && git push -u origin",
-    "git checkout main && git checkout -B next -- && git push -u origin",
-    "git checkout main && git switch -fc next && git push -u origin",
-    "git checkout main && git switch -C next && git push -u origin",
-    "git checkout main && git switch --create next && git push -u origin",
-    "git checkout main && git switch -c next # main\ngit push",
-    "git switch -c next main && git push",
-    "git checkout -b next main && git push",
     "git checkout -B next origin/main && git push",
     "git switch -c maintenance && git push",
     "git switch --create=next && git push",
-    "git checkout main && git switch -c next && git push",
-    "git switch -c main && git switch -c next && git push",
 ])
 def test_a_create_flag_for_another_branch_does_not_set_the_switch(command, on_feature):
     result = run_hook(command, project_dir=on_feature)
+    assert result.returncode == 0, result.stderr.decode()
+
+
+@pytest.mark.parametrize("tool", ["Bash", "PowerShell"])
+@pytest.mark.parametrize("command", [
+    "git checkout main && git checkout -b x && git push -u origin x",
+    "git checkout main; git switch -c x; git push -u origin x",
+    "git checkout main; git switch -dcx; git push origin HEAD:x",
+])
+def test_a_push_that_names_its_target_is_allowed_after_a_switch(command, tool, on_feature):
+    result = run_hook(command, project_dir=on_feature, tool=tool)
     assert result.returncode == 0, result.stderr.decode()
 
 

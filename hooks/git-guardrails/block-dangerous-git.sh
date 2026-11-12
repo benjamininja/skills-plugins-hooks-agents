@@ -241,11 +241,9 @@ check_segment() {
   # --- Remember a switch to main/master for a later bare push ---
   # The text here has its quotes and backslashes deleted, not turned into
   # spaces, so a split name (`ma''in`) reads as `main`. `sw_all` keeps a
-  # comment: text after a `#` can set the switch, never clear it. `sw_code`
-  # drops the comment and is the only text a create flag may clear from.
-  local sw_all sw_code
+  # comment: text after a `#` can set the switch.
+  local sw_all
   sw_all=$(echo "$pre" | tr -d "\"'\`\\\\" | tr '(){}$\t' '      ' | tr -s ' ')
-  sw_code=$(uncommented "$sw_all")
   if echo "$sw_all" | grep -qE "git (checkout|switch)${END}"; then
     local create='(-[[:alpha:]]*[bBcC]|--create|--force-create|--orphan)'
     local named='(main|master)'
@@ -263,19 +261,12 @@ check_segment() {
         set_hit=1
       fi
     done
-    # Any other new branch clears it, as before. Clearing is the loosening
-    # side: it reads only the quote-deleted text with the comment dropped and
-    # everything from `--` on cut off (a pathspec is not an option), and
-    # accepts only the create letters each subcommand really has: checkout
-    # -b and -B, switch -c and -C, each with the flags that can share a
-    # cluster (`-fb`).
-    local sw_opts
-    sw_opts=$(echo "$sw_code" | sed -E 's/[[:space:]]--([[:space:]].*)?$//')
+    # Nothing here clears the switch: once an earlier segment of the command
+    # switches to main, a later bare push is held, whatever comes between,
+    # because the hook cannot see whether a create succeeded (owner's ruling
+    # on #135). A push that names its target is unaffected.
     if [[ -n "$set_hit" ]]; then
       SWITCHED_TO_MAIN="$set_switch"
-    elif echo "$sw_opts" | grep -qE "git checkout${ARGS}(-[qfmtl]*[bB][^[:space:]]*|--orphan|--orphan=[^[:space:]]*)${END}" \
-       || echo "$sw_opts" | grep -qE "git switch${ARGS}(-[fmqt]*[cC][^[:space:]]*|--create|--force-create|--orphan|--(create|force-create|orphan)=[^[:space:]]*)${END}"; then
-      SWITCHED_TO_MAIN=""
     else
       for t in "$sw_all" "$flat"; do
         if echo "$t" | grep -qE "git (checkout|switch)${ARGS}${named}${END}"; then

@@ -102,10 +102,15 @@ this is a behavior adaptation.
   does a create flag whose new branch is `main` or `master`
   (`git switch -c main`, `git checkout -B main`, `-bmain`, `-fbmain`,
   `--create=main`, a long option abbreviated with `=` such as `--cre=main`,
-  a split name such as `ma''in`, `--ignore-other-worktrees -C main`); a
-  create flag for any other branch clears it, but never one that is only in
-  a `#` comment. A create that fails (the branch already exists) still
-  clears it: the hook cannot see the result.
+  a split name such as `ma''in`, `--ignore-other-worktrees -C main`).
+  **Nothing clears the switch** (owner's ruling on #135): once an earlier
+  segment of the command switches to `main`, a later bare push is held,
+  whatever comes between, even a real create (`git checkout main; git
+  checkout -b x; git push -u origin`), because the hook cannot see whether
+  a create succeeded (git refuses `-d` with a create, and a branch that
+  already exists fails). A push that names its target (`git push -u origin
+  x`) is unaffected. The server-side ruleset on `main` is the layer that
+  covers the rest.
 - **When in doubt it blocks.** Text after a `#` still counts toward a
   block and never toward an exemption, so
   `git push origin my-feature # not main` is blocked. Reword the comment.
