@@ -20,6 +20,14 @@ Updated 2026-11-11: owner-queue 0.10.0 (Session lines re-keyed at a
 and two more carried-over rules (git rm and git mv; the code review at
 re-proof). The two baseball repos were not read again.
 
+Updated 2026-11-12: owner-queue 0.11.0 (a tracked command line for queue
+edits), the session-dispatch rules and the skills at `main` `1bbf198`,
+and six more carried-over rules: everything on GitHub resolves on
+GitHub; questions to the owner by button; a role session's clear
+boundary; the reviewer applies the ruleset itself; an `Answer:` line
+leaves with its whole entry; no session dispatches a workflow. The two
+baseball repos were not read again.
+
 ## What this setup is
 
 A project is worked by three kinds of Claude Code session, each with its
@@ -44,9 +52,9 @@ It is used in production on `benjamininja/Python-PowerBI-DynastyFantasyFootball`
 
 | Piece | Where | Version at writing | What it gives you |
 |---|---|---|---|
-| Session-dispatch plugin | [`plugins/session-dispatch-managers-build-review/`](../../plugins/session-dispatch-managers-build-review/) | 0.3.0, with its rules and script as on `main` at `e754faa` (the version number has not moved since #84; take `main`) | `dispatch.ps1`, the `session-rules` and `session-dispatch` skills, role files, settings examples, profiles, brief template, and the `pr-code-reviewer` agent template |
-| Owner-queue mod | [`plugins/owner-queue/`](../../plugins/owner-queue/) | 0.10.0 | The queue pane, `/owner`, `/owner id`, answers carried back to the session that asked. One pane reads its own project's queue plus every queue listed in its `queues` setting. A typed answer or comment waits for Submit. After a `/clear`, open entries' `Session:` lines are re-keyed to the new id. |
-| Skills, agents and hooks | [`skills/`](../../skills/), [`.claude/agents/`](../../.claude/agents/), [`hooks/`](../../hooks/) | `main` at `e754faa` | The skill catalog ([CATALOG.md](../../CATALOG.md)) and the git guardrail hook |
+| Session-dispatch plugin | [`plugins/session-dispatch-managers-build-review/`](../../plugins/session-dispatch-managers-build-review/) | 0.3.0, with its rules and scripts as on `main` at `1bbf198` (the version number has not moved since #84; take `main`) | `dispatch.ps1`, the `session-rules` and `session-dispatch` skills, role files, settings examples, profiles, brief template, the `pr-code-reviewer` agent template, and the state-file helper `prepend_state.py` |
+| Owner-queue mod | [`plugins/owner-queue/`](../../plugins/owner-queue/) | 0.11.0 | The queue pane, `/owner`, `/owner id`, answers carried back to the session that asked. One pane reads its own project's queue plus every queue listed in its `queues` setting. A typed answer or comment waits for Submit. After a `/clear`, open entries' `Session:` lines are re-keyed to the new id. A command line (`add`, `remove`, `prune`) edits the queue file, so a manager needs no scripts of its own. |
+| Skills, agents and hooks | [`skills/`](../../skills/), [`.claude/agents/`](../../.claude/agents/), [`hooks/`](../../hooks/) | `main` at `1bbf198` | The skill catalog ([CATALOG.md](../../CATALOG.md)) and the git guardrail hook |
 | Memory template | [`benjamininja/project-memory-template`](https://github.com/benjamininja/project-memory-template) | `1fe3df5` | `CLAUDE.md` plus `.claude/memory/` tiers (minimal, standard, full), and the `check-in-hygiene` pre-commit hook |
 
 Take each piece from a **clone that only ever holds merged `main`**, never
@@ -208,7 +216,33 @@ They are in the `session-rules` skill. Read it rather than this summary.
   repo's own ruleset skill. The builder answers each finding once, a fresh
   reviewer re-checks, and the manager decides. No upheld blocking finding
   may stay open at merge. Each repo writes its own ruleset; this repo's is
-  `tools-code-review`, a model to copy from.
+  `tools-code-review`, a model to copy from. The reviewer applies the
+  ruleset itself and never starts a general-purpose review fork, which no
+  wording or tool list can hold to read-only.
+- **Everything on GitHub resolves on GitHub.** No issue, PR, comment,
+  commit message or committed file points at a scratchpad, Temp or
+  worktree path, or a gitignored file. Put the substance in the record
+  instead, and name a worktree by its branch. Session ids, issue and PR
+  numbers and commit hashes are lookup keys, and may stand in the queue's
+  `Session:` lines and in committed state files.
+- **Every question to the owner goes through a button**: the
+  AskUserQuestion pop-up when the owner is in the chat, a queue entry
+  otherwise. Each option is a real alternative. A summary, the pros, the
+  cons and then the recommendation sit above the question. Sessions name
+  the owner by name or as "the owner", and themselves as Claude or by
+  role, never "you" or "I".
+- **A role session's clear boundary.** A planner or manager prepares
+  before a `/clear`, in order: close the step, record it on GitHub, open a
+  state-back PR, flush memory, then write a reset prompt (about 400
+  words, no secret, nothing without a GitHub record).
+- **An `Answer:` line leaves only with its whole entry.** No agent writes,
+  edits or removes one on its own; the entry goes once the answer is
+  recorded on its ticket.
+- **No session dispatches a workflow**, by any route: `gh workflow run`,
+  `gh api` on a workflow's dispatches endpoint, or the web page. A
+  dispatch is the owner's. Agents act through the owner's token, so a
+  check on who started the run can't tell them apart. This matters for
+  the ETL repo's weekly job, which truncates and reloads the database.
 
 ## Decisions that are SpunkyLlama's
 
