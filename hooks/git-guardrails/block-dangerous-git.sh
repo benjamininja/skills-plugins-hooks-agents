@@ -13,10 +13,9 @@
 #     in this order: the command's own -C path; then the top-level `cwd` of
 #     the hook input (the worktree, in a worktree session), which skips the
 #     CLAUDE_PROJECT_DIR lookup (the main checkout in a worktree session) but
-#     only when no segment of the command changes directory or overrides the
-#     git dir or work tree (rule A, below); then CLAUDE_PROJECT_DIR, then
-#     $PWD. A network path in -C, or in a `cwd` that is used, blocks and is
-#     never given to git.
+#     only when the whole command is exactly a plain push (rule B, below);
+#     then CLAUDE_PROJECT_DIR, then $PWD. A network path in -C, or in a `cwd`
+#     that is used, blocks and is never given to git.
 #   - reset --hard / clean -f / checkout . / restore . stay blanket-blocked
 #     — always destructive regardless of branch.
 #   - A force branch delete (-D, -d -f, --delete --force, ... any spelling)
@@ -96,23 +95,19 @@ HOOK_CWD=$(printf '%s' "$INPUT" | tr '\n\t\r' '   ' | awk '{
   }
 }' | sed -e 's/\\\\/\x01/g' -e 's/\\\//\//g' -e 's/\x01/\\/g')
 
-# Rule A (fail-closed): the hook input's cwd is used for the implicit-push
-# branch lookup only when no part of the command can move git elsewhere. Any
-# of these as a word anywhere in the command, in any segment, even inside
-# quotes, a comment or a subshell, turns the cwd off, and the lookup is the
-# command's own -C, then CLAUDE_PROJECT_DIR, then $PWD, as before. A directory
-# change is not parsed; a false match only makes the hook stricter. The text
-# is checked as written and again with quotes and backslashes removed, so
-# c''d is read as cd. A name built at run time (a variable, eval) is out of
-# reach, as README.md says; the ruleset on main is the backstop.
-MOVES_GIT='(^|[^[:alnum:]_.-])(cd|pushd|popd|chdir|Set-Location|sl|Push-Location|Pop-Location)([^[:alnum:]_.-]|$)'
-MOVES_GIT+='|(^|[^[:alnum:]_.-])env([^[:alnum:]_.-].*)?[[:space:]]-[[:alnum:]]*C'
-MOVES_GIT+='|--chdir|--git-dir|--work-tree|GIT_DIR|GIT_WORK_TREE|core\.worktree'
-USE_HOOK_CWD=1
-if printf '%s\n' "$COMMAND" | grep -qiE -- "$MOVES_GIT" \
-   || printf '%s\n' "$COMMAND" | tr -d "\"'\`\\\\" | grep -qiE -- "$MOVES_GIT"; then
-  USE_HOOK_CWD=""
-fi
+# Rule B (an allowlist, fail-closed): the hook input's cwd is used for the
+# implicit-push branch lookup only when the WHOLE command is exactly a plain
+# push: `git push`, then optionally `-u` or `--set-upstream`, then optionally
+# one bare remote name (letters, digits, `.`, `_`, `-`, not starting with `-`
+# or a dot). One segment, so no `;`, `&&`, `||`, `|`, `&` or newline (a
+# newline is already `;` here); no wrapper, subshell, substitution, backtick,
+# variable, `$` or env prefix; no global git option, no other push flag and no
+# refspec. Anything else, even a command close to a plain push, uses the
+# lookup as before: the command's own -C, then CLAUDE_PROJECT_DIR, then $PWD.
+# The same for the Bash and the PowerShell tool.
+PLAIN_PUSH='^[[:space:]]*git[[:space:]]+push([[:space:]]+(-u|--set-upstream))?([[:space:]]+[A-Za-z0-9_][A-Za-z0-9._-]*)?[[:space:]]*$'
+USE_HOOK_CWD=""
+[[ "$COMMAND" =~ $PLAIN_PUSH ]] && USE_HOOK_CWD=1
 
 block() {
   echo "BLOCKED: '$COMMAND' — $1. The user has prevented you from doing this." >&2
@@ -244,11 +239,40 @@ check_segment() {
   fi
 
   # --- Remember a switch to main/master for a later bare push ---
-  if echo "$flat" | grep -qE "git (checkout|switch)${END}"; then
-    if echo "$flat" | grep -qE "git (checkout|switch)${ARGS}(-b|-B|-c|-C|--create|--force-create|--orphan)${END}"; then
-      SWITCHED_TO_MAIN=""   # a new branch is created; a later push is not on main
-    elif echo "$flat" | grep -qE "git (checkout|switch)${ARGS}(main|master)${END}"; then
-      SWITCHED_TO_MAIN=$(echo "$flat" | sed -nE 's/.*git ((checkout|switch).*)/\1/p' | sed -E 's/[[:space:]]+$//')
+  # The text here has its quotes and backslashes deleted, not turned into
+  # spaces, so a split name (`ma''in`) reads as `main`. `sw_all` keeps a
+  # comment: text after a `#` can set the switch.
+  local sw_all
+  sw_all=$(echo "$pre" | tr -d "\"'\`\\\\" | tr '(){}$\t' '      ' | tr -s ' ')
+  if echo "$sw_all" | grep -qE "git (checkout|switch)${END}"; then
+    local create='(-[[:alpha:]]*[bBcC]|--create|--force-create|--orphan)'
+    local named='(main|master)'
+    local set_switch t set_hit=""
+    set_switch=$(echo "$sw_all" | sed -nE 's/.*git ((checkout|switch).*)/\1/p' | sed -E 's/[[:space:]]+$//')
+    # Setting reads the text both ways, quotes deleted (`ma''in`) and quotes
+    # spaced (`"$x"main`, where deleting the quotes first would fuse `$x` and
+    # `main`): either one matching sets the switch, which fails closed.
+    # A new branch named main or master: `-c main`, `-B main`, `-bmain`, a
+    # cluster such as `-fb main` or `-fbmain`, `--create=main`, any option
+    # spelled short with `=` (`--cre=main`, `--force-c=main`, `--orph=main`),
+    # any other option in between: a later push is on main. Set the switch.
+    for t in "$sw_all" "$flat"; do
+      if echo "$t" | grep -qE "git (checkout|switch)${ARGS}(${create}[[:space:]]+${named}${END}|-[[:alpha:]]*[bBcC]${named}${END}|--[[:alpha:]-]+=${named}${END})"; then
+        set_hit=1
+      fi
+    done
+    # Nothing here clears the switch: once an earlier segment of the command
+    # switches to main, a later bare push is held, whatever comes between,
+    # because the hook cannot see whether a create succeeded (owner's ruling
+    # on #135). A push that names its target is unaffected.
+    if [[ -n "$set_hit" ]]; then
+      SWITCHED_TO_MAIN="$set_switch"
+    else
+      for t in "$sw_all" "$flat"; do
+        if echo "$t" | grep -qE "git (checkout|switch)${ARGS}${named}${END}"; then
+          SWITCHED_TO_MAIN="$set_switch"
+        fi
+      done
     fi
   fi
 
@@ -286,10 +310,10 @@ check_segment() {
         [/\\][/\\]*|[/\\]\?\?[/\\]*) block "push from a folder on a network path and no branch named — name the branch explicitly" ;;
       esac
       # Where the branch is read, in order: the command's own -C path; the
-      # hook input's `cwd`, only under rule A (no directory change or
-      # git-dir/work-tree override anywhere in the command), which then
-      # replaces the CLAUDE_PROJECT_DIR lookup; then CLAUDE_PROJECT_DIR (or
-      # $PWD). A `cwd` that gives no branch falls through to the next one.
+      # hook input's `cwd`, only under rule B (the whole command is exactly a
+      # plain push), which then replaces the CLAUDE_PROJECT_DIR lookup; then
+      # CLAUDE_PROJECT_DIR (or $PWD). A `cwd` that gives no branch falls
+      # through to the next one.
       local branch="" dir
       for dir in "$cdir" "$cwd_dir" "${CLAUDE_PROJECT_DIR:-$PWD}"; do
         [[ -z "$dir" ]] && continue
@@ -298,7 +322,13 @@ check_segment() {
         [[ -n "$cdir" ]] && break   # a -C path is final, as before
       done
       if [[ "$branch" == "main" || "$branch" == "master" ]]; then
-        block "current checked-out branch is '$branch' and the command names no other target — push a feature branch and open a PR instead"
+        local why=""
+        # Say why the hook input's cwd was not read, so a feature worktree is
+        # not told its own branch is main.
+        if [[ -z "$cdir" && -n "$HOOK_CWD" && -z "$USE_HOOK_CWD" ]]; then
+          why=" (read from CLAUDE_PROJECT_DIR or the hook's folder, not the hook input's cwd, because the command is not exactly a plain push)"
+        fi
+        block "current checked-out branch is '$branch'${why} and the command names no other target — push a feature branch and open a PR instead"
       fi
     fi
   fi
