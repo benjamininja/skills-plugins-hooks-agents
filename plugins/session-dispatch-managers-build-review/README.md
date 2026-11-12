@@ -13,6 +13,7 @@ Windows only in 0.1.0: the script is Windows PowerShell 5.1.
 | Part | What it is |
 |---|---|
 | `scripts/dispatch.ps1` | Starts one builder. A dry run unless `-Apply` is given. |
+| `scripts/prepend_state.py` | Puts a block read from a file at the top of a state file, before its first `- **CURRENT STATE` line: `prepend_state.py <state in> <block file> <state out>`. |
 | `scripts/resume_plain.ps1` | Resumes a stopped builder with a follow-up message and no other flag. The manager uses it for a follow-up when SendMessage cannot reach the builder. |
 | `skills/session-rules` | The rules every role keeps: tiers, briefs, the "Never" list, a denied call, parking, who may merge. Any session may load it. It starts nothing. |
 | `skills/session-dispatch` | The manager's procedures that change things: dispatch, merging a builder's PR, closeout. Manual only (`disable-model-invocation: true`): the owner invokes it in a manager's session. |
