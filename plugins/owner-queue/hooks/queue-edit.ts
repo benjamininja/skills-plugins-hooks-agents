@@ -14,8 +14,29 @@ type Entry = {
 const FENCE = '```'
 const PANE_LINE = /^\s*[-*]\s+\**\s*(?:Answer|Note)\s*\**\s*:/i
 const NOTE_LINE = /^\s*[-*]\s+\**\s*Note\s*\**\s*:/i
+const ANSWER_LINE = /^\s*[-*]\s+\**\s*Answer\s*\**\s*:/i
 
 const bare = (line: string) => line.replace(/\r$/, '')
+
+export type HeldBy = 'Note' | 'Answer' | 'Note and Answer'
+
+/** The lines of one entry that hold it, given which overrides were passed. */
+const heldBy = (
+  lines: string[],
+  withNotes: boolean,
+  withAnswers: boolean,
+): HeldBy | undefined => {
+  const hasNote = !withNotes && lines.some(line => NOTE_LINE.test(bare(line)))
+  const hasAnswer = !withAnswers && lines.some(line => ANSWER_LINE.test(bare(line)))
+
+  return hasNote && hasAnswer
+    ? 'Note and Answer'
+    : hasNote
+      ? 'Note'
+      : hasAnswer
+        ? 'Answer'
+        : undefined
+}
 const isPane = (line: string) => PANE_LINE.test(bare(line))
 const count = (text: string, pattern: RegExp) => (text.match(pattern) ?? []).length
 
@@ -215,13 +236,15 @@ export type Removed = { text: string; line: number; count: number }
 /**
  * The file without the one entry of that title (of that kind, when `kind` is
  * given, for a title used in both sections). An entry that holds a Note line
- * is refused unless `withNotes`: then its Notes leave with it.
+ * is refused unless `withNotes`, and one that holds an Answer line unless
+ * `withAnswers`: then those lines leave with it.
  */
 export function remove(
   text: string,
   title: string,
   withNotes = false,
   kind?: Kind,
+  withAnswers = false,
 ): Removed {
   const lines = text.split('\n')
   const found = scanFile(lines).entries.filter(
@@ -234,10 +257,16 @@ export function remove(
     )
   const one = found[0]
   const range: [number, number] = [one.from, one.to]
-  if (!withNotes && lines.slice(one.from, one.to).some(line => NOTE_LINE.test(bare(line))))
+  const held = heldBy(lines.slice(one.from, one.to), withNotes, withAnswers)
+  if (held !== undefined) {
+    const flags = [
+      held !== 'Answer' ? '--with-notes' : '',
+      held !== 'Note' ? '--with-answers' : '',
+    ].filter(Boolean)
     throw new Error(
-      'the entry holds a Note line: raise it in the chat, or remove it with --with-notes',
+      `the entry "${one.title}" holds ${held === 'Note and Answer' ? 'a Note line and an Answer line' : `${held === 'Note' ? 'a Note' : 'an Answer'} line`}: raise it in the chat, or remove it with ${flags.join(' and ')}`,
     )
+  }
   const left = cut(lines, [range])
   guard(lines, left, [range], one.isDone ? 0 : -1)
 
@@ -248,15 +277,21 @@ export type Pruned = {
   text: string
   removed: string[]
   kept: string[]
-  /** Ticked entries left in place because they hold a Note line. */
-  held: string[]
+  /** Ticked entries left in place, each with the line that holds it. */
+  held: { title: string; line: HeldBy }[]
 }
 
 /**
  * The file without its ticked Actions, except those whose title holds one of
- * `keep`. A ticked Action that holds a Note line stays unless `withNotes`.
+ * `keep`. A ticked Action that holds a Note line stays unless `withNotes`, and
+ * one that holds an Answer line stays unless `withAnswers`.
  */
-export function prune(text: string, keep: string[] = [], withNotes = false): Pruned {
+export function prune(
+  text: string,
+  keep: string[] = [],
+  withNotes = false,
+  withAnswers = false,
+): Pruned {
   const lines = text.split('\n')
   const ticked = scanFile(lines).entries.filter(
     one => one.kind === 'action' && one.isDone,
@@ -266,14 +301,14 @@ export function prune(text: string, keep: string[] = [], withNotes = false): Pru
   for (const one of ticked) {
     if (keep.some(word => word !== '' && one.title.includes(word))) {
       out.kept.push(one.title)
-    } else if (
-      !withNotes &&
-      lines.slice(one.from, one.to).some(line => NOTE_LINE.test(bare(line)))
-    ) {
-      out.held.push(one.title)
     } else {
-      ranges.push([one.from, one.to])
-      out.removed.push(one.title)
+      const held = heldBy(lines.slice(one.from, one.to), withNotes, withAnswers)
+      if (held !== undefined) {
+        out.held.push({ title: one.title, line: held })
+      } else {
+        ranges.push([one.from, one.to])
+        out.removed.push(one.title)
+      }
     }
   }
   const left = cut(lines, ranges)
@@ -292,18 +327,25 @@ export type Io = {
 export const USAGE = [
   'usage: queue-cli.ts <queue file> <command>',
   '  add decision|action --block-file <file>   one new open entry, at the top of its section',
-  '  remove --title <title> [--kind decision|action] [--with-notes]',
-  '                                            one entry; refuses one that holds a Note line',
-  '  prune [--keep <text>]... [--with-notes]   ticked Actions, keeping titles that hold <text>',
+  '  remove --title <title> [--kind decision|action] [--with-notes] [--with-answers]',
+  '                                            one entry; refuses one that holds a Note or Answer line',
+  '  prune [--keep <text>]... [--with-notes] [--with-answers]',
+  '                                            ticked Actions, keeping titles that hold <text>',
 ].join('\n')
 
-type Flags = { values: Record<string, string[]>; isNotes: boolean; rest: string[] }
+type Flags = {
+  values: Record<string, string[]>
+  isNotes: boolean
+  isAnswers: boolean
+  rest: string[]
+}
 
 function flagsOf(args: string[], names: string[]): Flags {
-  const out: Flags = { values: {}, isNotes: false, rest: [] }
+  const out: Flags = { values: {}, isNotes: false, isAnswers: false, rest: [] }
   for (let at = 0; at < args.length; at++) {
     const arg = args[at]
     if (arg === '--with-notes') out.isNotes = true
+    else if (arg === '--with-answers') out.isAnswers = true
     else if (names.includes(arg)) {
       const value = args[++at]
       if (value === undefined) throw new Error(`${arg} needs a value`)
@@ -343,16 +385,16 @@ export function run(argv: string[], io: Io): number {
       const kind = flags.values['--kind']?.[0]
       if (!title || flags.rest.length > 0) throw new Error(USAGE)
       if (kind !== undefined && kind !== 'decision' && kind !== 'action') throw new Error(USAGE)
-      const done = remove(text, title, flags.isNotes, kind as Kind | undefined)
+      const done = remove(text, title, flags.isNotes, kind as Kind | undefined, flags.isAnswers)
       save(done.text)
       io.print(`removed ${done.count} lines at ${done.line}`)
     } else if (command === 'prune') {
       const flags = flagsOf(args, ['--keep'])
       if (flags.rest.length > 0) throw new Error(USAGE)
-      const done = prune(text, flags.values['--keep'] ?? [], flags.isNotes)
+      const done = prune(text, flags.values['--keep'] ?? [], flags.isNotes, flags.isAnswers)
       if (done.text !== text) save(done.text)
       io.print(
-        `removed ${done.removed.length} kept ${JSON.stringify(done.kept)} held for a Note ${JSON.stringify(done.held)}`,
+        `removed ${done.removed.length} kept ${JSON.stringify(done.kept)} held ${JSON.stringify(done.held)}`,
       )
     } else throw new Error(USAGE)
 

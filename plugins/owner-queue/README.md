@@ -133,7 +133,8 @@ that it stands alone.
 
 Only the pane writes an `Answer:` or a `Note:` line; no agent writes, edits
 or removes one. (The queue command line below removes a whole entry, and its
-`Answer:` line goes with it; with `--with-notes` its Notes too.)
+`Answer:` line goes with it only with `--with-answers`, its Notes only with
+`--with-notes`.)
 
 ## Edit the queue from a script
 
@@ -144,7 +145,7 @@ TypeScript file as it is. The first argument is the queue file.
 
 ```bash
 node plugins/owner-queue/hooks/queue-cli.ts <queue file> add decision --block-file <file>
-node plugins/owner-queue/hooks/queue-cli.ts <queue file> remove --title "<title>"
+node plugins/owner-queue/hooks/queue-cli.ts <queue file> remove --title "<title>" [--with-notes] [--with-answers]
 node plugins/owner-queue/hooks/queue-cli.ts <queue file> prune --keep "<text>"
 ```
 
@@ -154,15 +155,22 @@ node plugins/owner-queue/hooks/queue-cli.ts <queue file> prune --keep "<text>"
   unclosed code fence, or a title already in that section, or if that section
   holds text between its heading and its first entry.
 - `remove --title "<title>"` removes one whole entry, from its title line to
-  the next heading, whatever its box, and an answered entry goes with its
-  `Answer:` line. It is refused if the title is missing or not unique (a title
-  used in both sections needs `--kind decision` or `--kind action`), or if the
-  entry holds a `Note:` line. With `--with-notes` the Notes leave with the
-  entry. Removing a whole entry is the only way the CLI ever removes an
-  `Answer:` or `Note:` line; it never writes or edits one.
-- `prune [--keep "<text>"]...` removes the ticked `[x]` Actions, except those
-  whose title holds a `--keep` text. A ticked Action that holds a `Note:` line
-  stays, and is listed, unless `--with-notes` is given.
+  the next heading, whatever its box. It is refused if the title is missing or
+  not unique (a title used in both sections needs `--kind decision` or
+  `--kind action`), or if the entry holds a `Note:` or an `Answer:` line. The
+  refusal names the entry, the line that holds it and the flag to pass. With
+  `--with-notes` the Notes leave with the entry; with `--with-answers` the
+  `Answer:` line does (an `Answer:` is the owner's decision, which the manager
+  may not have recorded yet). `--with-notes` covers only Notes, and an entry
+  holding both lines needs both flags. Removing a whole entry is the only way
+  the CLI ever removes an `Answer:` or `Note:` line; it never writes or edits
+  one.
+- `prune [--keep "<text>"]... [--with-notes] [--with-answers]` removes the
+  ticked `[x]` Actions, except those whose title holds a `--keep` text. A
+  ticked Action that holds a `Note:` line stays unless `--with-notes` is given,
+  and one that holds an `Answer:` line stays unless `--with-answers` is given.
+  The report lists each held entry as `{"title", "line"}`, where `line` is
+  `Note`, `Answer` or `Note and Answer`.
 - Line endings (CRLF too) and every other byte stay as they were. An edit is
   checked after it is made: if any `Answer:` or `Note:` line outside the
   removed entry would differ, the open entries would not be as expected, or a
@@ -236,9 +244,9 @@ read or delete.
 
 ### The `Session:` line
 
-An entry's `- Session:` line is the id of the session that raises it, as
-`/owner id` prints it in that session. A wrong id sends the answer to
-another session.
+An entry's `- Session:` line is the id of the session that acts on the
+answer (for a builder's park, the manager), as `/owner id` prints it in that
+session. A wrong id sends the answer to another session.
 
 ## Develop
 
