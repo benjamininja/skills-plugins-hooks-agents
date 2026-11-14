@@ -56,8 +56,10 @@ the glossary for the skills catalog itself.
 
 ## Agents — when to run
 
-Three agents live in `.claude/agents/` and are linked into `~/.claude/agents`,
-so they are available from any repo. They only help if they are run:
+The agents in `.claude/agents/` are linked into `~/.claude/agents`, so they
+are available from any repo. Three of them are run by hand, and only help
+if they are run (the others are session roles, or subagents a role
+starts by name):
 
 - **`vendor-sync-reapply`** — right after `python tools/update_vendor_skills.py
   --apply <name>` prints a "Reapply ritual" notice. Never commit a re-vendor
@@ -65,7 +67,9 @@ so they are available from any repo. They only help if they are run:
   otherwise.
 - **`skill-safety-auditor`** — before committing any change to
   `disable-model-invocation`, any new vendored skill, or
-  `vendor-skills.json`'s safety-relevant fields. Show its table to the user.
+  `vendor-skills.json`'s safety-relevant fields. It has no shell: pass the
+  change as file paths (a diff file, or the old and new skill folders).
+  Show its table to the user.
 - **`root-memory-propagation-auditor`** — after root memory
   (`~/.claude/memory/*.md`, `~/.claude/CLAUDE.md`) changes; give it the
   commit or merge range if the change is already committed.
