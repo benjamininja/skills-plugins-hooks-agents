@@ -35,7 +35,9 @@ the answer; nothing is written or sent until `Submit`.
   skill is the fallback for a session without the mod, or when it gave up.
   Submit says in the pressing session only
   the entries that name it or name no session. The mod tells each session
-  its id in the system prompt, and `/owner id` prints it.
+  its id in the system prompt, and `/owner id` prints it (and, for a
+  tracked session, its reset prompt's path; see "Tracked sessions and reset
+  prompts").
 - A fenced code block inside an entry is one chunk: the pane draws it
   under the field or step that holds it, with one `Copy block N` button
   that copies it with its line breaks.
@@ -108,6 +110,76 @@ the answer; nothing is written or sent until `Submit`.
   one, the mod stays hidden.
 - A session loads the mod once, at launch. A session started before an
   update keeps the old copy; the version line shows which one is drawing.
+
+## Tracked sessions and reset prompts
+
+A role session prepares before every clear (session-rules, "A role
+session's clear boundary"). The mod measures and prompts that prep; the
+session's model never counts for itself. Each tracked session's own copy of
+the mod does the measuring and pulls its instructions. No session pushes to
+another (#161, the planner's ruling).
+
+- **Tracked sessions.** A session is tracked when its main thread was started
+  with one of these `--agent` roles: `central-planner`,
+  `central-builder-manager`, `supabase-consultant` or
+  `supabase-consultant-dispatch`. A role a plugin provides counts by its name
+  after the `plugin:` prefix. It registers itself at start
+  (`classic.SessionStart`, its `agent_type`). Stage builders and sessions
+  with no role are never tracked and write nothing.
+- **The store.** Three folders in the mod's own data folder, beside
+  `drafts`, outside every repository, never committed:
+  - `sessions/<id>.json`: each tracked session's own record. Only that
+    session writes it. It holds its role and name, its state (`busy` at a
+    turn's start, `idle` at its end, `closed` at the session's end), the
+    time of its last turn start and end, its context tokens, and a
+    heartbeat written every 30 seconds.
+  - `requests/<id>.json`: a prep request. Only the pane writes it, when the
+    owner presses End of Day.
+  - `reset-prompts/<id>.md`: the session's reset prompt. Only the session
+    writes it.
+
+  The records are files, not keys in the mod's `$.store`, because `$.store`
+  is one JSON file with no compare-and-set: two sessions writing it at the
+  same moment could lose a write.
+- **What the pane shows of a session.** A fresh heartbeat means running,
+  busy or idle as the record says. `closed` means closed. A heartbeat three
+  beats stale with no `closed` means stopped. Stopped and closed are drawn in
+  red, each with its own word.
+- **The write route.** A tracked session's system prompt names the exact
+  file for its reset prompt, `reset-prompts/<id>.md` under the mod's folder,
+  and `/owner id` prints it. The session writes the whole file with its file
+  tool. It replaces the file and never appends. A session that works on
+  after its prep writes it again before its turn ends.
+- **Fresh or stale.** A reset prompt is fresh when its file time is at or
+  after the session's last turn start. A turn that starts later makes it
+  stale.
+- **The triggers.** Each is sent once, until a new turn starts after it, and
+  never while the prompt is fresh. The session's own mod sends the prep
+  instruction into its own chat, and only while the session is idle, so a
+  busy session gets it right after its current turn:
+  - its context reaches 255,000 tokens. This is a must: the session finishes
+    its current step and prepares before new work;
+  - it has been idle 45 minutes after a turn;
+  - the owner pressed End of Day.
+- **Reset prompts**, a section of the pane: one row per tracked session,
+  with its name, role and state, the prompt's time and `fresh`, `stale` or
+  `used`, and `Copy prompt`, which copies the file whole with its line
+  breaks.
+- **End of Day**, in the pane's top row beside `Refresh`: it writes a prep
+  request for every running tracked session with no fresh prompt. Each takes
+  it at its next read, once its turn has ended. A stopped or closed session
+  is drawn in red as "no reset prompt, closed" (or "stopped"); its last
+  prompt stays as it was.
+- **A `/clear`.** A cleared id is not closed. The re-key that already runs
+  moves the reset prompt to the new id: the new file gets the text, the old
+  one is emptied, and the row says `used` until the session writes a new
+  one. The old id's row is no longer drawn.
+- **Held for a session that is not running.** When Submit sends an answer, a
+  Note or a done mark to a tracked session that is stopped or closed, the
+  toast names it and says the item is held. The pane lists every such item
+  under "Held for sessions not running", so none sits unseen. A session with
+  no record, such as an untracked builder, cannot be judged: it gets no
+  held toast.
 
 ## File format it reads
 
