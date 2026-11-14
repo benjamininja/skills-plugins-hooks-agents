@@ -24,9 +24,10 @@ is `templates/NEEDS-OWNER.md` in this plugin.
 ## The five steps
 
 1. Stop work on the ticket. Do not answer the owner's side.
-2. Write an entry, in the format of the file's head: under
-   `## Decisions` for a choice, under `## Actions` for work by the
-   owner's hand. Give the evidence, the options with one recommended,
+2. Write an entry, in the format `templates/NEEDS-OWNER.md` gives (a
+   worktree holds no copy of the queue, and each queue's head repeats
+   the template): under `## Decisions` for a choice, under `## Actions`
+   for work by the owner's hand. Give the evidence, the options with one recommended,
    and what it blocks. Each option stands alone: it says in full what
    happens, and never refers to another option by its letter. Add
    `- Session: <id>`, naming the session that acts on the answer, so the
