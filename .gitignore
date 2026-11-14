@@ -8,3 +8,6 @@ pytest-cache-files-*/
 .claude/worktrees/
 .venv/
 builder-state/
+
+# The owner's queue: working state, never committed (ADR-0016)
+.claude/memory/NEEDS-OWNER.md

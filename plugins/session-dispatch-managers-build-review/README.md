@@ -44,7 +44,9 @@ the example settings files deny it.
    the read-only reviewer the manager starts at re-proof
    (`session-rules`, `references/code-review.md`). Copy
    `PROJECT-RULES.md`, `NEEDS-OWNER.md`,
-   `PLANNER.md` and `MANAGER.md` to `.claude/memory/`. Fill in
+   `PLANNER.md` and `MANAGER.md` to `.claude/memory/`. Add
+   `.claude/memory/NEEDS-OWNER.md` to the project's `.gitignore`: the
+   queue is never committed. Fill in
    `PROJECT-RULES.md`: the project's list of proofs ("Green"), its own
    "Never" lines, its stages.
 4. Write the builders' and the managers' settings files, starting from
@@ -207,8 +209,10 @@ flag anchors at the working directory.
 
 ## The owner's queue
 
-Every session leaves what waits on the owner in
-`.claude/memory/NEEDS-OWNER.md`. The `owner-queue` plugin of this
+Every session leaves what waits on the owner in a project's
+`.claude/memory/NEEDS-OWNER.md`: one queue per project, untracked, and
+an entry goes to the queue of the repo its ticket lives in
+(`session-rules`, `references/parking.md`). The `owner-queue` plugin of this
 repository (0.5.0 or later) shows that file as a pane and carries an
 answer back to the session that asked. This plugin works without it: the
 queue is then read and answered in the file.

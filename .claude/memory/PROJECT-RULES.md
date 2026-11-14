@@ -12,9 +12,11 @@ own. The dynasty project's builder manager
 (`dynastyFantasyFootball-central-builder-manager`) dispatches builders here
 from this planner's `Tier:` and `Profile:` lines, and merges their PRs once
 they are Green. The owner gave that merge approval on 2026-11-07: "Yes, it
-may merge". The owner's queue is the dynasty project's `NEEDS-OWNER.md`.
-Only that manager writes it, so a builder here parks by messaging the
-manager, never by writing a queue file here.
+may merge". This repository has its own owner's queue,
+`.claude/memory/NEEDS-OWNER.md` in the main checkout, untracked (#183,
+ADR-0016). An entry whose ticket is in this repository goes there. The
+dynasty manager is its one writer, so a builder here parks by messaging
+that manager, never by writing the queue file.
 
 Every ticket carries a `Tier:` line at the top of its body and the matching
 `tier:` label (`tier:low`, `tier:medium`, `tier:high`, `tier:none`, or

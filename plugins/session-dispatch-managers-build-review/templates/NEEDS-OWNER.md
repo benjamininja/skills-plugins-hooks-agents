@@ -1,7 +1,9 @@
 # NEEDS-OWNER
 
-What waits on the owner, in one place. The `owner-queue` pane reads the
-main checkout's copy of this file and no other.
+What waits on the owner for this project, in one place. The
+`owner-queue` pane reads the main checkout's copy of this file and no
+other. This file is never committed: the project's `.gitignore` names
+it.
 
 Format:
 
@@ -11,6 +13,8 @@ Format:
   - A decision carries Ticket, Context, Options, Recommended, Blocks,
     Raised.
   - An action carries Ticket, Steps, Context, Blocks, Raised.
+  - `Ticket:` holds the ticket's full link. An entry belongs in the
+    queue of the project whose repo holds that ticket.
 - Options are written `- Options: (a) ...; (b) ...` and
   `- Recommended: (a), because ...`. The pane shows one button per
   option.

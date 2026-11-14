@@ -1,8 +1,25 @@
 # Parking and the owner's queue
 
-One file holds everything that waits on the owner: `NEEDS-OWNER.md` in
-the main checkout. The `owner-queue` pane reads that copy and no other.
-The format head is `templates/NEEDS-OWNER.md` in this plugin.
+Each project has one queue: `NEEDS-OWNER.md` in its main checkout. It
+holds everything that waits on the owner for that project. The
+`owner-queue` pane reads the main checkout's copy and no other, and
+shows each queue the owner lists under its own heading. The format head
+is `templates/NEEDS-OWNER.md` in this plugin.
+
+## Which queue an entry goes to
+
+- **By the ticket's repo.** An entry goes to the queue of the project
+  whose repo holds its ticket, whichever session raises it. A ticket in
+  a repo that has no queue goes to the queue of the raiser's project.
+- **The full link.** The `Ticket:` field holds the ticket's full link,
+  so the entry says which repo it means.
+- **One writer per queue.** A builder manager writes each queue, with
+  the owner-queue CLI. A project with no manager of its own names, in
+  its project rules file, the manager that writes its queue.
+- **Never committed.** A queue is working state on the owner's machine.
+  It holds steps for the owner's hands, so it names local paths, and
+  its record is the ticket each entry links to. The project's
+  `.gitignore` names `.claude/memory/NEEDS-OWNER.md` (ADR-0016).
 
 ## The five steps
 
@@ -15,7 +32,7 @@ The format head is `templates/NEEDS-OWNER.md` in this plugin.
    `- Session: <id>`, naming the session that acts on the answer, so the
    answer goes to it. A value the owner pastes goes in code marks, a
    command the owner runs in a fenced block, and steps are numbered.
-   - The manager writes the main checkout's copy.
+   - The queue's manager writes the main checkout's copy.
    - A builder never writes the queue. Its message to the manager
      holds the ready entry, and the manager writes it at once, with the
      manager's own id on the `Session:` line: a builder is often stopped
