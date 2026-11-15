@@ -10,11 +10,18 @@ Last state-back: 2026-11-15, in the twentieth session, at Ben's word
 `1661ac8` (PR #194 merged). The newest state is the "Twentieth session"
 block under "Do first after this clear"; the "Open PRs", "Queue entries
 raised" and "Coming to Ben later" sections further down are older and
-are brought up to date at the next full rewrite. One queue entry is
-open and keyed to this planner's id
-`79be61bc-d749-440f-b714-23e1d697c3e7`, in the dynasty queue file:
-*Discard or keep the uncommitted edit to PLAN.md in the tools main
-checkout*. Earlier, in the nineteenth session: `origin/main` was at
+are brought up to date at the next full rewrite. No queue entry is
+open for this planner (its id in this session was
+`79be61bc-d749-440f-b714-23e1d697c3e7`): Ben did the `PLAN.md` Action
+and the planner checked it (issues/221, the comment of 2026-11-15
+titled "The uncommitted edit to PLAN.md in the main checkout is
+gone"). After the prep, three reports came in:
+the tools manager's queue id is `e0ebd1e2-fb41-4781-8cde-8dddd20742d7`
+and it holds; the tabs are #229, tiered medium by the dynasty planner;
+the one comment on PR #230 is the dynasty planner's read, five points,
+none blocking (pull/230 issuecomment-6899900063), still to be worked
+into the role text. Dynasty's role files are now `dff-central-planner`
+and `dff-central-builder-manager` on its `main`. Earlier, in the nineteenth session: `origin/main` was at
 `6262b1a`. **The #195 plugin fix is
 proved**: after Ben's full app restart every session loads the
 `session-rules` skill, and the manager has resumed its re-proof line,
