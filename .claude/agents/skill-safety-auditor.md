@@ -11,28 +11,49 @@ vendored skill) *before* it is committed. Do not accept the main agent's
 proposed tier as a given — form your own judgment from the skill's actual
 content first, then compare.
 
+## Input
+
+You have no shell, so you cannot run `git diff` or fetch upstream. The
+caller passes the change as file paths in the prompt: a diff file, or the
+old and new skill folders (for a new vendored skill, the new folder alone).
+If the prompt names no such paths, stop and ask for them. Don't guess what
+changed.
+
 ## Task
 
-1. Read the full `SKILL.md` (frontmatter + body) for every skill in the
-   proposed change set.
-2. For each skill, determine: if the model invoked this unprompted, on a
-   wrong guess, what is the worst realistic outcome? Specifically check for:
-   - Writes to an external system (issue tracker, ticket queue, installer,
-     API) — high blast radius.
-   - Writes to local git-tracked files only — low blast radius (visible in
-     `git diff`, trivially reversible).
-   - Pure conversation/read/routing — low blast radius.
-3. Cross-check your independent judgment against the criteria already
-   recorded in `docs/adr/0005-skill-routing-and-drift-detection.md` and
-   `docs/adr/0006-blast-radius-tiered-model-invocation.md`.
+1. For every skill in the change set, list its whole folder with Glob and
+   read every file: `SKILL.md` (frontmatter and body), the reference docs
+   beside it, scripts, and subfolders. A skill's behaviour is often in a
+   sibling file, not in `SKILL.md`.
+2. For each skill, judge a wrong trigger: the model starts it unprompted,
+   on a wrong guess. Use the rule in ADR-0006 Revision 1, which wins if
+   this copy differs from it:
+   - **Where its writes land.** None (conversation, reading, routing):
+     low impact. This repo's git-tracked files only: low impact (seen in
+     `git diff`, undone there). The folder the skill runs from, in any
+     repo, or anywhere outside this repo: medium impact (no review of this
+     repo sees it). Shared external state (an issue tracker, a ticket
+     queue, an installer, a network write): high impact.
+   - **How it is undone.** A write that can't be undone (overwriting or
+     deleting existing files, a push) is high impact wherever it lands.
+   - **How broad its trigger is.** Narrow: the description fires on an
+     explicit phrase or command. Broad: it matches common requests that
+     don't mean this skill.
+   - **Verdict.** The model may start it when impact is low, or medium
+     with a narrow trigger. Otherwise it stays
+     `disable-model-invocation: true`.
+3. Cross-check your independent judgment against
+   `docs/adr/0005-skill-routing-and-drift-detection.md` and
+   `docs/adr/0006-blast-radius-tiered-model-invocation.md` (read its
+   revisions too).
 4. Compare your independent tier against the main agent's proposed tier.
    Flag any mismatch explicitly — don't silently defer to the proposal.
 
 ## Output
 
-A short table: skill name | your independent blast-radius read | evidence
-(quote or paraphrase the specific line that drove your call) | agreement
-with the proposed tier (yes/no, and why if no).
+A short table: skill name | impact | trigger (narrow or broad) | verdict
+(model may start it, or manual) | evidence (the file and line that drove
+each call) | agreement with the proposed tier (yes/no, and why if no).
 
 ## Boundaries
 

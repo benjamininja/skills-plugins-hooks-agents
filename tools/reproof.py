@@ -31,6 +31,7 @@ import subprocess
 import sys
 import tarfile
 import tempfile
+import time
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -38,7 +39,7 @@ ROOT = Path(__file__).resolve().parent.parent
 PR_RE = re.compile(r"[1-9][0-9]{0,8}")
 SHA_RE = re.compile(r"[0-9a-f]{40}")
 GIT_OPTS = ["-c", "gc.auto=0", "-c", "maintenance.auto=false", "-c", "core.autocrlf=false"]
-TIMEOUT = 1800
+TIMEOUT = 3600
 PLUGIN_DIR = "plugins/owner-queue"
 PASS, FAIL, SKIP = "PASS", "FAIL", "SKIP"
 
@@ -124,8 +125,8 @@ def export_tree(repo: Path, tree: str, work: Path) -> tuple[Path | None, str]:
     return dest, ""
 
 
-def show(name: str, status: str, text: str) -> None:
-    print(f"== {name}: {status}")
+def show(name: str, status: str, text: str, elapsed: float = 0.0) -> None:
+    print(f"== {name}: {status} ({elapsed:.1f}s)")
     if text:
         print(text)
 
@@ -160,18 +161,23 @@ def main(argv: list[str], repo: Path = ROOT) -> int:
         )
         return 2
     pr, head = parsed
-    results: list[tuple[str, str]] = []
+    results: list[tuple[str, str, float]] = []
+    mark = time.monotonic()
 
     def record(name: str, status: str, text: str = "") -> bool:
-        results.append((name, status))
-        show(name, status, text)
+        nonlocal mark
+        now = time.monotonic()
+        elapsed = now - mark
+        mark = now
+        results.append((name, status, elapsed))
+        show(name, status, text, elapsed)
         return status == PASS
 
     def finish() -> int:
         print("== summary")
-        for name, status in results:
-            print(f"{status:<5} {name}")
-        green = all(status == PASS for _, status in results)
+        for name, status, elapsed in results:
+            print(f"{status:<5} {name} {elapsed:.1f}s")
+        green = all(status == PASS for _, status, _ in results)
         print("RESULT: " + ("GREEN" if green else "NOT GREEN"))
         return 0 if green else 1
 
