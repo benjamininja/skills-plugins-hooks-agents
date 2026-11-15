@@ -147,6 +147,21 @@ whose re-proof was running, and ends with PR #216.
    255K" becomes 245,000, and prep step 5 says the reset prompt is
    written to the store and shown in chat in one block. It merges
    before the mod's constant changes. Ask Ben to approve it by button.
+   Hold the step-5 wording until item 0f is settled.
+0f. **Portable roles and the reset-prompt file: take up on resume, on
+   Ben's word.** Ben, 2026-11-15: the standing pattern is a
+   `reset_prompt.md` file the session keeps current, with a pointer to
+   it as the prompt; and roles are to be portable across machines, the
+   core being that packets and settings are the same wherever a role is
+   deployed (both word for word on issues/217 issuecomment-6896203373).
+   The personal-assistant leads the research; this planner and the
+   dynasty planner each contribute from their own experience. Open:
+   where the file lives (Ben was asked and left it open), given that a
+   session may clear several times between check-ins. For this clear
+   only, the prompt is a local, untracked file and Ben holds the
+   pointer; if the pointer is lost, start from this file. First step on
+   resume: message both peers with the #217 link, then second look, then
+   Ben by button.
 1. **#195: the pane shows 0.11.0** (Ben's word, issuecomment-6894719062)
    and the dynasty planner is told for #202. Ben ruled the one source:
    "Settings file (Recommended)" (issuecomment-6895058128). The new
@@ -531,6 +546,9 @@ Ben's decisions, each recorded on its ticket or PR.
 - **The worktree session counts the word git in a path.** A command
   with `hooks/git-guardrails` in an argument is refused as two git
   calls. Read that folder with the Read tool, or name its parent.
+- **A pasted reset prompt is stale as soon as the session works on.**
+  It was written three times in one hour on 2026-11-15. Keep it in a
+  file and hand over a pointer; keep commit hashes out of it.
 - **Plan mode stops a clear prep.** Its comments, commit and push are
   all writes. When Ben asks for a prep while plan mode is on, put the
   prep in the plan and ask for approval at once.
