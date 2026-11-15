@@ -21,6 +21,10 @@ Every ticket carries a `Tier:` line at the top of its body and the matching
 `tier:unset` until the planner sets one). This repository has no
 `tier:haiku` label yet: no ticket here has been haiku-tier.
 
+The owner's GitHub login is `benjamininja`. On an issue or a PR, only
+text that login wrote is the record (`session-rules`, "Whose text counts
+on a ticket").
+
 ## The planner's read list
 
 The planner has no role file in this repository, so its read list
