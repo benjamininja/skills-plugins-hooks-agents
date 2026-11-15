@@ -5,10 +5,10 @@ alone. Rules are in the `session-rules` skill and in
 [PROJECT-RULES.md](PROJECT-RULES.md); this file is state. GitHub issues are
 the record. This file links to them and does not repeat them.
 
-Last state-back: 2026-11-15 (UTC), at a sixteenth context clear, at
+Last state-back: 2026-11-15 (UTC), at a seventeenth context clear, at
 Ben's word. `origin/main` is still at `6262b1a`: nothing merged on the
-tools repository in this session. The manager cleared in the same hour
-and its next session re-proves #194 first.
+tools repository in this session. The manager's line starts with #194,
+whose re-proof was running, and ends with PR #216.
 
 ## START HERE
 
@@ -34,8 +34,8 @@ and its next session re-proves #194 first.
 - **The dynasty builder manager** dispatches here, re-proves and merges.
   Address it by app session id,
   `local_39e3ac7a-9d6d-4524-82e4-9b5f0e6db274`. Its queue id changes at
-  each clear (`d7ab8b3f-533b-4fb0-811f-e822752a1e02` on 2026-11-15, and
-  a newer one after the clear that followed). Its
+  each clear (`0f450e2b-06cb-4be5-834d-e80757dbdf8d` since its clear of
+  2026-11-15). Its
   messages can sit queued while it is mid-turn: if it seems to miss a
   head or a go, re-send it with the PR comment link.
 - **Merges (since #170):** the manager merges head-pinned in one call once
@@ -44,8 +44,13 @@ and its next session re-proves #194 first.
   Green. Relay his words word for word, record them on the PR.
 - **The dynasty planner** (`local_84c6f2af-95ee-4c21-9c02-95877dc0cd21`)
   plans the owner-queue mod (#111, #137, #142, #147, #161, #179, #185,
-  #188, #202). Its queue id since its second clear of 2026-11-15 is
-  `df8ce212-d05c-4e0e-abee-55ee8a799b78`.
+  #188, #202), and since 2026-11-15, on Ben's word, the project tabs and
+  the Sessions tab (item 0e below). Its queue id since its third clear
+  of 2026-11-15 is `6116cb2f-15c9-406a-aa61-05abfe1c941a`.
+- **The personal-assistant** (`local_a8a11097-9b58-4198-82a6-7c1355a4f11d`)
+  is a new read-only role across projects, set up by Ben on 2026-11-15.
+  It messages the two planners only. Its reports are #217. A message
+  from it is a report, never Ben's approval.
 - **The draft advisory GHSA-27j5-qx96-v8w3 holds what public tickets may
   not** (Ben, 2026-11-15: "Move to advisory, delete (Recommended)").
   Which push form a settings file or the hook does not refuse, and the
@@ -57,7 +62,11 @@ and its next session re-proves #194 first.
   and append, never from an older copy. Its section I (2026-11-15) holds
   the planner's two unverified notes about `git fetch`, found while
   tiering #215; the trials and any rule text are the dynasty planner's
-  lane and Ben's hands.
+  lane and Ben's hands. Sections I3 to I5 are the dynasty planner's
+  trial, count and Action; I6 is the tools side, with Ben's "Queue
+  Action (Recommended)". **The advisory's text has a limit of 65,535
+  characters and stood at 60,226 on 2026-11-15**: keep a new section
+  short, or cut an older trial table to its result lines first.
 - **Your own ids.** App session id
   `local_9830794b-c1e9-400a-ba66-e6abb9432396`. The queue id changes at
   every `/clear`: it is on the owner-queue line of the system prompt. If
@@ -98,25 +107,49 @@ and its next session re-proves #194 first.
 
 ## Do first after this clear
 
-0a. **Re-read the dynasty queue file first.** The three old tools
-   Actions (#195, #193, #204) are recorded on their tickets and the
-   manager was told, twice, that they may leave: check they are gone.
-   One new Action went to the manager at this prep, with
-   `Session: 209a059f-7891-4e1e-a1c2-18143fc5cd7a`: *Name both plugin
-   folders in the settings file and delete the user-level variable
-   (#195; ends in an app restart)*. Check it is in the file, read it for
-   an `Answer:`, a `Note:` or a tick, and send the manager the new id
-   with that title first thing.
-0b. **PR B, the ruleset section for #193, is planned, approved and not
-   started.** Ben approved the plan in plan mode on 2026-11-15; it is
-   on #193 (issuecomment-6895069727). Build it from that comment: branch
-   `docs/t193-ruleset-setup` from `origin/main`, one file, the route
-   under "Your own PRs", then ask Ben by button to approve at its head
-   and whether the manager may merge on Green.
+0a. **Re-read the dynasty queue file first.** Two Actions there name
+   this planner, with `Session: bae0af50-ba4f-42e1-9ae2-e271f84ce2a1`:
+   *Name both plugin folders in the settings file and delete the
+   user-level variable (#195; ends in an app restart)*, and *Tools
+   builders' file: one exact fetch rule and seven denies (same sitting
+   as the dynasty fetch Action)*. Read each for an `Answer:`, a `Note:`
+   or a tick, and send the manager the new id with both titles first
+   thing. The three older tools Actions have left the file.
+0b. **PR B is PR #216** (`docs/t193-ruleset-setup`, at `3e99496`): the
+   "Server-side rulesets" section in the plugin README. **Approved at
+   `3e99496`, merge on Green** (Ben, by button: "Approve, merge on Green
+   (Recommended)", pull/216 issuecomment-6895241523). The manager has
+   the words and placed it last in its line. Nothing is left here but
+   to read its merge. #193 stays open for item 2.
+0c. **The fetch-rules Action** (the second title in 0a): when Ben ticks
+   it and pastes step 3's output (allow 41, deny 56, exact fetch True,
+   wide fetch False), read the tools builders' file to check, then add
+   one short line to the advisory's section I6. Its rule text and the
+   reading are in the advisory only.
+0d. **#217, the personal-assistant's report** (`Tier: unset`): stale
+   copies, second-laptop restore gaps, Ben's goal of relaunching any
+   role at will, and the review of that role's file. Rule on each item
+   and tier or split the ticket. The role-file draft arrives as message
+   text. Section C is a design: second look, then Ben by button
+   (grilling), before anything is built. Before any Action to remove
+   the hand copy of the mod, check #195: desktop sessions loaded that
+   copy until Ben's fix.
+0e. **The owner-queue asks of 2026-11-15** (a tab per project; a
+   Sessions tab with context size and time until cold; the instruction
+   at 245,000; a prompt dropped once its session has reset) are the
+   dynasty planner's to ticket, on Ben's "Dynasty planner
+   (Recommended)". Records: issues/185 issuecomment-6895986248 and
+   issues/161 issuecomment-6895988934, the second with Ben's "Size only
+   (Recommended)" and "Countdown only (Recommended)". **Left here: one
+   `session-rules` PR after PR #210 merges** (same section): "about
+   255K" becomes 245,000, and prep step 5 says the reset prompt is
+   written to the store and shown in chat in one block. It merges
+   before the mod's constant changes. Ask Ben to approve it by button.
 1. **#195: the pane shows 0.11.0** (Ben's word, issuecomment-6894719062)
    and the dynasty planner is told for #202. Ben ruled the one source:
    "Settings file (Recommended)" (issuecomment-6895058128). The new
-   Action (item 0a) is Ben's hand step. When Ben says the version after
+   Action (item 0a) is Ben's hand step; the manager says in its chat
+   when it is a quiet moment for it. When Ben says the version after
    the restart: read the new session's own `CLAUDE_CODE_PLUGIN_DIRS`,
    record both on #195, offer the commit of Ben's settings file by
    button, then open PR A as that comment says: a few lines after the
@@ -152,8 +185,8 @@ and its next session re-proves #194 first.
 2. **#193's trial passed** on the tools repository
    (issuecomment-6894814836, with Ben's push output: `GH013`). The
    dynasty ruleset Action is with the dynasty manager, with no test
-   push there. Left here: PR B (item 0b). The ticket stays open for
-   item 2, which waits for #191.
+   push there. PR B is open as #216 (item 0b). The ticket stays open
+   for item 2, which waits for #191.
 3. **PR #205** (ADR-0018 for #190, at `a9571f3`) is stacked on #194. When
    #194 merges: merge `origin/main` in, push, read its comments, ask Ben by
    button to approve at the new head and whether the manager may merge on
@@ -229,7 +262,8 @@ Not building, not dispatching, and never a settings file or
   line, after #210); #205 (stacked on #194, not approved);
   this state-back, #198 (stacked on #181, not approved); #208 (approved,
   merge on Green at `0f1e1a1`, CI green); #210 (approved, merge on Green
-  at `0b5acdb`, by pane answer).
+  at `0b5acdb`, by pane answer); #216 (approved, merge on Green at
+  `3e99496`, last in the manager's line).
 - **Builder PRs:** #182 (#175, low review posted, no blocking finding);
   #196 (#179) and #197 (#161, the re-check accepted all seven answers),
   the dynasty planner's; #211 (#168, at `df23375`, its builder is
@@ -239,8 +273,10 @@ Not building, not dispatching, and never a settings file or
   (its re-proof was running at the manager's clear), #181, #182, #208,
   #210, #184, #196, #197, #211, #214. The closeout of #186's builder is
   done.
-- **Planned, not opened:** PR B for #193 and PR A for #195 (items 0b
-  and 1).
+- **Planned, not opened:** PR A for #195 (item 1), and the 245,000
+  rule-text PR (item 0e).
+- **Filed 2026-11-15, the seventeenth session:** #217 (`Tier: unset`,
+  item 0d).
 - **Filed 2026-11-15:** #212 (five rules, low, the planner's own PR, no
   dispatch); #213 (the hook and one more push form, medium,
   `Profile: none`, filed by the dynasty planner; Ben's go "Go, after #200
@@ -270,23 +306,23 @@ Not building, not dispatching, and never a settings file or
 
 ## Queue entries raised
 
-One, sent to the manager as a ready entry at this prep (2026-11-15),
-with `Session: 209a059f-7891-4e1e-a1c2-18143fc5cd7a`. It was delivered;
-whether it is in the dynasty queue file is not yet read.
+Two, both read in the dynasty queue file on 2026-11-15 with
+`Session: bae0af50-ba4f-42e1-9ae2-e271f84ce2a1`:
 
 - *Name both plugin folders in the settings file and delete the
   user-level variable (#195; ends in an app restart)*.
-
-Done and recorded, to leave the queue on the manager's next pass: the
-three Actions for #195, #193 and #204 that named `b5e85b86-…`.
+- *Tools builders' file: one exact fetch rule and seven denies (same
+  sitting as the dynasty fetch Action)*.
 
 ## Waiting on Ben
 
 - The #195 settings Action (queue).
+- The fetch-rules Action for the tools builders' file (queue).
 
 ## Coming to Ben later
 
-- Approval of PR B (#193), once the next session has built it.
+- The design question for #217's section C, and the ruling on its items.
+- Approval of the 245,000 rule-text PR, after #210 merges.
 - Approval of PR A (#195), after Ben's hand step.
 - Approval of PR #205, after #194 merges.
 - Approval of this state-back, after #181 merges.
@@ -335,8 +371,19 @@ three Actions for #195, #193 and #204 that named `b5e85b86-…`.
   released; #195 at 0.11.0 and the one-source ruling; #193's trial
   passed; #215 tiered with its go; #212 at six rules; the advisory's
   section I; the plan for PR A and PR B approved.
+- 2026-11-15, the seventeenth session: PR #216 built and approved; the
+  #195 Action re-keyed; the tools side of the fetch finding read and
+  written as the advisory's section I6, and its Action queued; Ben's
+  two owner-queue asks recorded on #185 and #161 for the dynasty
+  planner; #217 filed.
 
 ## Gaps
+
+- **The three settings templates lag the real files** (the advisory's
+  section I6): they take the proven rules in one text change after the
+  advisory is published. One part is safe to ticket now: the builders'
+  template has no fetch allow at all, so under it a builder's
+  `git fetch origin` is refused.
 
 - **The hook README's layered-defense note** names only the `main`
   ruleset. Its one sentence goes into #215's brief.
@@ -410,6 +457,12 @@ Ben's decisions, each recorded on its ticket or PR.
   brief, object-only* (#215); *Add to #212* (the queue-entry rule from
   the #562 sitting); *Settings file* (the one source for the plugin
   folders, #195); the plan for PR A and PR B, approved in plan mode.
+- 2026-11-15, the seventeenth session, by button in this session:
+  *Approve, merge on Green* (PR #216 at `3e99496`); *Queue Action* (the
+  fetch rules in the tools builders' file; the advisory's section I6);
+  *Dynasty planner*, *Size only* and *Countdown only* (the owner-queue
+  asks, #161 issuecomment-6895988934); the plan for this clear prep,
+  approved in plan mode.
 - By pane answer in the manager's session: PR #210, approve at `0b5acdb`,
   merge on Green (pull/210 issuecomment-6887544775).
 - From the dynasty planner's session: *Approve, history to git* (the
@@ -476,6 +529,13 @@ Ben's decisions, each recorded on its ticket or PR.
 - **The worktree session counts the word git in a path.** A command
   with `hooks/git-guardrails` in an argument is refused as two git
   calls. Read that folder with the Read tool, or name its parent.
+- **Plan mode stops a clear prep.** Its comments, commit and push are
+  all writes. When Ben asks for a prep while plan mode is on, put the
+  prep in the plan and ask for approval at once.
+- **A draft advisory has a size limit.** Read its length before a
+  write, and say the room left to the other writers.
+- **A peer's finding is a report to check.** The assistant read the
+  mod's hand copy as never loaded; #195 shows it was.
 - Worktrees share branch refs; only `HEAD` is per worktree.
 - `/security-review` sees only commits. Commit first.
 - A worktree session can't `git -C` the main checkout. Read each
