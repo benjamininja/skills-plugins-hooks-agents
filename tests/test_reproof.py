@@ -6,9 +6,11 @@ is a ref made by hand under refs/pull/1/head.
 """
 import importlib.util
 import os
+import re
 import subprocess
 import sys
 import tempfile
+import types
 from pathlib import Path
 
 import pytest
@@ -181,6 +183,33 @@ def test_green_run_exits_zero_and_changes_nothing_in_the_clone(tmp_path, export_
     assert git(clone, "cat-file", "-t", moved) == "commit"
     assert not (clone / "MAIN_ONLY.txt").exists()
     assert list(export_area.iterdir()) == []
+
+
+def test_the_timeout_is_an_hour():
+    assert reproof.TIMEOUT == 3600
+
+
+def test_every_result_line_carries_its_elapsed_seconds(tmp_path, export_area, monkeypatch, capsys):
+    ticks = iter(x * 2.5 for x in range(1000))
+    monkeypatch.setattr(reproof, "time", types.SimpleNamespace(monotonic=lambda: next(ticks)))
+    clone, head, _ = scenario(tmp_path)
+    code, out = reproof_run(clone, head, capsys)
+    assert code == 0, out
+    steps = ("fetch main", "fetch head", "merge", "export", "index", "pytest",
+             "build_catalog", "catalog diff")
+    for step in steps:
+        assert f"== {step}: PASS (2.5s)" in out
+        assert f"PASS  {step} 2.5s" in out
+
+
+def test_a_failing_step_also_carries_its_elapsed_seconds(tmp_path, export_area, capsys):
+    clone, head, _ = scenario(
+        tmp_path, pr_files={"tests/test_fail.py": "def test_fail():\n    assert False\n"}
+    )
+    code, out = reproof_run(clone, head, capsys)
+    assert code == 1
+    assert re.search(r"== pytest: FAIL \(\d+\.\ds\)", out)
+    assert re.search(r"^FAIL  pytest \d+\.\ds$", out, re.MULTILINE)
 
 
 LS_FILES_TEST = (
