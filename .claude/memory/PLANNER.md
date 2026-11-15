@@ -5,10 +5,11 @@ alone. Rules are in the `session-rules` skill and in
 [PROJECT-RULES.md](PROJECT-RULES.md); this file is state. GitHub issues are
 the record. This file links to them and does not repeat them.
 
-Last state-back: 2026-11-15, in the twentieth session, at Ben's word
+Last state-back: 2026-11-15, in the twenty-first session, at Ben's word
 "prepare for clear boundary including reset prompt". `origin/main` is at
-`1661ac8` (PR #194 merged). The newest state is the "Twentieth session"
-block under "Do first after this clear"; the "Open PRs", "Queue entries
+`1661ac8` (PR #194 merged). The newest state is the "Twenty-first
+session" block under "Do first after this clear"; the rest of this
+paragraph is the twentieth session's and is older; the "Open PRs", "Queue entries
 raised" and "Coming to Ben later" sections further down are older and
 are brought up to date at the next full rewrite. No queue entry is
 open for this planner (its id in this session was
@@ -151,6 +152,63 @@ dynasty first.
 
 **Read this block first. It is the nineteenth session's state and it
 wins over items 0a, 0d and 1 below, which are kept only as history.**
+
+**Twenty-first session, 2026-11-15** (newest; it wins over everything
+below where they differ). Queue id in this session:
+`9cd4844a-f436-4aeb-8619-e96c240816cc`; no queue entry is keyed to it.
+Peers' queue ids by their own word: the dynasty manager
+`b7fa12c4-3c9f-453f-9ee7-6229f84d8e95`, the tools manager
+`e0ebd1e2-fb41-4781-8cde-8dddd20742d7`, the dynasty planner
+`a02cc6a2-abe6-4770-ba0a-eec8b22afc28`.
+
+- **Ben's answers, all by button in this session:**
+  - "Dynasty manager, last time (Recommended)": the dynasty manager
+    re-proves and merges PR #224 and PR #230 and runs their closeout
+    pulls, as one exception to its stop; "Ask again by button
+    (Recommended)": an approval given in another session is asked again
+    by the tools manager (both: issues/228 issuecomment-6900150287).
+  - "Every PR (Recommended)": the tools manager asks Ben's merge word
+    for every PR, a builder's included (pull/230
+    issuecomment-6900286477).
+  - "Not sure, run a trial (Recommended)", then "It ran": a desktop
+    session does not load a managers' settings file (issues/228
+    issuecomment-6900315989 and issuecomment-6900424559).
+  - "Hand over now, ticket it (Recommended)": no managers' file is made;
+    **#233** (medium, `Profile: none`, **no go asked yet**) finds where a
+    manager's rules live (pull/230 issuecomment-6901448364).
+  - "Now, from chat (Recommended)": Ben does the reduced step 4 himself.
+- **PR #230 is at `484cb7a`.** Both reads and the re-read are worked in
+  (rulings: pull/230 issuecomment-6900179371, issuecomment-6900286477,
+  issuecomment-6901448364). Both readers found nothing failing. Its
+  Windows check was running at the clear. PR #224 is green at
+  `f409d4f`. **Next: with #230 green, ask Ben by button for the approval
+  and merge word for #224 and #230 at their heads, and relay word for
+  word to the dynasty manager, #224 first.**
+- **The reduced step 4 is not shown done** (issues/228
+  issuecomment-6901525838): the tools `.venv`, two exact
+  `claude plugin validate` rules in the builders' file, removal of the
+  trial's managers' file, two checks. Ben answered "Done, pasted" but no
+  output reached the chat and the files did not show it. **Ask by
+  button, read the files, then record.**
+- **PR #210 is at `dce2100`** and **PR #205 at `bb80384`**, each with
+  `main` merged in (pull/210 issuecomment-6900191387, pull/205
+  issuecomment-6900200378). Neither is approved at its head; the tools
+  manager asks Ben at merge time. So items 2a and 3 below are done as
+  far as this planner goes.
+- **After #230 merges and is pulled and the `.venv` exists:** on Ben's
+  word, the comment on #228 titled "Hand-over done". Then the briefs:
+  #231 first, #232 after #189's PR, #220 and #219 at their turn, and
+  the go for #233 by button; its brief carries the drafted managers'
+  rules (34 allow rules from Ben's dynasty file) as the text to try.
+- **#218's PR** says "the project's builder manager" where the
+  assistant's draft says "the manager" (its report of 2026-11-15).
+- **The dynasty planner** files a dynasty ticket that follows #233; send
+  it the finding's link. It still waits for two words: PR #197 merged,
+  and the `session-rules` branch for its read after PR #210.
+- **Local branches:** PR #230's commits are on the local branch
+  `t228-role-reads`, pushed to the PR's branch; the local branch
+  `t228-tools-manager-role` is behind it, and `backup-230-6bbaecc` is a
+  leftover. Deleting either is Ben's word.
 
 **Twentieth session, 2026-11-15, after the clear** (it wins over C and E
 below where they differ):
@@ -847,6 +905,15 @@ Ben's decisions, each recorded on its ticket or PR.
 - **The mod's options block in the settings file is written by the
   host's settings dialog**, not by hand (the host's documentation, read
   by a subagent).
+- **Check that a file is loaded before designing on it.** Step 4 of
+  #228 and PR #230's first text assumed a managers' settings file
+  applies to a desktop session; a five-minute trial showed it does not.
+- **A merge commit takes the default author.** Pass the noreply
+  `user.email` on `git merge` too, or the push is refused; the guard
+  hook refuses `git reset --hard`, so the repair is a new local branch
+  pushed to the PR's branch.
+- **"Done" without the output is checked in the files** before it is
+  recorded, and said plainly when the files do not show it.
 - Worktrees share branch refs; only `HEAD` is per worktree.
 - `/security-review` sees only commits. Commit first.
 - A worktree session can't `git -C` the main checkout. Read each
