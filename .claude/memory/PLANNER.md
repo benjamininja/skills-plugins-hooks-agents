@@ -65,8 +65,8 @@ whose re-proof was running, and ends with PR #216.
   lane and Ben's hands. Sections I3 to I5 are the dynasty planner's
   trial, count and Action; I6 is the tools side, with Ben's "Queue
   Action (Recommended)". **The advisory's text has a limit of 65,535
-  characters and stood at 60,226 on 2026-11-15**: keep a new section
-  short, or cut an older trial table to its result lines first.
+  characters and stood at 62,778 on 2026-11-15**: under 2.8 KB is left,
+  so cut an older trial table to its result lines before a new section.
 - **Your own ids.** App session id
   `local_9830794b-c1e9-400a-ba66-e6abb9432396`. The queue id changes at
   every `/clear`: it is on the owner-queue line of the system prompt. If
@@ -107,25 +107,27 @@ whose re-proof was running, and ends with PR #216.
 
 ## Do first after this clear
 
-0a. **Re-read the dynasty queue file first.** Two Actions there name
+0a. **Re-read the dynasty queue file first.** One Action there names
    this planner, with `Session: bae0af50-ba4f-42e1-9ae2-e271f84ce2a1`:
    *Name both plugin folders in the settings file and delete the
-   user-level variable (#195; ends in an app restart)*, and *Tools
-   builders' file: one exact fetch rule and seven denies (same sitting
-   as the dynasty fetch Action)*. Read each for an `Answer:`, a `Note:`
-   or a tick, and send the manager the new id with both titles first
-   thing. The three older tools Actions have left the file.
+   user-level variable (#195; ends in an app restart)*. Read it for an
+   `Answer:`, a `Note:` or a tick, and send the manager the new id with
+   that title first thing. The fetch-rules Action (item 0c) is done and
+   the manager was told it may leave: check it is gone.
 0b. **PR B is PR #216** (`docs/t193-ruleset-setup`, at `3e99496`): the
    "Server-side rulesets" section in the plugin README. **Approved at
    `3e99496`, merge on Green** (Ben, by button: "Approve, merge on Green
    (Recommended)", pull/216 issuecomment-6895241523). The manager has
    the words and placed it last in its line. Nothing is left here but
    to read its merge. #193 stays open for item 2.
-0c. **The fetch-rules Action** (the second title in 0a): when Ben ticks
-   it and pastes step 3's output (allow 41, deny 56, exact fetch True,
-   wide fetch False), read the tools builders' file to check, then add
-   one short line to the advisory's section I6. Its rule text and the
-   reading are in the advisory only.
+0c. **The fetch-rules Action is done** (*Tools builders' file: one
+   exact fetch rule and seven denies*). Ben ticked it on 2026-11-15
+   with the check's output in a pane note; the planner read the file
+   and recorded it as the advisory's last paragraph. The dynasty
+   planner's second trial is the advisory's section I7: it holds one
+   more candidate check for #192's linter, and it leaves the note on
+   the managers' template (I6) to this planner, for the template change
+   after the advisory is published.
 0d. **#217, the personal-assistant's report** (`Tier: unset`): stale
    copies, second-laptop restore gaps, Ben's goal of relaunching any
    role at will, and the review of that role's file. Rule on each item
@@ -306,18 +308,18 @@ Not building, not dispatching, and never a settings file or
 
 ## Queue entries raised
 
-Two, both read in the dynasty queue file on 2026-11-15 with
+One, read in the dynasty queue file on 2026-11-15 with
 `Session: bae0af50-ba4f-42e1-9ae2-e271f84ce2a1`:
 
 - *Name both plugin folders in the settings file and delete the
   user-level variable (#195; ends in an app restart)*.
-- *Tools builders' file: one exact fetch rule and seven denies (same
-  sitting as the dynasty fetch Action)*.
+
+Done and recorded, to leave the queue on the manager's next pass: the
+fetch-rules Action for the tools builders' file.
 
 ## Waiting on Ben
 
 - The #195 settings Action (queue).
-- The fetch-rules Action for the tools builders' file (queue).
 
 ## Coming to Ben later
 
