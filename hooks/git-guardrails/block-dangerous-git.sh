@@ -140,6 +140,26 @@ SWITCHED_TO_MAIN=""
 # for counting what a push names. Blocking patterns never use this.
 uncommented() { echo "$1" | sed -E 's/(^|[[:space:]])#.*$//'; }
 
+# True when the text holds a `#` inside quotes or right after a backslash
+# or a backtick.
+quoted_hash() {
+  local s="$1" q="" i c
+  [[ "$s" == *'#'* ]] || return 1
+  for ((i = 0; i < ${#s}; i++)); do
+    c="${s:i:1}"
+    if [[ -n "$q" ]]; then
+      [[ "$c" == '#' ]] && return 0
+      [[ "$c" == "$q" ]] && q=""
+      continue
+    fi
+    case "$c" in
+      '\'|'`') [[ "${s:i+1:1}" == '#' ]] && return 0; ((i++)) ;;
+      '"'|"'") q="$c" ;;
+    esac
+  done
+  return 1
+}
+
 GH_CAP=10
 # "<dir>|<branch>" lines already passed, so each reading of a segment does
 # not ask gh again.
@@ -170,6 +190,11 @@ check_force_branch_delete() {
 
   if [[ "$pre" == *'$'* || "$pre" == *'`'* ]]; then
     block "force branch delete with \$ or a backtick — name each branch literally"
+  fi
+  # A `#` inside quotes or after an escape is not a comment, so the names
+  # after it are real: block rather than guess which ones git deletes.
+  if quoted_hash "$pre"; then
+    block "force branch delete with a quoted or escaped # — name each branch literally"
   fi
 
   # The branches it names: words that are not flags, comment excluded.
@@ -363,16 +388,40 @@ check_segment() {
 # `git` word (which the gate in check_segment would pass over) is not printed.
 VIEWS_AWK='
 BEGIN { SQ = "\047"; DQ = "\042"; BS = "\\"; BT = "`"; US = "\037"
-        VERBS = " push reset clean checkout restore branch switch " }
+        VERBS = " push reset clean checkout restore branch switch "
+        VALOPT = " -C -c --git-dir --work-tree --namespace --exec-path --super-prefix --config-env --attr-source "
+        LDQ1 = "\342\200\234"; LDQ2 = "\342\200\235"; LDQ3 = "\342\200\236"
+        LSQ1 = "\342\200\230"; LSQ2 = "\342\200\231"; LSQ3 = "\342\200\232"; LSQ4 = "\342\200\233" }
 function flush() { if (cur != "") { n++; W[n] = cur; F[n] = flag } cur = ""; flag = 0 }
-function dollar(s, i, mode,    d, j, e, depth) {
-  flag = 1; cur = cur "$"; d = substr(s, i + 1, 1)
-  if (d == "(") {
-    j = i + 1
-    while (j <= L) { e = substr(s, j, 1); cur = cur e; j++
-      if (e == "(") depth++; else if (e == ")") { depth--; if (depth == 0) break } }
-    return j
+function addq(ch) { cur = cur (ch == "#" ? BS "#" : ch) }
+function group(s, i, op, cl, mode,    j, e, depth, q) {
+  q = ""; depth = 0
+  for (j = (op == cl) ? i + 1 : i; j <= L; j++) {
+    e = substr(s, j, 1)
+    if (q != "") {
+      if (e == q) q = ""
+      else if (q == DQ && ((mode == "bash" && e == BS) || (mode == "ps" && e == BT))) j++
+      continue
+    }
+    if (mode == "bash" && e == BS) { j++; continue }
+    if (mode == "ps" && e == BT) { j++; continue }
+    if (op == cl && e == cl) return j
+    if (e == SQ || e == DQ) { q = e; continue }
+    if (op != cl) {
+      if (e == op) depth++
+      else if (e == cl) { depth--; if (depth == 0) return j }
+    }
   }
+  return L + 1
+}
+function dollar(s, i, mode,    d, j, e) {
+  flag = 1; d = substr(s, i + 1, 1)
+  if (d == "(") {
+    j = group(s, i + 1, "(", ")", mode)
+    cur = cur "$" substr(s, i + 1, j - i)
+    return j + 1
+  }
+  cur = cur "$"
   if (d == "{") {
     j = i + 1
     while (j <= L) { e = substr(s, j, 1); cur = cur e; j++; if (e == "}") break }
@@ -387,7 +436,12 @@ function dollar(s, i, mode,    d, j, e, depth) {
   }
   return i + 1
 }
-function lex(s, mode,    i, c, d, q) {
+function lex(s, mode,    i, c, d, q, j, e, k, inner, suf, pre, np, a, A) {
+  if (mode == "ps") {
+    gsub(LDQ1, DQ, s); gsub(LDQ2, DQ, s); gsub(LDQ3, DQ, s)
+    gsub(LSQ1, SQ, s); gsub(LSQ2, SQ, s); gsub(LSQ3, SQ, s); gsub(LSQ4, SQ, s)
+    gsub(/\\u201[cdeCDE]/, DQ, s); gsub(/\\u201[89abAB]/, SQ, s)
+  }
   n = 0; cur = ""; flag = 0; q = ""; L = length(s); i = 1
   while (i <= L) {
     c = substr(s, i, 1)
@@ -396,7 +450,7 @@ function lex(s, mode,    i, c, d, q) {
         if (mode == "ps" && substr(s, i + 1, 1) == SQ) { cur = cur SQ; i += 2; continue }
         q = ""; i++; continue
       }
-      cur = cur c; i++; continue
+      addq(c); i++; continue
     }
     if (q == DQ) {
       if (c == DQ) {
@@ -405,18 +459,48 @@ function lex(s, mode,    i, c, d, q) {
       }
       if (mode == "bash" && c == BS) {
         d = substr(s, i + 1, 1)
-        if (d == "$" || d == BT || d == DQ || d == BS) { cur = cur d; i += 2; continue }
+        if (d == "$" || d == BT || d == DQ || d == BS) { addq(d); i += 2; continue }
         cur = cur c; i++; continue
       }
-      if (mode == "ps" && c == BT) { cur = cur substr(s, i + 1, 1); i += 2; continue }
+      if (mode == "ps" && c == BT) { addq(substr(s, i + 1, 1)); i += 2; continue }
       if (c == "$") { i = dollar(s, i, mode); continue }
       if (mode == "bash" && c == BT) flag = 1
-      cur = cur c; i++; continue
+      addq(c); i++; continue
+    }
+    if (mode == "bash" && c == BT) {
+      j = group(s, i, BT, BT, mode)
+      cur = cur substr(s, i + 1, j - i - 1); flag = 1; i = j + 1; continue
+    }
+    if (mode == "ps" && c == "(") {
+      j = group(s, i, "(", ")", mode)
+      cur = cur substr(s, i + 1, j - i - 1); flag = 1; i = j + 1; continue
+    }
+    if (mode == "bash" && c == "{") {
+      for (j = i + 1; j <= L; j++) {
+        e = substr(s, j, 1)
+        if (e == "}") break
+        if (index(" \t{;&|()<>`$" SQ DQ BS, e)) { j = 0; break }
+      }
+      if (j && j <= L) {
+        inner = substr(s, i + 1, j - i - 1)
+        if (index(inner, "..")) { cur = cur substr(s, i, j - i + 1); flag = 1; i = j + 1; continue }
+        if (index(inner, ",")) {
+          for (k = j + 1; k <= L && !index(" \t;&|()<>{}`$" SQ DQ BS, substr(s, k, 1)); k++) ;
+          suf = substr(s, j + 1, k - j - 1); pre = cur; cur = ""
+          np = split(inner, A, ",")
+          for (a = 1; a <= np; a++) { cur = pre A[a] suf; flag = 1; flush() }
+          i = k; continue
+        }
+      }
+    }
+    if (c == "<" || c == ">") {
+      if (cur !~ /^[0-9]+$/) flush()
+      for (j = i; j <= L && index("<>", substr(s, j, 1)); j++) ;
+      cur = cur substr(s, i, j - i); flush(); i = j; continue
     }
     if (index(" \t(){}", c)) { flush(); i++; continue }
-    if (mode == "bash" && c == BT) { flush(); i++; continue }
     if (c == SQ || c == DQ) { q = c; i++; continue }
-    if ((mode == "bash" && c == BS) || (mode == "ps" && c == BT)) { cur = cur substr(s, i + 1, 1); i += 2; continue }
+    if ((mode == "bash" && c == BS) || (mode == "ps" && c == BT)) { addq(substr(s, i + 1, 1)); i += 2; continue }
     if (c == "$") { i = dollar(s, i, mode); continue }
     if (index("*?[", c)) flag = 1
     cur = cur c; i++
@@ -432,17 +516,22 @@ function norm(w,    k, c, b) {
   if (b ~ /^git-(push|reset|clean|checkout|restore|branch|switch)$/) return "git " substr(b, 5)
   return w
 }
-function render(cnt, r, quote,    k, w, o, prev, out) {
-  out = ""; prev = ""
+function render(cnt, r, quote, x,    k, w, o, out, sawgit, ag, skip) {
+  out = ""; sawgit = 0; ag = 0; skip = 0
   for (k = 1; k <= cnt; k++) {
     w = (k == r) ? "git" : W[k]
     o = norm(w)
-    if (o == w && prev == "git" && substr(w, 1, 1) != "-" && !index(w, " ") && !index(w, "\t")) o = tolower(w)
+    if (o != w && sawgit && k != x) o = w
+    if (o == "git" || o ~ /^git /) { sawgit = 1; ag = (o == "git") }
+    else if (ag) {
+      if (skip) skip = 0
+      else if (substr(w, 1, 1) == "-") { if (index(VALOPT, " " w " ")) skip = 1 }
+      else { if (o == w && !index(w, " ") && !index(w, "\t")) o = tolower(w); ag = 0 }
+    }
     if (quote && o == w && (index(w, " ") || index(w, "\t"))) {
       if (!index(w, DQ)) o = DQ w DQ; else if (!index(w, SQ)) o = SQ w SQ
     }
     out = out (out == "" ? "" : " ") o
-    prev = o
   }
   return out
 }
@@ -454,27 +543,55 @@ function emit(note, text,    key) {
   seen[key] = 1
   print note US text
 }
-{
-  seg = $0
-  if (seg ~ /^[ \t]*$/) next
+function readings(seg, v0,    m, mode, s, pass, cnt, k, nx, r) {
+  if (seg ~ /^[ \t]*$/) return
   split("", seen)
   seen[collapse(seg)] = 1
-  print US seg
+  if (v0) print US seg
   for (m = 1; m <= 2; m++) {
     mode = (m == 1) ? "bash" : "ps"
     s = seg
     for (pass = 1; pass <= 3; pass++) {
       cnt = lex(s, mode)
-      emit("", render(cnt, 0, 1))
+      emit("", render(cnt, 0, 1, 0))
       for (k = 1; k < cnt; k++) {
-        if (!F[k]) continue
         nx = tolower(W[k + 1])
-        if (index(VERBS, " " nx " ") || substr(nx, 1, 1) == "-") emit(W[k], render(cnt, k, 1))
+        if (F[k] && (index(VERBS, " " nx " ") || substr(nx, 1, 1) == "-")) emit(W[k], render(cnt, k, 1, 0))
+        if (norm(W[k]) != W[k] && index(VERBS, " " nx " ")) emit("", render(cnt, 0, 1, k))
       }
-      r = render(cnt, 0, 0)
+      r = render(cnt, 0, 0, 0)
       if (r == s) break
       s = r
     }
+  }
+}
+function toplevel(s,    i, c, q, depth, bt, start, L2) {
+  nt = 0; q = ""; depth = 0; bt = 0; start = 1; L2 = length(s)
+  for (i = 1; i <= L2; i++) {
+    c = substr(s, i, 1)
+    if (q != "") { if (c == q) q = ""; else if (q == DQ && c == BS) i++; continue }
+    if (c == BS) { i++; continue }
+    if (c == SQ || c == DQ) { q = c; continue }
+    if (c == BT) { bt = !bt; continue }
+    if (c == "(") { depth++; continue }
+    if (c == ")") { if (depth > 0) depth--; continue }
+    if (depth || bt) continue
+    if (c == ";" || c == "&" || c == "|") {
+      T[++nt] = substr(s, start, i - start)
+      if ((c == "&" || c == "|") && substr(s, i + 1, 1) == c) i++
+      start = i + 1
+    }
+  }
+  T[++nt] = substr(s, start)
+}
+{
+  toplevel($0)
+  for (t = 1; t <= nt; t++) {
+    tt = T[t]
+    gsub(/(&&|\|\||;|\||&)/, "\n", tt)
+    np = split(tt, P, "\n")
+    for (p = 1; p <= np; p++) readings(P[p], 1)
+    if (np > 1) readings(T[t], 0)
   }
 }'
 
@@ -485,12 +602,27 @@ function emit(note, text,    key) {
 # The readings are built first: if awk is missing or fails, or prints
 # nothing for a command that is not blank, the hook blocks rather than
 # check nothing.
-VIEWS=$(printf '%s\n' "$COMMAND" \
-  | sed -E -e 's/&>/>/g' -e 's/>&/>/g' -e 's/>\|/>/g' -e 's/(&&|\|\||;|\||&)/\n/g' \
-  | LC_ALL=C awk "$VIEWS_AWK") \
-  || block "the hook could not read the command (awk failed)"
+# The awk program splits each command twice: on every separator, as before
+# (each piece judged as it is and by its readings), and only on separators
+# outside quotes, parentheses and backticks (a piece that holds more than
+# one of the first kind is also read whole).
+views_of() {
+  printf '%s\n' "$1" | sed -E -e 's/&>/>/g' -e 's/>&/>/g' -e 's/>\|/>/g' \
+    | LC_ALL=C awk "$VIEWS_AWK"
+}
+VIEWS=$(views_of "$COMMAND") || block "the hook could not read the command (awk failed)"
 if [[ -z "$VIEWS" && -n "${COMMAND//[[:space:];&|]/}" ]]; then
   block "the hook could not read the command (no readings)"
+fi
+# Bash removes a backslash-newline and joins the words around it. The text
+# above reads it as a space; the joined text is read as well.
+COMMAND_JOINED=$(printf '%s' "$RAW" | sed -e 's/\\\\/\x01/g' \
+  -e 's/\x01\(\\r\)\{0,1\}\\n//g' -e 's/`\(\\r\)\{0,1\}\\n/ /g' \
+  -e 's/\\[nr]/;/g' -e 's/\\t/ /g' -e 's/\\"/"/g' -e 's/\\\//\//g' \
+  -e 's/\x01/\\/g')
+if [[ "$COMMAND_JOINED" != "$COMMAND" ]]; then
+  MORE=$(views_of "$COMMAND_JOINED") || block "the hook could not read the command (awk failed)"
+  VIEWS+=$'\n'"$MORE"
 fi
 while IFS=$'\x1f' read -r note view; do
   VIEW_NOTE=""

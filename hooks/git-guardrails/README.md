@@ -154,10 +154,8 @@ push to `main` past the hook.
 - A refspec built at run time (F4): `git push origin HEAD:$b` with
   `b=main`. A quoted refspec (`HEAD:ma''in`, `ma"in"`) is read and blocked.
 - `git switch -t origin/main` (F13), when no local `main` exists, creates a
-  local `main` without setting the switch, so a later bare push in another
-  tool call is judged by the lookup alone.
-- `git switch -c "$x"main` with `$x` unset creates a local `main` the same
-  way.
+  local `main` without setting the switch.
+- `git switch -c "$x"main` with `$x` unset (listed on #168).
 
 This hook is a text match on one tool call made by **Claude Code itself**.
 It does not see:

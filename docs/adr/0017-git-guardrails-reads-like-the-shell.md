@@ -66,6 +66,9 @@ same next spellings waiting: `g\it`, `$'\x67it'`, `/usr/bin/g?t`,
   a few). A force-delete name is asked of `gh` once per command.
 - Case-folding is stricter than Bash on Linux, where `GIT` is not git.
   That is the fail-closed side.
-- Still out of reach, and covered by the ruleset: a refspec built at run
-  time, F13, `git switch -c "$x"main`, a name built at run time that does
-  not sit before a guarded verb, and unknown git global options (#200).
+- Still out of reach: a refspec built at run time, F13,
+  `git switch -c "$x"main`, a name built at run time that does not sit
+  before a guarded verb, and unknown git global options (#200). The
+  ruleset covers these only when they push to `main`. For the local
+  destructive commands (`reset --hard`, `clean -f`, `checkout .`,
+  `restore .`, a force branch delete) nothing behind the hook covers them.
