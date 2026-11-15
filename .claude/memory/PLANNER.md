@@ -20,7 +20,15 @@ the tools manager's queue id is `e0ebd1e2-fb41-4781-8cde-8dddd20742d7`
 and it holds; the tabs are #229, tiered medium by the dynasty planner;
 the one comment on PR #230 is the dynasty planner's read, five points,
 none blocking (pull/230 issuecomment-6899900063), still to be worked
-into the role text. A second comment on PR #230 is the tools manager's
+into the role text. **The dynasty manager has stopped its tools line**
+and posted the hand-over list (issues/228 issuecomment-6900047255), by
+its report on Ben's word in its own chat. **PR #210 was not finished:
+it conflicts with `main` since #194 merged** and is handed over too, so
+it needs this planner's merge of `origin/main`, a new head and Ben's
+approval again. Until the tools manager's role file has merged and
+Ben's settings files exist, **no session re-proves or merges tools
+PRs**: PR #230 and the settings Action are the critical path. A second
+comment on PR #230 is the tools manager's
 cold read (pull/230 issuecomment-6900040210): five findings on the
 Start list (A1 to A5) and eleven on the rest (B1 to B11), **not yet
 read by the planner**. By its own summary the heaviest are: no first
