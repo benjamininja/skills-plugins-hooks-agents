@@ -62,9 +62,12 @@ the glossary for the skills catalog itself.
 ## Agents — when to run
 
 The agents in `.claude/agents/` are linked into `~/.claude/agents`, so they
-are available from any repo. There are seven. Four are session roles, or
+are available from any repo. There are eight. Five are session roles, or
 subagents a role starts by name, and nobody runs them by hand:
 
+- **`tools-central-builder-manager`** — the main-agent role of this
+  repository's builder manager. For a session rooted here and nowhere
+  else.
 - **`stage-builder`** — the main-agent role of a builder session the
   manager dispatches.
 - **`pr-code-reviewer`** — the read-only reviewer the manager starts at
