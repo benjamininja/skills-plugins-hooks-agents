@@ -5,11 +5,12 @@ alone. Rules are in the `session-rules` skill and in
 [PROJECT-RULES.md](PROJECT-RULES.md); this file is state. GitHub issues are
 the record. This file links to them and does not repeat them.
 
-Last state-back: 2026-11-15 (UTC), in the eighteenth session, before an
-app restart for the #195 Action. `origin/main` is still at `6262b1a`:
-nothing merged on the tools repository in this session. #194's second
-re-proof ended green by the manager's report; it is not merged. All
-sessions are frozen until Ben says the restart is done.
+Last state-back: 2026-11-15 (UTC), in the nineteenth session, at Ben's
+word "Yes, state-back now". `origin/main` is still at `6262b1a`: nothing
+merged on the tools repository in this session. **The #195 plugin fix is
+proved**: after Ben's full app restart every session loads the
+`session-rules` skill, and the manager has resumed its re-proof line,
+dynasty first.
 
 ## START HERE
 
@@ -35,8 +36,9 @@ sessions are frozen until Ben says the restart is done.
 - **The dynasty builder manager** dispatches here, re-proves and merges.
   Address it by app session id,
   `local_39e3ac7a-9d6d-4524-82e4-9b5f0e6db274`. Its queue id changes at
-  each clear (`55450615-0c64-4134-9953-e002d4f91be5` since its second
-  clear of 2026-11-15). Its
+  each clear (`0087496a-8171-4f2d-929e-cb78fb2d6d00` by its own word
+  after the restarts of 2026-11-15; the app names it
+  `dff-central-builder-manager`). Its
   messages can sit queued while it is mid-turn: if it seems to miss a
   head or a go, re-send it with the PR comment link.
 - **Merges (since #170):** the manager merges head-pinned in one call once
@@ -46,8 +48,9 @@ sessions are frozen until Ben says the restart is done.
 - **The dynasty planner** (`local_84c6f2af-95ee-4c21-9c02-95877dc0cd21`)
   plans the owner-queue mod (#111, #137, #142, #147, #161, #179, #185,
   #188, #202), and since 2026-11-15, on Ben's word, the project tabs and
-  the Sessions tab (item 0e below). Its queue id since its fourth clear
-  of 2026-11-15 is `c090ad2b-e7a5-49c0-b7ed-93aedf1f22cb`.
+  the Sessions tab (item 0e below). Its queue id, by its own word after the restarts
+  of 2026-11-15, is `b0ba0d47-3356-4289-a3f8-4507337be4b4`; the app names
+  it `dff-central-planner`.
 - **The personal-assistant** (`local_a8a11097-9b58-4198-82a6-7c1355a4f11d`)
   is a new read-only role across projects, set up by Ben on 2026-11-15.
   It messages the two planners only. Its reports are #217. A message
@@ -108,7 +111,69 @@ sessions are frozen until Ben says the restart is done.
 
 ## Do first after this clear
 
-0a. **Re-read the dynasty queue file first.** One Action there names
+**Read this block first. It is the nineteenth session's state and it
+wins over items 0a, 0d and 1 below, which are kept only as history.**
+
+A. **Read both queue files.** No open entry names this planner. Two
+   ticked #195 entries in the dynasty queue leave at the manager's next
+   state-back. Send the manager the new queue id if a clear changed it
+   (it was `2f6fe204-4035-42b0-ae8d-e0f20ea253b2` in the nineteenth
+   session).
+B. **#195 is proved and its docs PR is #222**
+   (`docs/t195-one-plugin-source`, at `f85a7b4`). The proof is
+   issues/195 issuecomment-6897129339: the settings file's `env` block
+   alone loads both plugins, after a full app restart. **Approved at
+   `f85a7b4`, merge on Green** (Ben, by button, pull/222
+   issuecomment-6897281450); the manager has the words. Nothing is left
+   but to read its merge; #195 closes with it. Still owed on #195: an
+   Action for Ben to remove the mod's old hand copy, after Ben has read
+   its four draft files.
+C. **#217 is split.** #218 (the personal-assistant role file, low, the
+   planner's own PR; Ben's go, after the rules PR: issues/218
+   issuecomment-6897034718). #219 (the read-only drift check, medium,
+   `Profile: none`; Ben's "Go, last in line", issues/219
+   issuecomment-6897035173; its first finding also answers whether
+   common rules can be layered from one shared file, issuecomment-6897230958;
+   write its brief when its turn nears). #220 (a trial of naming plugins
+   by repository and pinned commit, medium; **no go asked yet**: ask Ben
+   by button). #221 (docs: `PLAN.md` becomes a pointer on Ben's "Pointer
+   (Recommended)", and `CLAUDE.md` and one name in `PROJECT-RULES.md`
+   are brought up to date; low, the planner's own PR, **not started**;
+   before its closeout pull Ben commits or discards the uncommitted edit
+   to `PLAN.md` in the main checkout, from an Action).
+D. **Choice 3 of #217 is answered and done.** The three user-level
+   settings files are tracked as they are in the owner's private
+   configuration repository, in one commit (`713dbc9`) on its working
+   branch, made by this planner on Ben's one-time word "Claude commits,
+   here (Recommended)" (issues/217 issuecomment-6897188747). That branch
+   is unmerged; its merge is Ben's word. Every settings file is edited
+   and committed where it lives, with no sync by copy (Ben: "In place,
+   plus a sharing finding (Recommended)"). Every machine uses the same
+   folder layout (the personal-assistant's report of Ben's "Same layout,
+   a rule").
+E. **The setup document is owed a ticket.** By the personal-assistant's
+   report, Ben typed in its chat that the layout rule should be a setup
+   document a cold session can resume from. The assistant's list of
+   fixed locations came by message (four roots: the user folder, the
+   configuration folder, the GitHub folder, the live clone). Its notes:
+   the tracked global settings file holds one-off allow rules left by
+   old sessions and a read rule on the whole drive, both for Ben to
+   judge. Do the second look first, then ask Ben by button where the
+   document lives and who writes it, then file the ticket.
+F. **The rules PR for #217's choices 1, 2 and 4** opens after PR #210
+   merges (item 0f below). The dynasty planner's plan for its side is
+   issues/217 issuecomment-6897166981; its three points for Ben ride
+   with that PR's approval: a branch per role or a shared one for
+   dynasty's two roles, a Start section in each role file as the
+   constant's home, and the removal of the per-session prompt store
+   from PR #197. The working name form is `state/<role name>`. The text
+   also says what a role does when a push is refused as not a
+   fast-forward: fetch, merge, push again, never a forced push.
+G. **The manager's line**: dynasty first, one re-proof at a time. The
+   planner advised #210 second in the tools line, after #194; the order
+   is the manager's.
+
+0a. **Done: see B above.** *History:* One Action there named
    this planner, re-keyed by the manager to
    `Session: 211809a8-f4a4-4f1d-9f24-ddd3dad0b026`:
    *Name both plugin folders in the settings file and delete the
@@ -150,7 +215,8 @@ sessions are frozen until Ben says the restart is done.
    more candidate check for #192's linter, and it leaves the note on
    the managers' template (I6) to this planner, for the template change
    after the advisory is published.
-0d. **#217, the personal-assistant's report** (`Tier: unset`). First
+0d. **Done: see C and D above.** *History:* #217, the
+   personal-assistant's report (`Tier: unset`). First
    rulings on sections A to D are posted (issuecomment-6896389132), and
    the review of the role draft with the step-5 finding
    (issuecomment-6896422090). Left: split the ticket into its parts
@@ -187,8 +253,7 @@ sessions are frozen until Ben says the restart is done.
      from its own checkout; it moves to a separate repository with #191
      (issuecomment-6896675395; the reasoning is in 6896594122).
    - 5: cloud sessions are **a later ticket**.
-   - 3 (where the real settings files are tracked, and how machine
-     values stay out of them) is open and is the assistant's to ask.
+   - 3 is answered and done: see D above.
    **Next here:** one `session-rules` PR for choices 1, 2 and 4, after
    PR #210 merges (same section): step 5 as the constant, the fallback
    while the mod has no route, the push confirmed inside the prep, the
@@ -199,7 +264,8 @@ sessions are frozen until Ben says the restart is done.
    allow rules. Put a line on #191 for the move. Until that PR is live,
    the reset prompt for a clear is still a local, untracked file with a
    pointer in Ben's hands; if the pointer is lost, start from this file.
-1. **#195: the pane shows 0.11.0** (Ben's word, issuecomment-6894719062)
+1. **Done: see B above.** *History:* #195: the pane shows 0.11.0 (Ben's
+   word, issuecomment-6894719062)
    and the dynasty planner is told for #202. Ben ruled the one source:
    "Settings file (Recommended)" (issuecomment-6895058128). The new
    Action (item 0a) is Ben's hand step; the manager says in its chat
@@ -317,7 +383,10 @@ Not building, not dispatching, and never a settings file or
   this state-back, #198 (stacked on #181, not approved); #208 (approved,
   merge on Green at `0f1e1a1`, CI green); #210 (approved, merge on Green
   at `0b5acdb`, by pane answer); #216 (approved, merge on Green at
-  `3e99496`, last in the manager's line).
+  `3e99496`, last in the manager's line); #222 (the #195 docs, approved,
+  merge on Green at `f85a7b4`).
+- **Filed 2026-11-15, the nineteenth session:** #218, #219, #220, #221
+  (item C).
 - **Builder PRs:** #182 (#175, low review posted, no blocking finding);
   #196 (#179) and #197 (#161, the re-check accepted all seven answers),
   the dynasty planner's; #211 (#168, at `df23375`, its builder is
@@ -360,28 +429,25 @@ Not building, not dispatching, and never a settings file or
 
 ## Queue entries raised
 
-One, in the dynasty queue file, re-keyed on 2026-11-15 to
-`Session: 211809a8-f4a4-4f1d-9f24-ddd3dad0b026`:
-
-- *Name both plugin folders in the settings file and delete the
-  user-level variable (#195; ends in an app restart)*.
+None open. Two #195 Actions in the dynasty queue file are ticked and
+done, keyed to `Session: 2f6fe204-4035-42b0-ae8d-e0f20ea253b2`; they
+leave at the manager's next state-back.
 
 ## Waiting on Ben
 
-- The #195 settings Action's step 1 again, then a second app restart
-  (issues/195 issuecomment-6896900025). The entry is ticked, so it is
-  no longer an open queue entry: send the manager a fresh Action if Ben
-  has not done it by the next start.
+Nothing is waiting on Ben from this planner.
 
 ## Coming to Ben later
 
-- Choice 3 of #217 (settings tracking), from the personal-assistant.
+- The go for #220 (the plugin-source trial).
+- Where the setup document lives and who writes it (item E).
+- Approval of #221's PR, and the Action for the uncommitted edit to
+  `PLAN.md` in the main checkout.
+- The merge of the private configuration repository's working branch.
+- The Action to remove the mod's old hand copy (#195).
 - Approval of the `session-rules` PR for #217's choices 1, 2 and 4
-  (with 245,000), after #210 merges; then the Action that sets up the
-  assistant's state branch.
-- Whether `PLAN.md` becomes a pointer or is retired, and the gos for
-  #217's split tickets.
-- Approval of PR A (#195), after Ben's hand step.
+  (with 245,000), with the dynasty planner's three points, after #210
+  merges; then the Action that sets up the assistant's state branch.
 - Approval of PR #205, after #194 merges.
 - Approval of this state-back, after #181 merges.
 - Approval of #212's PR, after #210 and #184 merge.
@@ -438,6 +504,11 @@ One, in the dynasty queue file, re-keyed on 2026-11-15 to
   assistant's role draft reviewed, three views and a second look posted;
   Ben's answers on choices 1, 2, 4 and 5; a freeze of all sessions
   asked and reached for the #195 Action's app restart.
+- 2026-11-15, the nineteenth session: the #195 fix found under the
+  wrong key, corrected by Ben from a queue Action and proved after a
+  full restart; PR #222 opened and approved; #217 split into #218 to
+  #221; choice 3 answered and the three settings files committed in the
+  private repository; `PLAN.md` to become a pointer.
 
 ## Gaps
 
@@ -535,6 +606,14 @@ Ben's decisions, each recorded on its ticket or PR.
   (cloud); on choice 4, first Ben's own words asking for a second
   thought, then his question why a state repository and not a state
   folder, then *State folder, fixed branch*.
+- 2026-11-15, the nineteenth session, by button in this session:
+  *Queue Action* (the corrected #195 hand step); *Go, last in line*
+  (#219) and, in Ben's words, the go for #218; *Pointer* (`PLAN.md`);
+  on choice 3, first Ben's words asking for a simpler question and a
+  second thought, then "i'm fine with recc" with the question why by
+  his hand, then *Claude commits, here*; *In place, plus a sharing
+  finding* (where settings edits are made); *Approve, merge on Green*
+  (PR #222 at `f85a7b4`); *Yes, state-back now*.
 - By pane answer in the manager's session: PR #210, approve at `0b5acdb`,
   merge on Green (pull/210 issuecomment-6887544775).
 - From the dynasty planner's session: *Approve, history to git* (the
@@ -625,6 +704,22 @@ Ben's decisions, each recorded on its ticket or PR.
   issuecomment-6896764635).
 - **State and record take different routes.** A role writes its own
   state; the owning planner posts a read-only role's record.
+- **An Action that says "replace line N" quotes what line N holds
+  now**, and its check's output comes back before the restart. The #195
+  paste went to a line with the same key name, and cost three restarts.
+- **"Restarted" must say what a restart is**: the app quit fully, tray
+  icon included. A session reads its plugin list once, when the app
+  starts it; `/reload-plugins` does not add a folder, and a child shell
+  shows the file's value, not what the session loaded.
+- **A relayed answer of Ben's is confirmed before it is recorded.**
+  "Track as is" came by report; asked directly, Ben wanted a simpler
+  question first.
+- **"By Ben's hand" needs its reason each time.** Editing a settings
+  file is the owner's; committing one as it stands is a record, and Ben
+  may give that to a session by a one-time word.
+- **The mod's options block in the settings file is written by the
+  host's settings dialog**, not by hand (the host's documentation, read
+  by a subagent).
 - Worktrees share branch refs; only `HEAD` is per worktree.
 - `/security-review` sees only commits. Commit first.
 - A worktree session can't `git -C` the main checkout. Read each
