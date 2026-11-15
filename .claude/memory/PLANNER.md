@@ -5,9 +5,8 @@ alone. Rules are in the `session-rules` skill and in
 [PROJECT-RULES.md](PROJECT-RULES.md); this file is state. GitHub issues are
 the record. This file links to them and does not repeat them.
 
-Last state-back: 2026-11-14, at a twelfth context clear. `origin/main` was
-at `134691e` (#177), and the manager reported both tools checkouts pulled
-to it.
+Last state-back: 2026-11-14, at a thirteenth context clear. `origin/main`
+was still at `134691e` (#177): nothing merged in that session.
 
 ## START HERE
 
@@ -41,7 +40,8 @@ to it.
   Green. Relay his words word for word, record them on the PR.
 - **The dynasty planner** (`local_84c6f2af-95ee-4c21-9c02-95877dc0cd21`)
   plans the owner-queue mod (#111, #137, #142, #147, #161, #179, #185,
-  #188, #202).
+  #188, #202). Its queue id since its last clear is
+  `15250d47-4582-4cdc-b6c4-ea935b34c75e`.
 - **Your own ids.** App session id
   `local_9830794b-c1e9-400a-ba66-e6abb9432396`. The queue id changes at
   every `/clear`: it is on the owner-queue line of the system prompt. If
@@ -86,6 +86,26 @@ to it.
    says the pane's version, record it on #195 and tell the dynasty planner:
    #202 (the pane shows one queue) is most likely the same fault. Then
    propose the README line that names one source for the plugin folders.
+2a. **PR #210** (`t161-reset-prompt-pointer`, at `0b5acdb`, from `main`):
+   the `session-rules` text for the redesign Ben approved on #161
+   (issuecomment-6886175657). Ben answered "Not yet, read first"
+   (pull/210 issuecomment-6886522200); its approval is a queue Decision.
+   On Ben's approval: relay word for word, record on the PR. On a change:
+   edit, push, ask again at the new head. After it merges: rewrite this
+   file to the new shape (Current, then Reference) at the next
+   state-back, and ask Ben for #209's go once the dynasty planner says on
+   #161 that dynasty's state files are in the new shape. Three lines of
+   `parking.md` conflict with #180 and #184: whichever merges second takes
+   a merge of `main`.
+2b. **PR #208** (`command-forms-restore`, at `0f1e1a1`): the `git restore`
+   line in Command forms. Ben approved it to merge on Green
+   (pull/208 issuecomment-6886359918); CI is green. The manager's next
+   session merges it. Its settings half is a queue Action.
+2c. **The #204 read Action** is in the queue. When Ben pastes the window's
+   output: post the result table on #204. If Green's read (the Action's
+   step 5) worked, tell the manager #206 may dispatch (Ben's go: "Go,
+   after the reads", issues/206 issuecomment-6886359008). If it failed,
+   ask Ben by button what #206 should cover before any dispatch.
 2. **The #193 Action** is in the dynasty queue (apply the no-force-push
    ruleset to this repo, one test push by Ben's hand). When Ben pastes the
    output of its steps 5 and 6: read the ruleset with
@@ -113,17 +133,16 @@ to it.
 5. **This state-back** (PR #198) is stacked on #181. After #181 merges,
    merge `origin/main` in, keep this branch's `PLANNER.md`, push, read its
    comments, and ask Ben by button to approve and give a merge word.
-6. **#204** (narrow Ben's own GitHub login, owner-led): Claude owes step 1,
-   the list of every `gh` and `git` call the role files, `session-rules`,
-   `PROJECT-RULES.md` and `tools/reproof.py` prescribe, posted on the
-   ticket. Then send the manager a ready Action for Ben's test login.
+6. **#204** (narrow Ben's own GitHub login, owner-led): step 1, the call
+   list, is posted (issuecomment-6885992121), with Ben's ruling "Reads
+   now, writes by script" (issuecomment-6886194312). Next is item 2c.
 7. **Findings to rule on** when their builders post them: #189, #187, #192
-   (how the host matches rules), #191 (how a one-hour token reaches a
-   builder; a real fork goes to Ben by button). #200's design goes to Ben
-   by button, as #168's did.
-8. **#164** is closed. The manager sends the link of the first code review
-   that ran with the pulled reviewer and no fork (on #182 or #199); note it
-   on #164.
+   (how the host matches rules; two more checks from the dynasty planner
+   are on it, issuecomment-6886001749), #191 (how a one-hour token reaches
+   a builder; a real fork goes to Ben by button). #200's design goes to
+   Ben by button, as #168's did. #207 is dispatched at the manager's next
+   free slot; read its PR against the ticket if the manager asks.
+8. **#164** is done: the first no-fork review link is noted on it.
 
 ## What this session answers for
 
@@ -142,14 +161,23 @@ Not building, not dispatching, and never a settings file or
 ## Open PRs and in-flight work
 
 - **Planner PRs:** #180 (#178, approved, merge on Green at `86a45e3`, in
-  re-proof); #194 (approved, merge on Green at `8b66806`, next in line);
-  #181 (approved, merge on Green at `148c9d1`); #184 (stacked on #180, not
-  approved); #205 (stacked on #194, not approved); this state-back, #198
-  (stacked on #181, not approved).
+  re-proof Green, pull/180 issuecomment-6886463954, merge due in the
+  manager's next session); #194 (approved, merge on Green at `8b66806`,
+  next in line); #181 (approved, merge on Green at `148c9d1`); #184
+  (stacked on #180, not approved); #205 (stacked on #194, not approved);
+  this state-back, #198 (stacked on #181, not approved); #208 (approved,
+  merge on Green at `0f1e1a1`, CI green); #210 (at `0b5acdb`, not
+  approved, Decision queued).
 - **Builder PRs:** #182 (#175); #199 (#186); #196 (#179) and #197 (#161),
   the dynasty planner's. #168 is building as `t168-gitgate`, with Ben's
   design rulings on the ticket.
-- **Dispatch line, on Ben's recorded gos:** #167, #189, then #187, then
+- **Filed 2026-11-14, night, all low, `Profile: none`:** #206
+  (`tools/token_check.py`, the write half of #204's test; go after the
+  reads); #207 (`resume_plain.ps1` input checks; go at the next free
+  slot); #209 (retire `prepend_state.py`; no go asked, not before #210
+  merges).
+- **Dispatch line, on Ben's recorded gos:** #207 at the next free slot,
+  ahead of the line; then #167, #189, then #187, then
   #192 (first PR: checks 1, 2, 3 and 7); #176 after the pull and #50; #200
   after #168 merges; #203 and #191 after PR #205 merges (#191 only on the
   planner's word); #201 after #191 merges.
@@ -161,12 +189,18 @@ Not building, not dispatching, and never a settings file or
 
 ## Queue entries raised
 
-Both are in the dynasty queue, read there on 2026-11-14.
+All five are in the dynasty queue, read there on 2026-11-14, each with
+`Session: b5e85b86-f217-4a16-94e3-bc154bfd9e2f`.
 
 - *Point the plugin folder variable at the live clone (owner-queue 0.7.2
-  is loading)*, #195, `Session: 8bda0483-e47e-42fd-9850-8b25ee130dd4`.
+  is loading)*, #195.
 - *Add the no-force-push ruleset to the tools repository and test it
-  (#193)*, `Session: 8bda0483-e47e-42fd-9850-8b25ee130dd4`.
+  (#193)*.
+- *Make a test token and run nine read calls with it (#204)*.
+- *Add two allow rules to the tools builders' settings file (git restore
+  from main, gh pr edit with a body file)*, PR #208.
+- *Approve PR #210: a reset prompt is a pointer, a state file keeps one
+  Current block (#161)?*, a Decision.
 
 ## Waiting on Ben
 
@@ -174,13 +208,17 @@ Each is a queue entry; nothing here is prose only.
 
 - The #195 Action.
 - The #193 Action.
+- The #204 read Action.
+- The tools builders' settings Action.
+- The PR #210 approval Decision.
 
 ## Coming to Ben later
 
 - Approval of PR #205, after #194 merges.
 - Approval of PR #184, after #180 merges.
 - Approval of this state-back, after #181 merges.
-- #204's test Action, once the call list is posted.
+- #206's dispatch word, or a button on its scope, after #204's reads.
+- #209's go, after #210 merges and dynasty's state files change shape.
 - #200's design, and any real fork in #191's first finding.
 
 ## Vendor lane and held tickets
@@ -209,14 +247,23 @@ Each is a queue entry; nothing here is prose only.
   tiered with Ben's gos; #190 grilled in four rounds, SWOT, confirmed, and
   written as ADR-0018 in PR #205; #201, #203 and #204 filed; #193's ruleset
   text posted and its Action queued.
+- 2026-11-14, night: #204's call list posted and its read Action queued;
+  #206, #207 and #209 filed; PR #208 (the `git restore` form) opened and
+  approved; PR #210 (the reset prompt as a pointer, the state file's one
+  Current block) opened; the first no-fork review noted on #164.
 
 ## Gaps
 
 - **The baseball handoff**
   ([docs/handoff/baseball-session-dispatch.md](../../docs/handoff/baseball-session-dispatch.md))
-  is current at `01e2f46`. Bump it after #180, #184, #194 and #205 merge
-  (parking, the queue per project, the author rule and the threat model
-  changed; #177's auditor change is already on `main`).
+  is current at `01e2f46`. Bump it after #180, #184, #194, #205, #208 and
+  #210 merge (parking, the queue per project, the author rule, the threat
+  model, the `git restore` form and the reset prompt changed; #177's
+  auditor change is already on `main`).
+- **The Tools planner has no role file.** Its read list goes into
+  `PROJECT-RULES.md` with PR #210. A real role file is a later question
+  for Ben: this repo's agents are linked into the owner's global agents
+  folder, and the name would meet dynasty's own.
 - **`CLAUDE.md`'s CI sentence** is out of date.
 - **#140 F11:** a `-C` path is final even when it can't be resolved. No
   ticket yet.
@@ -250,6 +297,14 @@ Ben's decisions, each recorded on its ticket or PR.
   data and record text is written and last edited by the owner's login;
   builders only; one App; three review triggers; public now with classes
   only. Then *Confirmed, write it*.
+- 2026-11-14, night, by button in this session: *Reads now, writes by
+  script* (#204); *Public low ticket now* (the advisory's fix 7, #207);
+  *Rule line and settings* (PR #208); *Go, after the reads* (#206); *Go,
+  next free slot* (#207); *Approve, merge on Green* (PR #208 at
+  `0f1e1a1`); *Now, from main* and *Project rules file* (PR #210's
+  shape); *Not yet, read first* (PR #210's approval).
+- From the dynasty planner's session: *Approve, history to git* (the
+  resume-prompt redesign, #161 issuecomment-6886175657).
 - From the manager's session: Ben's four design rulings on #168
   (issuecomment-6885492170), and his answers on #185
   (issuecomment-6885472513).
