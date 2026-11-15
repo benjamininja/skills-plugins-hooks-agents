@@ -43,9 +43,10 @@ in the manager's session.
   Green. Relay his words word for word, record them on the PR.
 - **The dynasty planner** (`local_84c6f2af-95ee-4c21-9c02-95877dc0cd21`)
   plans the owner-queue mod (#111, #137, #142, #147, #161, #179, #185,
-  #188, #202). Its queue id was `c19bc37f-d5c9-4e25-af7e-36bff3f31a00`
-  on 2026-11-15; Ben then asked it to prepare for a clear, so a new id
-  follows by message.
+  #188, #202). Its queue id since its clear of 2026-11-15 is
+  `36cf9567-9d3e-427f-989a-7cd9a9203003`. That clear may have lost the
+  planner's messages of the hour before it: #213's tier and go, and the
+  two revisions in #213's history, were sent again after it.
 - **The draft advisory GHSA-27j5-qx96-v8w3 holds what public tickets may
   not** (Ben, 2026-11-15: "Move to advisory, delete (Recommended)").
   Which push form a settings file or the hook does not refuse, and the
