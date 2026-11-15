@@ -27,18 +27,20 @@ this is a behavior adaptation.
     worktree session), then `$PWD`. So a plain push from a worktree on a
     feature branch passes while the main checkout sits on `main`, and the
     same push from a worktree on `main` still blocks.
-  - **Rule A (fail-closed, owner's decision on #135).** The `cwd` is used,
-    and so the `CLAUDE_PROJECT_DIR` lookup skipped, only when the whole
-    command (every segment) holds none of: `cd`, `pushd`, `popd`, `chdir`,
-    `Set-Location`, `sl`, `Push-Location`, `Pop-Location`, `env -C`,
-    `env --chdir`, `--chdir`, `--git-dir`, `--work-tree`, `GIT_DIR`,
-    `GIT_WORK_TREE`, `core.worktree`. Any of them as a word, even inside
-    quotes, a comment or a subshell, falls back to the old lookup (`-C`,
-    then `CLAUDE_PROJECT_DIR`, then `$PWD`); quotes and backslashes are
-    also removed before a second look, so `c''d` counts. A directory change
-    is never parsed, and a false match only makes the hook stricter. A
-    name built at run time (`eval`, a variable) is out of reach, like the
-    other cases in the layered-defense note.
+  - **Rule B, an allowlist (owner's decision on #135, replacing a word
+    list that kept finding new spellings).** The `cwd` is used, and so the
+    `CLAUDE_PROJECT_DIR` lookup skipped, only when the whole command is
+    exactly a plain push: one segment (no `;`, `&&`, `||`, `|`, `&`, no
+    newline), no wrapper, subshell, substitution, backtick, variable, `$`
+    or env prefix, and the words are `git push`, then optionally `-u` or
+    `--set-upstream`, then optionally one bare remote name (letters,
+    digits, `.`, `_`, `-`, not starting with `-` or `.`). No global git
+    option (`-c`, `-C`, `--git-dir`, `--work-tree`, any other), no other
+    push flag (`--mirror`, `--all`, `--tags`, `-f`...) and no refspec.
+    Anything else, even a command close to a plain push, falls back to the
+    old lookup (`-C`, then `CLAUDE_PROJECT_DIR`, then `$PWD`). The Bash and
+    the PowerShell tool get the same rule. A directory change is never
+    parsed, so a `cd` built any way at all falls back.
   - Only a string-valued `cwd` directly inside the outermost JSON object
     counts, not one nested in `tool_input`. JSON `\\` decodes to a
     backslash. A missing or empty `cwd`, or one that is not a repo, falls
@@ -90,10 +92,25 @@ this is a behavior adaptation.
 - **Every spelling of the whole tree is blocked** for `checkout` / `restore`:
   `.`, `./`, `./.`, `./*`, `..`.
 - **`HEAD` and `@` count as "whatever is checked out"**, so
-  `git push origin HEAD` gets the same branch lookup as a bare `git push`.
+  `git push origin HEAD` gets a branch lookup like a bare `git push`. It is
+  not a plain push (rule B), so the lookup reads the `-C` path, then
+  `CLAUDE_PROJECT_DIR`, then `$PWD`, never the hook input's `cwd`. The block
+  message says so when the hook input has a `cwd` that was not read.
 - **A switch to `main` earlier in the same command blocks a later bare
   push** (`git checkout main && git merge x && git push`), because the
-  lookup would otherwise see the branch from before the command ran.
+  lookup would otherwise see the branch from before the command ran. So
+  does a create flag whose new branch is `main` or `master`
+  (`git switch -c main`, `git checkout -B main`, `-bmain`, `-fbmain`,
+  `--create=main`, a long option abbreviated with `=` such as `--cre=main`,
+  a split name such as `ma''in`, `--ignore-other-worktrees -C main`).
+  **Nothing clears the switch** (owner's ruling on #135): once an earlier
+  segment of the command switches to `main`, a later bare push is held,
+  whatever comes between, even a real create (`git checkout main; git
+  checkout -b x; git push -u origin`), because the hook cannot see whether
+  a create succeeded (git refuses `-d` with a create, and a branch that
+  already exists fails). A push that names its target (`git push -u origin
+  x`) is unaffected. The server-side ruleset on `main` is the layer that
+  covers the rest.
 - **When in doubt it blocks.** Text after a `#` still counts toward a
   block and never toward an exemption, so
   `git push origin my-feature # not main` is blocked. Reword the comment.
@@ -114,8 +131,8 @@ It does not see:
 - a `cd` in an earlier tool call, or one built at run time. A bare
   `git push` is judged against the folder the hook input's `cwd` names
   (where the tool call starts) unless `-C <path>` is given or the command
-  holds a directory change or git-dir override (rule A above), which
-  falls back to `CLAUDE_PROJECT_DIR`
+  is not exactly a plain push (rule B above), which falls back to
+  `CLAUDE_PROJECT_DIR`
 - a direct terminal `git push`, or another machine
 
 The layer that cannot be bypassed locally is the GitHub ruleset on `main`
