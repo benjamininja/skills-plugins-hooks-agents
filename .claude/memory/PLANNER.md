@@ -131,11 +131,25 @@ below where they differ):
   approval, send the manager the Action for the uncommitted `PLAN.md` in
   the main checkout. It meets PR #210 in `PROJECT-RULES.md`: the second
   to merge takes a merge of `main` and a fresh approval.
-- **The setup document is #223** (low, the planner's own PR, **not
-  started**), on Ben's "Tools repo, planner's PR (Recommended)". It must
-  not repeat the private restore guide (issues/223
-  issuecomment-6899328258). After its merge: an Action for Ben, one
-  pointer line in the private repository. The assistant's two notes on
+- **A builder manager for this repository is #228** (owner-led), on
+  Ben's typed ask of 2026-11-15, which also said to get the two dynasty
+  roles' help on boundaries and profiles. Both were asked to answer as
+  one comment each on #228. **Next: read their comments, second look,
+  then the design to Ben by button (plan mode), then a SWOT, then the
+  role file as the planner's own PR.** The settings files and the
+  dispatch configuration are Ben's, from an Action. Nothing moves from
+  the dynasty manager until Ben approves the design.
+- **The pane's tabs**: Ben said they are still missing and that each
+  project is a tab with its own page (issues/185
+  issuecomment-6899534141). The dynasty planner has the words and
+  tickets it.
+- **The setup document is #223, and its PR is #227**
+  (`docs/t223-machine-layout`, at `63c6445`), started on Ben's "start
+  #223 while CI runs". Its body flags that the user name is part of the
+  rule, and that two steps of the private restore guide look out of
+  date. **Next: Ben's approval by button, once CI is green.** After its
+  merge: an Action for Ben, one pointer line in the private repository,
+  naming those two steps. The assistant's two notes on
   the global settings file still go to Ben apart from it, by button.
 - **The owner-queue walkthrough** becomes a document inside the mod, by
   the assistant's report of Ben's answers (issues/221
