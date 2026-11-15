@@ -114,6 +114,37 @@ dynasty first.
 **Read this block first. It is the nineteenth session's state and it
 wins over items 0a, 0d and 1 below, which are kept only as history.**
 
+**Twentieth session, 2026-11-15, after the clear** (it wins over C and E
+below where they differ):
+
+- Queue ids: this planner `79be61bc-d749-440f-b714-23e1d697c3e7`; the
+  manager `b7fa12c4-3c9f-453f-9ee7-6229f84d8e95`, role confirmed by its
+  own word. Both are told. Nothing was re-keyed.
+- **#220 has Ben's go**: "Go, after #219's finding (Recommended)"
+  (issues/220 issuecomment-6899300195). The manager has the words. Write
+  its brief when #219's first finding is posted.
+- **#221's PR is #224** (`docs/t221-plan-pointer`, at `f409d4f`), on
+  Ben's "Build now (Recommended)" (issues/221 issuecomment-6899300957).
+  It names the manager by role, and also rewords three lines in
+  `program-status.md` and `MEMORY.md` that pointed at the removed plan
+  text. **Next: Ben's approval by button, once CI is green.** At
+  approval, send the manager the Action for the uncommitted `PLAN.md` in
+  the main checkout. It meets PR #210 in `PROJECT-RULES.md`: the second
+  to merge takes a merge of `main` and a fresh approval.
+- **The setup document is #223** (low, the planner's own PR, **not
+  started**), on Ben's "Tools repo, planner's PR (Recommended)". It must
+  not repeat the private restore guide (issues/223
+  issuecomment-6899328258). After its merge: an Action for Ben, one
+  pointer line in the private repository. The assistant's two notes on
+  the global settings file still go to Ben apart from it, by button.
+- **The owner-queue walkthrough** becomes a document inside the mod, by
+  the assistant's report of Ben's answers (issues/221
+  issuecomment-6899328684). The dynasty planner tickets it; this planner
+  tiers that ticket.
+- Nothing merged on the tools repository: `origin/main` is `6262b1a`.
+  The manager's tools line starts with #194, then #210, after dynasty's
+  re-proof.
+
 A. **Read both queue files.** No open entry names this planner. Two
    ticked #195 entries in the dynasty queue leave at the manager's next
    state-back. Send the manager the new queue id if a clear changed it
