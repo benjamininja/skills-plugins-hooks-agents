@@ -1080,7 +1080,10 @@ async function copy(
   $.ui.toast(isCopied ? `Copied: ${what}` : 'Could not copy here')
 }
 
-/** The mod's own data folder, where `drafts` is; outside every repository. */
+/**
+ * The mod's own data folder, where `drafts` is: the plugin folder, inside the
+ * live clone, its data folders gitignored and never committed.
+ */
 function dataDir($: EngineInterface): string {
   return $.plugin.root.replaceAll('\\', '/')
 }
@@ -1101,13 +1104,25 @@ function dated(ms: number): string {
   return `${at.getFullYear()}-${two(at.getMonth() + 1)}-${two(at.getDate())} ${two(at.getHours())}:${two(at.getMinutes())}`
 }
 
-/** Writes this session's own record whole. A failed write waits for the next. */
+/** True while this session's record could not be written; said once (F7). */
+let isUnsaved = false
+
+/**
+ * Writes this session's own record whole. A failed write is said once, since
+ * other panes would then draw this running session as stopped; the next
+ * heartbeat writes it again.
+ */
 async function save($: EngineInterface): Promise<void> {
   if (self === undefined) return
   try {
     await $.fs.write(recordPath($, self.id), `${JSON.stringify(self, null, 2)}\n`)
+    isUnsaved = false
   } catch {
-    // The next heartbeat writes it again.
+    if (!isUnsaved)
+      $.ui.toast(
+        "owner-queue: this session's record could not be written; other panes may show it stopped",
+      )
+    isUnsaved = true
   }
 }
 
@@ -1138,9 +1153,10 @@ async function promptStat(
 
 /**
  * Tracks this session when it was started with a tracked role, at
- * `classic.SessionStart`, and after a `/clear` under the new id. A resumed
- * session keeps what its record held; a new one takes no request older than
- * itself.
+ * `classic.SessionStart`, and after a `/clear` under the new id. A compaction
+ * keeps the record as it was. A start or a resume takes no request older
+ * than itself, and its idle time counts from its first turn in this process,
+ * not from a turn before it was resumed (F5 of PR #197's review).
  */
 async function enroll(
   $: EngineInterface,
@@ -1156,17 +1172,19 @@ async function enroll(
   }
   const now = await stamp($)
   const was = await readRecord($, id)
+  const isCompact = source === 'compact'
   self = {
     id,
     role,
     name: title?.trim() || was?.name || role,
     // A compaction can come mid-turn: it keeps the state it found.
-    state: source === 'compact' && was?.state === 'busy' ? 'busy' : 'idle',
+    state: isCompact && was?.state === 'busy' ? 'busy' : 'idle',
     turnStart: was?.turnStart ?? 0,
-    turnEnd: was?.turnEnd ?? 0,
+    turnEnd: isCompact ? (was?.turnEnd ?? 0) : 0,
+    workStart: was?.workStart ?? 0,
     tokens: was?.tokens ?? 0,
     beat: now,
-    ran: was?.ran ?? now,
+    ran: isCompact ? (was?.ran ?? now) : Math.max(was?.ran ?? 0, now),
     sent: was?.sent ?? {},
     ...(moved?.to === id
       ? { movedAt: moved.at }
@@ -1400,6 +1418,7 @@ export const register: Register = (on, settings) => {
   self = undefined
   isQueued = false
   isTending = false
+  isUnsaved = false
   moved = undefined
 
   on('session.start', async ($, e, next) => {
@@ -1436,6 +1455,8 @@ export const register: Register = (on, settings) => {
     if (e.agentId === undefined && self !== undefined) {
       self.state = 'busy'
       self.turnStart = await stamp($)
+      // The turn a prep instruction asked for re-arms nothing (F1).
+      if (!isQueued) self.workStart = self.turnStart
       isQueued = false
       await save($)
     }

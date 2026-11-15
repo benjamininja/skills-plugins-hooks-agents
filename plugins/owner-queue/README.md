@@ -127,7 +127,8 @@ another (#161, the planner's ruling).
   (`classic.SessionStart`, its `agent_type`). Stage builders and sessions
   with no role are never tracked and write nothing.
 - **The store.** Three folders in the mod's own data folder, beside
-  `drafts`, outside every repository, never committed:
+  `drafts`: the plugin folder, which is inside the live clone (see Install).
+  The plugin's `.gitignore` names all three, so they are never committed:
   - `sessions/<id>.json`: each tracked session's own record. Only that
     session writes it. It holds its role and name, its state (`busy` at a
     turn's start, `idle` at its end, `closed` at the session's end), the

@@ -40,6 +40,12 @@ export type SessionRecord = {
   /** When the last main-loop turn started and ended; 0 before the first. */
   turnStart: number
   turnEnd: number
+  /**
+   * When the last turn that was not a prep turn started. Only such a turn
+   * re-arms the triggers: a prep turn that ends with no prompt (Esc, a
+   * denied write, a question back) does not send the instruction again.
+   */
+  workStart: number
   /** The context tokens the last measurement gave. */
   tokens: number
   /** The last heartbeat. */
@@ -88,6 +94,7 @@ export function recordOf(text: string): SessionRecord | undefined {
       ran: 0,
       sent: {},
       ...one,
+      workStart: one.workStart ?? one.turnStart ?? 0,
     } as SessionRecord
   } catch {
     return undefined
@@ -136,11 +143,14 @@ export function isUsed(
   )
 }
 
-/** Each trigger sends once, until a new turn starts after it. */
+/**
+ * Each trigger sends once, until a new turn of work starts after it. The prep
+ * turn the instruction itself started does not count (F1 of PR #197's review).
+ */
 export function isArmed(one: SessionRecord, trigger: Trigger): boolean {
   const at = one.sent[trigger]
 
-  return at === undefined || one.turnStart > at
+  return at === undefined || one.workStart > at
 }
 
 /** Whether the context trigger is due: at or past the limit, armed. */

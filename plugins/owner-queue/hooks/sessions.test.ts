@@ -29,6 +29,7 @@ function world(on: On) {
   const toasts: string[] = []
   const copied: string[] = []
   const ids = { now: 'planner-1' }
+  const faults = { records: false }
   mock.store(on)
   const time = mock.clock(on, { now: START })
   // The queue is asked for by its absolute path; every other file by its own.
@@ -45,6 +46,8 @@ function world(on: On) {
     return { value: one.text }
   })
   on('fs.write', ($$, e) => {
+    if (faults.records && slash(e.path).includes('/sessions/'))
+      throw new Error('the disk is full')
     files.set(slash(e.path), { text: e.text, mtime: time.now() })
 
     return { value: undefined }
@@ -132,7 +135,7 @@ function world(on: On) {
     })
   const promptOf = (id: string) => `${root()}/reset-prompts/${id}.md`
 
-  return { files, sent, toasts, copied, time, ids, find, record, root, other, promptOf }
+  return { files, sent, toasts, copied, time, ids, faults, find, record, root, other, promptOf }
 }
 
 const enroll = (
@@ -224,22 +227,107 @@ test('the context trigger fires once, after the turn, and again only after a new
   await read($)
   expect(w.sent).toHaveLength(1)
 
-  // A new turn that writes no prompt: the trigger is armed again.
+  // The prep turn ends with no prompt (Esc on it, a denied write, a question
+  // back): it re-arms nothing, so the instruction is not sent again (F1).
   await w.time.advance(1000)
   await start($, 't2')
   await w.time.advance(1000)
-  await end($, 't2')
+  await $.turn.complete({
+    answer: '',
+    durationMs: 1,
+    isAborted: true,
+    turnId: 't2',
+    reason: 'aborted',
+  })
   await measure($, 262000)
-  expect(w.sent).toHaveLength(2)
+  await read($)
+  expect(w.sent).toHaveLength(1)
 
-  // A turn that writes the reset prompt leaves it fresh: nothing more.
+  // A turn of work after it, still with no prompt: armed again, sent once.
   await w.time.advance(1000)
   await start($, 't3')
   await w.time.advance(1000)
-  w.files.set(w.promptOf('planner-1'), { text: 'the prompt', mtime: w.time.now() })
   await end($, 't3')
   await measure($, 263000)
   expect(w.sent).toHaveLength(2)
+
+  // The prep turn writes the reset prompt and leaves it fresh; a turn of work
+  // after it makes it stale and arms the trigger once more.
+  await w.time.advance(1000)
+  await start($, 't4')
+  await w.time.advance(1000)
+  w.files.set(w.promptOf('planner-1'), { text: 'the prompt', mtime: w.time.now() })
+  await end($, 't4')
+  await measure($, 264000)
+  expect(w.sent).toHaveLength(2)
+})
+
+test('a prep turn with no prompt does not bring the idle trigger back (F1)', async ($, on) => {
+  const w = world(on)
+  await enroll($)
+  await start($, 't1')
+  await w.time.advance(1000)
+  await end($, 't1')
+  await w.time.advance(46 * MINUTE)
+  await read($)
+  expect(w.sent).toHaveLength(1)
+
+  // The prep turn writes nothing; 45 minutes later, nothing is sent again.
+  await start($, 't2')
+  await w.time.advance(1000)
+  await end($, 't2')
+  await w.time.advance(46 * MINUTE)
+  await read($)
+  await w.time.advance(46 * MINUTE)
+  await read($)
+  expect(w.sent).toHaveLength(1)
+
+  // A turn of work brings it back, once, 45 minutes after that turn.
+  await start($, 't3')
+  await w.time.advance(1000)
+  await end($, 't3')
+  await w.time.advance(46 * MINUTE)
+  await read($)
+  expect(w.sent).toHaveLength(2)
+})
+
+test('a resumed session takes no old request and no old idle time (F5)', async ($, on) => {
+  const w = world(on)
+  await enroll($)
+  await start($, 't1')
+  await w.time.advance(1000)
+  await end($, 't1')
+  // The session stops; End of Day writes a request it never takes.
+  w.files.set(`${w.root()}/requests/planner-1.json`, {
+    text: JSON.stringify({ at: w.time.now() }),
+    mtime: w.time.now(),
+  })
+  await $.session.end({
+    reason: 'prompt_input_exit',
+    sessionId: 'planner-1',
+    resume: { id: 'planner-1' },
+  })
+  await w.time.advance(3 * 60 * MINUTE)
+
+  await $.classic.SessionStart({
+    source: 'resume',
+    session_id: 'planner-1',
+    agent_type: 'central-planner',
+  })
+  await read($)
+  expect(w.sent).toHaveLength(0)
+  expect(w.record('planner-1')?.state).toBe('idle')
+})
+
+test('a record that cannot be written is said once (F7)', async ($, on) => {
+  const w = world(on)
+  w.faults.records = true
+  await enroll($)
+  await start($, 't1')
+  await end($, 't1')
+
+  const said = w.toasts.filter(one => one.includes('record could not be written'))
+  expect(said).toHaveLength(1)
 })
 
 test('the idle trigger fires after 45 minutes, once, and a fresh prompt stops it', async ($, on) => {
