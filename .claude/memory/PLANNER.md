@@ -114,12 +114,28 @@ sessions are frozen until Ben says the restart is done.
    *Name both plugin folders in the settings file and delete the
    user-level variable (#195; ends in an app restart)*. Read it for an
    `Answer:`, a `Note:` or a tick. After a clear, send the manager the
-   new id with that title first thing. **Ben was doing this Action at
-   this state-back**: all three peers reported quiet and hold until Ben
-   says the restart is done (issues/195 issuecomment-6896476736). When
-   Ben says the pane's version, go to item 1, and tell the three peers
-   the restart is done if Ben has not. The fetch-rules Action (item 0c)
-   has left the queue.
+   new id with that title first thing. **The app was restarted and the
+   Action is ticked, but its step 1 did not land** (issues/195
+   issuecomment-6896900025): line 3 of the settings file still names
+   only the owner-queue folder and the user-level variable is gone, so
+   a session started since then has **no session-dispatch plugin and no
+   `session-rules` skill**. Until Ben redoes step 1 and restarts again,
+   read the skill's file from the live clone of this repository
+   (`plugins/session-dispatch-managers-build-review/skills/session-rules/SKILL.md`),
+   and no dispatch, re-proof or merge can start. A peer session was
+   asking Ben by button whether to fix it at once. When Ben says the
+   pane's version, check a session's own variable holds both folders,
+   then go to item 1 and tell the peers the restart is done. The
+   fetch-rules Action (item 0c) has left the queue.
+   **Session names changed on 2026-11-15:** the dynasty planner is
+   `dff-central-planner` (Ben's word, dynasty #162
+   issuecomment-6896698877) and the app shows the manager as
+   `dff-central-builder-manager` (not Ben's word yet). After the
+   restart the manager's app session received the planner's reset
+   prompt and Ben was asked which role it holds: confirm each peer's
+   role and queue id before relying on a message from it.
+   `PROJECT-RULES.md` line 12 names the manager's old session name; fix
+   it in the next rule-text PR.
 0b. **PR B is PR #216** (`docs/t193-ruleset-setup`, at `3e99496`): the
    "Server-side rulesets" section in the plugin README. **Approved at
    `3e99496`, merge on Green** (Ben, by button: "Approve, merge on Green
@@ -352,7 +368,10 @@ One, in the dynasty queue file, re-keyed on 2026-11-15 to
 
 ## Waiting on Ben
 
-- The #195 settings Action (queue): Ben was doing it at this state-back.
+- The #195 settings Action's step 1 again, then a second app restart
+  (issues/195 issuecomment-6896900025). The entry is ticked, so it is
+  no longer an open queue entry: send the manager a fresh Action if Ben
+  has not done it by the next start.
 
 ## Coming to Ben later
 
@@ -597,6 +616,13 @@ Ben's decisions, each recorded on its ticket or PR.
   asked for a second thought, and then why a repository and not a
   folder. State the premise and its alternatives first, and say where
   the first case was overstated.
+- **A short prompt pasted into the wrong session gives it the wrong
+  role.** After the restart the manager's session took the dynasty
+  planner's prompt. The handover names the role in its first words;
+  the session that receives it checks its own title against it.
+- **At a prep, give Ben the file's full path and the short prompt
+  together, each in its own code block** (Ben, 2026-11-15, issues/217
+  issuecomment-6896764635).
 - **State and record take different routes.** A role writes its own
   state; the owning planner posts a read-only role's record.
 - Worktrees share branch refs; only `HEAD` is per worktree.
