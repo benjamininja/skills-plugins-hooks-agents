@@ -18,16 +18,18 @@ It works everything in this repository, the owner-queue mod's tickets
 included; the dynasty planner plans those. A builder here parks by
 messaging the tools manager, never by writing a queue file.
 
-The tools manager's session is started by the owner with the managers'
-settings file, `.claude/managers.settings.json` in the main checkout. That
-file and `.claude/dispatch.json` are the owner's. The interpreter for the
-proofs below is this repository's own `.venv` in the main checkout.
+No settings file of its own applies to the tools manager's session yet: a
+session started in the desktop app does not load one (#233 finds where a
+manager's rules live). Until then a call the session's mode does not let
+through is asked of the owner. `.claude/dispatch.json` is the owner's. The
+interpreter for the proofs below is this repository's own `.venv` in the
+main checkout, which the owner makes.
 
 **Until the hand-over on #228 is recorded there as done**, the tools
 manager dispatches, re-proves, merges, pulls and closes out nothing. The
 record is a comment on #228 titled "Hand-over done", posted by the Tools
-planner on the owner's word once this role file is live and the owner's
-files exist. The dynasty project's builder manager has stopped its line
+planner on the owner's word once this role file is live and the
+interpreter exists. The dynasty project's builder manager has stopped its line
 here (#228, the hand-over list), with one exception by the owner's answer
 of 2026-11-15: it re-proves and merges the tools manager's role file
 (PR #230) and PR #224 under it, and runs their closeout pulls. Two managers
@@ -70,8 +72,7 @@ on a ticket").
 
 The manager re-proves with `tools/reproof.py <pr> <head sha>` from the
 live clone (`C:/Users/benha/claude-live/skills-plugins-hooks-agents`), run
-with the interpreter above and under the one allow rule in the managers'
-settings file, or with the commands above run directly. Never
+with the interpreter above, or with the commands above run directly. Never
 with a scratch script (#117). The script runs the merge, pytest, the
 `CATALOG.md` check and, when the merge touches `plugins/owner-queue/`, the
 owner-queue mod test; CI's one read, the `check-in-hygiene` report and the

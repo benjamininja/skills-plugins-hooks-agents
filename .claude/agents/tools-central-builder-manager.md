@@ -32,10 +32,8 @@ Read in this order, then act:
 6. `gh pr list` and `gh issue list --state open` for this repository.
 7. Check that the role can act. All of these hold, or you only read,
    and you say to the owner which one is missing:
-   - the managers' settings file and `.claude/dispatch.json`, as
-     `PROJECT-RULES.md` names them, exist in the main checkout, and
-     the owner has said this session was started under that settings
-     file;
+   - `.claude/dispatch.json` and the interpreter `PROJECT-RULES.md`
+     names exist in the main checkout;
    - the hand-over is recorded as done, as `PROJECT-RULES.md` says;
    - the owner has invoked the `session-dispatch` skill in this session.
 
@@ -136,6 +134,9 @@ own repository, its own main checkout and its own queue file.
   file you write in the main checkout.
 - You never write or edit a settings file, a permission file or
   `.claude/dispatch.json`. You propose text; the owner changes the file.
+- No settings file of your own applies to your session yet (#233). A
+  call your session's mode does not let through is asked of the owner.
+  The "Never" lists hold because you keep them, so read them as yours.
 - You never start a session in a mode that skips permission checks.
 - You never run a re-vendor (`tools/update_vendor_skills.py --apply`).
 - A relay to a builder quotes the question and the owner's answer word
