@@ -98,9 +98,9 @@ at the same time.
 
 0a. **Re-read the dynasty queue file first.** Its three tools Actions
    (#195, #193, #204) still named the id `b5e85b86-f217-4a16-94e3-bc154bfd9e2f`
-   at the last read, three clears old. The manager's messages and the
-   planner's crossed while each was mid-turn, and both sessions then
-   cleared, so no re-key was done. An answer on them is said in no chat:
+   at the last read, three clears old. Both sessions were clearing, so
+   the manager holds the re-key, by agreement, for the next planner
+   session's id. An answer on them is said in no chat:
    read the file for `Answer:` and `Note:` lines and for a ticked entry,
    and send the manager the new id with the three titles first thing.
    None held an answer, a note or a tick at the last read.
@@ -161,9 +161,9 @@ at the same time.
    issuecomment-6888155220), and the flagged-`Answer:` sentence.
    ADR-0016's point 5 is reworded to those answers. **Approved at
    `05f2a7f`, merge on Green** (Ben, by button: "Approve, merge on Green
-   (Recommended)", pull/184 issuecomment-6888151069). The approval was
-   sent to the manager, which had not read it before its clear: confirm
-   #184 is in its re-proof line. If `parking.md` conflicts after #210
+   (Recommended)", pull/184 issuecomment-6888151069). The manager noted
+   the approval for its state file and gives #184 a place in its
+   re-proof line. If `parking.md` conflicts after #210
    merges first, merge `main` in and ask Ben again: an approval covers
    one head. Its merge is the switch: from then, tools entries go to the
    tools queue. Then ask the manager to move the three planner Actions
@@ -432,9 +432,9 @@ Ben's decisions, each recorded on its ticket or PR.
 - **An "Undo:" line under hand steps reads as one more step.** Ben
   asked whether to remove the line just pasted. Say "only to reverse it
   later", or leave the undo out of the steps.
-- **Two sessions that clear in the same hour lose each other's
-  messages.** A message queued behind a turn may never be read; the
-  next session re-sends what matters with the record's link.
+- **A message queued behind a turn is read late.** When both sessions
+  are near a clear, say so in the message, and put what must survive on
+  the record with its link.
 - Worktrees share branch refs; only `HEAD` is per worktree.
 - `/security-review` sees only commits. Commit first.
 - A worktree session can't `git -C` the main checkout. Read each
