@@ -15,6 +15,10 @@ Format:
   - An action carries Ticket, Steps, Context, Blocks, Raised.
   - `Ticket:` holds the ticket's full link. An entry belongs in the
     queue of the project whose repo holds that ticket.
+  - `- Id: <id>` is the entry's id, written by the queue CLI: `d14` for
+    a decision, `a9` for an action, counted up per project and never
+    reused. **No agent writes or changes an `Id:` line by hand.** An
+    entry without one is named by its title.
 - Options are written `- Options: (a) ...; (b) ...` and
   `- Recommended: (a), because ...`. The pane shows one button per
   option.

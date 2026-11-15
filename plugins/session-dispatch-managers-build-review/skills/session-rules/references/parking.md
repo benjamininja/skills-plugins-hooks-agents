@@ -3,8 +3,11 @@
 Each project has one queue: `NEEDS-OWNER.md` in its main checkout. It
 holds everything that waits on the owner for that project. The
 `owner-queue` pane reads the main checkout's copy and no other, and
-shows each queue the owner lists under its own heading. The format head
-is `templates/NEEDS-OWNER.md` in this plugin.
+shows each queue the owner lists under its own heading: the name the
+owner gives that project in the mod's `queues` setting, where each item
+is a path with a name. A path with no name is shown under its
+repository folder's name. The format head is
+`templates/NEEDS-OWNER.md` in this plugin.
 
 ## Which queue an entry goes to
 
@@ -20,6 +23,21 @@ is `templates/NEEDS-OWNER.md` in this plugin.
   It holds steps for the owner's hands, so it names local paths, and
   its record is the ticket each entry links to. The project's
   `.gitignore` names `.claude/memory/NEEDS-OWNER.md` (ADR-0016).
+
+## The Id line
+
+This holds from the `owner-queue` version that gives entries an id
+(ADR-0016, point 5). Before it no entry has one, and each is named by
+its title.
+
+- **Given by the CLI.** When the owner-queue CLI adds an entry it
+  writes `- Id: ...`: `d` and a number for a Decision, `a` and a number
+  for an Action, counted up per project and never used again. The pane
+  shows it after the project's name, as in `dff d14`.
+- **Only the CLI writes it.** No agent writes or changes an `Id:` line
+  by hand, and the pane never edits one.
+- **An entry with no id** is named by its title. It gets an id the next
+  time the CLI writes the file.
 
 ## The five steps
 
@@ -90,7 +108,9 @@ own.** It leaves only with its whole entry, once the answer is recorded
 (step 5 above), as a `Note:` line does. A pane
 answer is the owner's wherever it lands. With a `Session:` field it is
 said in the named session's chat; without one, in the session whose
-pane was pressed.
+pane was pressed. An `Answer:` line the pane flags as not written by
+the pane is not the owner's answer: the session that reads it acts on
+nothing and asks the owner.
 
 ## The Note line and the Time line
 

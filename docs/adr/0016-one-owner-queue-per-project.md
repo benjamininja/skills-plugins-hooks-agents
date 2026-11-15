@@ -65,10 +65,15 @@ answered, and for a self-critical review of the plan after it.
    CLI. This repository has no manager, so the dynasty manager writes
    its queue.
 5. **The pane's order is the same in every session.** Groups follow the
-   owner's `queues` list, numbers restart per project with a short key,
-   and entries are shown in file order, as that project's sessions wrote
-   them. This is a change to the mod, planned by the dynasty planner on
-   a ticket of its own.
+   owner's `queues` list. Each item of that list is a path with a name,
+   the owner's word for the project, and the name is the group's
+   heading. Each entry carries an id the queue CLI writes, counted up
+   per project and never reused, and entries are shown in file order,
+   as that project's sessions wrote them. This is a change to the mod,
+   planned by the dynasty planner on #185, which records the owner's
+   three answers of 2026-11-14 on the name, the id and the heading:
+   "Ben sets a name (Recommended)", "Id written in the file
+   (Recommended)" and "The set name alone (Recommended)".
 
 ## Alternatives rejected
 
@@ -97,9 +102,11 @@ answered, and for a self-critical review of the plan after it.
   is open, which must then be rebuilt from the tickets.
 - An untracked file sits in the tracked `.claude/memory/` folder. The
   mod reads that fixed path, so moving it is a mod change.
-- Numbers in the pane are not ids. The CLI adds an entry at the top of
-  its section, so numbers shift inside a project. An entry is quoted by
-  its title or its ticket link.
+- Until the mod change of point 5 is live, numbers in the pane are not
+  ids. The CLI adds an entry at the top of its section, so numbers shift
+  inside a project, and an entry is quoted by its title or its ticket
+  link. From then an entry's id stays with it, and only the CLI writes
+  an `Id:` line.
 - Dynasty's queue stays tracked until its own ticket is done. Untracking
   a live, modified file is a hazard: the main checkout's pull of the
   commit that removes it is refused or deletes the file. That ticket
