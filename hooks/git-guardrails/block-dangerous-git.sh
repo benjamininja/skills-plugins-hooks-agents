@@ -359,7 +359,8 @@ check_segment() {
 # text of the one before. A word the hook cannot read (it holds `$` or an
 # unquoted `*`, `?`, `[`) that comes right before a guarded verb or a dash
 # word gives one more reading with that word as `git`, and <note> names it.
-# Readings equal up to whitespace are printed once.
+# Readings equal up to whitespace are printed once, and a reading with no
+# `git` word (which the gate in check_segment would pass over) is not printed.
 VIEWS_AWK='
 BEGIN { SQ = "\047"; DQ = "\042"; BS = "\\"; BT = "`"; US = "\037"
         VERBS = " push reset clean checkout restore branch switch " }
@@ -449,6 +450,7 @@ function collapse(t) { gsub(/[ \t]+/, " ", t); sub(/^ /, "", t); sub(/ $/, "", t
 function emit(note, text,    key) {
   key = collapse(text)
   if (key == "" || key in seen) return
+  if (text !~ /(^|[^A-Za-z0-9_.-])git(\.exe)?([ \t]|$)/) return
   seen[key] = 1
   print note US text
 }
