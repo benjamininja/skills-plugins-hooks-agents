@@ -973,6 +973,18 @@ def test_other_spellings_of_the_same_class_block(command, tool, on_feature):
     assert result.returncode == 2, result.stderr.decode()
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="Git Bash puts /usr/bin before the PATH it inherits, so a shim cannot shadow awk")
+def test_a_failing_awk_blocks_instead_of_checking_nothing(gh, on_feature):
+    # the gh shim folder is first on PATH: an awk there that fails must not
+    # leave the command unchecked
+    awk = gh / "awk"
+    awk.write_bytes(b"#!/bin/bash\nexit 1\n")
+    awk.chmod(0o755)
+    result = run_hook("git status", project_dir=on_feature)
+    assert result.returncode == 2, result.stderr.decode()
+    assert b"could not read the command" in result.stderr
+
+
 # Ben's ruling on #168, question 1 (whole segment): a quoted refspec reads main too
 @pytest.mark.parametrize("tool", TOOLS)
 @pytest.mark.parametrize("command", [

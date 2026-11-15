@@ -482,12 +482,20 @@ function emit(note, text,    key) {
 # own. The `&` and `|` of a redirection (`2>&1`, `&>file`, `>|file`) are not
 # separators: reduce those to a plain `>` first, so `git push 2>&1 origin
 # main` stays one segment. Each reading of a segment is checked in turn.
+# The readings are built first: if awk is missing or fails, or prints
+# nothing for a command that is not blank, the hook blocks rather than
+# check nothing.
+VIEWS=$(printf '%s\n' "$COMMAND" \
+  | sed -E -e 's/&>/>/g' -e 's/>&/>/g' -e 's/>\|/>/g' -e 's/(&&|\|\||;|\||&)/\n/g' \
+  | LC_ALL=C awk "$VIEWS_AWK") \
+  || block "the hook could not read the command (awk failed)"
+if [[ -z "$VIEWS" && -n "${COMMAND//[[:space:];&|]/}" ]]; then
+  block "the hook could not read the command (no readings)"
+fi
 while IFS=$'\x1f' read -r note view; do
   VIEW_NOTE=""
   [[ -n "$note" ]] && VIEW_NOTE=" (cannot tell whether '$note' is git — name git literally)"
   check_segment "$view"
-done < <(printf '%s\n' "$COMMAND" \
-  | sed -E -e 's/&>/>/g' -e 's/>&/>/g' -e 's/>\|/>/g' -e 's/(&&|\|\||;|\||&)/\n/g' \
-  | LC_ALL=C awk "$VIEWS_AWK")
+done <<< "$VIEWS"
 
 exit 0
