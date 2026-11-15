@@ -12,9 +12,12 @@
        8-4-4-4-12 shape of the "started:" line) or that starts with a hyphen
     3. read the message file (UTF-8, trimmed); refuse a message that holds
        a double quote or whose text starts with a hyphen
-    4. find the CLI as dispatch.ps1 does: the "claude" key of the main
-       checkout's .claude\dispatch.json, else claude on PATH. The main
-       checkout is found from the worktree.
+    4. find the CLI: the "claude" key of the main checkout's
+       .claude\dispatch.json, but only when that main checkout (found from
+       the worktree) is on the owner's list,
+       <user profile>\.claude\dispatch-projects.json, as dispatch.ps1 -Apply
+       requires. Otherwise, or with no key, claude on PATH; the config of an
+       unlisted folder is not read.
     5. run  claude --resume <SessionId> --bg <message>  with the worktree
        as the working directory, and no other flag
     6. wait up to 60 s for the claude process to exit, then print
@@ -55,7 +58,7 @@ function Refuse([string]$Why) {
 if (-not (Test-Path -LiteralPath $Worktree)) { Refuse "no worktree $Worktree" }
 if ($SessionId.Contains('"')) { Refuse 'the session id holds a double quote' }
 if ($SessionId.TrimStart().StartsWith('-')) { Refuse 'the session id starts with a hyphen' }
-if ($SessionId -cnotmatch '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$') {
+if ($SessionId -cnotmatch '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\z') {
     Refuse "the session id is not a session id (hex digits, 8-4-4-4-12): $SessionId"
 }
 if (-not (Test-Path -LiteralPath $MessageFile -PathType Leaf)) { Refuse "no message file: $MessageFile" }
@@ -64,13 +67,26 @@ $msg = if ($msg) { $msg.Trim() } else { '' }
 if (-not $msg) { Refuse "the message file is empty: $MessageFile" }
 if ($msg.Contains('"')) { Refuse 'the message holds a double quote' }
 if ($msg.StartsWith('-')) { Refuse 'the message starts with a hyphen' }
+if ($msg.EndsWith('\')) { Refuse 'the message ends in a backslash' }
 
 $Claude = 'claude'
+$ErrorActionPreference = 'Continue'
 $common = (& git -C $Worktree rev-parse --path-format=absolute --git-common-dir 2>$null)
+$ErrorActionPreference = 'Stop'
 if ($LASTEXITCODE -ne 0 -or -not $common) { Refuse "not a git checkout: $Worktree" }
 $main = (Split-Path -Parent ($common -replace '/', '\')).TrimEnd('\')
 $configPath = Join-Path $main '.claude\dispatch.json'
-if (Test-Path -LiteralPath $configPath -PathType Leaf) {
+$listPath = Join-Path ([Environment]::GetFolderPath('UserProfile')) '.claude\dispatch-projects.json'
+$listed = @()
+if (Test-Path -LiteralPath $listPath -PathType Leaf) {
+    try {
+        $listed = @((Get-Content -LiteralPath $listPath -Raw -Encoding UTF8 | ConvertFrom-Json).projects)
+    } catch {
+        $listed = @()
+    }
+}
+$isListed = @($listed | Where-Object { $_ -and ("$_" -replace '/', '\').TrimEnd('\') -ieq $main }).Count -gt 0
+if ($isListed -and (Test-Path -LiteralPath $configPath -PathType Leaf)) {
     try {
         $config = Get-Content -LiteralPath $configPath -Raw -Encoding UTF8 | ConvertFrom-Json
     } catch {

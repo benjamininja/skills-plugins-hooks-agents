@@ -73,10 +73,12 @@ While the builder is listed, use SendMessage. Otherwise, from the
 builder's worktree, run `claude --resume <sessionId> --bg <message>`
 with no flags, through `scripts/resume_plain.ps1 -Worktree <worktree>
 -SessionId <sessionId> -MessageFile <file>` (it reads the CLI's path from
-the project's `.claude/dispatch.json`, else `claude` on PATH, as
-`dispatch.ps1` does; it refuses a missing worktree, a session id that
-is not a session id or starts with a hyphen, and a message with a double
-quote or a leading hyphen, and prints `exit: <code>`). Never resume a builder that is still running, and never
+the project's `.claude/dispatch.json` only when the owner has listed
+that project in `dispatch-projects.json`, as `dispatch.ps1 -Apply`
+requires, else it uses `claude` on PATH; it refuses a missing worktree,
+a session id that is not a session id or starts with a hyphen, and a
+message with a double quote, a leading hyphen or a trailing backslash,
+and prints `exit: <code>`). Never resume a builder that is still running, and never
 pass flags: either one starts a copy without the builder settings.
 The message holds no double quote.
 If a resume starts a copy anyway, stop that copy at once with
