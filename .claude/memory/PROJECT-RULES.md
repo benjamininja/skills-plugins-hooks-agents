@@ -8,8 +8,7 @@ apply.
 This repository's planner is the standing session **Tools-central-planner**,
 since 2026-11-07. It writes the tickets, tiers and briefs here, and keeps
 its state in [PLANNER.md](PLANNER.md). The repository has no manager of its
-own. The dynasty project's builder manager
-(`dynastyFantasyFootball-central-builder-manager`) dispatches builders here
+own. The dynasty project's builder manager dispatches builders here
 from this planner's `Tier:` and `Profile:` lines, and merges their PRs once
 they are Green. The owner gave that merge approval on 2026-11-07: "Yes, it
 may merge". The owner's queue is the dynasty project's `NEEDS-OWNER.md`.

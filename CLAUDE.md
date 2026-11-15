@@ -16,6 +16,11 @@ section.
   - [MEMORY.md](.claude/memory/MEMORY.md) — index of project state
   - [program-status.md](.claude/memory/program-status.md) — the 3-goal
     restructure/saturation program: what's shipped, what's next
+  - [PROJECT-RULES.md](.claude/memory/PROJECT-RULES.md) — this
+    repository's rules for role sessions and builders: what Green means,
+    its "Never" lines, closeout pulls. Every role session reads it.
+  - [PLANNER.md](.claude/memory/PLANNER.md) — the planner's state file:
+    where the work stands. [PLAN.md](PLAN.md) only points to it.
 - **`C:\Users\benha\.claude\memory\` (global, cross-project)**:
   - `preferences.md` — working style, cross-project git/workflow rules
   - `MEMORY.md` — index across all of Ben's projects
@@ -43,8 +48,8 @@ the glossary for the skills catalog itself.
   symlink/junction distinction and why junctions are the practical default
   on this machine.
 - **CI runs on every PR** (`.github/workflows/test.yml`, since 2026-10-12):
-  pytest for `hooks/git-guardrails` and agent frontmatter on Ubuntu and
-  Windows, plus a check that `CATALOG.md` is current. `vendor-check.yml`
+  pytest over the whole `tests/` folder on Ubuntu and Windows, plus a
+  check that `CATALOG.md` is current. `vendor-check.yml`
   looks at upstream weekly and opens an issue; it never applies an update.
   See [ADR-0004](docs/adr/0004-ci-over-local-pr-hook.md): CI is the correct
   enforcement layer for "tests must pass before merge," a local hook is a
@@ -57,9 +62,18 @@ the glossary for the skills catalog itself.
 ## Agents — when to run
 
 The agents in `.claude/agents/` are linked into `~/.claude/agents`, so they
-are available from any repo. Three of them are run by hand, and only help
-if they are run (the others are session roles, or subagents a role
-starts by name):
+are available from any repo. There are seven. Four are session roles, or
+subagents a role starts by name, and nobody runs them by hand:
+
+- **`stage-builder`** — the main-agent role of a builder session the
+  manager dispatches.
+- **`pr-code-reviewer`** — the read-only reviewer the manager starts at
+  re-proof.
+- **`supabase-consultant-dispatch`** and **`supabase-consultant`** — the
+  owner's Supabase roles: the first routes work, the second looks and
+  changes nothing.
+
+Three are run by hand, and only help if they are run:
 
 - **`vendor-sync-reapply`** — right after `python tools/update_vendor_skills.py
   --apply <name>` prints a "Reapply ritual" notice. Never commit a re-vendor
