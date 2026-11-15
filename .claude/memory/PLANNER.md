@@ -141,6 +141,14 @@ below where they differ):
   the assistant's report of Ben's answers (issues/221
   issuecomment-6899328684). The dynasty planner tickets it; this planner
   tiers that ticket.
+- **#226** (the mod's how-it-works document and its test) is tiered
+  medium (issues/226 issuecomment-6899383875); **#225** (two clears
+  before a re-key) keeps the dynasty planner's low. Both wait for PR
+  #197. **When PR #197 merges: tell the dynasty planner**, which asks
+  Ben for both gos, and write #226's brief (first step: a throwaway
+  test that reads a file from the plugin's folder).
+- The dynasty planner's queue id is
+  `a1b47cbf-d757-4e3e-b1d2-c8e9c1dd1950`, by its own word.
 - Nothing merged on the tools repository: `origin/main` is `6262b1a`.
   The manager's tools line starts with #194, then #210, after dynasty's
   re-proof.
