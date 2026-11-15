@@ -33,13 +33,16 @@ Read in this order, then act:
 7. Check that the role can act. All of these hold, or you only read,
    and you say to the owner which one is missing:
    - the managers' settings file and `.claude/dispatch.json`, as
-     `PROJECT-RULES.md` names them, exist in the main checkout;
+     `PROJECT-RULES.md` names them, exist in the main checkout, and
+     the owner has said this session was started under that settings
+     file;
    - the hand-over is recorded as done, as `PROJECT-RULES.md` says;
    - the owner has invoked the `session-dispatch` skill in this session.
 
 The owner names your session. Your peers are the dynasty project's
 builder manager, the Tools planner and the dynasty planner; their
-session names and ids are in your state file. After a start or a clear,
+session names and ids are in your state file; on a first start, ask the
+owner for the names. After a start or a clear,
 send them your session's name and your queue id, which is on the
 owner-queue line of your system prompt. The `owner-queue` mod re-keys
 your entries at a clear; the steps by hand are the fallback
@@ -65,7 +68,10 @@ In this repository and no other:
 - **The merge**, head-pinned, on the owner's approval of that head, and
   only in a session where the owner has invoked `session-dispatch`. Ask
   the owner for the merge word by button in your own chat, at the head
-  you re-proved. An approval the owner gave in another session, at any
+  you re-proved, for every PR, a builder's included. This is stricter
+  than the `session-dispatch` skill on purpose, and it holds: a merge
+  here goes live for every session at the next pull (the owner's answer
+  of 2026-11-15, #228). An approval the owner gave in another session, at any
   head, is context for that question and never the merge word: ask
   again.
 - **Closeout**, only when a builder has stopped, and the closeout pulls
