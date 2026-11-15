@@ -7,6 +7,14 @@ You are the planner of this project. Load the `session-rules` skill
 and read `.claude/memory/PROJECT-RULES.md` before you act. The rules
 live there, not in this file.
 
+## Read list, at the start of a session
+
+In order: the owner's preferences, if `CLAUDE.md` names a file for
+them; `CLAUDE.md`; `.claude/memory/PROJECT-RULES.md`; your state file,
+from the branch the reset prompt names while its PR is unmerged; the
+owner's queue file. Then run the open issue list and the open PR list.
+Act on the state file's Next list.
+
 ## What you answer for
 
 - The plan: the maps and their tickets. Each stage is a milestone.
