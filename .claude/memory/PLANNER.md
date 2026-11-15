@@ -127,18 +127,45 @@ below where they differ):
   Ben's "Build now (Recommended)" (issues/221 issuecomment-6899300957).
   It names the manager by role, and also rewords three lines in
   `program-status.md` and `MEMORY.md` that pointed at the removed plan
-  text. **Next: Ben's approval by button, once CI is green.** At
-  approval, send the manager the Action for the uncommitted `PLAN.md` in
-  the main checkout. It meets PR #210 in `PROJECT-RULES.md`: the second
+  text. **Approved at `f409d4f`, merge on Green** (Ben, by button,
+  pull/224 issuecomment-6899682873). The Action for the uncommitted
+  `PLAN.md` in the main checkout is in the dynasty queue, keyed to this
+  planner. It meets PR #210 in `PROJECT-RULES.md`: the second
   to merge takes a merge of `main` and a fresh approval.
 - **A builder manager for this repository is #228** (owner-led), on
-  Ben's typed ask of 2026-11-15, which also said to get the two dynasty
-  roles' help on boundaries and profiles. Both were asked to answer as
-  one comment each on #228. **Next: read their comments, second look,
-  then the design to Ben by button (plan mode), then a SWOT, then the
-  role file as the planner's own PR.** The settings files and the
-  dispatch configuration are Ben's, from an Action. Nothing moves from
-  the dynasty manager until Ben approves the design.
+  Ben's typed ask of 2026-11-15. Both dynasty roles answered on it.
+  **Ben's four answers, by button** (issues/228
+  issuecomment-6899821242, with the second look and the build plan): by
+  repository, the mod's tickets included; a lock in `tools/reproof.py`;
+  the dynasty manager finishes #194 and #210 and the rest moves with a
+  hand-over list on #228; the plugin validate rule in the tools
+  builders' settings file.
+  - **Step 1 is PR #230** (`t228-tools-manager-role`, at `a366d78`,
+    stacked on #224's branch): the role file
+    `tools-central-builder-manager`, the `PROJECT-RULES.md` text with a
+    transition rule, the agent count. On Ben's "Build now
+    (Recommended)". **Next: read the comments the tools manager session
+    and the dynasty planner post on it, fix what holds, then Ben's
+    approval by button once CI is green.** It meets #210 and #184 in
+    `PROJECT-RULES.md`.
+  - **#231** (the lock, medium) and **#232** (the plugin's manager
+    role template, low, after #189's PR) are filed. **No go asked
+    yet** for either.
+  - **Owed, step 4: one Action for Ben** with the tools managers'
+    settings file (the classes in the dynasty manager's answer, about
+    34 rules, none with a wildcard path), the validate rule in the
+    tools builders' file, and the dispatch configuration. Read the
+    plugin's `templates/managers.settings.example.json` and Ben's
+    dynasty file first; after the settings commit of dynasty #564.
+  - **A session named Tools-builder-manager exists**
+    (`local_e24a5ecc-2330-45fb-840c-f4c224508689`). Ben confirmed by
+    button that he started it: "Keep it holding (Recommended)". It is
+    read-only until the role file has merged, Ben's files exist and
+    the hand-over is done. Its queue id is not yet known.
+- **PR #194 merged as `1661ac8`** and both checkouts were pulled. So
+  item 3 below is due: PR #205 takes a merge of `origin/main`, a push,
+  a read of its comments, then Ben's approval by button. **Not done
+  yet.**
 - **The pane's tabs**: Ben said they are still missing and that each
   project is a tab with its own page (issues/185
   issuecomment-6899534141). The dynasty planner has the words and
@@ -147,7 +174,9 @@ below where they differ):
   (`docs/t223-machine-layout`, at `63c6445`), started on Ben's "start
   #223 while CI runs". Its body flags that the user name is part of the
   rule, and that two steps of the private restore guide look out of
-  date. **Next: Ben's approval by button, once CI is green.** After its
+  date. **Approved at `63c6445`, merge on Green** (Ben, by button,
+  pull/227 issuecomment-6899843931); it waits for the tools manager.
+  After its
   merge: an Action for Ben, one pointer line in the private repository,
   naming those two steps. The assistant's two notes on
   the global settings file still go to Ben apart from it, by button.
@@ -163,9 +192,8 @@ below where they differ):
   test that reads a file from the plugin's folder).
 - The dynasty planner's queue id is
   `a1b47cbf-d757-4e3e-b1d2-c8e9c1dd1950`, by its own word.
-- Nothing merged on the tools repository: `origin/main` is `6262b1a`.
-  The manager's tools line starts with #194, then #210, after dynasty's
-  re-proof.
+- `origin/main` is `1661ac8`. The dynasty manager finishes #210, then
+  writes the hand-over list on #228 and stops its tools line.
 
 A. **Read both queue files.** No open entry names this planner. Two
    ticked #195 entries in the dynasty queue leave at the manager's next
