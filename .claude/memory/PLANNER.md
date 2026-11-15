@@ -20,7 +20,13 @@ the tools manager's queue id is `e0ebd1e2-fb41-4781-8cde-8dddd20742d7`
 and it holds; the tabs are #229, tiered medium by the dynasty planner;
 the one comment on PR #230 is the dynasty planner's read, five points,
 none blocking (pull/230 issuecomment-6899900063), still to be worked
-into the role text. Dynasty's role files are now `dff-central-planner`
+into the role text. By the dynasty planner's report, both dynasty
+settings Actions of the advisory's section I are done and checked
+(dynasty #564, issuecomment-6899967383 and issuecomment-6900019102):
+what is left for the advisory is the tools side (the three settings
+templates, under "Gaps") and its publishing. The dynasty planner was
+also prepared for a clear; its next session sends a new id. Dynasty's
+role files are now `dff-central-planner`
 and `dff-central-builder-manager` on its `main`. Earlier, in the nineteenth session: `origin/main` was at
 `6262b1a`. **The #195 plugin fix is
 proved**: after Ben's full app restart every session loads the
