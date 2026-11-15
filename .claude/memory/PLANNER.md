@@ -5,10 +5,13 @@ alone. Rules are in the `session-rules` skill and in
 [PROJECT-RULES.md](PROJECT-RULES.md); this file is state. GitHub issues are
 the record. This file links to them and does not repeat them.
 
-Last state-back: 2026-11-15, in the twenty-first session, at Ben's word
+Last state-back: 2026-11-15, in the twenty-second session, at Ben's word
 "prepare for clear boundary including reset prompt". `origin/main` is at
-`1661ac8` (PR #194 merged). The newest state is the "Twenty-first
-session" block under "Do first after this clear"; the rest of this
+`3b65c41` (PR #224 merged). **The newest state is the "Twenty-second
+session" block under "Do first after this clear"; it wins over all
+else.** The rest of this paragraph is the twenty-first session's and
+older: then `origin/main` was at `1661ac8`, and the newest block was
+the "Twenty-first session" one; the rest of this
 paragraph is the twentieth session's and is older; the "Open PRs", "Queue entries
 raised" and "Coming to Ben later" sections further down are older and
 are brought up to date at the next full rewrite. No queue entry is
@@ -153,8 +156,76 @@ dynasty first.
 **Read this block first. It is the nineteenth session's state and it
 wins over items 0a, 0d and 1 below, which are kept only as history.**
 
-**Twenty-first session, 2026-11-15** (newest; it wins over everything
+**Twenty-second session, 2026-11-15** (newest; it wins over everything
 below where they differ). Queue id in this session:
+`f3ffbb8c-29b5-4fad-9e9d-e1dd72985270`; no queue entry is keyed to it,
+and both queue files hold nothing for this planner. Peers' queue ids by
+their own word: the dynasty manager
+`500ccfa7-c0f4-494d-aedf-9cc278c361f2`, the tools manager
+`e0ebd1e2-fb41-4781-8cde-8dddd20742d7`, the dynasty planner
+`3b579a78-96e4-4cb6-a358-50ea2fa737d9`.
+
+- **PR #224 merged as `3b65c41`.** At this clear the tools main
+  checkout was still at `1661ac8`: the closeout pulls are the dynasty
+  manager's and were not yet reported.
+- **PR #230 conflicts with `main`** since that merge (it was stacked on
+  #224's branch; pull/230 issuecomment-6902972506). **Do first: merge
+  `origin/main` into its branch (the local branch `t228-role-reads`,
+  pushed to the PR's branch `t228-tools-manager-role`), push, read the
+  three checks, then ask Ben by button for the approval and merge word
+  at the new head.** Ben's "Approve both, merge on Green (Recommended)"
+  covered `484cb7a` only (pull/230 issuecomment-6901728045; the summary
+  is issues/228 issuecomment-6901729756).
+- **The dynasty manager takes a relayed approval as a report.** It
+  asked Ben in its own chat to invoke `session-dispatch` and for the
+  merge word by button, and merged #224 on that. So for #230's new
+  head: record Ben's words on the PR, send the manager the link, and
+  tell Ben the manager asks once more in its chat.
+- **The reduced step 4 of #228 is done and checked**: the tools `.venv`
+  (pytest 9.2.0, pyyaml 6.0.3), the two validate rules on lines 13 and
+  14 of the builders' file, the trial managers' file removed, both
+  checks (issues/228 issuecomment-6901659493 and the tools manager's
+  issuecomment-6902012736). `session-dispatch` is invoked in the tools
+  manager's session, by its report.
+- **Left before the comment "Hand-over done" on #228:** PR #230 merged
+  and both checkouts pulled, then Ben's word by button.
+- **Briefs posted:** #231 (issues/231 issuecomment-6902507285) and #233
+  (issues/233 issuecomment-6902573027), each in two parts with a stop
+  after its finding; the planner rules on each finding. **#233 has
+  Ben's go**: "Go, after #231 (Recommended)" (issues/233
+  issuecomment-6901599204). The tools manager has the three gos (#231,
+  #233, #232) as reports and asks Ben again by button before each
+  dispatch. The managers' rules drafted in the twenty-first session
+  were not carried over: #233's brief starts from the plugin's template.
+- **The root hook copies** (the personal-assistant's report): the four
+  hook folders of the configuration folder are junctions into the tools
+  main checkout, so the private repository showed this repository's
+  hook files as edits to its old tracked copies. Ben: "Stop tracking
+  them (Recommended)" (issues/219 issuecomment-6902158493). His hand
+  step is done and checked (issuecomment-6902755765; the pane note is
+  issuecomment-6902778325). Still open there: that commit is on the
+  private repository's working branch, not pushed; its main branch
+  tracks the five files until the branch merges (Ben's word), and a
+  branch switch or merge there can write an old hook through the link.
+  For #219's brief: name the case (a path tracked in one repository
+  that is a link into another), and ask whether the learning script,
+  which has no counterpart on `main`, is retired. For PR #227: check
+  that the setup document says root hooks come from the tools clone by
+  a link; add it if not.
+- **#234** is a new mod ticket by the dynasty planner (medium,
+  `Profile: none`), last in the one-writer line after #229; no go asked.
+  For #226's brief, a candidate Not covered line is recorded (issues/226
+  issuecomment-6901605387).
+- **Still owed to the dynasty planner:** #233's finding, the
+  `session-rules` branch for a read after PR #210, the word when PR
+  #197 merges.
+- Everything in the twenty-first block below still holds where this
+  block is silent: PR #210 and PR #205 are the tools manager's to ask;
+  #218's wording; the rules PR for #217's choices 1, 2 and 4 after PR
+  #210; the local branches.
+
+**Twenty-first session, 2026-11-15** (it wins over everything
+below where they differ). Queue id in that session:
 `9cd4844a-f436-4aeb-8619-e96c240816cc`; no queue entry is keyed to it.
 Peers' queue ids by their own word: the dynasty manager
 `b7fa12c4-3c9f-453f-9ee7-6229f84d8e95`, the tools manager
