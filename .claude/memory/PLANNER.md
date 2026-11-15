@@ -5,9 +5,17 @@ alone. Rules are in the `session-rules` skill and in
 [PROJECT-RULES.md](PROJECT-RULES.md); this file is state. GitHub issues are
 the record. This file links to them and does not repeat them.
 
-Last state-back: 2026-11-15 (UTC), in the nineteenth session, at Ben's
-word "Yes, state-back now". `origin/main` is still at `6262b1a`: nothing
-merged on the tools repository in this session. **The #195 plugin fix is
+Last state-back: 2026-11-15, in the twentieth session, at Ben's word
+"prepare for clear boundary including reset prompt". `origin/main` is at
+`1661ac8` (PR #194 merged). The newest state is the "Twentieth session"
+block under "Do first after this clear"; the "Open PRs", "Queue entries
+raised" and "Coming to Ben later" sections further down are older and
+are brought up to date at the next full rewrite. One queue entry is
+open and keyed to this planner's id
+`79be61bc-d749-440f-b714-23e1d697c3e7`, in the dynasty queue file:
+*Discard or keep the uncommitted edit to PLAN.md in the tools main
+checkout*. Earlier, in the nineteenth session: `origin/main` was at
+`6262b1a`. **The #195 plugin fix is
 proved**: after Ben's full app restart every session loads the
 `session-rules` skill, and the manager has resumed its re-proof line,
 dynasty first.
@@ -148,9 +156,17 @@ below where they differ):
     and the dynasty planner post on it, fix what holds, then Ben's
     approval by button once CI is green.** It meets #210 and #184 in
     `PROJECT-RULES.md`.
-  - **#231** (the lock, medium) and **#232** (the plugin's manager
-    role template, low, after #189's PR) are filed. **No go asked
-    yet** for either.
+  - **At the clear of 2026-11-15 (the twentieth session's prep):** PR
+    #230 has one comment, **not yet read**
+    (pull/230 issuecomment-6899900063), and its Windows check was
+    still running. Read it first.
+  - **#231** (the lock, medium) has Ben's "Go, first tools dispatch
+    (Recommended)" (issues/231 issuecomment-6899996423): its brief is
+    written when the hand-over on #228 is done. **#232** (the plugin's
+    manager role template, low) has Ben's "Go, after #189's PR
+    (Recommended)" (issues/232 issuecomment-6899996975). Neither
+    manager has been told these two gos yet: send them with the
+    briefs.
   - **Owed, step 4: one Action for Ben** with the tools managers'
     settings file (the classes in the dynasty manager's answer, about
     34 rules, none with a wildcard path), the validate rule in the
