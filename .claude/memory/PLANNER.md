@@ -5,10 +5,11 @@ alone. Rules are in the `session-rules` skill and in
 [PROJECT-RULES.md](PROJECT-RULES.md); this file is state. GitHub issues are
 the record. This file links to them and does not repeat them.
 
-Last state-back: 2026-11-15 (UTC), at a fourteenth context clear.
-`origin/main` was still at `134691e` (#177): nothing merged in that
-session either. The #180 merge waits on Ben invoking `session-dispatch`
-in the manager's session.
+Last state-back: 2026-11-15 (UTC), at a fifteenth context clear.
+`origin/main` is at `6262b1a`: #180 merged as `fca5373` and #199 as
+`6262b1a`. Ben invoked `session-dispatch` in the manager's session, so
+the merge line moves. The manager was preparing for a clear of its own
+at the same time.
 
 ## START HERE
 
@@ -34,7 +35,8 @@ in the manager's session.
 - **The dynasty builder manager** dispatches here, re-proves and merges.
   Address it by app session id,
   `local_39e3ac7a-9d6d-4524-82e4-9b5f0e6db274`. Its queue id changes at
-  each clear (`efe5ed14-3c04-4790-abf0-8442b111611a` on 2026-11-15). Its
+  each clear (`b48f0cf3-5d6b-449b-aadd-f7d0ac81d267` on 2026-11-15, and
+  a newer one after the clear it was preparing). Its
   messages can sit queued while it is mid-turn: if it seems to miss a
   head or a go, re-send it with the PR comment link.
 - **Merges (since #170):** the manager merges head-pinned in one call once
@@ -96,17 +98,16 @@ in the manager's session.
 
 0a. **Re-read the dynasty queue file first.** Its three tools Actions
    (#195, #193, #204) still named the id `b5e85b86-f217-4a16-94e3-bc154bfd9e2f`
-   at the last read, two clears old, though the manager was asked three
-   times to re-key them. An answer on them is said in no chat: read the
-   file for `Answer:` and `Note:` lines and for a ticked entry, and send
-   the manager the new id.
-0b. **The seven-rule edit to the tools builders' settings file** is
-   Ben's hand, from chat, not a queue entry (Ben: "Ben does it now, from
-   chat (Recommended)"; advisory section H). The steps were given in
-   chat on 2026-11-15. Check the file's deny list: the new line follows
-   the line that ends with the `origin main` rule. If it is not there,
-   ask Ben by button whether to show the steps again. The rule text is
-   in the advisory, section C; it goes in no tracked file.
+   at the last read, three clears old. The manager's messages and the
+   planner's crossed while each was mid-turn, and both sessions then
+   cleared, so no re-key was done. An answer on them is said in no chat:
+   read the file for `Answer:` and `Note:` lines and for a ticked entry,
+   and send the manager the new id with the three titles first thing.
+   None held an answer, a note or a tick at the last read.
+0b. **The seven-rule edit to the tools builders' settings file is
+   done** (Ben's hand, 2026-11-15; the deny list went from 42 to 49
+   rules, read by the planner; pointer on #213, issuecomment-6888151889).
+   Nothing is left of it.
 0c. **#213's edit history** holds the first body twice: the first
    revision and the planner's own tier edit after it. The dynasty
    planner's queue Action asks Ben to remove the first; the manager and
@@ -154,15 +155,20 @@ in the manager's session.
    - ask the manager to draft the code-review ruleset line for the first
      review trigger (ADR-0015's route);
    - ask the dynasty planner for dynasty's asset list in its rules file.
-4. **PR #184** (#183's rule text and ADR-0016, at `9b75719`) is stacked on
-   #180. When #180 merges: merge `origin/main` in, add the rule text Ben's
-   answers on #185 call for (the Id field, the queues setting's new shape:
-   #185 issuecomment-6885472513), add one sentence to `parking.md`'s
-   Answer section (a flagged `Answer:` line is not the owner's; Ben:
-   "Add to PR #184", pull/184 issuecomment-6887449330) and name it in
-   the body as outside ADR-0016, push, and ask Ben to approve and whether
-   the manager may merge on Green. Its merge is the switch: from then,
-   tools entries go to the tools queue.
+4. **PR #184** (#183's rule text and ADR-0016) is at `05f2a7f`, with
+   `main` merged in and three additions: the `Id:` line rule and the
+   queue's set name (Ben's answers on #185; noted there,
+   issuecomment-6888155220), and the flagged-`Answer:` sentence.
+   ADR-0016's point 5 is reworded to those answers. **Approved at
+   `05f2a7f`, merge on Green** (Ben, by button: "Approve, merge on Green
+   (Recommended)", pull/184 issuecomment-6888151069). The approval was
+   sent to the manager, which had not read it before its clear: confirm
+   #184 is in its re-proof line. If `parking.md` conflicts after #210
+   merges first, merge `main` in and ask Ben again: an approval covers
+   one head. Its merge is the switch: from then, tools entries go to the
+   tools queue. Then ask the manager to move the three planner Actions
+   to the tools queue and to update each queue's head to the template
+   (it gains the `Id:` field line).
 5. **This state-back** (PR #198) is stacked on #181. After #181 merges,
    merge `origin/main` in, keep this branch's `PLANNER.md`, push, read its
    comments, and ask Ben by button to approve and give a merge word.
@@ -177,8 +183,8 @@ in the manager's session.
    free slot; read its PR against the ticket if the manager asks.
 8. **#164** is done: the first no-fork review link is noted on it.
 9. **#212** (five rules from the dynasty Lessons lists, low, the
-   planner's own PR): open one PR from `main` only after #180, #210 and
-   #184 have merged, then ask Ben to approve. Tell the dynasty planner
+   planner's own PR): open one PR from `main` only after #210 and #184
+   have merged (#180 has), then ask Ben to approve. Tell the dynasty planner
    the merge commit; #111's third commit then needs no rule text of its
    own.
 
@@ -198,20 +204,23 @@ Not building, not dispatching, and never a settings file or
 
 ## Open PRs and in-flight work
 
-- **Planner PRs:** #180 (#178, approved, merge on Green at `86a45e3`, in
-  re-proof Green, pull/180 issuecomment-6886463954, merge due in the
-  manager's next session); #194 (approved, merge on Green at `8b66806`,
+- **Merged 2026-11-15:** #180 as `fca5373`; #199 (#186) as `6262b1a`.
+  Both tools checkouts were pulled to `6262b1a`.
+- **Planner PRs:** #194 (approved, merge on Green at `8b66806`,
   next in line); #181 (approved, merge on Green at `148c9d1`); #184
-  (stacked on #180, not approved); #205 (stacked on #194, not approved);
+  (approved, merge on Green at `05f2a7f`, not yet in the manager's
+  line); #205 (stacked on #194, not approved);
   this state-back, #198 (stacked on #181, not approved); #208 (approved,
   merge on Green at `0f1e1a1`, CI green); #210 (approved, merge on Green
   at `0b5acdb`, by pane answer).
-- **Builder PRs:** #182 (#175); #199 (#186); #196 (#179) and #197 (#161),
-  the dynasty planner's; #211 (#168, at `df23375`, review at high and a
-  queue entry for Ben's ADR-0017 text are the manager's next steps).
-- **The manager's order (2026-11-15):** #180 merge, then the re-proofs of
-  #194, #181, #182, #199, #208, #196, #197, #211; #207 at the next free
-  slot. Agreed.
+- **Builder PRs:** #182 (#175); #196 (#179, code review posted, no
+  findings) and #197 (#161, review at high running), the dynasty
+  planner's; #211 (#168, at `df23375`, review at high running; a queue
+  entry for Ben's ADR-0017 text is the manager's). #207's builder is
+  dispatched at low, on branch `worktree-t207-resumechecks`.
+- **The manager's order (2026-11-15):** the re-proofs of #194, #181,
+  #182, #208, #210, #196, #197, #211, one at a time; #184 to be placed.
+  The closeout of #186's builder is owed.
 - **Filed 2026-11-15:** #212 (five rules, low, the planner's own PR, no
   dispatch); #213 (the hook and one more push form, medium,
   `Profile: none`, filed by the dynasty planner; Ben's go "Go, after #200
@@ -241,9 +250,10 @@ Not building, not dispatching, and never a settings file or
 ## Queue entries raised
 
 Three are in the dynasty queue, read there on 2026-11-15, each still with
-`Session: b5e85b86-f217-4a16-94e3-bc154bfd9e2f`. The session's id in
-between was `57c20f52-66e7-4467-99d7-7d0768349609`; the manager was sent
-it three times and had not re-keyed at the last read.
+`Session: b5e85b86-f217-4a16-94e3-bc154bfd9e2f`. The session's ids in
+between, `57c20f52-66e7-4467-99d7-7d0768349609` and
+`e972ec46-398b-4a06-b0ac-093e03e65767`, were never applied; the manager
+was told to hold the re-key for the next planner session's id.
 
 - *Point the plugin folder variable at the live clone (owner-queue 0.7.2
   is loading)*, #195.
@@ -259,15 +269,12 @@ PR #210 Decision (answered and recorded).
 - The #195 Action (queue).
 - The #193 Action (queue).
 - The #204 read Action (queue).
-- The seven-rule edit to the tools builders' settings file: by Ben's own
-  ruling it is done from chat, not from the queue (item 0b).
 
 ## Coming to Ben later
 
 - Approval of PR #205, after #194 merges.
-- Approval of PR #184, after #180 merges.
 - Approval of this state-back, after #181 merges.
-- Approval of #212's PR, after #180, #210 and #184 merge.
+- Approval of #212's PR, after #210 and #184 merge.
 - #206's dispatch word, or a button on its scope, after #204's reads.
 - #209's go, after #210 merges and dynasty's state files change shape.
 - #200's design, and any real fork in #191's first finding.
@@ -305,6 +312,9 @@ PR #210 Decision (answered and recorded).
 - 2026-11-15 (UTC): PR #210 approved by pane answer; #189 amended; #212
   filed; #213 tiered with Ben's rule and go; three planner comments
   moved into the draft advisory and deleted from #200 and #213.
+- 2026-11-15 (UTC), later: #180 and #199 merged; Ben's seven-rule edit
+  to the tools builders' settings file done and checked; PR #184 brought
+  to `05f2a7f` and approved, merge on Green; #207 dispatched.
 
 ## Gaps
 
@@ -366,6 +376,9 @@ Ben's decisions, each recorded on its ticket or PR.
   (the tools builders' file; advisory section H); the hook's rule for
   #213 (advisory section G) and *Go, after #200 merges*; *Move to
   advisory, delete* (the three comments).
+- 2026-11-15 (UTC), later, by button in this session: *Show the steps
+  now* (the seven-rule edit, then done by Ben's hand); *Approve, merge
+  on Green* (PR #184 at `05f2a7f`, pull/184 issuecomment-6888151069).
 - By pane answer in the manager's session: PR #210, approve at `0b5acdb`,
   merge on Green (pull/210 issuecomment-6887544775).
 - From the dynasty planner's session: *Approve, history to git* (the
@@ -416,6 +429,12 @@ Ben's decisions, each recorded on its ticket or PR.
   edit to such a body adds one more.
 - **A ticked or reported-done Action is checked in the file** before its
   effect is recorded (#212 row 1).
+- **An "Undo:" line under hand steps reads as one more step.** Ben
+  asked whether to remove the line just pasted. Say "only to reverse it
+  later", or leave the undo out of the steps.
+- **Two sessions that clear in the same hour lose each other's
+  messages.** A message queued behind a turn may never be read; the
+  next session re-sends what matters with the record's link.
 - Worktrees share branch refs; only `HEAD` is per worktree.
 - `/security-review` sees only commits. Commit first.
 - A worktree session can't `git -C` the main checkout. Read each
