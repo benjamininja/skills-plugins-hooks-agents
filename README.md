@@ -79,6 +79,8 @@ A **fork** happens when we need a skill to diverge from its upstream vendor copy
 
 Claude Code discovers skills **one level deep only** — `~/.claude/skills/<name>/SKILL.md` (personal) or `<repo>/.claude/skills/<name>/SKILL.md` (project-local). It does **not** scan nested subdirectories, so a single symlink pointing `~/.claude/skills/library` at this repo's `skills/` folder will not work — skills would sit two levels deep (`library/<name>/SKILL.md`) and never be found.
 
+The folders every machine uses, and the order of a cold setup, are in [docs/setup/machine-layout.md](docs/setup/machine-layout.md).
+
 Link each skill individually instead, as a **directory junction** (no admin or Developer Mode needed, unlike `-ItemType SymbolicLink`; see [ADR-0003](docs/adr/0003-junction-vs-symlink-fallback.md)). Agents and hooks are linked the same way.
 
 **Whatever the links point at is what every session runs, immediately.** Pointing them at a checkout with unfinished work once left a half-finished re-vendor live for ten weeks (see [ADR-0011](docs/adr/0011-unified-distribution-architecture.md), Revision 2). There are two setups that keep unfinished work from going live; [ADR-0011 Revision 3](docs/adr/0011-unified-distribution-architecture.md) records which one this machine uses and why.
