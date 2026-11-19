@@ -1,3 +1,7 @@
 # Written by the engine at every load.
 .claude-plugin/types/
 drafts/
+# Each tracked session's record, the pane's prep requests and the reset prompts (#161).
+sessions/
+requests/
+reset-prompts/
