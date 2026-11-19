@@ -193,7 +193,8 @@ tools #240 (medium, the dynasty planner's ticket) finds why.
   the fallback to `session-rules` step 5. The dynasty planner committed
   its drain together with that rewording (dotclaude `5eb0c0c`). The 9
   root commits were on an already-merged branch, so on Ben's button
-  answer they go to main by dotclaude PR #7, which Ben merges. The
+  answer they went to main by dotclaude PR #7, merged as `6c7d4cc`
+  (the dynasty planner's duplicate, #6, was closed). The
   registry gap is #241 (low, after #239).
 - **Open in #235** (issuecomment-7024358904): step 3's prune of merged
   worktrees (a delete, by Ben's word per manager); the owner-queue store
