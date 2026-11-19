@@ -1,5 +1,5 @@
 {
-  "//": "A proposal. The project owner copies this text into the real file and edits it by hand; no agent creates or changes a settings file. Add the project's own proof commands to allow and its own fenced-off commands to deny. This key is a note: delete it in the real file.",
+  "//": "A proposal. The project owner copies this text into the real file and edits it by hand; no agent creates or changes a settings file. Add the project's own proof commands to allow and its own fenced-off commands to deny. Name the project's tracked re-proof script here, one exact rule. This key is a note: delete it in the real file.",
   "permissions": {
     "allow": [
       "Bash(gh pr merge * --squash --delete-branch)",
@@ -11,6 +11,7 @@
       "Bash(git push origin --delete *)",
       "Bash(git worktree list)",
       "Bash(git worktree remove *)",
+      "Bash(.venv/Scripts/python.exe scripts/reproof.py *)",
       "PowerShell(*session-dispatch-managers-build-review\\scripts\\dispatch.ps1 *)",
       "PowerShell(*claude.exe agents *)",
       "PowerShell(*claude.exe --resume *)",

@@ -64,6 +64,11 @@ further word from the owner; any other PR (the manager's own, the
 planner's) is merged only after the owner has approved that PR.
 `references/manager.md` has those merges and the planner's read.
 
+A project's re-proof is a committed script, run as one plain command
+under one exact allow rule: never a chained line, never a `cd` prefix,
+never an untracked script. A change to that script is a PR that gets the
+code review, because the allow rule trusts everything inside it (#117).
+
 ## Closeout
 
 Only for a builder this session dispatched, only when it has stopped,
