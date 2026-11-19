@@ -5,10 +5,10 @@ alone. Rules are in the `session-rules` skill and in
 [PROJECT-RULES.md](PROJECT-RULES.md); this file is state. GitHub issues are
 the record. This file links to them and does not repeat them.
 
-Last state-back: 2026-11-19, in the twenty-fifth session, after the
-app restart. **The newest state is the "Twenty-fifth session" block
-under "Do first after this clear"; it wins over all else.** Before
-that, the twenty-fourth session, the first
+Last state-back: 2026-11-19, in the twenty-sixth session. **The newest
+state is the "Twenty-sixth session" block under "Do first after this
+clear"; it wins over all else.** Before that, the twenty-fifth session,
+after the app restart. Before that, the twenty-fourth session, the first
 after the move, at Ben's word "prepare for exit app and reopen":
 the "Twenty-fourth session" block under "Do first
 after this clear"; it wins over all else.** Before that, the
@@ -164,7 +164,29 @@ dynasty first.
 **Read this block first. It is the nineteenth session's state and it
 wins over items 0a, 0d and 1 below, which are kept only as history.**
 
-**Twenty-fifth session, 2026-11-19** (newest; it wins over everything
+**Twenty-sixth session, 2026-11-19** (newest; it wins over everything
+below where they differ). The owner-queue line is back: queue id
+`8e3b8951-c6d7-4e8f-b472-1320abb0fa54`, sent to both managers and the
+dynasty planner (a data point for #240). Neither queue holds an entry
+for this planner.
+
+- **Merge line unchanged:** #236, #238, #239, #242, re-proved one at a
+  time by the tools manager after its clear, each merge word asked of
+  Ben by button. #241 follows #239.
+- **#242:** the builder answered F1 and F2 at `b278602` (F1 by the
+  planner's view: claim corrected, test renamed; F2: a failed record
+  write is a failed take). The fresh re-check is the manager's.
+- **#233:** no finding yet.
+- **Dispatchable after the merge line,** sent to the tools manager:
+  #189 (Ben's go after #186, which merged as `6262b1a`) and #219 (Ben's
+  go of 2026-11-15). #232 follows #189's PR; #220 follows #219's first
+  finding; #218 follows the #217 rules PR (after PR #210); #226 follows
+  PR #197.
+- **Next:** after #242 merges, the planner's PR replacing PROJECT-RULES'
+  one-run message rule with the lock. Rule on #233's finding. #235
+  remainders (step 3's prune, step 11).
+
+**Twenty-fifth session, 2026-11-19** (it wins over everything
 below where they differ). The same session as the twenty-fourth,
 resumed after Ben's app restart. Still no owner-queue line or queue id;
 tools #240 (medium, the dynasty planner's ticket) finds why.
