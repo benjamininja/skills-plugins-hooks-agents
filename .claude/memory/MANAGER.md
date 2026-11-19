@@ -26,8 +26,10 @@ Next, in order:
    `8506434b-7326-4099-93ee-68c02a26c635`, branch
    `worktree-t231-reproof-lock` (issues/231 issuecomment-7024077556). Ben
    restarted the app right after; check `claude agents --json` for it.
-   If it is gone, resume it with `resume_plain.ps1` on the same ticket.
-   It stops after its Part 1 finding; send the link to the Tools planner.
+   It parked at Part 1 (its probe script was refused); the Decision is
+   in the queue. Relay Ben's answer word for word, or the planner's
+   ruling on #231. If the session is gone, resume it with
+   `resume_plain.ps1` on the same ticket.
 2. **#236** (this file): re-prove, then ask Ben for the merge word.
 3. **#233**, then **#232**, each go asked of Ben again by button.
 4. The open PR line, below.
@@ -45,7 +47,7 @@ pulls of the main checkout and the live clone, and this file.
 
 | Builder | Ticket | Tier | Session | Stage |
 |---|---|---|---|---|
-| `t231-reproof-lock` | #231 | medium | `8506434b` | Part 1, the finding |
+| `t231-reproof-lock` | #231 | medium | `8506434b` | parked at Part 1: its probe script was refused; Decision in the queue |
 
 ## Open PRs
 
@@ -88,7 +90,9 @@ id after the relaunch; the Tools planner takes that to Ben.
 
 ## Queue entries raised
 
-None.
+- 2026-11-19, Decision: #231 builder parked at Part 1, how its finding
+  gets its probes (probe profile, the planner drops the tried
+  requirement, or hold until #233). Recommended: the planner drops it.
 
 ## Decided since
 
