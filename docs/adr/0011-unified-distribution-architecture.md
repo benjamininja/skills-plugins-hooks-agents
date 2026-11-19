@@ -1,6 +1,6 @@
 # Unified bidirectional distribution architecture (skills, plugins, hooks, agents)
 
-- Status: revised (2026-11-11) — Revision 3 below is current; the original text, "Revision" and "Revision 2" are kept as history
+- Status: revised (2026-11-19) — Revision 4 below is current; the original text, "Revision", "Revision 2" and "Revision 3" are kept as history
 - Date: 2026-07-18
 - Scope: repo-wide; introduces `distribution-registry.json`,
   `tools/manage_distribution.py`, and a junction-based install path for
@@ -258,3 +258,18 @@ and hook links at the live clone with `tools/relink_live.ps1`, if:
   machine no longer hold every checkout at one commit; or
 - an owner **hand edit goes live unreviewed**, the failure Revision 2
   recorded.
+
+## Revision 4 (2026-11-19), paths after the move
+
+The main checkout is now at `C:\source\Github\skills-plugins-hooks-agents`
+(#235), outside OneDrive. The skill, agent and hook links point there. The
+live clone, `C:\Users\benha\claude-live\skills-plugins-hooks-agents`, is
+unchanged, and plugins still load from it.
+
+The design of Revision 3 is unchanged: the links stay on the main checkout,
+and closeout pulls hold both checkouts at one commit. Only the path moved.
+
+The OneDrive lock risk that Revision 3 lists no longer applies to the main
+checkout, since it no longer sits inside OneDrive. A file lock can still
+stop a pull halfway, so the closeout pull's rule is unchanged: the manager
+parks the output, and the repair is the owner's.
