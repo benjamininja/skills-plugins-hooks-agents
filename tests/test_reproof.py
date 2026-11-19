@@ -1,15 +1,22 @@
-"""tools/reproof.py: the argument check, the summary's exit code, and that the
-repository it runs in gains objects and FETCH_HEAD, never a ref or a file.
+"""tools/reproof.py: the argument check, the summary's exit code, that the
+repository it runs in gains objects and FETCH_HEAD, never a ref or a file, and
+the machine-wide lock (#231).
 
 No network and no real PR: origin is a local bare repository and the PR head
-is a ref made by hand under refs/pull/1/head.
+is a ref made by hand under refs/pull/1/head. Every test points the lock at a
+temp folder (the autouse fixture below), so the suite never touches the real
+lock, which the outer run holds while it runs this file.
 """
+import errno
 import importlib.util
+import json
 import os
 import re
+import signal
 import subprocess
 import sys
 import tempfile
+import time
 import types
 from pathlib import Path
 
@@ -109,6 +116,13 @@ def snapshot(clone):
         git(clone, "status", "--porcelain"),
         git(clone, "branch", "--list", "-a"),
     )
+
+
+@pytest.fixture(autouse=True)
+def lock_area(tmp_path, monkeypatch):
+    area = tmp_path / "lock-area"
+    monkeypatch.setattr(reproof, "LOCK_DIR", area)
+    return area
 
 
 @pytest.fixture
@@ -417,3 +431,262 @@ def test_an_export_folder_inside_onedrive_is_refused(tmp_path, monkeypatch, caps
     assert "FAIL  export" in out
     assert "inside OneDrive" in out
     assert list(area.iterdir()) == []
+
+
+LOCK_FILE = reproof.LOCK_NAME
+
+DRIVER = """
+import importlib.util, os, sys, time
+from pathlib import Path
+
+script, lock_dir, gate, ready, head = sys.argv[1:6]
+spec = importlib.util.spec_from_file_location("reproof", script)
+reproof = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(reproof)
+reproof.LOCK_DIR = Path(lock_dir)
+
+
+def stub_fetch(repo, ref):
+    tmp = ready + ".tmp"
+    Path(tmp).write_text(str(os.getpid()))
+    os.replace(tmp, ready)
+    deadline = time.time() + 120
+    while not Path(gate).exists() and time.time() < deadline:
+        time.sleep(0.05)
+    return None, "stub"
+
+
+reproof.fetch_sha = stub_fetch
+sys.exit(reproof.main(["1", head], repo=Path(lock_dir)))
+"""
+
+
+def start_run(tmp_path, name, lock_dir, open_gate=False):
+    """A real second process running reproof.main, held at its first fetch until its gate opens."""
+    driver = tmp_path / "driver.py"
+    if not driver.exists():
+        driver.write_text(DRIVER, encoding="utf-8")
+    gate = tmp_path / f"{name}.gate"
+    ready = tmp_path / f"{name}.ready"
+    if open_gate:
+        gate.write_text("go")
+    proc = subprocess.Popen(
+        [sys.executable, str(driver), str(SCRIPT), str(lock_dir), str(gate), str(ready), SHA],
+        stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True,
+    )
+    return proc, gate, ready
+
+
+def wait_for_ready(proc, ready):
+    deadline = time.time() + 90
+    while not ready.exists():
+        assert proc.poll() is None, proc.communicate()[0]
+        assert time.time() < deadline, "the run never reached its first fetch"
+        time.sleep(0.05)
+    return int(ready.read_text())
+
+
+def record_of(lock_dir):
+    return (lock_dir / LOCK_FILE).read_bytes()[: reproof.RECORD]
+
+
+def assert_lock_is_free(lock_dir):
+    fd = reproof.take_lock(lock_dir / LOCK_FILE, reproof.lock_record("1", SHA))
+    assert fd is not None, "the lock is still held"
+    reproof.release_lock(fd)
+
+
+def test_the_record_is_512_bytes_of_one_json_line():
+    rec = reproof.lock_record("231", SHA)
+    assert len(rec) == reproof.RECORD == 512
+    assert rec.endswith(b"\n")
+    assert rec.count(b"\n") == 1
+    data = json.loads(rec)
+    assert set(data) == {"v", "project", "pid", "pr", "head", "started"}
+    assert data["v"] == 1
+    assert data["project"] == "tools"
+    assert data["pid"] == os.getpid()
+    assert data["pr"] == "231"
+    assert data["head"] == SHA
+    assert re.fullmatch(r"\d{4}-\d\d-\d\dT\d\d:\d\d:\d\dZ", data["started"])
+    assert reproof.BLANK == b" " * 511 + b"\n"
+    assert len(reproof.BLANK) == 512
+    assert reproof.HELD == 75
+
+
+def test_bad_arguments_exit_before_the_lock_folder_is_made(tmp_path, lock_area):
+    assert reproof.main(["1"], repo=tmp_path) == 2
+    assert not lock_area.exists()
+
+
+def test_a_free_lock_adds_one_line_and_leaves_a_blank_record(tmp_path, export_area, lock_area, capsys):
+    clone, head, _ = scenario(tmp_path)
+    code, out = reproof_run(clone, head, capsys)
+    assert code == 0, out
+    lines = [line for line in out.splitlines() if line.startswith("lock: ")]
+    assert len(lines) == 1
+    assert str(lock_area / LOCK_FILE) in lines[0]
+    assert record_of(lock_area) == reproof.BLANK
+    assert_lock_is_free(lock_area)
+
+
+def test_the_printed_text_is_kept_as_a_result_file_per_pr_and_head(
+    tmp_path, export_area, lock_area, capsys
+):
+    clone, head, _ = scenario(tmp_path)
+    code, out = reproof_run(clone, head, capsys)
+    assert code == 0, out
+    kept = (lock_area / f"result-1-{head[:12]}.txt").read_text(encoding="utf-8")
+    assert kept == out
+    assert "RESULT: GREEN" in kept
+
+
+def test_a_failed_result_write_is_ignored(tmp_path, export_area, lock_area, capsys):
+    clone, head, _ = scenario(tmp_path)
+    lock_area.mkdir()
+    (lock_area / f"result-1-{head[:12]}.txt").mkdir()
+    code, out = reproof_run(clone, head, capsys)
+    assert code == 0, out
+    assert "RESULT: GREEN" in out
+
+
+def test_a_lock_folder_inside_onedrive_is_refused(tmp_path, monkeypatch, capsys):
+    area = tmp_path / "OneDrive" / "lock"
+    monkeypatch.setattr(reproof, "LOCK_DIR", area)
+    code = reproof.main(["1", SHA], repo=tmp_path)
+    out = capsys.readouterr().out
+    assert code == 1
+    assert "inside OneDrive" in out
+    assert not area.exists()
+
+
+def test_the_lock_is_released_when_a_step_raises(tmp_path, lock_area, monkeypatch):
+    def boom(repo, ref):
+        raise RuntimeError("boom")
+
+    monkeypatch.setattr(reproof, "fetch_sha", boom)
+    with pytest.raises(RuntimeError):
+        reproof.main(["1", SHA], repo=tmp_path)
+    assert record_of(lock_area) == reproof.BLANK
+    assert_lock_is_free(lock_area)
+
+
+def test_the_lock_is_released_when_a_step_times_out(tmp_path, export_area, lock_area, monkeypatch, capsys):
+    real = reproof.run
+
+    def fake(cmd, cwd=None):
+        if cmd[1:3] == ["-m", "pytest"]:
+            return 124, "", "timed out after 3600s"
+        return real(cmd, cwd)
+
+    monkeypatch.setattr(reproof, "run", fake)
+    clone, head, _ = scenario(tmp_path)
+    code, out = reproof_run(clone, head, capsys)
+    assert code == 1
+    assert "timed out after 3600s" in out
+    assert record_of(lock_area) == reproof.BLANK
+    assert_lock_is_free(lock_area)
+
+
+def test_two_runs_started_together_one_runs_and_the_other_exits_at_once(tmp_path, lock_area):
+    first, gate, ready = start_run(tmp_path, "first", lock_area)
+    try:
+        holder_pid = wait_for_ready(first, ready)
+        second, _, second_ready = start_run(tmp_path, "second", lock_area)
+        out, _ = second.communicate(timeout=60)
+        assert second.returncode == reproof.HELD == 75, out
+        assert "reproof lock held by tools" in out
+        assert f"pid {holder_pid}," in out
+        assert f"PR 1 head {SHA[:12]}" in out
+        assert "since 20" in out
+        assert not second_ready.exists()
+        assert not (lock_area / f"result-1-{SHA[:12]}.txt").exists()
+        assert json.loads(record_of(lock_area))["pid"] == holder_pid
+    finally:
+        gate.write_text("go")
+        first_out, _ = first.communicate(timeout=90)
+    assert first.returncode == 1, first_out
+    assert "lock: " in first_out
+    assert "FAIL  fetch main" in first_out
+    assert record_of(lock_area) == reproof.BLANK
+    third, _, _ = start_run(tmp_path, "third", lock_area, open_gate=True)
+    third_out, _ = third.communicate(timeout=90)
+    assert third.returncode == 1, third_out
+    assert "lock: " in third_out
+
+
+def test_a_lock_left_by_a_killed_run_is_taken_by_the_next_run(tmp_path, lock_area):
+    first, gate, ready = start_run(tmp_path, "first", lock_area)
+    killed_pid = wait_for_ready(first, ready)
+    os.kill(killed_pid, getattr(signal, "SIGKILL", signal.SIGTERM))
+    first.communicate(timeout=90)
+    left = json.loads(record_of(lock_area))
+    assert left["pid"] == killed_pid
+    deadline = time.time() + 30
+    while True:
+        try:
+            assert_lock_is_free(lock_area)
+            break
+        except AssertionError:
+            assert time.time() < deadline, "the killed run's lock was never freed"
+            time.sleep(0.2)
+    nxt, nxt_gate, nxt_ready = start_run(tmp_path, "next", lock_area)
+    try:
+        nxt_pid = wait_for_ready(nxt, nxt_ready)
+        assert nxt_pid != killed_pid
+        assert json.loads(record_of(lock_area))["pid"] == nxt_pid
+    finally:
+        nxt_gate.write_text("go")
+        out, _ = nxt.communicate(timeout=90)
+    assert nxt.returncode == 1, out
+    assert "lock: " in out
+    assert record_of(lock_area) == reproof.BLANK
+
+
+def test_a_failed_record_write_gives_up_the_lock_and_fails(tmp_path, lock_area, monkeypatch, capsys):
+    real = os.write
+
+    def fake(fd, data):
+        if data.startswith(b"{"):
+            raise OSError(errno.ENOSPC, "no space left on device")
+        return real(fd, data)
+
+    with monkeypatch.context() as patch:
+        patch.setattr(reproof.os, "write", fake)
+        code = reproof.main(["1", SHA], repo=tmp_path)
+    out = capsys.readouterr().out
+    assert code == 1
+    assert "cannot take the lock" in out
+    assert "no space left on device" in out
+    assert record_of(lock_area) == reproof.BLANK
+    assert_lock_is_free(lock_area)
+
+
+def test_a_held_lock_with_an_unreadable_record_still_exits_held(tmp_path, lock_area, capsys):
+    lock_area.mkdir()
+    fd = reproof.take_lock(lock_area / LOCK_FILE, b"x" * 511 + b"\n")
+    assert fd is not None
+    try:
+        code = reproof.main(["1", SHA], repo=tmp_path)
+    finally:
+        reproof.release_lock(fd)
+    out = capsys.readouterr().out
+    assert code == reproof.HELD
+    assert "not readable" in out
+    assert "FAIL" not in out
+
+
+@pytest.mark.parametrize(
+    "name", ["REPROOF_LOCK", "REPROOF_LOCK_DIR", "REPROOF_NO_LOCK", "SKIP_LOCK", "TMPDIR", "TEMP", "TMP"]
+)
+def test_no_variable_of_the_scripts_own_skips_or_moves_the_lock(name, tmp_path, lock_area, monkeypatch, capsys):
+    lock_area.mkdir()
+    fd = reproof.take_lock(lock_area / LOCK_FILE, reproof.lock_record("9", SHA))
+    assert fd is not None
+    monkeypatch.setenv(name, str(tmp_path / "elsewhere"))
+    try:
+        code = reproof.main(["1", SHA], repo=tmp_path)
+    finally:
+        reproof.release_lock(fd)
+    assert code == reproof.HELD
+    assert "PR 9" in capsys.readouterr().out
