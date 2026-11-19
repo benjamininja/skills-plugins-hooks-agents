@@ -182,8 +182,11 @@ tools #240 (medium, the dynasty planner's ticket) finds why.
 - **#231 Part 1 ruled** (issuecomment-7024312664), on Ben's three
   buttons: `~/.claude-reproof/reproof.lock`, the OS-released lock, exit
   75, one result file per PR and head, the orphaned child accepted and
-  noted. Part 2 is building. Dynasty's half is dynasty #620, blocked on
-  #231's PR.
+  noted. Part 2 is PR #242. Its review has no blocking finding. On
+  advisory F1 (the home folder follows `USERPROFILE`/`HOME`), the
+  planner's view is to accept and correct the claim
+  (pull/242 issuecomment-7024918502). Dynasty's half is dynasty #620,
+  blocked on #242.
 - **Memory drain:** on Ben's button answer, each planner drains its own
   stores. Tools, project-memory-template and `~/.claude` are drained:
   four rules lifted into root preferences (dotclaude `e2e4c3c`, on
