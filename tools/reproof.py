@@ -6,6 +6,11 @@ Run it from the live clone (merged main, never edited by hand), with the
 interpreter the permission rule names: the steps run with that same
 interpreter (sys.executable), and it must have pytest.
 
+  0. take the machine's one re-proof lock (~/.claude-reproof/reproof.lock,
+     #231) before anything else; if another run holds it, start nothing,
+     print who holds it and exit 75. The operating system frees the lock
+     when its process ends, so a killed run never leaves a stale one. A
+     killed run's pytest child may still be running after its lock is free.
   1. fetch origin's main and the PR head into FETCH_HEAD, one at a time; the
      head must equal the sha given
   2. git merge-tree the head onto main (a conflict fails)
@@ -15,14 +20,21 @@ interpreter (sys.executable), and it must have pytest.
      then, only if the merge changes a path under plugins/owner-queue/:
      claude plugin test plugins/owner-queue
   5. remove the export, print one summary, exit non-zero if any step failed
+     (the printed text is also kept as result-<pr>-<head12>.txt beside the lock)
 
 The repository it runs in gains objects and FETCH_HEAD, never a ref, a branch
 or a working-tree file. CI's read and the check-in-hygiene report are not run.
+
+Exit codes: 0 green, 1 not green, 2 bad arguments, 75 the lock is held.
 """
 
 from __future__ import annotations
 
+import contextlib
+import datetime
 import difflib
+import errno
+import json
 import os
 import re
 import shutil
@@ -35,6 +47,15 @@ import time
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
+
+PROJECT = "tools"
+LOCK_DIR = Path.home() / ".claude-reproof"
+LOCK_NAME = "reproof.lock"
+HELD = 75
+RECORD = 512
+LOCK_AT = 4096
+BLANK = b" " * (RECORD - 1) + b"\n"
+HELD_ERRNOS = {errno.EACCES, errno.EAGAIN, errno.EWOULDBLOCK, errno.EDEADLK}
 
 PR_RE = re.compile(r"[1-9][0-9]{0,8}")
 SHA_RE = re.compile(r"[0-9a-f]{40}")
@@ -152,6 +173,99 @@ def check_catalog(dest: Path, before: bytes | None, build_ok: bool) -> tuple[str
     return FAIL, "\n".join(lines) if lines else "CATALOG.md differs in line endings only"
 
 
+def lock_record(pr: str, head: str) -> bytes:
+    started = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    body = json.dumps(
+        {"v": 1, "project": PROJECT, "pid": os.getpid(), "pr": pr, "head": head, "started": started},
+        separators=(",", ":"),
+    )
+    return body.encode("ascii").ljust(RECORD - 1, b" ") + b"\n"
+
+
+def take_lock(path: Path, record: bytes) -> int | None:
+    fd = os.open(path, os.O_RDWR | os.O_CREAT | getattr(os, "O_BINARY", 0), 0o600)
+    try:
+        if os.name == "nt":
+            import msvcrt
+
+            os.lseek(fd, LOCK_AT, os.SEEK_SET)
+            msvcrt.locking(fd, msvcrt.LK_NBLCK, 1)
+        else:
+            import fcntl
+
+            fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+    except OSError as exc:
+        os.close(fd)
+        if exc.errno in HELD_ERRNOS:
+            return None
+        raise
+    try:
+        os.lseek(fd, 0, os.SEEK_SET)
+        os.write(fd, record)
+    except OSError:
+        pass
+    return fd
+
+
+def release_lock(fd: int) -> None:
+    try:
+        os.lseek(fd, 0, os.SEEK_SET)
+        os.write(fd, BLANK)
+        if os.name == "nt":
+            import msvcrt
+
+            os.lseek(fd, LOCK_AT, os.SEEK_SET)
+            msvcrt.locking(fd, msvcrt.LK_UNLCK, 1)
+    except OSError:
+        pass
+    finally:
+        os.close(fd)
+
+
+def read_holder(path: Path) -> dict | None:
+    try:
+        with open(path, "rb", buffering=0) as f:
+            raw = f.read(RECORD)
+        holder = json.loads(raw)
+    except (OSError, ValueError):
+        return None
+    return holder if isinstance(holder, dict) else None
+
+
+def describe_holder(holder: dict | None) -> str:
+    if holder is None:
+        return "reproof lock held; the holder's record is not readable yet"
+    def field(key: str) -> str:
+        return str(holder.get(key, "?"))[:60]
+    return (
+        f"reproof lock held by {field('project')}, pid {field('pid')}, "
+        f"PR {field('pr')} head {field('head')[:12]}, since {field('started')}"
+    )
+
+
+class Tee:
+    def __init__(self, out) -> None:
+        self.out = out
+        self.parts: list[str] = []
+
+    def write(self, text: str) -> int:
+        self.parts.append(text)
+        return self.out.write(text)
+
+    def flush(self) -> None:
+        self.out.flush()
+
+    def text(self) -> str:
+        return "".join(self.parts)
+
+
+def save_result(folder: Path, pr: str, head: str, text: str) -> None:
+    try:
+        (folder / f"result-{pr}-{head[:12]}.txt").write_text(text, encoding="utf-8", errors="replace")
+    except OSError:
+        pass
+
+
 def main(argv: list[str], repo: Path = ROOT) -> int:
     parsed = parse_args(argv)
     if parsed is None:
@@ -161,6 +275,31 @@ def main(argv: list[str], repo: Path = ROOT) -> int:
         )
         return 2
     pr, head = parsed
+    folder = LOCK_DIR
+    if "onedrive" in str(folder.resolve()).lower():
+        print(f"== lock: FAIL\nlock folder {folder} is inside OneDrive")
+        return 1
+    path = folder / LOCK_NAME
+    try:
+        folder.mkdir(parents=True, exist_ok=True)
+        fd = take_lock(path, lock_record(pr, head))
+    except OSError as exc:
+        print(f"== lock: FAIL\ncannot take the lock at {path}: {exc}")
+        return 1
+    if fd is None:
+        print(describe_holder(read_holder(path)))
+        return HELD
+    tee = Tee(sys.stdout)
+    try:
+        with contextlib.redirect_stdout(tee):
+            print(f"lock: {path} taken by {PROJECT}, pid {os.getpid()}")
+            return run_steps(pr, head, repo)
+    finally:
+        save_result(folder, pr, head, tee.text())
+        release_lock(fd)
+
+
+def run_steps(pr: str, head: str, repo: Path) -> int:
     results: list[tuple[str, str, float]] = []
     mark = time.monotonic()
 
