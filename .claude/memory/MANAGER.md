@@ -15,23 +15,23 @@ its first state file, after the relaunch at the new main checkout path
 (issuecomment-7017901725). Ben invoked `session-dispatch` in this session
 on 2026-11-19; it must be typed again after every clear.
 
-**Holding every dispatch until step 7 of the #235 cutover checklist is
-reported done** (Ben's hand, led by the Tools planner): the `~/.claude`
-hook, skill and agent junctions still point at the old OneDrive folder,
-and the main checkout's `git worktree list` shows about 40 prunable
-entries at the old path. Also Ben's: the owner's dispatch list still names
-the old path, so `dispatch.ps1 -Apply` is refused.
+**Step 7 of the #235 cutover is done for this repository**: every
+`~/.claude` link points at the new main checkout path, the main
+checkout's worktree list has nothing prunable, and the owner's dispatch
+list names the new path (Claude's own check, 2026-11-19; record on #235).
 
 Next, in order:
 
-1. **#231**: Ben's go, "Go, after repair (Recommended)", recorded at
-   issues/231 issuecomment-7023959064. Apply once step 7 is done and the
-   dispatch list names the new path; dry run again first. Name
-   `t231-reproof-lock`, tier medium, Profile none, brief at
-   issuecomment-6902507285. It stops after its finding; send the link to
-   the Tools planner.
-2. **#233**, then **#232**, each go asked of Ben again by button.
-3. The open PR line, below.
+1. **#231 is dispatched**: builder `t231-reproof-lock`, session
+   `8506434b-7326-4099-93ee-68c02a26c635`, branch
+   `worktree-t231-reproof-lock` (issues/231 issuecomment-7024077556). Ben
+   restarted the app right after; check `claude agents --json` for it.
+   If it is gone, resume it with `resume_plain.ps1` on the same ticket.
+   It stops after its Part 1 finding; send the link to the Tools planner.
+2. **#236** (this file): re-prove, then ask Ben for the merge word.
+3. **#233**, then **#232**, each go asked of Ben again by button.
+4. The open PR line, below.
+5. The Tools planner's brief for the tools path PR (#235 step 9).
 
 ## What this session answers for
 
@@ -43,7 +43,9 @@ pulls of the main checkout and the live clone, and this file.
 
 ## Builders running
 
-None.
+| Builder | Ticket | Tier | Session | Stage |
+|---|---|---|---|---|
+| `t231-reproof-lock` | #231 | medium | `8506434b` | Part 1, the finding |
 
 ## Open PRs
 
@@ -75,16 +77,14 @@ issuecomment-6900047255.
 - 2026-11-19, #231 dry run from the new main checkout: tier medium
   (Sonnet, effort high, turn cap 80), Profile none, builder settings with
   56 deny rules, mode `dontAsk`, plugin folder from the live clone. Apply
-  refused: the project is not on the owner's dispatch list at its new
-  path.
+  refused at first: the project was not on the owner's dispatch list at
+  its new path. After Ben fixed the list, a fresh dry run passed and the
+  apply started the builder (setup made the worktree's `.venv`).
 
 ## Waiting on the owner (pointer to NEEDS-OWNER.md)
 
-The queue file is empty. Waiting on Ben, outside the queue, by the Tools
-planner's lead (#235): step 7 of the cutover (junctions, worktree repair
-and prune) and the dispatch list's new path. The owner-queue mod gave
-this session no queue id after the relaunch; the Tools planner takes
-that to Ben.
+The queue file is empty. The owner-queue mod gave this session no queue
+id after the relaunch; the Tools planner takes that to Ben.
 
 ## Queue entries raised
 
@@ -96,13 +96,16 @@ None.
   (issues/231 issuecomment-7023959064).
 - 2026-11-19: Ben chose that the Tools planner leads the move repair, not
   a queue Action.
+- 2026-11-19: #231 dispatched under that go, once both its conditions
+  held (issues/231 issuecomment-7024077556).
 
 ## Lessons
 
 - Until #231's lock is live: message the dynasty manager
   (dff-central-builder-manager) before and after every full test run and
-  wait for its answer. It does the same; its next planned run is a
-  re-proof of dynasty PR #617.
+  wait for its answer. It does the same. Its re-proof of dynasty PR #617
+  ended not Green from a local venv fault; it owes a re-run after the
+  restart and sends a notice first.
 - Peers: Tools-central-planner, dff-central-planner,
   dff-central-builder-manager. Find them with ListAgents by name; ids
   change at a relaunch.
