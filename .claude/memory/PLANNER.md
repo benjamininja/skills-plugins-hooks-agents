@@ -5,9 +5,12 @@ alone. Rules are in the `session-rules` skill and in
 [PROJECT-RULES.md](PROJECT-RULES.md); this file is state. GitHub issues are
 the record. This file links to them and does not repeat them.
 
-Last state-back: 2026-11-19, in the twenty-fourth session, the first
-after the move, at Ben's word "prepare for exit app and reopen".
-**The newest state is the "Twenty-fourth session" block under "Do first
+Last state-back: 2026-11-19, in the twenty-fifth session, after the
+app restart. **The newest state is the "Twenty-fifth session" block
+under "Do first after this clear"; it wins over all else.** Before
+that, the twenty-fourth session, the first
+after the move, at Ben's word "prepare for exit app and reopen":
+the "Twenty-fourth session" block under "Do first
 after this clear"; it wins over all else.** Before that, the
 twenty-third session, before the repository move to `C:\source\Github`
 (#235): its block was the newest then. Before that: 2026-11-15, the twenty-second session, at Ben's word
@@ -161,7 +164,41 @@ dynasty first.
 **Read this block first. It is the nineteenth session's state and it
 wins over items 0a, 0d and 1 below, which are kept only as history.**
 
-**Twenty-fourth session, 2026-11-19** (newest; it wins over everything
+**Twenty-fifth session, 2026-11-19** (newest; it wins over everything
+below where they differ). The same session as the twenty-fourth,
+resumed after Ben's app restart. Still no owner-queue line or queue id;
+tools #240 (medium, the dynasty planner's ticket) finds why.
+
+- **Tools path PR:** #237 (low), brief revised to six files on Ben's
+  word (issuecomment-7024323671), because a builder can't write under
+  `.claude/`. The builder's PR is #239. The `PROJECT-RULES.md` half is
+  the planner's PR #238 (security-review clean). Both are in the
+  manager's line after #236. **Lesson for briefs:** no file under
+  `.claude/` in a builder brief. The proof line `pre-commit run
+  --from-ref origin/main --to-ref HEAD` has no builder allow rule, so a
+  brief marks it as the manager's at re-proof.
+- **Dynasty path PR:** dynasty #619 (low), with Ben's three choices on
+  #235 (issuecomment-7024324390). Dynasty worktree repair: 0 prunable.
+- **#231 Part 1 ruled** (issuecomment-7024312664), on Ben's three
+  buttons: `~/.claude-reproof/reproof.lock`, the OS-released lock, exit
+  75, one result file per PR and head, the orphaned child accepted and
+  noted. Part 2 is building. Dynasty's half is dynasty #620, blocked on
+  #231's PR.
+- **Memory drain:** on Ben's button answer, each planner drains its own
+  stores. Tools, project-memory-template and `~/.claude` are drained:
+  four rules lifted into root preferences (dotclaude `e2e4c3c`, on
+  Ben's word), with redirects left. The dynasty planner drains both
+  dynasty stores. The propagation auditor was started on `e2e4c3c`;
+  its result goes on #235.
+- **Open in #235** (issuecomment-7024358904): step 3's prune of merged
+  worktrees (a delete, by Ben's word per manager); the owner-queue store
+  keyed by old paths (#240); step 11.
+- **Next:** rule on #231's PR when it comes, then #233's finding; then
+  #232, #220, #219, #218, #226 after PR #197, and the rules PR for #217
+  after PR #210. After #231 merges, the planner's own PR replaces
+  PROJECT-RULES' message rule with the lock.
+
+**Twenty-fourth session, 2026-11-19** (it wins over everything
 below where they differ). The first session after the move; it ended at
 Ben's word "prepare for exit app and reopen". No owner-queue line
 appeared in this session, so it had no queue id, and none in the
