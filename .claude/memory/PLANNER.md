@@ -5,7 +5,10 @@ alone. Rules are in the `session-rules` skill and in
 [PROJECT-RULES.md](PROJECT-RULES.md); this file is state. GitHub issues are
 the record. This file links to them and does not repeat them.
 
-Last state-back: 2026-11-15, in the twenty-second session, at Ben's word
+Last state-back: 2026-11-19, in the twenty-third session, before the
+repository move to `C:\source\Github` (#235). **The newest state is the
+"Twenty-third session" block under "Do first after this clear"; it wins
+over all else.** Before that: 2026-11-15, the twenty-second session, at Ben's word
 "prepare for clear boundary including reset prompt". `origin/main` is at
 `3b65c41` (PR #224 merged). **The newest state is the "Twenty-second
 session" block under "Do first after this clear"; it wins over all
@@ -156,7 +159,46 @@ dynasty first.
 **Read this block first. It is the nineteenth session's state and it
 wins over items 0a, 0d and 1 below, which are kept only as history.**
 
-**Twenty-second session, 2026-11-15** (newest; it wins over everything
+**Twenty-third session, 2026-11-19** (newest; it wins over everything
+below where they differ). Queue id in this session:
+`2afab339-1191-43f1-8128-8ad03a076976`; no queue entry is keyed to it.
+Peers' ids by their own word: the dynasty manager
+`2fc702e7-0a21-4215-a11b-657bfa11fd39`, the tools manager
+`510da87d-2f9d-447c-9ff8-2cd945985c6f`, the dynasty planner
+`8bbde36f-ff90-46aa-b78a-a4d1987060ad`. A relaunch after the move gives
+every session a new id again.
+
+- **The repository move, #235** (Tier: none, owner-led). Ben wants every
+  repository moved from the OneDrive GitHub folder to `C:\source\Github`.
+  Ben's word by button: the cutover starts when #230's re-proof ends
+  (issues/235 issuecomment-7016902189), which replaces his earlier "After
+  #230 hand-over". The personal-assistant's read-only sweep replaced the
+  low builder brief (summary: issuecomment-7017133835). The blocker it
+  found: 70 Fabric files were cloud-only. Ben chose by button to pin them
+  now. The assistant is drafting Ben's click-level checklist; Claude
+  sent the corrections for v3 (the gate, the outside worktrees, the dynasty
+  settings files by Ben's hand before the relaunch and `git restore`
+  before that PR's pull, the tools `.venv` from pytest 9.2.0 and pyyaml
+  6.0.3). **Do first after the relaunch:** check the moved paths, then
+  the two path PRs (tools and dynasty) from the sweep, then the drain of
+  the per-folder memory stores.
+- **PR #230:** the dynasty manager's solo re-proof was GREEN at `c3368ef`
+  (602 passed, on pull/230). That manager asks Ben for the merge word,
+  merges and does the closeout pulls. **After it is merged and pulled:**
+  ask Ben by button for the comment "Hand-over done" on #228, then tell
+  the tools manager. If this is still open at the relaunch, it is the
+  first item.
+- **Dynasty:** #617 (#594's data PR) is pushed and held; it is re-proved
+  after the move. #614, #615 and #616 are held by Ben until after the
+  move.
+- **PR #227:** the setup document already says that the hook links are
+  junctions into the main checkout and are not tracked (pull/227
+  issuecomment-7010014301). After the move it names the old GitHub
+  folder, as the sweep found.
+- Everything in the twenty-second block below still holds where this
+  block is silent.
+
+**Twenty-second session, 2026-11-15** (it wins over everything
 below where they differ). Queue id in this session:
 `f3ffbb8c-29b5-4fad-9e9d-e1dd72985270`; no queue entry is keyed to it,
 and both queue files hold nothing for this planner. Peers' queue ids by
