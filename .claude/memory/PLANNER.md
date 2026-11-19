@@ -190,8 +190,11 @@ tools #240 (medium, the dynasty planner's ticket) finds why.
   Ben's word), with redirects left. The dynasty planner drains both
   dynasty stores. The propagation audit of `e2e4c3c` is on #235
   (issuecomment-7024454677). The root reset-prompt rule was reworded as
-  the fallback to `session-rules` step 5, with its commit pending Ben's
-  word. The registry gap is #241 (low, after #239).
+  the fallback to `session-rules` step 5. The dynasty planner committed
+  its drain together with that rewording (dotclaude `5eb0c0c`). The 9
+  root commits were on an already-merged branch, so on Ben's button
+  answer they go to main by dotclaude PR #7, which Ben merges. The
+  registry gap is #241 (low, after #239).
 - **Open in #235** (issuecomment-7024358904): step 3's prune of merged
   worktrees (a delete, by Ben's word per manager); the owner-queue store
   keyed by old paths (#240); step 11.
