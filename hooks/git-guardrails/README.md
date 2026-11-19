@@ -85,6 +85,23 @@ this is a behavior adaptation.
   braces and `$` become spaces before matching, so `(git push)`,
   `bash -c 'git restore .'` and `git submodule foreach 'git checkout .'`
   are judged like the plain command.
+- **The command is also read the way the shell reads it** (#168, owner's
+  ruling on the fail-closed design; [ADR-0017](../../docs/adr/0017-git-guardrails-reads-like-the-shell.md)).
+  Each segment gets a Bash reading and a PowerShell reading, for both tools:
+  quotes are removed and joined (`g''it`, `"git"`, `ma"in"`), escapes are
+  resolved (`g\it`, PowerShell ``g`it``), and a word whose last path part is
+  `git` in any case, with or without `.exe`, `.cmd`, `.bat` or `.com`,
+  reads as `git` (`Git`, `GIT.EXE`, `& "C:\Program Files\Git\cmd\git.exe"`).
+  `git-push` and the other guarded verbs spelled `git-<verb>` read as
+  `git <verb>`, and the word after `git` is lowercased. Quoted text is read
+  again, up to three passes, so `bash -c '"Git" reset --hard'` is seen too.
+  The whole segment is read this way, so a quoted refspec such as
+  `HEAD:ma''in` reads `main` and blocks. A word the hook cannot read (it
+  holds `$`, or an unquoted `*`, `?` or `[`) that comes right before a
+  guarded verb or a dash word is tried as `git`: `$g push origin main`
+  blocks with "cannot tell whether '$g' is git — name git literally".
+  The literal reading above still runs; a block from any reading stands,
+  and an exemption holds only when it holds in every reading.
 - **Redirections are dropped before matching.** `2>&1`, `&>file`, `>file`
   and `<file` are removed with their target, so `git push 2>&1 origin main`
   and `git clean -fd>/dev/null` are judged like the plain command, and a
@@ -123,6 +140,23 @@ this is a behavior adaptation.
 
 ## Layered-defense note
 
+**The first layer is a GitHub ruleset on `main`**: require a pull request,
+block force pushes, block deletion. GitHub then refuses any direct push to
+`main` however the command is spelled, from any tool or machine. Set it in
+every repo this hook guards. This hook is the second layer for pushes, and
+the only layer for the local destructive commands (`reset --hard`,
+`clean -f`, `checkout .`, `restore .`, a force branch delete), which the
+server never sees.
+
+**Known limits in a repo with no ruleset on `main`** (#168): these still
+push to `main` past the hook.
+
+- A refspec built at run time (F4): `git push origin HEAD:$b` with
+  `b=main`. A quoted refspec (`HEAD:ma''in`, `ma"in"`) is read and blocked.
+- `git switch -t origin/main` (F13), when no local `main` exists, creates a
+  local `main` without setting the switch.
+- `git switch -c "$x"main` with `$x` unset (listed on #168).
+
 This hook is a text match on one tool call made by **Claude Code itself**.
 It does not see:
 
@@ -134,11 +168,12 @@ It does not see:
   is not exactly a plain push (rule B above), which falls back to
   `CLAUDE_PROJECT_DIR`
 - a direct terminal `git push`, or another machine
+- a git name built at run time that the hook cannot read and that does
+  not sit right before a guarded verb or a dash word, or a git global
+  option the hook does not know (tracked on #200)
 
-The layer that cannot be bypassed locally is the GitHub ruleset on `main`
-(require a pull request, no direct pushes). This hook is the seatbelt in
-front of it, and the only layer covering the local-only destructive
-commands (`reset --hard`, `clean -f`, ...).
+The ruleset above is the layer that cannot be bypassed locally; this hook
+is the seatbelt in front of it.
 
 The force-delete exemption trusts `gh`'s answer for the current repo's remote;
 it does not see a branch deleted from a script, an alias or a terminal.
@@ -152,8 +187,9 @@ it does not see a branch deleted from a script, an alias or a terminal.
    one is already there — don't overwrite other hooks or settings). The
    matcher is `Bash|PowerShell`: both tools pass the command as
    `tool_input.command`.
-3. No other dependencies — works with the shell tools already present in
-   Claude Code's Bash environment (`sed`, `grep`, `awk`).
+3. No other dependencies: it works with the shell tools already present in
+   Claude Code's Bash environment (`sed`, `grep`, `awk`). The shell
+   readings run in one `awk` program per command.
 
 ## Tests
 
