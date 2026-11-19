@@ -24,8 +24,8 @@
   (a skill or hook removed from main) are reported, and removed with -Prune.
 
 .EXAMPLE
-  .\tools\relink_live.ps1 -Source C:\Users\benha\OneDrive\Documents\GitHub\skills-plugins-hooks-agents
-  .\tools\relink_live.ps1 -Source C:\Users\benha\OneDrive\Documents\GitHub\skills-plugins-hooks-agents -Apply -Prune
+  .\tools\relink_live.ps1 -Source C:\source\Github\skills-plugins-hooks-agents
+  .\tools\relink_live.ps1 -Source C:\source\Github\skills-plugins-hooks-agents -Apply -Prune
 #>
 [CmdletBinding()]
 param(
