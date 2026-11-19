@@ -192,7 +192,12 @@ own word: `0c145f0f-0c28-4299-97c5-1bdbc7ca264d`.
 - **#231 is dispatched** by the tools manager (issues/231
   issuecomment-7024077556), builder branch `t231-reproof-lock`. The
   builder stops after its Part 1 finding, and the manager sends this
-  planner the link to rule on.
+  planner the link to rule on. It parked once: its scratch probe was
+  refused under Profile none. On Ben's word by button ("Rule from
+  reading"), the planner revised Part 1 to answer from reading, with
+  Part 2's two-run and killed-run tests on both operating systems as
+  the evidence (issues/231 issuecomment-7024139524). Rule on the
+  finding when it comes.
 - Then the twenty-third block's items c and d: #231's finding, then
   #233's; then #232, #220, #219, #218, #226 and the rules PR for #217.
 
