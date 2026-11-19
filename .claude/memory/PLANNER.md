@@ -182,12 +182,12 @@ every session a new id again.
   6.0.3). **Do first after the relaunch:** check the moved paths, then
   the two path PRs (tools and dynasty) from the sweep, then the drain of
   the per-folder memory stores.
-- **PR #230:** the dynasty manager's solo re-proof was GREEN at `c3368ef`
-  (602 passed, on pull/230). That manager asks Ben for the merge word,
-  merges and does the closeout pulls. **After it is merged and pulled:**
-  ask Ben by button for the comment "Hand-over done" on #228, then tell
-  the tools manager. If this is still open at the relaunch, it is the
-  first item.
+- **PR #230 is merged as `f1ff785`**, after a Green solo re-proof at
+  `c3368ef` (602 passed). Both tools checkouts are pulled to it.
+  **"Hand-over done" is on #228** (issuecomment-7017901725), on Ben's
+  word by button. The tools manager is in its full role from the
+  relaunch, and its first item is #231. Ben approved the cutover checklist
+  by button (issues/235 issuecomment-7017874292).
 - **Dynasty:** #617 (#594's data PR) is pushed and held; it is re-proved
   after the move. #614, #615 and #616 are held by Ben until after the
   move.
