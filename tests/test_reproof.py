@@ -7,6 +7,7 @@ is a ref made by hand under refs/pull/1/head. Every test points the lock at a
 temp folder (the autouse fixture below), so the suite never touches the real
 lock, which the outer run holds while it runs this file.
 """
+import errno
 import importlib.util
 import json
 import os
@@ -642,6 +643,25 @@ def test_a_lock_left_by_a_killed_run_is_taken_by_the_next_run(tmp_path, lock_are
     assert record_of(lock_area) == reproof.BLANK
 
 
+def test_a_failed_record_write_gives_up_the_lock_and_fails(tmp_path, lock_area, monkeypatch, capsys):
+    real = os.write
+
+    def fake(fd, data):
+        if data.startswith(b"{"):
+            raise OSError(errno.ENOSPC, "no space left on device")
+        return real(fd, data)
+
+    with monkeypatch.context() as patch:
+        patch.setattr(reproof.os, "write", fake)
+        code = reproof.main(["1", SHA], repo=tmp_path)
+    out = capsys.readouterr().out
+    assert code == 1
+    assert "cannot take the lock" in out
+    assert "no space left on device" in out
+    assert record_of(lock_area) == reproof.BLANK
+    assert_lock_is_free(lock_area)
+
+
 def test_a_held_lock_with_an_unreadable_record_still_exits_held(tmp_path, lock_area, capsys):
     lock_area.mkdir()
     fd = reproof.take_lock(lock_area / LOCK_FILE, b"x" * 511 + b"\n")
@@ -659,7 +679,7 @@ def test_a_held_lock_with_an_unreadable_record_still_exits_held(tmp_path, lock_a
 @pytest.mark.parametrize(
     "name", ["REPROOF_LOCK", "REPROOF_LOCK_DIR", "REPROOF_NO_LOCK", "SKIP_LOCK", "TMPDIR", "TEMP", "TMP"]
 )
-def test_no_environment_variable_skips_the_lock(name, tmp_path, lock_area, monkeypatch, capsys):
+def test_no_variable_of_the_scripts_own_skips_or_moves_the_lock(name, tmp_path, lock_area, monkeypatch, capsys):
     lock_area.mkdir()
     fd = reproof.take_lock(lock_area / LOCK_FILE, reproof.lock_record("9", SHA))
     assert fd is not None

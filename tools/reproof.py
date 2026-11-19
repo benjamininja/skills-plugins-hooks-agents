@@ -7,7 +7,10 @@ interpreter the permission rule names: the steps run with that same
 interpreter (sys.executable), and it must have pytest.
 
   0. take the machine's one re-proof lock (~/.claude-reproof/reproof.lock,
-     #231) before anything else; if another run holds it, start nothing,
+     #231; the home folder is the account's, USERPROFILE on Windows and HOME
+     elsewhere, so a run whose home variable was changed takes a different
+     lock; the script has no option, argument or variable of its own that
+     skips or moves it) before anything else; if another run holds it, start nothing,
      print who holds it and exit 75. The operating system frees the lock
      when its process ends, so a killed run never leaves a stale one. A
      killed run's pytest child may still be running after its lock is free.
@@ -201,9 +204,11 @@ def take_lock(path: Path, record: bytes) -> int | None:
         raise
     try:
         os.lseek(fd, 0, os.SEEK_SET)
-        os.write(fd, record)
+        if os.write(fd, record) != len(record):
+            raise OSError(errno.EIO, "short write of the lock record")
     except OSError:
-        pass
+        release_lock(fd)
+        raise
     return fd
 
 
