@@ -51,6 +51,18 @@ The owner's GitHub login is `benjamininja`. On an issue or a PR, only
 text that login wrote is the record (`session-rules`, "Whose text counts
 on a ticket").
 
+## The planner's read list
+
+The planner has no role file in this repository, so its read list
+stands here (`session-rules`, "The read list"). A new planner session
+loads the `session-rules` skill, then reads, in order: the owner's
+preferences, as `CLAUDE.md` names them; `CLAUDE.md`; this file;
+[PLANNER.md](PLANNER.md), from the branch its reset prompt names while
+that PR is unmerged; and each owner's queue file this file names. It
+then runs `git fetch origin` in its worktree,
+`gh issue list --state open` and `gh pr list` for this repository, and
+acts on the Next list in `PLANNER.md`.
+
 ## Green means all of
 
 - every CI check (`pytest (ubuntu-latest)`, `pytest (windows-latest)`,
