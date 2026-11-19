@@ -5,10 +5,12 @@ alone. Rules are in the `session-rules` skill and in
 [PROJECT-RULES.md](PROJECT-RULES.md); this file is state. GitHub issues are
 the record. This file links to them and does not repeat them.
 
-Last state-back: 2026-11-19, in the twenty-third session, before the
-repository move to `C:\source\Github` (#235). **The newest state is the
-"Twenty-third session" block under "Do first after this clear"; it wins
-over all else.** Before that: 2026-11-15, the twenty-second session, at Ben's word
+Last state-back: 2026-11-19, in the twenty-fourth session, the first
+after the move, at Ben's word "prepare for exit app and reopen".
+**The newest state is the "Twenty-fourth session" block under "Do first
+after this clear"; it wins over all else.** Before that, the
+twenty-third session, before the repository move to `C:\source\Github`
+(#235): its block was the newest then. Before that: 2026-11-15, the twenty-second session, at Ben's word
 "prepare for clear boundary including reset prompt". `origin/main` is at
 `3b65c41` (PR #224 merged). **The newest state is the "Twenty-second
 session" block under "Do first after this clear"; it wins over all
@@ -159,7 +161,42 @@ dynasty first.
 **Read this block first. It is the nineteenth session's state and it
 wins over items 0a, 0d and 1 below, which are kept only as history.**
 
-**Twenty-third session, 2026-11-19** (newest; it wins over everything
+**Twenty-fourth session, 2026-11-19** (newest; it wins over everything
+below where they differ). The first session after the move; it ended at
+Ben's word "prepare for exit app and reopen". No owner-queue line
+appeared in this session, so it had no queue id, and none in the
+relaunched tools manager either: the mod may not be loading, which is
+to be checked after the reopen. The dynasty planner's new id by its
+own word: `0c145f0f-0c28-4299-97c5-1bdbc7ca264d`.
+
+- **#235 move check done** (issues/235 issuecomment-7023953244).
+  Steps 5 and 6 are done. Both tools checkouts are at `f1ff785`, and
+  the tools `.venv` exists. The relaunch ran before step 7.
+- **Step 7 is done for the tools repo.** Worktrees: on Ben's word by
+  button (split: Ben does the links, Claude the worktrees), Claude ran
+  `git worktree repair`, which leaves 0 prunable and deleted nothing
+  (issuecomment-7024046819). Links: Ben remade them, and Claude checked
+  that all 43 point at the new checkout (issuecomment-7024062640). The
+  tools manager was told its move hold is lifted, and that it still
+  needs a relaunch and Ben's `session-dispatch`.
+- **Still open in #235:** the dynasty repo shows 20 prunable worktree
+  entries (whose hand is not yet decided); step 9, the two path PRs;
+  step 11, the empty old folder; the drain of the per-folder memory
+  stores (root memory-architecture, Phase 0).
+- **Tools path PR scope is recorded** (issuecomment-7024075255): seven
+  files, a low tier proposed, and one design question (ADR-0011 and the
+  OneDrive lock text). **Do first after the reopen:** write the brief
+  from that comment, and send it to the tools manager as a ticket or a
+  #235 brief. Then brief the dynasty path PR from the sweep
+  (issuecomment-7017133835, section B). Then the memory drain.
+- **#231 is dispatched** by the tools manager (issues/231
+  issuecomment-7024077556), builder branch `t231-reproof-lock`. The
+  builder stops after its Part 1 finding, and the manager sends this
+  planner the link to rule on.
+- Then the twenty-third block's items c and d: #231's finding, then
+  #233's; then #232, #220, #219, #218, #226 and the rules PR for #217.
+
+**Twenty-third session, 2026-11-19** (it wins over everything
 below where they differ). Queue id in this session:
 `2afab339-1191-43f1-8128-8ad03a076976`; no queue entry is keyed to it.
 Peers' ids by their own word: the dynasty manager
