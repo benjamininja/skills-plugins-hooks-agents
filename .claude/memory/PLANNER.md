@@ -33,10 +33,14 @@ word asked of Ben by button):** #236, PR #238 (the planner's), #239
 - **#244 goes first** (medium, `Profile: none`; Ben's "Go, first
   (Recommended)", 2026-11-22; brief: issues/244
   issuecomment-7082663876). Dispatched as builder `t244-pytest-hang`
-  (issuecomment-7083733874). #236's re-proof timed out in pytest at 3600s
+  (issuecomment-7083733874). Part 1 was killed for low memory at 326 of
+  603 tests: slow, not hung (issuecomment-7084964448). Ben's ruling
+  "Re-run when freed (Recommended)" (issuecomment-7085050188): Part 1
+  runs again on a freed machine, with memory logged by the manager. Rule
+  on the full finding, then brief Part 2. #236's re-proof timed out in pytest at 3600s
   twice (`7b5b408`, `629074b`), while Windows CI passes in 17–19 min.
-  Every tools re-proof is held until #244's Part 1 finding. Rule on it
-  when it comes; it feeds #187.
+  The held re-proofs may follow the re-run on the freed machine. The
+  finding feeds #187.
 - #242: the re-check accepted F1 and F2 at `b278602`. It needs only its
   re-proof.
 
@@ -101,10 +105,6 @@ goes to Ben by button), #233. #200's design goes to Ben by button.
 - The Action to remove the mod's old hand copy (#195).
 - The merge of the private configuration repository's working branch.
 - #245's go (low), and the planner PR for the stale OneDrive paths.
-
-**Owed to Tools-builder-manager** (its session was not running at
-2026-11-22's send): #245's go (issuecomment-7084478611, dispatch after
-the line), and the note that #243's root split merged (dotclaude #9).
 
 **Waiting on Ben:** nothing.
 
