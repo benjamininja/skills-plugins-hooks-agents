@@ -6,7 +6,7 @@ alone. Rules are in the `session-rules` skill and in
 
 ## START HERE
 
-Written 2026-11-19 by the tools manager (session Tools-builder-manager),
+Written 2026-11-22 by the tools manager (session Tools-builder-manager),
 at a clear boundary. `origin/main`, the main checkout and the live clone
 were all at `f1ff785` on the last read. The role is in full ("Hand-over
 done" on #228); the move (#235) is done for this repository through
@@ -14,30 +14,35 @@ step 7. `session-dispatch` must be typed again after every clear.
 
 **One full test run on the machine at a time**, by message with the
 dynasty manager (dff-central-builder-manager) until #231's lock (PR
-#242) merges and is pulled. At the clear: the tools re-proof of #236 was
-running and may have been cut off; the dynasty manager's b615 builder
-waits for the tools end notice and takes the next turn (about 5
-minutes); dynasty b614 also waits for a line.
+#242) merges and is pulled. At the clear the line was free: the
+dynasty manager's end notice came after #621 (GREEN, merged `5bd92f4`)
+and #625. Its next session asks for the line before it re-runs #625.
+After the clear, tell the dynasty manager the tools manager takes the
+line, then run.
 
 Next, in order:
 
-1. **#236** (this file): re-prove at its head, post the result, ask Ben
-   for the merge word by button. If the run cut off at the clear did
-   finish, its result is not on the PR: run it again.
-2. **#238** (the planner's `PROJECT-RULES.md` half of #237): re-prove,
-   merge word by button. No code review (planner PR).
-3. **#239** (#237's builder PR, six path files): check whether the
-   ruleset counts `tools/relink_live.ps1` as code (a full review at
-   `low` if so); re-prove, merge word. The builder's `pre-commit`
-   proof was refused in its mode; the manager runs it at re-proof.
-4. **#242** (#231's lock, builder PR): first review posted (no
-   blocking, F1 and F2 advisories, pull/242 issuecomment-7024904558);
-   the planner's view on F1 is at issuecomment-7024918502 (accept,
-   correct the PR body and format text and the test name). Wait for
-   the builder's one answer, then a fresh reviewer re-checks, the
-   manager rules on F2, then re-prove and the merge word. When the
-   format text is final, send it to the dynasty planner for dynasty
-   #620.
+1. **#236** (this file): the re-proof at `7b5b408` was NOT GREEN, as
+   pytest hit the 3600s cap while every other step passed
+   (pull/236 issuecomment-7026612616). CI's Windows pytest passed at
+   that head in 19m13s, and no leftover pytest process remained, so
+   the cause is the machine (a local hang or contention), not the PR.
+   This state-back moves the head: re-prove at the new head. A second
+   timeout opens a `Tier: unset` ticket on the local hang for the
+   planner. Then the merge word by button.
+2. **#238** (the planner's `PROJECT-RULES.md` half of #237, `c211cad`,
+   CI clean): re-prove, merge word by button. No code review (planner
+   PR). It merges before #239.
+3. **#239** (#237's builder PR, `c64cf25`): first review done (full at
+   `low`; the ruleset counts every non-Markdown file as code). No
+   blocking finding. F1 (advisory) is closed by #238
+   (pull/239 issuecomment-7025383696). Re-prove after #238 merges,
+   with `pre-commit` run by the manager, then the merge word.
+4. **#242** (#231's lock, builder PR, `b278602`, CI clean): code review
+   closed, F1 and F2 accepted at re-check and closed
+   (pull/242 issuecomment-7025134405). Re-prove, then the merge word.
+   Then send the final lock format text (in the PR body) to
+   dff-central-planner for dynasty #620.
 5. Closeout pulls after each merge. #238 and #242 change rules or the
    re-proof tool: tell the dynasty manager and both planners before the
    pull and send both heads after.
@@ -58,8 +63,8 @@ pulls of the main checkout and the live clone, and this file.
 
 | Builder | Ticket | Tier | Session | PR | Stage |
 |---|---|---|---|---|---|
-| `t231-reproof-lock` | #231 | medium | `8506434b` | #242 at `f7effec` | answering review F1/F2 |
-| `t237-path-move` | #237 | low | `f0de4ab6` | #239 | waiting for re-proof |
+| `t231-reproof-lock` | #231 | medium | `8506434b` | #242 at `b278602` | review closed; waiting for re-proof (state-back issues/231 issuecomment-7025354702) |
+| `t237-path-move` | #237 | low | `f0de4ab6` | #239 at `c64cf25` | review done; waiting for re-proof |
 
 Both are held from the full local suite: the manager's re-proof runs it.
 
@@ -99,8 +104,9 @@ read again before its re-proof:
 
 ## Waiting on the owner (pointer to NEEDS-OWNER.md)
 
-The queue file is empty. The owner-queue mod gives this session no queue
-id since the move; the Tools planner took that to Ben.
+The queue file is empty. The owner-queue line came back in this
+session's system prompt on 2026-11-19 (relevant to #240); after a clear,
+send the new queue id to both planners and the dynasty manager.
 
 ## Queue entries raised
 
@@ -124,6 +130,10 @@ id since the move; the Tools planner took that to Ben.
 - The git-guardrails hook blocks a chained command that holds a push:
   one git command per call, and push with
   `git -C <worktree> push origin <branch>`.
+- In Git Bash, `git show <branch>:<path>` needs `MSYS_NO_PATHCONV=1`,
+  or the argument is rewritten into a Windows path.
+- A reviewer runs read-only, so it may run during another manager's
+  test line; only the full suite waits for the line.
 - Peers: Tools-central-planner, dff-central-planner,
   dff-central-builder-manager. Find them with ListAgents by name; ids
   change at a relaunch.
