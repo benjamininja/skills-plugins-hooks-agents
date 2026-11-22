@@ -12,7 +12,9 @@ in this file's git history:
 The last stacked version, with 26 session blocks, is that branch's commit
 before the #243 rewrite.
 
-Last state-back: 2026-11-22, the twenty-seventh session.
+Last state-back: 2026-11-22, the twenty-seventh session's compact prep,
+at Ben's word "prepare for compact". dff-central-builder-manager has not
+yet reported its own memory review (#243); nothing is owed to it.
 
 ## Current
 
@@ -43,9 +45,12 @@ word asked of Ben by button):** #236, PR #238 (the planner's), #239
 2. **#233's finding** when it comes: rule on it. Send the link to
    dff-central-planner, which files the dynasty follow-up.
 3. **#243, the memory review.** The Current-block rewrite is done here.
-   Left: the root split. dff-central-planner first moves the dynasty-only
-   text of root `preferences.md` into the dynasty memory (relayed
-   2026-11-22). Then this planner removes it from root, drops the three
+   Left: the root split. The dynasty side is dynasty PR #632 (into the
+   dynasty project `CLAUDE.md`, by Ben's button there; open, merged by
+   dff-central-builder-manager on Ben's go; issues/243
+   issuecomment-7082480190). Root does not change until
+   dff-central-planner reports #632 merged. Then this planner removes
+   all the listed dynasty-only text from root, drops the three
    OneDrive gotchas, fixes the old paths in root `MEMORY.md` and this
    repo's `.claude/memory/MEMORY.md`, and runs
    `root-memory-propagation-auditor`. The dotclaude commit is on Ben's
