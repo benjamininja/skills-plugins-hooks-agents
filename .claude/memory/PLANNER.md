@@ -46,10 +46,10 @@ word asked of Ben by button):** #236, PR #238 (the planner's), #239
    dff-central-planner, which files the dynasty follow-up.
 3. **#243, the memory review.** The Current-block rewrite is done here.
    Left: the root split. The dynasty side is dynasty PR #632 (into the
-   dynasty project `CLAUDE.md`, by Ben's button there; open, merged by
-   dff-central-builder-manager on Ben's go; issues/243
-   issuecomment-7082480190). Root does not change until
-   dff-central-planner reports #632 merged. Then this planner removes
+   dynasty project `CLAUDE.md`, by Ben's button there; issues/243
+   issuecomment-7082480190). **#632 merged as `c598e3e`** (checked
+   2026-11-22), so the root edit is unblocked: do it first after the
+   compact. Its PR body lists what moved. This planner removes
    all the listed dynasty-only text from root, drops the three
    OneDrive gotchas, fixes the old paths in root `MEMORY.md` and this
    repo's `.claude/memory/MEMORY.md`, and runs
