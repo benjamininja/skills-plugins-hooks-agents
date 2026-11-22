@@ -5,9 +5,10 @@ alone. Rules are in the `session-rules` skill and in
 [PROJECT-RULES.md](PROJECT-RULES.md); this file is state. GitHub issues are
 the record. This file links to them and does not repeat them.
 
-Last state-back: 2026-11-19, in the twenty-sixth session. **The newest
-state is the "Twenty-sixth session" block under "Do first after this
-clear"; it wins over all else.** Before that, the twenty-fifth session,
+Last state-back: 2026-11-22, the twenty-sixth session's clear prep, at
+Ben's word. **The newest state is the "Twenty-sixth session" block
+under "Do first after this clear"; it wins over all else.** Before
+that, the twenty-fifth session,
 after the app restart. Before that, the twenty-fourth session, the first
 after the move, at Ben's word "prepare for exit app and reopen":
 the "Twenty-fourth session" block under "Do first
@@ -185,6 +186,16 @@ for this planner.
 - **Next:** after #242 merges, the planner's PR replacing PROJECT-RULES'
   one-run message rule with the lock. Rule on #233's finding. #235
   remainders (step 3's prune, step 11).
+- **At the clear prep, 2026-11-22:** nothing merged since 2026-11-19.
+  The tools manager's re-proof of #236 at `7b5b408` was NOT GREEN:
+  pytest timed out at 3600s on a PR that only changes `MANAGER.md`
+  (pull/236, the manager's re-proof comment). The manager looks into
+  the cause; a hang or machine contention is a data point for #187 and
+  #231. The tools manager's queue id after its clear:
+  `b4f527ea-69e9-4fe1-bdbc-bac6a2d93b46`. The dynasty planner's:
+  `5e9a5f7b-7fc8-40e8-a294-5e34990fbbc5`. Both report the owner-queue
+  line back (#240). The tools manager waits on Ben's `session-dispatch`
+  and on the dynasty manager for the test line.
 
 **Twenty-fifth session, 2026-11-19** (it wins over everything
 below where they differ). The same session as the twenty-fourth,
