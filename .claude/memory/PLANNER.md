@@ -12,8 +12,8 @@ in this file's git history:
 The last stacked version, with 26 session blocks, is that branch's commit
 before the #243 rewrite.
 
-Last state-back: 2026-11-22, after the compact: the #243 root split
-merged. dff-central-builder-manager has not
+Last state-back: 2026-11-22, compact prep at Ben's word "prepare for
+compact" (#243 root split merged; #244 re-run running). dff-central-builder-manager has not
 yet reported its own memory review (#243); nothing is owed to it.
 
 ## Current
@@ -105,7 +105,11 @@ goes to Ben by button), #233. #200's design goes to Ben by button.
   shape.
 - The Action to remove the mod's old hand copy (#195).
 - The merge of the private configuration repository's working branch.
-- #245's go (low), and the planner PR for the stale OneDrive paths.
+- The planner PR for the stale OneDrive paths (#243).
+- Root `preferences.md`'s "Direct-to-main is this repo's agreed mode"
+  line for dotclaude is stale: the guard hook refuses a push to its
+  `main`, and #5, #7 and #9 went by PR. The fix is a root edit, on Ben's
+  word.
 
 **Waiting on Ben:** nothing.
 
@@ -230,3 +234,6 @@ goes to Ben by button), #233. #200's design goes to Ben by button.
   `git -C` the main checkout.
 - A stacked state file grows without bound: 26 blocks reached 69 KB
   (#243). Rewrite Current in place.
+- dotclaude changes go by branch and PR: the guard hook refuses a push
+  to its `main`. The hook checks merged PRs only in the session's own
+  repo, so it refuses a local delete of a merged dotclaude branch.
