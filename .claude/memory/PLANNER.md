@@ -33,15 +33,15 @@ word asked of Ben by button):** #236, PR #238 (the planner's), #239
 - **#244 goes first** (medium, `Profile: none`; Ben's "Go, first
   (Recommended)", 2026-11-22; brief: issues/244
   issuecomment-7082663876). Dispatched as builder `t244-pytest-hang`
-  (issuecomment-7083733874). Part 1 was killed for low memory at 326 of
-  603 tests: slow, not hung (issuecomment-7084964448). Ben's ruling
-  "Re-run when freed (Recommended)" (issuecomment-7085050188): Part 1
-  runs again, with memory logged by the manager. Re-run dispatched
-  (issuecomment-7085240670), Chrome left open by Ben's choice (commit 52.0
-  of 58.2 GB). Rule on the full finding, then brief Part 2. #236's re-proof timed out in pytest at 3600s
-  twice (`7b5b408`, `629074b`), while Windows CI passes in 17–19 min.
-  The held re-proofs may follow the re-run on the freed machine. The
-  finding feeds #187.
+  (issuecomment-7083733874). Part 1 was stopped for low memory twice
+  (326 and 309 of 603 tests, 3.4 then 5.8 s a test). Ben's "Rule and
+  brief Part 2 (Recommended)": slow under memory pressure, not hung.
+  **Part 2 brief posted** (issuecomment-7085729098): `reproof.py` gets
+  `PYTEST_TIMEOUT = 5400` for pytest only, plus `--durations=25`, and one
+  test. It runs before the merge line, and #242 merges main in after it.
+  **Owed to Tools-builder-manager:** the brief's link. Its session was not
+  running at 2026-11-22 evening, so it reads #244 when it resumes. The
+  speed-up stays with #187.
 - #242: the re-check accepted F1 and F2 at `b278602`. It needs only its
   re-proof.
 
@@ -104,10 +104,6 @@ goes to Ben by button), #233. #200's design goes to Ben by button.
   shape.
 - The Action to remove the mod's old hand copy (#195).
 - The merge of the private configuration repository's working branch.
-- Root `preferences.md`'s "Direct-to-main is this repo's agreed mode"
-  line for dotclaude is stale: the guard hook refuses a push to its
-  `main`, and #5, #7 and #9 went by PR. The fix is a root edit, on Ben's
-  word.
 
 **Waiting on Ben:** nothing.
 
