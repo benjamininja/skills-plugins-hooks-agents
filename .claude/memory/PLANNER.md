@@ -12,8 +12,8 @@ in this file's git history:
 The last stacked version, with 26 session blocks, is that branch's commit
 before the #243 rewrite.
 
-Last state-back: 2026-11-22, the twenty-seventh session's compact prep,
-at Ben's word "prepare for compact". dff-central-builder-manager has not
+Last state-back: 2026-11-22, after the compact: the #243 root split
+merged. dff-central-builder-manager has not
 yet reported its own memory review (#243); nothing is owed to it.
 
 ## Current
@@ -32,7 +32,8 @@ word asked of Ben by button):** #236, PR #238 (the planner's), #239
 `f1ff785` (2026-11-19).
 - **#244 goes first** (medium, `Profile: none`; Ben's "Go, first
   (Recommended)", 2026-11-22; brief: issues/244
-  issuecomment-7082663876). #236's re-proof timed out in pytest at 3600s
+  issuecomment-7082663876). Dispatched as builder `t244-pytest-hang`
+  (issuecomment-7083733874). #236's re-proof timed out in pytest at 3600s
   twice (`7b5b408`, `629074b`), while Windows CI passes in 17–19 min.
   Every tools re-proof is held until #244's Part 1 finding. Rule on it
   when it comes; it feeds #187.
@@ -44,19 +45,18 @@ word asked of Ben by button):** #236, PR #238 (the planner's), #239
    one-run message rule with the lock.
 2. **#233's finding** when it comes: rule on it. Send the link to
    dff-central-planner, which files the dynasty follow-up.
-3. **#243, the memory review.** The Current-block rewrite is done here.
-   Left: the root split. The dynasty side is dynasty PR #632 (into the
-   dynasty project `CLAUDE.md`, by Ben's button there; issues/243
-   issuecomment-7082480190). **#632 merged as `c598e3e`** (checked
-   2026-11-22), so the root edit is unblocked: do it first after the
-   compact. Its PR body lists what moved. This planner removes
-   all the listed dynasty-only text from root, drops the three
-   OneDrive gotchas, fixes the old paths in root `MEMORY.md` and this
-   repo's `.claude/memory/MEMORY.md`, and runs
-   `root-memory-propagation-auditor`. The dotclaude commit is on Ben's
-   word. The peers' own reviews: Tools-builder-manager trims `MANAGER.md`
-   after #236 merges (pull/236, latest comment); personal-assistant's four
-   role-draft points are on #218 (issuecomment-7082200407).
+3. **#243, the memory review: the root split is done.** dotclaude PR #9
+   merged as `cfba40f` on Ben's buttons (issues/243
+   issuecomment-7084451575). Dynasty's stale descriptions of root are
+   dynasty #637. Left here: (a) one planner PR for this repo's stale
+   OneDrive paths (`README.md` 86-87, `PROJECT-RULES.md` 101 and 112,
+   `tools/relink_live.ps1` 27-28, `hooks/root-memory-propagation/README.md`
+   53), list in issuecomment-7083787493; (b) #245 (low), the propagation
+   registry's dead path, which needs Ben's go before dispatch. Peers:
+   Tools-builder-manager trims `MANAGER.md` after #236 merges;
+   personal-assistant's points are on #218 (issuecomment-7082200407).
+   The local dotclaude branch `memory/root-split-243` is merged content;
+   the guard hook refuses its delete from here, so it is left.
 4. **Dispatchable after the merge line** (sent to Tools-builder-manager,
    gos recorded): #189, #219. #232 follows #189's PR; #220 follows
    #219's first finding (go recorded, brief then); #218 follows the #217
@@ -100,7 +100,7 @@ goes to Ben by button), #233. #200's design goes to Ben by button.
   shape.
 - The Action to remove the mod's old hand copy (#195).
 - The merge of the private configuration repository's working branch.
-- The dotclaude commit for #243's root split.
+- #245's go (low), and the planner PR for the stale OneDrive paths.
 
 **Waiting on Ben:** nothing.
 
