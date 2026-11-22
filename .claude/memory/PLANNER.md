@@ -28,10 +28,12 @@ old id `5e9a5f7b-…`; that planner has been told.
 word asked of Ben by button):** #236, PR #238 (the planner's), #239
 (#237), #242 (#231). #241 follows #239. Nothing has merged since
 `f1ff785` (2026-11-19).
-- #236: the re-proof at `7b5b408` was NOT GREEN. pytest timed out at
-  3600s on a `MANAGER.md`-only PR (pull/236). The head is now `629074b`.
-  The manager finds the cause; a hang or contention is a data point for
-  #187 and #231.
+- **#244 goes first** (medium, `Profile: none`; Ben's "Go, first
+  (Recommended)", 2026-11-22; brief: issues/244
+  issuecomment-7082663876). #236's re-proof timed out in pytest at 3600s
+  twice (`7b5b408`, `629074b`), while Windows CI passes in 17–19 min.
+  Every tools re-proof is held until #244's Part 1 finding. Rule on it
+  when it comes; it feeds #187.
 - #242: the re-check accepted F1 and F2 at `b278602`. It needs only its
   re-proof.
 
