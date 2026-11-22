@@ -53,11 +53,10 @@ word asked of Ben by button):** #236, PR #238 (the planner's), #239
 3. **#243, the memory review: the root split is done.** dotclaude PR #9
    merged as `cfba40f` on Ben's buttons (issues/243
    issuecomment-7084451575). Dynasty's stale descriptions of root are
-   dynasty #637. Left here: (a) one planner PR for this repo's stale
-   OneDrive paths (`README.md` 86-87, `PROJECT-RULES.md` 101 and 112,
-   `tools/relink_live.ps1` 27-28, `hooks/root-memory-propagation/README.md`
-   53), list in issuecomment-7083787493; (b) #245 (low), the propagation
-   registry's dead path, which needs Ben's go before dispatch. Peers:
+   dynasty #637. The stale-paths planner PR is dropped: #238 and #239
+   cover every path. #245 is closed as a duplicate, folded into #241 on
+   Ben's "Fold into #241 (Recommended)" (issues/243
+   issuecomment-7085623163; #241 issuecomment-7085619927). Peers:
    Tools-builder-manager trims `MANAGER.md` after #236 merges;
    personal-assistant's points are on #218 (issuecomment-7082200407).
    The local dotclaude branch `memory/root-split-243` is merged content;
@@ -105,7 +104,6 @@ goes to Ben by button), #233. #200's design goes to Ben by button.
   shape.
 - The Action to remove the mod's old hand copy (#195).
 - The merge of the private configuration repository's working branch.
-- The planner PR for the stale OneDrive paths (#243).
 - Root `preferences.md`'s "Direct-to-main is this repo's agreed mode"
   line for dotclaude is stale: the guard hook refuses a push to its
   `main`, and #5, #7 and #9 went by PR. The fix is a root edit, on Ben's
@@ -194,6 +192,10 @@ goes to Ben by button), #233. #200's design goes to Ben by button.
   its limits.
 
 ### Lessons
+
+- Before filing a ticket or planning a PR, search open issues and PRs
+  for the same file. #245 and a planned PR duplicated #237, #239 and
+  #241 (2026-11-22).
 
 - Address sessions by name; check checkouts and queue files before
   relaying a claim about them. A peer's finding is a report to check.
