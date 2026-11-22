@@ -102,6 +102,10 @@ goes to Ben by button), #233. #200's design goes to Ben by button.
 - The merge of the private configuration repository's working branch.
 - #245's go (low), and the planner PR for the stale OneDrive paths.
 
+**Owed to Tools-builder-manager** (its session was not running at
+2026-11-22's send): #245's go (issuecomment-7084478611, dispatch after
+the line), and the note that #243's root split merged (dotclaude #9).
+
 **Waiting on Ben:** nothing.
 
 ## Reference
