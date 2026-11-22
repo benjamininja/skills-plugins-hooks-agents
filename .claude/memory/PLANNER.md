@@ -36,8 +36,9 @@ word asked of Ben by button):** #236, PR #238 (the planner's), #239
   (issuecomment-7083733874). Part 1 was killed for low memory at 326 of
   603 tests: slow, not hung (issuecomment-7084964448). Ben's ruling
   "Re-run when freed (Recommended)" (issuecomment-7085050188): Part 1
-  runs again on a freed machine, with memory logged by the manager. Rule
-  on the full finding, then brief Part 2. #236's re-proof timed out in pytest at 3600s
+  runs again, with memory logged by the manager. Re-run dispatched
+  (issuecomment-7085240670), Chrome left open by Ben's choice (commit 52.0
+  of 58.2 GB). Rule on the full finding, then brief Part 2. #236's re-proof timed out in pytest at 3600s
   twice (`7b5b408`, `629074b`), while Windows CI passes in 17–19 min.
   The held re-proofs may follow the re-run on the freed machine. The
   finding feeds #187.
