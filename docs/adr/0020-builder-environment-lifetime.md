@@ -137,6 +137,14 @@ with no commit of its own is removable: "Removable (Recommended)".
     read from `lstat`'s file attributes.
   - A file link is left to git, which removes the link and not its
     target. That is shown by a test on every platform that can make one.
+- **The worktree's own `.git` file is not trusted.** A builder can rewrite
+  it, and git would then read the config of a repository the builder
+  chose. A `core.fsmonitor` command in that config would run in the
+  manager's process. So the script checks that the file points to the
+  main checkout's record of that worktree, and that the record points
+  back. It runs `git status` with that record passed as `--git-dir` and
+  with `core.fsmonitor` off. A mismatch refuses. Found by the
+  security review before the PR.
 - **The in-use check:**
   - It runs on Windows, in an apply run, and last, after every other
     test has passed.

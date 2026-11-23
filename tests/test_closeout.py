@@ -529,6 +529,23 @@ def test_refuses_dangling_link(proj, capsys):
     assert code == 1 and "cannot be resolved" in out and wt.exists()
 
 
+def test_refuses_planted_git_file_and_runs_nothing_from_it(proj, capsys):
+    """A builder's .git file that names a repository of its own is never followed."""
+    wt, _ = merged_builder(proj, "b1")
+    evil = wt / "builder-state" / "evil"
+    git(proj.tmp, "init", "-q", "--bare", str(evil))
+    marker = proj.tmp / "ran.txt"
+    git(evil, "config", "core.fsmonitor", f"echo ran > '{marker.as_posix()}'")
+    with open(wt / ".git", "r+", encoding="utf-8") as f:  # r+: Windows refuses "w" on a hidden file
+        f.write(f"gitdir: {evil.as_posix()}\n")
+        f.truncate()
+    for args in (("b1", "--apply"), ("--list",)):
+        code, out = run_closeout(capsys, proj.main, *args)
+        assert "does not point to the main checkout's worktree record" in out, out
+    assert not marker.exists()
+    assert wt.exists() and has_branch(proj, "worktree-b1")
+
+
 def test_refuses_top_folder_that_is_a_link(proj, capsys):
     wt, _ = merged_builder(proj, "b1")
     moved = proj.tmp / "moved-b1"

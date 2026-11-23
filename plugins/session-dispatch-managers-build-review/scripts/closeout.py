@@ -168,6 +168,7 @@ class Project:
             cdir = os.path.join(self.main, cdir)
         if norm(gdir.strip()) != norm(cdir):
             raise Refusal(f"{main} is a linked worktree, not the main checkout")
+        self.admin_root = os.path.join(norm(cdir), "worktrees")
         self.root = os.path.join(self.main, ".claude", "worktrees")
         self.root_key = os.path.join(norm(self.main), ".claude", "worktrees")
         if os.path.lexists(self.root) and norm(self.root) != self.root_key:
@@ -261,6 +262,39 @@ class Verdict:
         return self.state in (MERGED, EMPTY) and not self.reasons
 
 
+def admin_dir(project, path):
+    """The worktree's record in the main checkout, checked both ways. Raises Refusal.
+
+    The worktree's own `.git` file is the builder's to write. Git would trust it
+    and read the config of whatever it names, so it is checked against the main
+    checkout's record before any git call runs in the worktree.
+    """
+    dotgit = os.path.join(path, ".git")
+    try:
+        if is_link(dotgit) or not stat.S_ISREG(os.lstat(dotgit).st_mode):
+            raise Refusal("its .git is not a plain file")
+        with open(dotgit, encoding="utf-8") as f:
+            line = f.readline().strip()
+    except OSError as e:
+        raise Refusal(f"its .git cannot be read: {e.strerror or e}")
+    if not line.startswith("gitdir: "):
+        raise Refusal("its .git file holds no gitdir line")
+    target = line[len("gitdir: "):]
+    if not os.path.isabs(target):
+        target = os.path.join(path, target)
+    record = norm(target)
+    if os.path.dirname(record) != project.admin_root or not os.path.isdir(record):
+        raise Refusal("its .git file does not point to the main checkout's worktree record")
+    try:
+        with open(os.path.join(record, "gitdir"), encoding="utf-8") as f:
+            back = f.readline().strip()
+    except OSError:
+        raise Refusal("the main checkout's worktree record has no gitdir file")
+    if literal(back) != literal(dotgit):
+        raise Refusal("the main checkout's worktree record points elsewhere")
+    return record
+
+
 def judge(project, wt):
     name = os.path.basename(wt["path"].rstrip("/\\"))
     v = Verdict(name, wt["path"], wt["branch"])
@@ -279,7 +313,14 @@ def judge(project, wt):
     if wt["locked"]:
         v.reasons.append(f"locked: {wt['locked']}")
     v.reasons.extend(scan_links(path))
-    code, out, err = git(path, "status", "--porcelain")
+    try:
+        record = admin_dir(project, path)
+    except Refusal as e:
+        v.reasons.append(str(e))
+        code, out, err = 0, "", ""
+    else:
+        code, out, err = git(path, "--git-dir=" + record, "--work-tree=" + path,
+                             "-c", "core.fsmonitor=false", "status", "--porcelain")
     if code != 0:
         v.reasons.append("git status failed: " + err.strip())
     elif out.strip():

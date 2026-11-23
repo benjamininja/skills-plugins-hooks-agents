@@ -142,6 +142,9 @@ names the git version. It acts only on a worktree that
 - **clean:** `git status --porcelain` prints nothing. Ignored files
   (`.venv`, `builder-state/`) leave with the worktree;
 - **not locked;**
+- **its `.git` file is the main checkout's:** it points to the main
+  checkout's record of that worktree, and the record points back. Only
+  then does any git call run against it;
 - **no link out:** no junction or folder symlink in it points out of it,
   no link fails to resolve, and its top folder is not a link;
 - **not in use** (Windows, at apply time): it renames the folder to
