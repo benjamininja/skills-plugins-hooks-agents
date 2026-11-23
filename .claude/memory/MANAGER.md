@@ -6,33 +6,36 @@ alone. Rules are in the `session-rules` skill and in
 
 ## START HERE
 
-Written 2026-11-22, second prep of the day, by the tools manager
-(session Tools-builder-manager). `origin/main`, the main checkout and
-the live clone were all at `f1ff785` on the last read. The role is in
-full ("Hand-over done" on #228). `session-dispatch` must be typed again
+Written 2026-11-23, prep at 14:11Z, by the tools manager (session
+Tools-builder-manager). `origin/main`, the main checkout and the live
+clone were all at `f1ff785` on the last read. The role is in full
+("Hand-over done" on #228). `session-dispatch` must be typed again
 after every clear.
 
-**One full test run on the machine at a time**, by message with the
-dynasty manager (dff-central-builder-manager) until #231's lock (PR
-#242) merges and is pulled. At this prep the line was with dynasty:
-the tools end notice went out after the #244 re-run at 14:56. Ask for
-it again before any tools full run.
+**One full test run on the machine at a time**, by message with
+dff-central-builder-manager until #231's lock (PR #242) merges and is
+pulled: a start notice before, an end notice after. At this prep the
+line is with tools: PR #246's re-proof started 13:26Z.
 
-**The merge line is held by #244.** #236's re-proof timed out at 3600s
-twice (`7b5b408`, then `629074b`: pull/236 issuecomment-7082628279),
-while Windows CI passed in 17 to 19 minutes. #244 (medium, Profile none)
-was dispatched twice on Ben's go; Claude Code killed both pytest runs
-for low memory, at 326 and 309 of 603 tests, no failures, no hang, at
-3.4 and 5.8 s a test (issues/244 issuecomment-7084964448,
-issuecomment-7085660045). Memory figures: issuecomment-7085240670 and
-issuecomment-7085659785 (commit charge 52 to 59.6 GB of 58 to 61 GB).
-At 5.8 s a test the suite is about 58 minutes, at the cap: the
-timeouts fit slowness under memory pressure. Tools-central-planner is
-taking it to Ben; wait for its ruling on #244. No tools re-proof until
-a full run can finish.
+**#244 is ruled** (slow under memory pressure, not hung; Ben's button
+in the planner's chat, issues/244 issuecomment-7085729098). Part 2 is
+**PR #246** (`9cb1145`): `PYTEST_TIMEOUT = 5400` for the pytest step,
+`--durations=25`, partial output kept on a timeout. Code review closed:
+F1 fixed, F2 dispute held on the brief (pull/246
+issuecomment-7102207809). Its re-proof runs the live clone's
+`reproof.py` (main's, 3600s cap, no table): the new cap applies only
+from the first re-proof after #246 merges. Memory at start: 10.5 GB
+free, commit 34.9 of 56.2 GB. When it ends: log memory, send the end
+notice to dff-central-builder-manager, post the output on #246.
 
-Next, in order, once #244 is ruled and a full run can finish:
+Next, in order:
 
+0. **#246**: on GREEN (and Windows CI green on one read), squash-merge
+   (builder PR for a dispatched ticket: no further word needed), then
+   closeout pulls with notice to peers first (it changes the re-proof
+   tool). If it times out at 3600s: post the figures and stop; the
+   planner takes it to Ben. Then close out `t244-pytest-hang`
+   (`9fd98bc0`) once its PR is merged.
 1. **#236** (this file, head moved by this state-back): re-prove at the
    new head, then the merge word by button.
 2. **#238** (the planner's `PROJECT-RULES.md` half of #237, `c211cad`,
@@ -58,6 +61,14 @@ Next, in order, once #244 is ruled and a full run can finish:
    #239; it now holds #245's point, closed as a duplicate on Ben's
    ruling, issues/241 issuecomment-7085619927); then the older open PR
    line below. Each go quoted and asked of Ben by button.
+   **#248** (low, ADR hygiene, `docs/adr/` only) after the merge line;
+   planner relayed Ben's go, ask Ben by button here. **#251** (medium)
+   only once the planner posts its brief after #189's PR merges (Ben's
+   go given here 2026-11-23). **#137** Bring to Chat + auto-close: Ben
+   chose a planner refresh; dff-central-planner folds #137 and #111 and
+   adds auto-close (issues/137 issuecomment-7103524615); ask Ben's go by
+   button when its brief is posted. PRs #196/#197 touch the same file.
+   **#249** (planner PR, #247) joins the planner PRs after #205.
 8. At the state-back after #236 merges, trim this file (Ben's button,
    pull/236 issuecomment-7082192929): drop "What this session answers
    for" and, once #231 and #237 close, the 2026-11-19 history.
@@ -76,7 +87,8 @@ pulls of the main checkout and the live clone, and this file.
 |---|---|---|---|---|---|
 | `t231-reproof-lock` | #231 | medium | `8506434b` | #242 at `b278602` | review closed; waiting for re-proof (state-back issues/231 issuecomment-7025354702) |
 | `t237-path-move` | #237 | low | `f0de4ab6` | #239 at `c64cf25` | review done; waiting for re-proof |
-| `t244-pytest-hang` | #244 | medium | `9fd98bc0` | none | Part 1 stopped twice for low memory; idle, no file changed; waits for the planner's ruling |
+| `t244-pytest-hang` | #244 | medium | `9fd98bc0` | #246 at `9cb1145` | review closed; re-proof running |
+| `t250-closeout-script` | #250 | high | `08a25cd7` | none | Part 1 finding, then stops for the planner's ruling; told no full run without the test line |
 
 The first two are not listed by `claude agents` since the app restart;
 check before closeout. `t244`'s first session `8ef7acf3` was stopped
@@ -146,6 +158,14 @@ send the new queue id to both planners and the dynasty manager.
 - 2026-11-22: Ben's memory-review answers (pull/236
   issuecomment-7082192929): trim this file after #236 merges; reset
   prompts stay at 400 words or fewer, as pointers.
+- 2026-11-23: Ben's go for #244 Part 2, "Send to t244 (Recommended)"
+  (issues/244 issuecomment-7088267365); sent by resume
+  (issuecomment-7101564153).
+- 2026-11-23: Ben's go for #250, "Now, no full run (Recommended)"
+  (issues/250 issuecomment-7103443214); dispatched. #251's go given,
+  waits for its brief.
+- 2026-11-23: #247 deny-rule Action done (issues/247
+  issuecomment-7103215501) and removed from the queue.
 
 ## Lessons
 
@@ -168,6 +188,12 @@ send the new queue id to both planners and the dynasty manager.
   manager reads its transcript and posts for it.
 - Before a long full run, log memory (physical free, commit charge):
   Claude Code kills background runs when the machine is low.
+- A builder that is no longer listed is followed up with
+  `resume_plain.ps1`; it wakes with its saved options (settings, mode).
+  A quiet transcript is not a stopped builder (it may sit in
+  `gh pr checks --watch`): watch `claude agents` state instead.
+- The re-proof runs the live clone's `reproof.py`, never a PR's copy:
+  a change to the tool takes effect only after it merges and is pulled.
 - Peers: Tools-central-planner, dff-central-planner,
   dff-central-builder-manager. Find them with ListAgents by name; ids
   change at a relaunch.
