@@ -72,9 +72,11 @@ subagents a role starts by name, and nobody runs them by hand:
   manager dispatches.
 - **`pr-code-reviewer`** — the read-only reviewer the manager starts at
   re-proof.
-- **`supabase-consultant-dispatch`** and **`supabase-consultant`** — the
-  owner's Supabase roles: the first routes work, the second looks and
-  changes nothing.
+- **`supabase-consultant`** — the owner's Supabase consultant. A session
+  the owner starts, never a subagent. It looks and changes nothing.
+- **`supabase-router`** — the on-call subagent a planner or a manager
+  starts to learn where a Supabase need goes
+  ([ADR-0019](docs/adr/0019-on-call-subagents-for-niche-roles.md)).
 
 Three are run by hand, and only help if they are run:
 
