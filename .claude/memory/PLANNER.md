@@ -24,7 +24,7 @@ memory review (#243); nothing is owed to it.
 `019c4c0b-d63a-4262-9ee1-558f1408fd4f`. Tools-builder-manager:
 `55edaa09-855e-454f-991a-371eb4875402`. dff-central-builder-manager:
 `1a0538b1-047b-4ba3-8967-ff325369e7ab`. dff-central-planner:
-`e0f49660-15b2-44b9-8430-e04f2e6b243b`. Neither queue holds an entry for
+`986a10cc-2c8b-4d55-9600-5cc9306c91be`. Neither queue holds an entry for
 this planner. Two dynasty entries (#548) still carry dff-central-planner's
 old id `5e9a5f7b-…`; that planner has been told.
 
