@@ -12,20 +12,25 @@ in this file's git history:
 The last stacked version, with 26 session blocks, is that branch's commit
 before the #243 rewrite.
 
-Last state-back: 2026-11-23, after the day's compact (which kept this
-planner's id). Since then: PR #246 merged; #250's Part 1 finding was
-ruled and its Part 2 is being built; the planner ruled on PRs #198,
-#181, #184 and #182 for the manager; PRs #227 and #184 have new heads;
-the user-level deny rule is committed in the private configuration
-repository. dff-central-builder-manager has not yet reported its own
-memory review (#243); nothing is owed to it.
+Last state-back: 2026-11-23, clear prep at Ben's word ("prepare for
+clear boundary ... pause once prepared until clear"). Since the day's
+compact: PR #246 merged; #250's Part 1 finding was ruled, with two
+amendments, and its Part 2 is being built; the planner ruled on PRs
+#198, #181, #184 and #182 for the manager; PRs #227 and #184 have new
+heads; the user-level deny rule is committed in the private
+configuration repository; #254 is filed with Ben's go.
+Tools-builder-manager paused for its own clear at 14:58Z.
+dff-central-builder-manager has not yet reported its own memory review
+(#243); nothing is owed to it.
 
 ## Current
 
 **Ids (queue ids change at every clear).** This planner:
 `6b47c44d-e4cb-43be-8d0a-51ec2776881b` (before the clear of 2026-11-23:
-`019c4c0b-d63a-4262-9ee1-558f1408fd4f`). Tools-builder-manager:
-`55edaa09-855e-454f-991a-371eb4875402`. dff-central-builder-manager:
+`019c4c0b-d63a-4262-9ee1-558f1408fd4f`); it changes at the clear of
+2026-11-23 and goes to the three peers. Tools-builder-manager:
+`55edaa09-855e-454f-991a-371eb4875402` until its own clear of
+2026-11-23; it sends its new id. dff-central-builder-manager:
 `aa75bef2-1167-49fd-995a-bdee72226d36`, read from its two #247 entries
 in the dynasty queue and not yet confirmed by it. dff-central-planner:
 `986a10cc-2c8b-4d55-9600-5cc9306c91be`. Neither queue holds an entry for
@@ -120,11 +125,34 @@ issues/250 issuecomment-7103259381; dynasty's half is dynasty #655).
   - Part 2 is being built in PR #252. Both hazards went to the dynasty
     manager and planner as a report. The tools manager checks for
     junctions by hand before any removal until the script lands.
+  - **Second amendment** (issuecomment-7104581056), after the
+    personal-assistant's read-only classification of all 125 worktrees
+    (recorded at issuecomment-7104579581, with its expected numbers for
+    the first list-only run). On Ben's "Both kinds (Recommended)": the
+    script restores status lines that hold no content (a file whose git
+    diff is empty; a tracked file deleted from the folder), then
+    removes. A record with no readable HEAD has its own verdict and is
+    never removed (dynasty has 24, 15.7 GB; their repair is dynasty's,
+    #655). Locks are printed and counted apart. The list covers every
+    worktree under the folder. An open PR is its own verdict.
+  - **Owed after both clears:** the second amendment was sent to
+    Tools-builder-manager at about the minute it paused for its clear.
+    Confirm it reached builder t250; if not, the manager sends the
+    comment whole.
 - **#251** (medium, `Profile: none`): the dispatch half. `setup` and
   `setupFull` lists, a switch on `dispatch.ps1`, and the brief line
   `venv: light, full or no`. Ben's "Go, after #189's PR (Recommended)"
   (issues/251 issuecomment-7103390046). **The planner writes its brief
   when #189's PR merges**, and rules on its finding.
+- **#254** (low, `Profile: none`): one `.gitattributes` line,
+  `CATALOG.md text eol=lf`. The catalog build leaves `CATALOG.md`
+  flagged as modified with an empty diff, and git then refuses to
+  remove the worktree; by the assistant's count that is the only status
+  line in 15 of 31 merged tools worktrees. The planner reproduced it
+  and tested the fix in its own worktree. Brief in the ticket's body;
+  Ben's "File it and go, low (Recommended)" (issues/254
+  issuecomment-7104636475). Sent to Tools-builder-manager as it paused:
+  confirm it is known.
 - **Planned planner PR, after #251's finding:** decision 10's two rules
   in `session-rules` (the main checkout's packages change only when no
   builder runs; a `requirements.txt` ticket gets `venv: full`).
@@ -135,6 +163,9 @@ issues/250 issuecomment-7103259381; dynasty's half is dynasty #655).
   manager has run no closeout yet, by its own state file.
 
 **Next for this planner, in order:**
+0. **First after the clear:** send the new queue id to the three peers.
+   Then one message to Tools-builder-manager repeating what was owed
+   across its clear: the second amendment for t250 and #254's go.
 1. **After #242 merges:** the planner's PR that replaces PROJECT-RULES'
    one-run message rule with the lock.
 2. **#233's finding** when it comes: rule on it. Send the link to
@@ -189,7 +220,8 @@ issuecomment-6896675395, #161 issuecomment-6895988934); #212's PR
 (after #210 and #184); the baseball handoff bump (after #180, #184,
 #205, #208, #210 and #212 merge).
 
-**Dispatch line on recorded gos, after the above:** #206; #167; #187;
+**Dispatch line on recorded gos, after the above:** #254 (low, when the
+manager has a slot); #206; #167; #187;
 #192 (first PR: checks 1, 2, 3, 7); #176 after #50; #200 after #168
 merges; #213 after #200; #215 after #213 (the hook lane, one writer at a
 time); #203 and #191 after PR #205 (#191 only on the planner's word);
@@ -290,6 +322,13 @@ the manager asks.
   and setup guide do not say so. The same holds for a plugin's server
   that is not signed in: its sign-in tools are still offered
   (issuecomment-7103639275).
+- Root preferences hold a caution, marked as the agent's own, against
+  a junction inside a worktree. #250's tests now prove the hazard for
+  the git on this machine; the line can say so at the next root-memory
+  change (a private-repository PR, on Ben's word).
+- Tracked `.claude/agents` files are deleted from the folder in some
+  old worktrees in both projects; which tool did it is not known (#250
+  issuecomment-7104579581, finding 3).
 - The hook README's layered-defense note names only the `main` ruleset;
   the fix sentence goes in #215's brief.
 - The Tools planner has no role file; its read list goes into
@@ -350,6 +389,17 @@ the manager asks.
   repository. The PR's real fault was stale paths (2026-11-23).
 - An unmerged PR written before a move or a role change goes stale
   without a conflict: read its text again before its turn (#227, #184).
+- Git reads a changed file size as a change without comparing content.
+  A file rewritten with other line endings stays flagged in
+  `git status` with an empty diff until git records its size again
+  (`git add`, `git restore`). Test a line-ending fix on a file checked
+  out after the fix (#254).
+- This session's guard refuses `git -C` into any other worktree of this
+  repository, not only the main checkout. A claim about another
+  worktree is checked in the planner's own, or recorded as the
+  reporter's.
+- A proof step that leaves a worktree not clean defeats closeout: check
+  what each proof command leaves behind (#250, #254).
 - An Action that says "replace line N" quotes what line N holds now.
   "Restarted" means the app quit fully, tray included. Leave "Undo:"
   lines out of the steps.
