@@ -273,12 +273,17 @@ def test_q4_git_worktree_remove_and_a_link_out(tmp_path):
     assert git(wt, "status", "--porcelain").stdout == ""  # an ignored link is invisible to status
 
     r = git(main, "worktree", "remove", str(wt), check=False)
-    report = (f"rc={r.returncode} stderr={r.stderr.strip()!r} wt_exists={wt.exists()} "
+    version = git(main, "--version").stdout.strip()
+    left = sorted(str(p.relative_to(wt)).replace(os.sep, "/") for p in wt.rglob("*")) if wt.exists() else None
+    report = (f"{version} rc={r.returncode} stderr={r.stderr.strip()!r} left={left} "
               f"outside_exists={outside.exists()} keep_exists={(outside / 'keep.txt').exists()}")
     print(report)
     if WIN:
-        # Git for Windows follows the junction and deletes what it points to.
-        assert r.returncode == 0 and not (outside / "keep.txt").exists(), report
+        # Git for Windows never removes it cleanly. Seen so far, by version: it
+        # follows the junction and deletes what it points to, or it exits 0
+        # and leaves the worktree folder behind.
+        clean = not wt.exists() and (outside / "keep.txt").exists()
+        assert not clean, report
     else:
         # git unlinks the symlink and does not descend: the target survives
         assert (outside / "keep.txt").exists(), report
