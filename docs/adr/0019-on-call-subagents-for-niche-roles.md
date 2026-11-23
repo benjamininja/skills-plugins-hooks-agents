@@ -51,8 +51,8 @@ button. The ticket quotes each answer word for word. In short:
 - The existing gap: a line in the consultant's file, and a deny rule the
   owner adds by hand.
 - The router runs on Sonnet with read-only tools, under a new name.
-- The Tools planner opens the central PR. The dynasty planner tickets
-  dynasty's half.
+- The Tools planner opens the central PR. The dynasty planner takes
+  dynasty's half (see Consequences for how).
 - Only a project's planner and manager start its look subagent.
 - The old session posts a final record, and is archived after the merge.
 - One new ADR, after ADR-0018. The ADR set's own faults go to one
@@ -134,6 +134,9 @@ server's name and nothing else.
   question is answered without a query, so no row reaches a session
   that can write a ticket or merge a PR. That is a narrower default, as
   ADR-0018 says of a builder's own token. It is not a limit.
+- **The rules-file line is record text, so it is a guard too.** A PR can
+  change who may task a consultant, a builder prefix included. A merge
+  needs the owner's word, and the names open look-only work only.
 - Private data in a project's tables stays under that project's own
   limit, named in its rules file (ADR-0018, asset 4).
 
@@ -175,15 +178,18 @@ that a `tools` line is a guard.
   archived after this merges. Its final record is on #247.
 - Until a project's rules file names the consultant's planner and
   manager, a new consultant session takes tasks from the owner only.
-  The dynasty planner tickets dynasty's line and its `supabase-look`
-  file.
+  Both of dynasty's files sit under `.claude/`, which a builder's mode
+  refuses to write. So the dynasty planner opens the PR for its
+  `supabase-look` file, and the rules-file line goes to the owner
+  through the manager's queue.
 - A new Supabase project needs three things: the owner's server, one
   line in the consultant's `tools` line, and the project's own copy of
   `supabase-look`.
 - Grants, policy text and row counts still wait on a consultant session
   that the owner starts.
 - Whether a builder's subagent can reach the database server has not
-  been tested. Dynasty's ticket carries that proof.
+  been tested. The dynasty manager or the owner runs that check, and its
+  result is recorded on #247.
 - The deny rule is the owner's hand item, queued by the tools manager.
 - The owner-queue mod's list of tracked roles drops the dispatch role
   (#161, PR #197).
