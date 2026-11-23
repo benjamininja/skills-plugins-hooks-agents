@@ -12,12 +12,12 @@ in this file's git history:
 The last stacked version, with 26 session blocks, is that branch's commit
 before the #243 rewrite.
 
-Last state-back: 2026-11-23, at the start after the clear that followed
-the #247 grill and PR #249 (the Supabase dispatch session becomes the
-on-call `supabase-router` subagent). The planner's new id is below and
-was sent to both managers and dff-central-planner. Nothing merged and no
-ticket moved across the clear. dff-central-builder-manager has not yet
-reported its own memory review (#243); nothing is owed to it.
+Last state-back: 2026-11-23, compact prep at Ben's word. Since the
+day's clear: the deny rule (#247) was tested and recorded; Ben's eleven
+decisions on the builder environment went on #250, which is tiered and
+briefed; #251 was filed; both goes are recorded. Nothing has merged.
+A compact keeps this planner's id. dff-central-builder-manager has not
+yet reported its own memory review (#243); nothing is owed to it.
 
 ## Current
 
@@ -27,9 +27,9 @@ reported its own memory review (#243); nothing is owed to it.
 `55edaa09-855e-454f-991a-371eb4875402`. dff-central-builder-manager:
 `aa75bef2-1167-49fd-995a-bdee72226d36`, read from its two #247 entries
 in the dynasty queue and not yet confirmed by it. dff-central-planner:
-`986a10cc-2c8b-4d55-9600-5cc9306c91be`. The tools queue's one entry for
-this planner, the deny rule (#247), is done and leaves at the manager's
-next state-back. The dynasty queue holds none.
+`986a10cc-2c8b-4d55-9600-5cc9306c91be`. Neither queue holds an entry for
+this planner: the tools queue is empty (the deny-rule entry has left),
+and the dynasty queue holds one #548 entry of dff-central-planner's.
 
 **Merge line (Tools-builder-manager, one re-proof at a time, each merge
 word asked of Ben by button):** #236, PR #238 (the planner's), #239
@@ -65,8 +65,13 @@ subagents rule in `session-rules`, ADR-0019. It merges after PR #205.
 - **Dynasty's half** is dff-central-planner's own PR (`supabase-look.md`,
   draft dynasty PR #653, merges after #249)
   plus a `GOAL-RUN.md` line queued for Ben; a builder cannot write under
-  `.claude/` (#247 issuecomment-7102585142). The builder-subagent check
-  is the dynasty manager's or Ben's run, recorded on #247.
+  `.claude/` (#247 issuecomment-7102585142). **The builder-subagent
+  check is done** (#247 issuecomment-7103503667): with no deny rule a
+  builder and its subagent were offered the server's 10 tool names;
+  with `mcp__supabase-dynasty` denied in the builders' settings, none.
+  Dynasty PR #657 carries that rule, and Ben's merge answer is recorded
+  (issuecomment-7103550708). Both dynasty #247 entries have left its
+  queue.
 - **After #249 merges:** archive the old session
   `local_6b981a48-1f7d-4986-93e6-6af76d316f28` (Ben's "Record, then
   archive after merge"; its final record: #247 issuecomment-7102435808,
@@ -236,6 +241,12 @@ button.
   desktop session, asked by one session (#195); a candidate for #212.
 - The three settings templates lag the real files (advisory I6). The
   builders' template has no fetch allow rule.
+- A project with a database server needs a server-level deny rule in its
+  builders' settings: without one, a builder is offered the server's
+  tools (#247 issuecomment-7103503667). The plugin's builders template
+  and setup guide do not say so.
+- The user-level `Agent(supabase-consultant)` deny rule is per machine;
+  the machine setup document (#223, PR #227) does not list it.
 - The hook README's layered-defense note names only the `main` ruleset;
   the fix sentence goes in #215's brief.
 - The Tools planner has no role file; its read list goes into
@@ -286,6 +297,10 @@ button.
 - "Done" or a ticked Action without output is checked in the files
   before it is recorded. Ask for missing output by button, with the
   commands shown.
+- An Action's check step says what the screen shows on a pass and on a
+  fail, and gives the folder as a full path. Ben ran the #247 session
+  check, could not tell whether its output was a pass, and asked for
+  help (2026-11-23).
 - An Action that says "replace line N" quotes what line N holds now.
   "Restarted" means the app quit fully, tray included. Leave "Undo:"
   lines out of the steps.
