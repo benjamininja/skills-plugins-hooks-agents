@@ -78,8 +78,11 @@ after closeout (1.1 GB here, 54 GB in dynasty; the personal-assistant's
 report of 2026-11-23, not re-checked). Closeout step 4 already says to
 remove the worktree; practice differs, and nobody has found why
 (issuecomment-7102788499; dynasty #655). Next: find the cause from the
-managers' closeout records, so at least medium; set the tier; answer its
-five questions. A closeout rule change goes to Ben.
+managers' closeout records, so at least medium. Ben is grilling the
+remediation in personal-assistant's chat (long-term fix first, cleanup
+after); the planner's facts and advice are at issuecomment-7102837777.
+When the assistant sends Ben's decisions: record them on #250, set the
+tier, write the brief. The #235 step 3 prune waits meanwhile.
 
 **Next for this planner, in order:**
 1. **After #242 merges:** the planner's PR that replaces PROJECT-RULES'
