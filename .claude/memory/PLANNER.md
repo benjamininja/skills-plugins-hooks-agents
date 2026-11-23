@@ -12,9 +12,10 @@ in this file's git history:
 The last stacked version, with 26 session blocks, is that branch's commit
 before the #243 rewrite.
 
-Last state-back: 2026-11-23, after the #247 grill and PR #249 (the
-Supabase dispatch session becomes the on-call `supabase-router`
-subagent). dff-central-builder-manager has not yet reported its own
+Last state-back: 2026-11-23, clear prep at Ben's word, after the #247
+grill and PR #249 (the Supabase dispatch session becomes the on-call
+`supabase-router` subagent). This planner's id below changes at the
+clear; one queue entry it raised (the deny rule) carries the old id. dff-central-builder-manager has not yet reported its own
 memory review (#243); nothing is owed to it.
 
 ## Current
@@ -66,7 +67,9 @@ subagents rule in `session-rules`, ADR-0019. It merges after PR #205.
   archive after merge"; its final record: #247 issuecomment-7102435808,
   nothing open). Then comment the outcome on #235 (item c), #217, #161
   and PR #197 (drop dispatch from `ROLES`).
-- **#248** (low): ADR hygiene. It needs Ben's go, by button, later.
+- **#248** (low): ADR hygiene. Ben's "Go, after line"
+  (issuecomment-7102642772); sent to Tools-builder-manager, dispatchable
+  after the merge line. The planner's roles answer is on the ticket.
 - The Tools planner now designs consultant, auditor and on-call
   subagent roles; `supabase-router` supplies drafts.
 
@@ -131,7 +134,8 @@ goes to Ben by button), #233. #200's design goes to Ben by button.
 - The Action to remove the mod's old hand copy (#195).
 - The merge of the private configuration repository's working branch.
 
-**Waiting on Ben:** nothing.
+**Waiting on Ben:** the deny-rule Action in the tools queue (#247). No
+button is pending.
 
 ## Reference
 
@@ -219,6 +223,17 @@ goes to Ben by button), #233. #200's design goes to Ben by button.
 - Before filing a ticket or planning a PR, search open issues and PRs
   for the same file. #245 and a planned PR duplicated #237, #239 and
   #241 (2026-11-22).
+- Never `cd` into another repository in a shell call: the session is
+  re-rooted there and cannot re-enter this worktree with EnterWorktree.
+  Read another repository with `git -C` or with absolute paths. If it
+  happens, `cd` back to the worktree's full path.
+- A builder cannot write under `.claude/`, so a project's agent file or
+  rules file is never a builder ticket: it is that project's planner's
+  PR, or text queued for Ben (#247, dynasty PR #653).
+- On a design question that touches safety or trust, Ben wants a second,
+  critical pass before the recommendation: read the files line by line,
+  check the claim against the ADRs, and say what changed (#247: the
+  spoofable dispatch name, and "a tools line is a guard, not a limit").
 
 - Address sessions by name; check checkouts and queue files before
   relaying a claim about them. A peer's finding is a report to check.
