@@ -12,9 +12,10 @@ in this file's git history:
 The last stacked version, with 26 session blocks, is that branch's commit
 before the #243 rewrite.
 
-Last state-back: 2026-11-22, compact prep at Ben's word "prepare for
-compact" (#243 root split merged; #244 re-run running). dff-central-builder-manager has not
-yet reported its own memory review (#243); nothing is owed to it.
+Last state-back: 2026-11-23, after the #247 grill and PR #249 (the
+Supabase dispatch session becomes the on-call `supabase-router`
+subagent). dff-central-builder-manager has not yet reported its own
+memory review (#243); nothing is owed to it.
 
 ## Current
 
@@ -39,11 +40,34 @@ word asked of Ben by button):** #236, PR #238 (the planner's), #239
   **Part 2 brief posted** (issuecomment-7085729098): `reproof.py` gets
   `PYTEST_TIMEOUT = 5400` for pytest only, plus `--durations=25`, and one
   test. It runs before the merge line, and #242 merges main in after it.
-  **Owed to Tools-builder-manager:** the brief's link. Its session was not
-  running at 2026-11-22 evening, so it reads #244 when it resumes. The
-  speed-up stays with #187.
+  Part 2 is built as PR #246 at `9cb1145`; its review is closed (F1
+  fixed, F2 held on the brief; pull/246 issuecomment-7102207809). Its
+  re-proof started 2026-11-23 13:26Z on main's script, so still under
+  the 3600 s cap; the new cap and table apply from the first re-proof
+  after #246 merges. The speed-up stays with #187.
 - #242: the re-check accepted F1 and F2 at `b278602`. It needs only its
   re-proof.
+
+**#247, the Supabase roles (grilled with Ben, 2026-11-23; the ten
+decisions are the ticket's body).** PR #249 is open: `supabase-router`
+replaces the dispatch role file, the consultant is session-only with
+assignment from Ben alone, a `supabase-look` template, an on-call
+subagents rule in `session-rules`, ADR-0019. It merges after PR #205.
+- **Raised queue entry** (sent to Tools-builder-manager, `Session:` this
+  planner): "Add a deny rule so no session starts supabase-consultant as
+  a subagent (#247)". On Ben's report: record it on #247.
+- **Dynasty's half** is dff-central-planner's own PR (`supabase-look.md`)
+  plus a `GOAL-RUN.md` line queued for Ben; a builder cannot write under
+  `.claude/` (#247 issuecomment-7102585142). The builder-subagent check
+  is the dynasty manager's or Ben's run, recorded on #247.
+- **After #249 merges:** archive the old session
+  `local_6b981a48-1f7d-4986-93e6-6af76d316f28` (Ben's "Record, then
+  archive after merge"; its final record: #247 issuecomment-7102435808,
+  nothing open). Then comment the outcome on #235 (item c), #217, #161
+  and PR #197 (drop dispatch from `ROLES`).
+- **#248** (low): ADR hygiene. It needs Ben's go, by button, later.
+- The Tools planner now designs consultant, auditor and on-call
+  subagent roles; `supabase-router` supplies drafts.
 
 **Next for this planner, in order:**
 1. **After #242 merges:** the planner's PR that replaces PROJECT-RULES'
@@ -73,7 +97,8 @@ approval at its new head when its turn comes; an approval covers one
 head): #181 and #198 (old state-backs, likely to be closed instead), #184
 (#183, queue per project, ADR-0016), #205 (ADR-0018), #208 (`git restore`
 form), #210 (reset prompt as pointer, one Current block), #216 (ruleset
-setup), #222 (#195 docs), #227 (#223 setup doc), #238.
+setup), #222 (#195 docs), #227 (#223 setup doc), #238, #249 (#247, after
+#205).
 
 **Open builder PRs:** #182 (#175), #196 (#179), #197 (#161), #211 (#168),
 #214 (#207), #239, #242. #196 and #197 are planned by
@@ -124,8 +149,9 @@ goes to Ben by button), #233. #200's design goes to Ben by button.
 - **Peers** (address by name from ListAgents): Tools-builder-manager
   (dispatches, re-proves, merges and writes this repo's queue);
   dff-central-builder-manager and dff-central-planner (dynasty);
-  personal-assistant (reports only, never Ben's approval);
-  supabase-consultant-dispatch.
+  personal-assistant (reports only, never Ben's approval). The
+  supabase-consultant-dispatch session is retired (#247) and waits for
+  its archive.
 
 ### Working rules
 
