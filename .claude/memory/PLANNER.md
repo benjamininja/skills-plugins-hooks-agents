@@ -56,7 +56,8 @@ subagents rule in `session-rules`, ADR-0019. It merges after PR #205.
 - **Raised queue entry** (sent to Tools-builder-manager, `Session:` this
   planner): "Add a deny rule so no session starts supabase-consultant as
   a subagent (#247)". On Ben's report: record it on #247.
-- **Dynasty's half** is dff-central-planner's own PR (`supabase-look.md`)
+- **Dynasty's half** is dff-central-planner's own PR (`supabase-look.md`,
+  draft dynasty PR #653, merges after #249)
   plus a `GOAL-RUN.md` line queued for Ben; a builder cannot write under
   `.claude/` (#247 issuecomment-7102585142). The builder-subagent check
   is the dynasty manager's or Ben's run, recorded on #247.
