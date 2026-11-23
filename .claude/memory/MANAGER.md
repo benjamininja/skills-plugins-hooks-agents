@@ -6,38 +6,45 @@ alone. Rules are in the `session-rules` skill and in
 
 ## START HERE
 
-Written 2026-11-23, prep at 14:11Z, by the tools manager (session
+Written 2026-11-23, state-back at 14:40Z, by the tools manager (session
 Tools-builder-manager). `origin/main`, the main checkout and the live
-clone were all at `f1ff785` on the last read. The role is in full
-("Hand-over done" on #228). `session-dispatch` must be typed again
-after every clear.
+clone are all at `aefbc68` (PR #246 merged and pulled). The role is in
+full ("Hand-over done" on #228). `session-dispatch` must be typed again
+after every clear (a compact keeps it).
 
 **One full test run on the machine at a time**, by message with
 dff-central-builder-manager until #231's lock (PR #242) merges and is
-pulled: a start notice before, an end notice after. At this prep the
-line is with tools: PR #246's re-proof started 13:26Z.
+pulled: a start notice before, an end notice after. The line is with
+tools: dynasty said at 14:27Z it needs no full run now and asks tools
+before its next one. A full run takes about 59 minutes (608 tests).
+Builders `t248` and `t250` run no full suite until the manager gives
+them the line.
 
-**#244 is ruled** (slow under memory pressure, not hung; Ben's button
-in the planner's chat, issues/244 issuecomment-7085729098). Part 2 is
-**PR #246** (`9cb1145`): `PYTEST_TIMEOUT = 5400` for the pytest step,
-`--durations=25`, partial output kept on a timeout. Code review closed:
-F1 fixed, F2 dispute held on the brief (pull/246
-issuecomment-7102207809). Its re-proof runs the live clone's
-`reproof.py` (main's, 3600s cap, no table): the new cap applies only
-from the first re-proof after #246 merges. Memory at start: 10.5 GB
-free, commit 34.9 of 56.2 GB. When it ends: log memory, send the end
-notice to dff-central-builder-manager, post the output on #246.
+**#244 Part 2 is merged**: PR #246 at `aefbc68`. Its re-proof was GREEN
+with the pytest step at 3510.8s, 89s under the old 3600s cap (pull/246
+issuecomment-7103972437). From the next re-proof the pytest step has a
+5400s cap and prints the 25 slowest tests. #244 is the planner's to
+close.
+
+**Windows hazard** (t250's Part 1 finding, issues/250
+issuecomment-7103861254): `git worktree remove` follows a junction and
+deletes the contents of the folder it points to, and a file held open
+stops it part way while git drops its record. Before any worktree
+removal, scan it: `Get-ChildItem -Recurse -Force -Attributes
+ReparsePoint`. Both planners and the dynasty manager are told.
 
 Next, in order:
 
-0. **#246**: on GREEN (and Windows CI green on one read), squash-merge
-   (builder PR for a dispatched ticket: no further word needed), then
-   closeout pulls with notice to peers first (it changes the re-proof
-   tool). If it times out at 3600s: post the figures and stop; the
-   planner takes it to Ben. Then close out `t244-pytest-hang`
-   (`9fd98bc0`) once its PR is merged.
-1. **#236** (this file, head moved by this state-back): re-prove at the
-   new head, then the merge word by button.
+0. **t244 closeout, left open.** The builder has stopped and its PR is
+   merged. `git cherry` lists its two commits as not in main (a squash
+   merge changes the patch id) though `git diff origin/main` is empty;
+   its worktree lists `CATALOG.md` as modified, by line endings only;
+   it holds no junction. Under the rule both stay until Ben names
+   them or #250's script lands; asked of Ben by button.
+1. **#236** (this file): its re-proof starts right after this
+   state-back (output in the scratchpad as `reproof-236.txt`), then the
+   merge word by button. No push to this branch between the re-proof
+   and the merge: a push moves the head.
 2. **#238** (the planner's `PROJECT-RULES.md` half of #237, `c211cad`,
    CI clean): re-prove, merge word by button. No code review (planner
    PR). It merges before #239.
@@ -61,8 +68,11 @@ Next, in order:
    #239; it now holds #245's point, closed as a duplicate on Ben's
    ruling, issues/241 issuecomment-7085619927); then the older open PR
    line below. Each go quoted and asked of Ben by button.
-   **#248** (low, ADR hygiene, `docs/adr/` only) after the merge line;
-   planner relayed Ben's go, ask Ben by button here. **#251** (medium)
+   **#248** is dispatched (builder table). **#250**: the planner's
+   ruling on Part 1 is issues/250 issuecomment-7103994943; its point 3
+   is Ben's button in the planner's chat, so Ben confirms by button
+   here, then the comment goes whole to `t250` by SendMessage while it
+   is listed (else `resume_plain.ps1`). **#251** (medium)
    only once the planner posts its brief after #189's PR merges (Ben's
    go given here 2026-11-23). **#137** Bring to Chat + auto-close: Ben
    chose a planner refresh; dff-central-planner folds #137 and #111 and
@@ -87,8 +97,9 @@ pulls of the main checkout and the live clone, and this file.
 |---|---|---|---|---|---|
 | `t231-reproof-lock` | #231 | medium | `8506434b` | #242 at `b278602` | review closed; waiting for re-proof (state-back issues/231 issuecomment-7025354702) |
 | `t237-path-move` | #237 | low | `f0de4ab6` | #239 at `c64cf25` | review done; waiting for re-proof |
-| `t244-pytest-hang` | #244 | medium | `9fd98bc0` | #246 at `9cb1145` | review closed; re-proof running |
-| `t250-closeout-script` | #250 | high | `08a25cd7` | none | Part 1 finding, then stops for the planner's ruling; told no full run without the test line |
+| `t244-pytest-hang` | #244 | medium | `9fd98bc0` | #246 merged at `aefbc68` | stopped; closeout left open (step 0) |
+| `t250-closeout-script` | #250 | high | `08a25cd7` | #252, draft, tests only | Part 1 posted; waits for the ruling to be sent; no full run without the test line |
+| `t248-adr-hygiene` | #248 | low | `f328d768` | none yet (branch pushed) | working; no full run without the test line |
 
 The first two are not listed by `claude agents` since the app restart;
 check before closeout. `t244`'s first session `8ef7acf3` was stopped
@@ -111,12 +122,23 @@ read again before its re-proof:
 | #210 | `dce2100` | reset prompt is a pointer (#161) |
 | #208 | `0f1e1a1` | git restore command form |
 | #205 | `bb80384` | ADR-0018 threat model (#190) |
-| #198 | `e16203d` | planner state-back, clears 11 and 12 |
+| #198 | `f280c65` | planner state-back, clears 11 and 12 and later |
 | #197 | `b7ef918` | owner-queue clear prep (#161) |
 | #196 | `7b8f1e9` | owner-queue Answer hold (#179) |
 | #184 | `05f2a7f` | one queue per project (#183) |
 | #182 | `5632555` | re-proof one script, one rule (#175) |
 | #181 | `148c9d1` | planner state-back, clear 10 |
+
+Read-only pass of 2026-11-23 at `f1ff785`: #227, #222, #216, #214,
+#211, #210, #208, #205, #197 and #196 merge clean with CI green. Four
+are with Tools-central-planner on Ben's button ("Send to planner
+(Recommended)"), each ruling to come as a comment on its PR: #198 (head
+moved, about 60 state commits), #181 (an ancestor of #198's branch),
+#184 (conflicts on `PROJECT-RULES.md` with main and with #238; its
+one-writer text is stale since #230), #182 (its allow rule names
+`scripts/reproof.py`; main has `tools/reproof.py`). The planner is
+repairing #227 and #184 on Ben's button in its chat: their heads will
+move.
 
 ## Dispatch, as proven
 
@@ -166,6 +188,12 @@ send the new queue id to both planners and the dynasty manager.
   waits for its brief.
 - 2026-11-23: #247 deny-rule Action done (issues/247
   issuecomment-7103215501) and removed from the queue.
+- 2026-11-23: PR #246 merged at `aefbc68` on a GREEN re-proof
+  (pull/246 issuecomment-7103972437); both checkouts pulled.
+- 2026-11-23: Ben's "Both" by button: #248 dispatched ahead of the
+  merge line (issues/248 issuecomment-7103854424), and a read-only pass
+  of the 14 older PRs; then "Send to planner (Recommended)" for the
+  four that need a call.
 
 ## Lessons
 
@@ -194,6 +222,12 @@ send the new queue id to both planners and the dynasty manager.
   `gh pr checks --watch`): watch `claude agents` state instead.
 - The re-proof runs the live clone's `reproof.py`, never a PR's copy:
   a change to the tool takes effect only after it merges and is pulled.
+- Before `git worktree remove` on Windows, scan the worktree for
+  reparse points: git follows a junction and deletes what it points
+  to (#250 Part 1).
+- A squash merge leaves `git cherry` listing the branch's commits as
+  missing. Compare trees (`git diff origin/main <branch>`) and list the
+  branch for Ben; the cherry rule is not met by a tree match alone.
 - Peers: Tools-central-planner, dff-central-planner,
   dff-central-builder-manager. Find them with ListAgents by name; ids
   change at a relaunch.
