@@ -69,8 +69,12 @@ def run(cmd: list[str], cwd: str | None = None, timeout: int = TIMEOUT) -> tuple
             errors="replace",
             timeout=timeout,
         )
-    except subprocess.TimeoutExpired:
-        return 124, "", f"timed out after {timeout}s"
+    except subprocess.TimeoutExpired as exc:
+        # The killed process's output so far shows how far a step got; it is bytes on some platforms.
+        partial = exc.stdout
+        if isinstance(partial, bytes):
+            partial = partial.decode("utf-8", "replace")
+        return 124, partial or "", f"timed out after {timeout}s"
     except OSError as exc:
         return 127, "", str(exc)
     return p.returncode, p.stdout, p.stderr

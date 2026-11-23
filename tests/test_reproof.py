@@ -244,6 +244,18 @@ def test_a_timeout_names_the_cap_that_applied(monkeypatch):
     assert reproof.run(["x"], timeout=reproof.PYTEST_TIMEOUT) == (124, "", "timed out after 5400s")
 
 
+@pytest.mark.parametrize("partial", [b"tests/a.py ..\ntests/b.py .\n", "tests/a.py ..\ntests/b.py .\n"])
+def test_a_timeout_keeps_the_output_printed_so_far(partial, monkeypatch):
+    def expire(cmd, **kwargs):
+        raise subprocess.TimeoutExpired(cmd, kwargs["timeout"], output=partial)
+
+    monkeypatch.setattr(reproof.subprocess, "run", expire)
+    code, out, err = reproof.run(["x"], timeout=5)
+    assert code == 124
+    assert out == "tests/a.py ..\ntests/b.py .\n"
+    assert err == "timed out after 5s"
+
+
 def test_every_result_line_carries_its_elapsed_seconds(tmp_path, export_area, monkeypatch, capsys):
     ticks = iter(x * 2.5 for x in range(1000))
     monkeypatch.setattr(reproof, "time", types.SimpleNamespace(monotonic=lambda: next(ticks)))
