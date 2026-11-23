@@ -4,7 +4,10 @@ Part 1: what git itself does, on the platform the test runs on. Each
 `test_q<n>_*` answers one question of the ticket's finding. Every repository
 is a throwaway one under pytest's tmp_path.
 """
+import importlib.util
+import json
 import os
+import shutil
 import subprocess
 import sys
 import time
@@ -314,3 +317,410 @@ def test_q4_scan_finds_link_without_following(tmp_path):
     links = find_links(wt)
     assert [os.path.basename(p) for p in links] == ["out"]
     assert (outside / "deep" / "x.txt").exists()
+
+
+# Part 2: scripts/closeout.py ---------------------------------------------------
+
+SCRIPT = (Path(__file__).resolve().parent.parent / "plugins" / "session-dispatch-managers-build-review"
+          / "scripts" / "closeout.py")
+_spec = importlib.util.spec_from_file_location("closeout", SCRIPT)
+closeout = importlib.util.module_from_spec(_spec)
+_spec.loader.exec_module(closeout)
+
+
+@pytest.fixture
+def proj(tmp_path, monkeypatch):
+    """A main checkout with an origin, origin/HEAD set, and a stand-in gh."""
+    for k, val in GIT_ENV.items():
+        monkeypatch.setenv(k, val)
+    main = make_project(tmp_path)
+    origin = tmp_path / "origin.git"
+    git(tmp_path, "clone", "-q", "--bare", str(main), str(origin))
+    git(main, "remote", "add", "origin", str(origin))
+    git(main, "fetch", "-q", "origin")
+    git(main, "remote", "set-head", "origin", "main")
+    fakebin = tmp_path / "fakebin"
+    fakebin.mkdir()
+    if WIN:
+        (fakebin / "gh.cmd").write_text(
+            '@echo off\r\nif defined FAKE_GH_RC exit /b %FAKE_GH_RC%\r\ntype "%FAKE_GH_JSON%"\r\n',
+            encoding="utf-8")
+    else:
+        gh = fakebin / "gh"
+        gh.write_text('#!/bin/sh\n[ -n "$FAKE_GH_RC" ] && exit "$FAKE_GH_RC"\ncat "$FAKE_GH_JSON"\n',
+                      encoding="utf-8")
+        gh.chmod(0o755)
+    monkeypatch.setenv("PATH", str(fakebin) + os.pathsep + os.environ["PATH"])
+    monkeypatch.delenv("FAKE_GH_RC", raising=False)
+    prs_file = tmp_path / "prs.json"
+    monkeypatch.setenv("FAKE_GH_JSON", str(prs_file))
+
+    class P:
+        pass
+    p = P()
+    p.main, p.tmp, p.root = main, tmp_path, main / ".claude" / "worktrees"
+    p.prs = []
+
+    def set_prs(prs):
+        p.prs = prs
+        prs_file.write_text(json.dumps(prs), encoding="utf-8")
+    p.set_prs = set_prs
+    set_prs([])
+    return p
+
+
+def builder(p, name, commits=2):
+    wt = add_worktree(p.main, name)
+    for i in range(commits):
+        commit_file(wt, f"{name}-{i}.txt", f"{i}\n", f"{name} {i}")
+    add_ignored_content(wt)
+    return wt, git(wt, "rev-parse", "HEAD").stdout.strip()
+
+
+def squash(p, branch):
+    squash_merge(p.main, branch)
+    git(p.main, "push", "-q", "origin", "main")
+    git(p.main, "fetch", "-q", "origin")
+
+
+def merged_builder(p, name, number=7, commits=2):
+    wt, tip = builder(p, name, commits)
+    squash(p, f"worktree-{name}")
+    p.set_prs(p.prs + [{"number": number, "headRefName": f"worktree-{name}", "headRefOid": tip}])
+    return wt, tip
+
+
+def run_closeout(capsys, *args):
+    code = closeout.main([str(a) for a in args])
+    return code, capsys.readouterr().out
+
+
+def has_branch(p, b):
+    return git(p.main, "rev-parse", "--verify", "--quiet", f"refs/heads/{b}", check=False).returncode == 0
+
+
+def snapshot(p):
+    tree = sorted(str(x) for x in p.root.rglob("*")) if p.root.exists() else []
+    return (git(p.main, "worktree", "list", "--porcelain").stdout,
+            git(p.main, "branch", "--list").stdout, tree)
+
+
+def test_removes_merged_clean_worktree(proj, capsys):
+    wt, _ = merged_builder(proj, "b1")
+    code, out = run_closeout(capsys, proj.main, "b1", "--apply")
+    assert code == 0, out
+    assert out.splitlines()[0].startswith("closeout: git version")
+    assert "b1: removed (merged, PR #7)" in out
+    assert "branch worktree-b1 deleted" in out
+    assert not wt.exists() and not has_branch(proj, "worktree-b1")
+
+
+def test_dry_run_changes_nothing(proj, capsys):
+    merged_builder(proj, "b1")
+    before = snapshot(proj)
+    code, out = run_closeout(capsys, proj.main, "b1")
+    assert code == 0, out
+    assert "b1: would remove (merged, PR #7)" in out
+    assert "would delete branch worktree-b1" in out
+    assert ("in-use check runs at apply time" in out) is WIN
+    assert snapshot(proj) == before
+
+
+def test_refuses_unmerged_branch(proj, capsys):
+    wt, _ = builder(proj, "b1")
+    code, out = run_closeout(capsys, proj.main, "b1", "--apply")
+    assert code == 1
+    assert "b1: refused: no merged PR" in out
+    assert "refused, for the owner queue:" in out
+    assert wt.exists() and has_branch(proj, "worktree-b1")
+
+
+def test_refuses_commits_after_merged_pr(proj, capsys):
+    wt, _ = merged_builder(proj, "b1")
+    commit_file(wt, "late.txt", "late\n", "after the PR")
+    code, out = run_closeout(capsys, proj.main, "b1", "--apply")
+    assert code == 1 and "commits after merged PR #7" in out and wt.exists()
+
+
+def test_refuses_tracked_change(proj, capsys):
+    wt, _ = merged_builder(proj, "b1")
+    (wt / "b1-0.txt").write_text("changed\n", encoding="utf-8")
+    code, out = run_closeout(capsys, proj.main, "b1", "--apply")
+    assert code == 1 and "uncommitted: 1 line(s)" in out and "b1-0.txt" in out
+    assert wt.exists()
+
+
+def test_refuses_untracked_file_not_ignored(proj, capsys):
+    wt, _ = merged_builder(proj, "b1")
+    (wt / "stray.txt").write_text("x\n", encoding="utf-8")
+    code, out = run_closeout(capsys, proj.main, "b1", "--apply")
+    assert code == 1 and "uncommitted" in out and "stray.txt" in out
+    assert wt.exists()
+
+
+def test_refuses_locked(proj, capsys):
+    wt, _ = merged_builder(proj, "b1")
+    git(proj.main, "worktree", "lock", "--reason", "kept", str(wt))
+    code, out = run_closeout(capsys, proj.main, "b1", "--apply")
+    assert code == 1 and "locked: kept" in out and wt.exists()
+
+
+@pytest.mark.parametrize("name", ["..", "../x", "a/b", "B1", "-x"])
+def test_refuses_path_outside_the_folder(proj, capsys, name):
+    code, out = run_closeout(capsys, proj.main, name, "--apply")
+    assert code == 2
+
+
+def test_never_acts_on_a_worktree_outside_the_folder(proj, capsys):
+    elsewhere = proj.tmp / "elsewhere"
+    git(proj.main, "worktree", "add", "-q", "-b", "worktree-b5", str(elsewhere))
+    code, out = run_closeout(capsys, proj.main, "b5", "--apply")
+    assert code == 1 and "no worktree of that name" in out and elsewhere.exists()
+    code, out = run_closeout(capsys, proj.main, "--list")
+    assert "1 worktree(s) outside" in out
+
+
+def test_refuses_folder_git_does_not_know(proj, capsys):
+    ghost = proj.root / "ghost"
+    ghost.mkdir(parents=True)
+    (ghost / "f.txt").write_text("x\n", encoding="utf-8")
+    code, out = run_closeout(capsys, proj.main, "ghost", "--apply")
+    assert code == 1 and "unknown to git: listed, never removed" in out
+    assert (ghost / "f.txt").exists()
+
+
+def test_refuses_folder_link_out(proj, capsys):
+    wt, _ = merged_builder(proj, "b1")
+    outside = outside_sentinel(proj.tmp)
+    make_link(wt / "builder-state" / "out", outside)
+    code, out = run_closeout(capsys, proj.main, "b1", "--apply")
+    assert code == 1 and "folder link" in out and "points out to" in out
+    assert str(outside) in out or os.path.realpath(outside) in out
+    assert wt.exists() and (outside / "keep.txt").exists()
+
+
+def test_folder_link_inside_passes_the_scan(proj, capsys):
+    wt, _ = merged_builder(proj, "b1")
+    make_link(wt / "builder-state" / "in", wt / ".venv")
+    code, out = run_closeout(capsys, proj.main, "b1")
+    assert code == 0 and "b1: would remove" in out, out
+
+
+def test_file_link_out_is_removed_as_a_link(proj, capsys):
+    wt, _ = merged_builder(proj, "b1")
+    outside = outside_sentinel(proj.tmp)
+    try:
+        os.symlink(outside / "keep.txt", wt / "builder-state" / "f-link")
+    except OSError as e:
+        pytest.skip(f"this platform cannot make a file symlink here: {e}")
+    code, out = run_closeout(capsys, proj.main, "b1", "--apply")
+    assert code == 0, out
+    assert "b1: removed" in out and not wt.exists()
+    assert (outside / "keep.txt").read_text(encoding="utf-8") == "keep\n"
+
+
+def test_refuses_dangling_link(proj, capsys):
+    wt, _ = merged_builder(proj, "b1")
+    gone = proj.tmp / "gone"
+    gone.mkdir()
+    make_link(wt / "builder-state" / "dead", gone)
+    gone.rmdir()
+    code, out = run_closeout(capsys, proj.main, "b1", "--apply")
+    assert code == 1 and "cannot be resolved" in out and wt.exists()
+
+
+def test_refuses_top_folder_that_is_a_link(proj, capsys):
+    wt, _ = merged_builder(proj, "b1")
+    moved = proj.tmp / "moved-b1"
+    os.rename(wt, moved)
+    make_link(wt, moved)
+    code, out = run_closeout(capsys, proj.main, "b1", "--apply")
+    assert code == 1 and "top folder is a link" in out
+    assert (moved / "b1-0.txt").exists()
+
+
+@pytest.mark.skipif(not WIN, reason="an open file blocks a delete only on Windows")
+def test_refuses_in_use_and_deletes_nothing(proj, capsys):
+    wt, _ = merged_builder(proj, "b1")
+    held = wt / ".venv" / "pyvenv.cfg"
+    with open(held, "rb"):
+        code, out = run_closeout(capsys, proj.main, "b1", "--apply")
+    assert code == 1 and "in use" in out and "Close any terminal" in out
+    assert (wt / "b1-0.txt").exists() and (wt / ".git").exists() and has_branch(proj, "worktree-b1")
+
+
+def test_in_use_check_refuses_when_sibling_exists(tmp_path):
+    wt = tmp_path / "b1"
+    wt.mkdir()
+    (tmp_path / ("b1" + closeout.INUSE_SUFFIX)).mkdir()
+    ok, msg, fatal = closeout.in_use_check(str(wt))
+    assert not ok and not fatal and "already exists" in msg and wt.exists()
+
+
+def test_in_use_check_rename_back_fails(tmp_path, monkeypatch):
+    wt = tmp_path / "b1"
+    wt.mkdir()
+    real, calls = os.rename, []
+
+    def rename(a, b):
+        calls.append((a, b))
+        if len(calls) > 1:
+            raise OSError("held")
+        real(a, b)
+    monkeypatch.setattr(closeout.os, "rename", rename)
+    monkeypatch.setattr(closeout.time, "sleep", lambda s: None)
+    ok, msg, fatal = closeout.in_use_check(str(wt))
+    monkeypatch.undo()
+    sibling = str(wt) + closeout.INUSE_SUFFIX
+    assert not ok and fatal and len(calls) == 6
+    assert "Rename" in msg and sibling in msg and "Nothing was deleted" in msg
+    assert os.path.isdir(sibling) and not wt.exists()
+
+
+def test_git_reports_success_but_leaves_the_folder(proj, capsys, monkeypatch):
+    wt, _ = merged_builder(proj, "b1")
+    real = closeout.git
+
+    def fake(cwd, *args):
+        if args[:2] == ("worktree", "remove"):
+            return 0, "", ""
+        return real(cwd, *args)
+    monkeypatch.setattr(closeout, "git", fake)
+    code, out = run_closeout(capsys, proj.main, "b1", "--apply")
+    assert code == 3
+    assert "removal did not finish (git exit 0)" in out and "git still lists it" in out
+    assert "left:" in out and "b1: removed" not in out
+    assert has_branch(proj, "worktree-b1")
+
+
+def test_merged_pr_head_not_local_is_unknown(proj, capsys):
+    wt, _ = builder(proj, "b1")
+    proj.set_prs([{"number": 9, "headRefName": "worktree-b1", "headRefOid": "ab" * 20}])
+    code, out = run_closeout(capsys, proj.main, "b1", "--apply")
+    assert code == 1
+    assert "unknown: PR #9 head not local" in out
+    assert f"git -C {os.path.abspath(proj.main)} fetch origin pull/9/head" in out
+    assert wt.exists()
+
+
+def test_local_tip_behind_merged_head_215(proj, capsys):
+    wt, tip = merged_builder(proj, "b1", commits=3)
+    git(wt, "reset", "-q", "--hard", "HEAD~2")
+    code, out = run_closeout(capsys, proj.main, "b1", "--apply")
+    assert code == 0 and "b1: removed (merged, PR #7)" in out, out
+
+
+def test_no_commit_of_its_own_is_removable(proj, capsys):
+    wt = add_worktree(proj.main, "b1")
+    add_ignored_content(wt)
+    code, out = run_closeout(capsys, proj.main, "b1", "--apply")
+    assert code == 0 and "b1: removed (no commit of its own" in out, out
+    assert not wt.exists() and not has_branch(proj, "worktree-b1")
+
+
+def test_detached_worktrees(proj, capsys):
+    on_main = git(proj.main, "rev-parse", "HEAD").stdout.strip()
+    d1 = proj.root / "d1"
+    git(proj.main, "worktree", "add", "-q", "--detach", str(d1), on_main)
+    d2 = proj.root / "d2"
+    git(proj.main, "worktree", "add", "-q", "--detach", str(d2), on_main)
+    commit_file(d2, "x.txt", "x\n", "detached work")
+    d3 = proj.root / "d3"
+    git(proj.main, "worktree", "add", "-q", "--detach", str(d3), on_main)
+    commit_file(d3, "y.txt", "y\n", "detached PR head")
+    head3 = git(d3, "rev-parse", "HEAD").stdout.strip()
+    proj.set_prs([{"number": 11, "headRefName": "other", "headRefOid": head3}])
+
+    code, out = run_closeout(capsys, proj.main, "d1", "--apply")
+    assert code == 0 and "d1: removed (no commit of its own" in out
+    code, out = run_closeout(capsys, proj.main, "d2", "--apply")
+    assert code == 1 and "detached at" in out and d2.exists()
+    code, out = run_closeout(capsys, proj.main, "d3", "--apply")
+    assert code == 0 and "d3: removed (merged, PR #11)" in out
+
+
+def test_gh_failure_removes_nothing(proj, capsys, monkeypatch):
+    wt = add_worktree(proj.main, "b1")  # no commit of its own: would pass without gh
+    monkeypatch.setenv("FAKE_GH_RC", "1")
+    code, out = run_closeout(capsys, proj.main, "b1", "--apply")
+    assert code == 1 and "unknown: gh failed" in out and wt.exists()
+
+
+def test_pr_list_at_the_limit_says_it_may_be_cut(proj, capsys, monkeypatch):
+    wt, _ = builder(proj, "b1")
+    monkeypatch.setattr(closeout, "PR_LIMIT", 1)
+    proj.set_prs([{"number": 1, "headRefName": "other", "headRefOid": "cd" * 20}])
+    code, out = run_closeout(capsys, proj.main, "b1")
+    assert code == 1 and "no merged PR (the merged PR list stopped at 1 and may be cut)" in out
+
+
+def test_main_checkout_in_another_case_and_slash(proj, capsys):
+    wt, _ = merged_builder(proj, "b1")
+    arg = str(proj.main)
+    arg = arg.replace("\\", "/").upper() if WIN else arg + "/"
+    code, out = run_closeout(capsys, arg, "b1", "--apply")
+    assert code == 0 and "b1: removed" in out, out
+    assert not wt.exists()
+
+
+def test_extra_branches(proj, capsys):
+    wt, _ = merged_builder(proj, "b1")
+    git(wt, "branch", "feat-merged")
+    git(wt, "branch", "feat-open", "HEAD")
+    commit_file(wt, "z.txt", "z\n", "more")  # moves worktree-b1 only
+    git(wt, "branch", "-f", "feat-open", "HEAD")
+    git(wt, "reset", "-q", "--hard", "HEAD~1")
+    code, out = run_closeout(capsys, proj.main, "b1", "--apply", "--branch", "feat-merged",
+                             "--branch", "feat-open")
+    assert "b1: removed" in out
+    assert "branch feat-merged deleted (merged, PR #7)" in out
+    assert "kept: branch feat-open" in out and code == 1
+    assert not has_branch(proj, "feat-merged") and has_branch(proj, "feat-open")
+
+
+def test_list_mode(proj, capsys):
+    merged_builder(proj, "m1", number=1)
+    w2 = add_worktree(proj.main, "e1")  # no commit of its own
+    builder(proj, "u1")
+    proj.set_prs(proj.prs + [{"number": 3, "headRefName": "worktree-u1", "headRefOid": "ef" * 20}])
+    dirty, _ = merged_builder(proj, "m2", number=2)
+    (dirty / "stray.txt").write_text("x\n", encoding="utf-8")
+    ghost = proj.root / "ghost"
+    ghost.mkdir()
+    outside = outside_sentinel(proj.tmp)
+    make_link(ghost / "out", outside)
+    (proj.root / ("e1" + closeout.INUSE_SUFFIX)).mkdir()
+    gone = add_worktree(proj.main, "g1")
+    shutil.rmtree(gone)
+
+    before = snapshot(proj)
+    code, out = run_closeout(capsys, proj.main, "--list")
+    assert code == 0, out
+    assert "m1: would remove (merged, PR #1)" in out
+    assert "e1: would remove (no commit of its own" in out
+    assert "u1: refused: unknown: PR #3 head not local" in out
+    assert "m2: refused: uncommitted" in out
+    assert "ghost: unknown to git: listed, never removed; folder link" in out
+    assert f"e1{closeout.INUSE_SUFFIX}: an interrupted in-use check of e1" in out
+    assert "g1: refused: git record only: the folder is gone" in out
+    assert out.rstrip().splitlines()[-1] == \
+        "count: merged and still there 2; no commit of its own 1; unknown 1"
+    assert snapshot(proj) == before and w2.exists()
+
+
+def test_list_takes_no_builder(proj, capsys):
+    code, out = run_closeout(capsys, proj.main, "b1", "--list")
+    assert code == 2
+
+
+def test_refuses_a_linked_worktree_as_main(proj, capsys):
+    wt, _ = merged_builder(proj, "b1")
+    code, out = run_closeout(capsys, wt, "b1")
+    assert code == 2 and "not the main checkout" in out
+
+
+def test_refuses_without_origin_head(proj, capsys):
+    merged_builder(proj, "b1")
+    git(proj.main, "remote", "set-head", "origin", "--delete")
+    code, out = run_closeout(capsys, proj.main, "b1", "--apply")
+    assert code == 2 and "cannot tell the main branch" in out

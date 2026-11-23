@@ -102,12 +102,73 @@ dispatched.
    request and redirect hop, and the script must change no data.
    Anything else is listed for the owner.
 2. `git pull --ff-only` on the main checkout.
-3. Delete that builder's remaining branches, each only after
-   `git cherry` against the main branch shows nothing missing.
-4. Remove that builder's worktree, only if it has no uncommitted file.
-   `claude rm <id>` belongs here and nowhere earlier.
+3. Right after the merge and the pull, with no separate word from the
+   owner, run the closeout script for that builder (below): the dry run,
+   then the same line with `--apply`. Name each other branch the builder
+   opened a PR from with `--branch`. Never remove a worktree or delete a
+   branch of a builder any other way.
+4. Only when the script printed `removed` for that builder, run
+   `claude rm <id>`. A refused worktree keeps its session, so the owner
+   can resume it to finish the work.
 5. State-back, then report to the owner with the commands and their
-   output.
+   output. The script's `refused, for the owner queue:` list goes to the
+   queue as one entry.
 
-Anything unmerged, uncommitted or not that builder's is listed for the
-owner and left where it is.
+An `in use` refusal: close any terminal or editor in the folder, check
+that the builder's session has ended, and run the script again. A second
+`in use` refusal is listed for the owner. Anything unmerged, uncommitted
+or not that builder's is listed for the owner and left where it is.
+
+## The closeout script
+
+`scripts/closeout.py` (Python 3.8 or later, standard library only), run
+with the project's interpreter as one plain command:
+
+```
+closeout.py <main checkout> <builder name> [--branch <name>]... [--apply]
+closeout.py <main checkout> --list
+```
+
+Without `--apply` it is a dry run and changes nothing. Its first line
+names the git version. It acts only on a worktree that
+`git worktree list --porcelain` names and that sits directly under
+`<main checkout>/.claude/worktrees`, and removes it only when all hold:
+
+- **merged:** the branch's tip is a merged PR's head or an ancestor of
+  one, or the tip (a detached one too) is on the remote main branch and
+  so holds no commit of its own; a detached HEAD also passes when it is
+  exactly a merged PR's head. `git cherry` is not used: it shows every
+  commit of a squash of several as missing;
+- **clean:** `git status --porcelain` prints nothing. Ignored files
+  (`.venv`, `builder-state/`) leave with the worktree;
+- **not locked;**
+- **no link out:** no junction or folder symlink in it points out of it,
+  no link fails to resolve, and its top folder is not a link;
+- **not in use** (Windows, at apply time): it renames the folder to
+  `<name>.closeout-inuse` and back. An open file or a process running in
+  the folder stops the rename, before anything is deleted.
+
+There is no force option. Its only deletes are `git worktree remove`
+without `--force`, then `git branch -D` of the builder's branches on the
+same merged test. It never fetches, pushes, prunes or deletes a remote
+ref. It prints `removed` only when the folder is gone and git no longer
+lists it, whatever git's exit code; otherwise it prints what is left and
+exits 3. One `gh pr list --state merged` call gives the merged PRs; if
+`gh` fails, nothing is removed. A merged PR head that is not local is
+`unknown`, with the fetch to run (`git -C <main checkout> fetch origin
+pull/<n>/head`); run it, then the script again. The main branch is read
+from `refs/remotes/origin/HEAD`, so the pull of step 2 comes first.
+
+Exit codes: 0 done (or, in a dry run, would be); 1 something refused or
+unknown; 2 the run itself refused; 3 a removal or the in-use check did
+not finish.
+
+**List-only mode** changes nothing. It prints every worktree under the
+folder with its verdict, every folder there that git does not know
+(never removed, scanned for links), and ends with one count line:
+`count: merged and still there <n>; no commit of its own <n>; unknown <n>`.
+The manager runs it at every state-back and writes the count line into
+the state file. A just-dispatched builder counts as "no commit of its
+own", so read that number against the builders running. A folder git
+does not know, or a git record whose folder is gone, is listed for the
+owner; pruning stays the manager's command.

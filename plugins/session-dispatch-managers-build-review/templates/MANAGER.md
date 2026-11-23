@@ -10,6 +10,8 @@ alone. Rules are in the `session-rules` skill and in
 
 ## Builders running
 
+Leftover worktrees (`closeout.py <main checkout> --list`, its last line, at every state-back):
+
 ## Open PRs
 
 ## Dispatch, as proven
