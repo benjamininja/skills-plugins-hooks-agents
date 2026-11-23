@@ -75,8 +75,11 @@ subagents rule in `session-rules`, ADR-0019. It merges after PR #205.
 
 **#250** (`Tier: unset`): each builder worktree keeps its own `.venv`
 after closeout (1.1 GB here, 54 GB in dynasty; the personal-assistant's
-report of 2026-11-23, not re-checked). Next: check the figures, set the
-tier, answer its three questions. A closeout rule change goes to Ben.
+report of 2026-11-23, not re-checked). Closeout step 4 already says to
+remove the worktree; practice differs, and nobody has found why
+(issuecomment-7102788499; dynasty #655). Next: find the cause from the
+managers' closeout records, so at least medium; set the tier; answer its
+five questions. A closeout rule change goes to Ben.
 
 **Next for this planner, in order:**
 1. **After #242 merges:** the planner's PR that replaces PROJECT-RULES'
