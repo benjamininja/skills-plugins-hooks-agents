@@ -46,6 +46,8 @@ nothing reads them any more. `.claude/learnings.db` stays in `.gitignore`.
 
 Ticket: tools #248 (ADR hygiene). The Scope line says `hooks/continual-learning/`
 was removed. In git it was: no file of it is tracked. An empty, untracked
-folder of that name remains in the main checkout. It holds nothing and
-nothing reads it; the manager removes it at closeout. The decision is
-unchanged.
+folder of that name remains in the main checkout. It holds no file, but
+`tools/relink_live.ps1` lists every directory under `hooks/`, so a run of
+it with `-Apply` would remake the `~/.claude/hooks/continual-learning`
+link this decision removed. The manager removes the folder at closeout,
+before any such run. The decision is unchanged.
