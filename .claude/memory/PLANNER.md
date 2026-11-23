@@ -12,12 +12,12 @@ in this file's git history:
 The last stacked version, with 26 session blocks, is that branch's commit
 before the #243 rewrite.
 
-Last state-back: 2026-11-23, compact prep at Ben's word. Since the
-day's clear: the deny rule (#247) was tested and recorded; Ben's eleven
-decisions on the builder environment went on #250, which is tiered and
-briefed; #251 was filed; both goes are recorded. Nothing has merged.
-A compact keeps this planner's id. dff-central-builder-manager has not
-yet reported its own memory review (#243); nothing is owed to it.
+Last state-back: 2026-11-23, at the start after the day's compact. The
+compact kept this planner's id. Since the prep: #250 was dispatched at
+once on Ben's word in the manager's chat, and its builder opened draft
+PR #252 with the Part 1 tests; the finding is not posted yet. Nothing
+has merged here. dff-central-builder-manager has not yet reported its
+own memory review (#243); nothing is owed to it.
 
 ## Current
 
@@ -28,8 +28,7 @@ yet reported its own memory review (#243); nothing is owed to it.
 `aa75bef2-1167-49fd-995a-bdee72226d36`, read from its two #247 entries
 in the dynasty queue and not yet confirmed by it. dff-central-planner:
 `986a10cc-2c8b-4d55-9600-5cc9306c91be`. Neither queue holds an entry for
-this planner: the tools queue is empty (the deny-rule entry has left),
-and the dynasty queue holds one #548 entry of dff-central-planner's.
+this planner: both queues were empty at the start after the compact.
 
 **Merge line (Tools-builder-manager, one re-proof at a time, each merge
 word asked of Ben by button):** #236, PR #238 (the planner's), #239
@@ -70,8 +69,12 @@ subagents rule in `session-rules`, ADR-0019. It merges after PR #205.
   builder and its subagent were offered the server's 10 tool names;
   with `mcp__supabase-dynasty` denied in the builders' settings, none.
   Dynasty PR #657 carries that rule, and Ben's merge answer is recorded
-  (issuecomment-7103550708). Both dynasty #247 entries have left its
-  queue.
+  (issuecomment-7103550708). Dynasty PR #656 (the consultant line in its
+  `GOAL-RUN.md`) merged as `97dbebb` (issuecomment-7103677619).
+  dff-central-planner ruled that dynasty's builders also deny the
+  separate, unauthenticated Supabase plugin server
+  (issuecomment-7103639275); its manager queues that line after #657.
+  The dynasty queue is empty.
 - **After #249 merges:** archive the old session
   `local_6b981a48-1f7d-4986-93e6-6af76d316f28` (Ben's "Record, then
   archive after merge"; its final record: #247 issuecomment-7102435808,
@@ -91,7 +94,14 @@ issues/250 issuecomment-7103259381; dynasty's half is dynasty #655).
   manager state-back, the closeout rule text and ADR-0020. Brief:
   issuecomment-7103342516. Ben's "Go, after the merge line
   (Recommended)" (issuecomment-7103389275), sent to
-  Tools-builder-manager. Its first step is a finding: rule on it.
+  Tools-builder-manager. Ben then told the manager "250 and 251 approved
+  to launch" and chose "Now, no full run (Recommended)"
+  (issuecomment-7103443214): dispatched as builder `t250-closeout-script`
+  from `f1ff785`, with one added paragraph that the builder runs no full
+  suite until the manager gives the test line. Its plan is
+  issuecomment-7103465652. Draft PR #252 holds the Part 1 tests only, so
+  CI answers the Linux half. **The finding is not posted yet: rule on it
+  when it is.**
 - **#251** (medium, `Profile: none`): the dispatch half. `setup` and
   `setupFull` lists, a switch on `dispatch.ps1`, and the brief line
   `venv: light, full or no`. Ben's "Go, after #189's PR (Recommended)"
@@ -138,8 +148,10 @@ setup), #222 (#195 docs), #227 (#223 setup doc), #238, #249 (#247, after
 #205).
 
 **Open builder PRs:** #182 (#175), #196 (#179), #197 (#161), #211 (#168),
-#214 (#207), #239, #242. #196 and #197 are planned by
-dff-central-planner.
+#214 (#207), #239, #242, #246 (#244), #252 (#250, draft, Part 1 tests
+only). #196 and #197 are planned by dff-central-planner. #137 and #111
+(the owner-queue mod) are with dff-central-planner for one refreshed
+design with auto-close, at Ben's word (#137 issuecomment-7103524615).
 
 **Planned, not opened:** the `session-rules` PR for #217's choices 1, 2
 and 4 with 245,000 (after PR #210; its text: #217
@@ -244,7 +256,9 @@ button.
 - A project with a database server needs a server-level deny rule in its
   builders' settings: without one, a builder is offered the server's
   tools (#247 issuecomment-7103503667). The plugin's builders template
-  and setup guide do not say so.
+  and setup guide do not say so. The same holds for a plugin's server
+  that is not signed in: its sign-in tools are still offered
+  (issuecomment-7103639275).
 - The user-level `Agent(supabase-consultant)` deny rule is per machine;
   the machine setup document (#223, PR #227) does not list it.
 - The hook README's layered-defense note names only the `main` ruleset;
