@@ -1,7 +1,8 @@
 # One owner queue per project, untracked, routed by the ticket's repo
 
 - Status: accepted
-- Date: 2026-11-14
+- Date: 2026-11-14 (brought up to date on 2026-11-23, before it merged:
+  the writer of this repository's queue, point 4)
 - Scope: `plugins/session-dispatch-managers-build-review/` (`session-rules`
   and its `references/parking.md`, the `NEEDS-OWNER.md` template, the
   plugin README, the manager role template); this repository's
@@ -62,8 +63,11 @@ answered, and for a self-critical review of the plan after it.
    the queue of the raiser's project. The `Ticket:` field holds the full
    link.
 4. **One writer per queue**, a builder manager, through the owner-queue
-   CLI. This repository has no manager, so the dynasty manager writes
-   its queue.
+   CLI. When this was decided, this repository had no manager and the
+   owner chose the dynasty manager as its queue's writer. Since #228
+   (merged 2026-11-19) it has its own manager,
+   `tools-central-builder-manager`, which writes this repository's
+   queue.
 5. **The pane's order is the same in every session.** Groups follow the
    owner's `queues` list. Each item of that list is a path with a name,
    the owner's word for the project, and the name is the group's
@@ -97,9 +101,9 @@ answered, and for a self-critical review of the plan after it.
   never goes to a gitignored folder in a project. The queue is not such
   a record: an entry is a pointer to its ticket, and step 5 of parking
   records every `Answer:` and `Note:` line before an entry leaves. The
-  cost is real all the same. Once the repositories leave OneDrive, a
-  queue is one copy on one disk, and losing it loses the list of what
-  is open, which must then be rebuilt from the tickets.
+  cost is real all the same. Since the repositories left OneDrive
+  (#235), a queue is one copy on one disk, and losing it loses the list
+  of what is open, which must then be rebuilt from the tickets.
 - An untracked file sits in the tracked `.claude/memory/` folder. The
   mod reads that fixed path, so moving it is a mod change.
 - Until the mod change of point 5 is live, numbers in the pane are not
@@ -107,16 +111,18 @@ answered, and for a self-critical review of the plan after it.
   inside a project, and an entry is quoted by its title or its ticket
   link. From then an entry's id stays with it, and only the CLI writes
   an `Id:` line.
-- Dynasty's queue stays tracked until its own ticket is done. Untracking
-  a live, modified file is a hazard: the main checkout's pull of the
-  commit that removes it is refused or deletes the file. That ticket
-  holds a copy-aside, pull, restore sequence the owner attends. Earlier
-  versions of the file stay in dynasty's public history; removing them
-  is the owner's call.
-- Whether the dynasty manager's session can write a file in this
-  repository's main checkout was not checked when this was written. The
-  manager reports on #183. If it cannot, the writer goes back to the
-  owner as a decision.
+- Dynasty's queue was still tracked when this was decided, and stayed
+  so until its own ticket. Untracking a live, modified file is a
+  hazard: the main checkout's pull of the commit that removes it is
+  refused or deletes the file. That ticket held a copy-aside, pull,
+  restore sequence the owner attends. The file is untracked there now
+  (checked 2026-11-23). Earlier versions of the file stay in dynasty's
+  public history; removing them is the owner's call.
+- The writer of this repository's queue changed before this record
+  merged. The owner's answer above named the dynasty manager; #228 then
+  gave this repository a manager of its own, which writes the queue
+  from this repository's own main checkout. So the question of whether
+  a dynasty session can write a file here no longer arises.
 
 ## Later growth
 

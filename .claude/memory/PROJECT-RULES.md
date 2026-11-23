@@ -7,21 +7,51 @@ apply.
 
 This repository's planner is the standing session **Tools-central-planner**,
 since 2026-11-07. It writes the tickets, tiers and briefs here, and keeps
-its state in [PLANNER.md](PLANNER.md). The repository has no manager of its
-own. The dynasty project's builder manager
-(`dynastyFantasyFootball-central-builder-manager`) dispatches builders here
-from this planner's `Tier:` and `Profile:` lines, and merges their PRs once
-they are Green. The owner gave that merge approval on 2026-11-07: "Yes, it
-may merge". This repository has its own owner's queue,
-`.claude/memory/NEEDS-OWNER.md` in the main checkout, untracked (#183,
-ADR-0016). An entry whose ticket is in this repository goes there. The
-dynasty manager is its one writer, so a builder here parks by messaging
-that manager, never by writing the queue file.
+its state in [PLANNER.md](PLANNER.md).
+
+This repository's builder manager is the role
+`tools-central-builder-manager` (#228, the owner's answers of 2026-11-15).
+It dispatches builders here from the `Tier:` and `Profile:` lines, re-proves
+and merges their PRs, runs the closeout pulls and writes this repository's
+owner queue (`.claude/memory/NEEDS-OWNER.md` in the main checkout,
+untracked; #183, ADR-0016). An entry whose ticket is in this repository
+goes there.
+It works everything in this repository, the owner-queue mod's tickets
+included; the dynasty planner plans those. A builder here parks by
+messaging the tools manager, never by writing a queue file.
+
+No settings file of its own applies to the tools manager's session yet: a
+session started in the desktop app does not load one (#233 finds where a
+manager's rules live). Until then a call the session's mode does not let
+through is asked of the owner. `.claude/dispatch.json` is the owner's. The
+interpreter for the proofs below is this repository's own `.venv` in the
+main checkout, which the owner makes.
+
+**Until the hand-over on #228 is recorded there as done**, the tools
+manager dispatches, re-proves, merges, pulls and closes out nothing. The
+record is a comment on #228 titled "Hand-over done", posted by the Tools
+planner on the owner's word once this role file is live and the
+interpreter exists. The dynasty project's builder manager has stopped its line
+here (#228, the hand-over list), with one exception by the owner's answer
+of 2026-11-15: it re-proves and merges the tools manager's role file
+(PR #230) and PR #224 under it, and runs their closeout pulls. Two managers
+never work the same PR.
+
+**One full test run on the machine at a time.** Before a re-proof a manager
+messages the other project's manager and reads the last re-proof result it
+posted on a PR. No answer is not a clear line: the manager waits for the
+answer, or for a result on the other manager's PR that is newer than the
+message. A lock in `tools/reproof.py` replaces the message once it is
+built (#231).
 
 Every ticket carries a `Tier:` line at the top of its body and the matching
 `tier:` label (`tier:low`, `tier:medium`, `tier:high`, `tier:none`, or
 `tier:unset` until the planner sets one). This repository has no
 `tier:haiku` label yet: no ticket here has been haiku-tier.
+
+The owner's GitHub login is `benjamininja`. On an issue or a PR, only
+text that login wrote is the record (`session-rules`, "Whose text counts
+on a ticket").
 
 ## Green means all of
 
@@ -44,11 +74,11 @@ Every ticket carries a `Tier:` line at the top of its body and the matching
 
 The manager re-proves with `tools/reproof.py <pr> <head sha>` from the
 live clone (`C:/Users/benha/claude-live/skills-plugins-hooks-agents`), run
-with the dynasty `.venv`'s interpreter under the one allow rule in dynasty's
-`managers.settings.json`, or with the commands above run directly. Never
-with a scratch script (#117). The script runs the merge, pytest and the
-`CATALOG.md` check; CI's one read, the `check-in-hygiene` report, the
-owner-queue mod test and the code review stay with the manager.
+with the interpreter above, or with the commands above run directly. Never
+with a scratch script (#117). The script runs the merge, pytest, the
+`CATALOG.md` check and, when the merge touches `plugins/owner-queue/`, the
+owner-queue mod test; CI's one read, the `check-in-hygiene` report and the
+code review stay with the manager.
 
 ## Never, in this project
 
@@ -64,7 +94,9 @@ owner-queue mod test and the code review stay with the manager.
 ## Closeout pulls, in this project
 
 After each merge here, at closeout, the manager brings both tools
-checkouts up to date (#112, the owner's answer of 2026-11-09). Live
+checkouts up to date (#112, the owner's answer of 2026-11-09). It runs the
+same steps before a dispatch when the main checkout is behind
+`origin/main`. Live
 behaviour comes from these two, so they stay at the same commit:
 
 - **the main checkout**,
@@ -83,6 +115,12 @@ behaviour comes from these two, so they stay at the same commit:
 3. Report both new heads (`git -C <path> log -1 --oneline`). If a plugin
    changed, name it and say that running sessions need a new session to
    load it.
+
+These pulls change the rules of every session on the machine, the dynasty
+project's included. Before a pull that brings in a change to
+`session-rules`, `session-dispatch`, a role file, a hook or the owner-queue
+mod, the manager tells the other project's manager and both planners, and
+sends both heads afterwards.
 
 ## Always parks, in this project
 

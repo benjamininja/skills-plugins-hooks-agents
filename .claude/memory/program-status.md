@@ -21,7 +21,9 @@ to trust it elsewhere and we are not there yet."
 
 ## Where the detail lives (do not re-expand it here)
 
-- What shipped, per goal and per session: `PLAN.md` Shipped section.
+- What shipped, per goal and per session: the Shipped section of
+  `PLAN.md` as it stood before #221, in git history
+  (`git log -- PLAN.md`). `PLAN.md` is a pointer now.
 - Skill catalog, sources, vendoring + three-state drift ontology
   (faithful / vendored-with-known-edits / fork): `README.md`.
 - Decisions: `docs/adr/` (indexed in `MEMORY.md`).
@@ -35,6 +37,6 @@ to trust it elsewhere and we are not there yet."
 
 ## How to apply
 
-Re-read `README.md`'s Roadmap and `PLAN.md`'s Shipped section for current
-state. Root `memory-architecture.md` describes the Phase 0 algorithm this
+Re-read `README.md`'s Roadmap for this program, and the planner's state
+file (`PLANNER.md`) for current state. Root `memory-architecture.md` describes the Phase 0 algorithm this
 file's creation is an instance of.
