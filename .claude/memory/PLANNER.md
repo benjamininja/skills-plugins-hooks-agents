@@ -78,16 +78,28 @@ subagents rule in `session-rules`, ADR-0019. It merges after PR #205.
 - The Tools planner now designs consultant, auditor and on-call
   subagent roles; `supabase-router` supplies drafts.
 
-**#250** (`Tier: unset`): each builder worktree keeps its own `.venv`
-after closeout (1.1 GB here, 54 GB in dynasty; the personal-assistant's
-report of 2026-11-23, not re-checked). Closeout step 4 already says to
-remove the worktree; practice differs, and nobody has found why
-(issuecomment-7102788499; dynasty #655). Next: find the cause from the
-managers' closeout records, so at least medium. Ben is grilling the
-remediation in personal-assistant's chat (long-term fix first, cleanup
-after); the planner's facts and advice are at issuecomment-7102837777.
-When the assistant sends Ben's decisions: record them on #250, set the
-tier, write the brief. The #235 step 3 prune waits meanwhile.
+**#250 and #251, the builder environment's lifetime** (Ben's eleven
+decisions from the assistant's grill, confirmed by button here:
+issues/250 issuecomment-7103259381; dynasty's half is dynasty #655).
+- **#250** (high, `Profile: none`): the closeout half. One script,
+  `scripts/closeout.py` in the plugin, with a list-only count for every
+  manager state-back, the closeout rule text and ADR-0020. Brief:
+  issuecomment-7103342516. Ben's "Go, after the merge line
+  (Recommended)" (issuecomment-7103389275), sent to
+  Tools-builder-manager. Its first step is a finding: rule on it.
+- **#251** (medium, `Profile: none`): the dispatch half. `setup` and
+  `setupFull` lists, a switch on `dispatch.ps1`, and the brief line
+  `venv: light, full or no`. Ben's "Go, after #189's PR (Recommended)"
+  (issues/251 issuecomment-7103390046). **The planner writes its brief
+  when #189's PR merges**, and rules on its finding.
+- **Planned planner PR, after #251's finding:** decision 10's two rules
+  in `session-rules` (the main checkout's packages change only when no
+  builder runs; a `requirements.txt` ticket gets `venv: full`).
+- **The cleanup** is the script's first real run after #250 merges, by
+  each manager on Ben's word; refusals go to Ben as one queue list. It
+  replaces the #235 step 3 prune, which waits until then.
+- The cause is still inferred (closeout not run to its end). The tools
+  manager has run no closeout yet, by its own state file.
 
 **Next for this planner, in order:**
 1. **After #242 merges:** the planner's PR that replaces PROJECT-RULES'
@@ -109,8 +121,8 @@ tier, write the brief. The #235 step 3 prune waits meanwhile.
    gos recorded): #189, #219. #232 follows #189's PR; #220 follows
    #219's first finding (go recorded, brief then); #218 follows the #217
    rules PR, which follows PR #210; #226 follows PR #197.
-5. **#235 remainders:** step 3's prune of merged worktrees (the manager's,
-   on Ben's word), then step 11 (Ben removes the old folder).
+5. **#235 remainders:** step 3's prune is now #250's first real run (the
+   manager's, on Ben's word), then step 11 (Ben removes the old folder).
 
 **Open planner PRs** (each needs `origin/main` merged in and Ben's
 approval at its new head when its turn comes; an approval covers one
@@ -138,7 +150,8 @@ time); #203 and #191 after PR #205 (#191 only on the planner's word);
 #55. #47 runs alone (not beside #54). #51, #53 and #54 after #48.
 
 **Findings to rule on when posted:** #189, #187, #192, #191 (a real fork
-goes to Ben by button), #233. #200's design goes to Ben by button.
+goes to Ben by button), #233, #250, #251. #200's design goes to Ben by
+button.
 
 **Coming to Ben later (not waiting yet):**
 - The approvals of the open planner PRs above, each at its turn.
@@ -208,7 +221,8 @@ goes to Ben by button), #233. #200's design goes to Ben by button.
   `tools/build_catalog.py` leaves a line-ending-only change in
   `CATALOG.md`: check it with `git diff --ignore-cr-at-eol` and drop it.
 - **ADR numbers:** 0016 is in PR #184, 0017 is #168's builder's, 0018 is
-  in PR #205. The next free number is 0019.
+  in PR #205, 0019 is in PR #249, 0020 is #250's builder's. The next free
+  number is 0021.
 - **The clear boundary** (`session-rules`): close the step, record, then
   state-back on this branch, then memory, then the reset prompt last. The
   reset prompt is a local, untracked `reset_prompt.md` in this worktree's
