@@ -12,21 +12,25 @@ in this file's git history:
 The last stacked version, with 26 session blocks, is that branch's commit
 before the #243 rewrite.
 
-Last state-back: 2026-11-23, clear prep at Ben's word, after the #247
-grill and PR #249 (the Supabase dispatch session becomes the on-call
-`supabase-router` subagent). This planner's id below changes at the
-clear; one queue entry it raised (the deny rule) carries the old id. dff-central-builder-manager has not yet reported its own
-memory review (#243); nothing is owed to it.
+Last state-back: 2026-11-23, at the start after the clear that followed
+the #247 grill and PR #249 (the Supabase dispatch session becomes the
+on-call `supabase-router` subagent). The planner's new id is below and
+was sent to both managers and dff-central-planner. Nothing merged and no
+ticket moved across the clear. dff-central-builder-manager has not yet
+reported its own memory review (#243); nothing is owed to it.
 
 ## Current
 
 **Ids (queue ids change at every clear).** This planner:
-`019c4c0b-d63a-4262-9ee1-558f1408fd4f`. Tools-builder-manager:
+`6b47c44d-e4cb-43be-8d0a-51ec2776881b` (before the clear of 2026-11-23:
+`019c4c0b-d63a-4262-9ee1-558f1408fd4f`). Tools-builder-manager:
 `55edaa09-855e-454f-991a-371eb4875402`. dff-central-builder-manager:
-`1a0538b1-047b-4ba3-8967-ff325369e7ab`. dff-central-planner:
-`986a10cc-2c8b-4d55-9600-5cc9306c91be`. Neither queue holds an entry for
-this planner. Two dynasty entries (#548) still carry dff-central-planner's
-old id `5e9a5f7b-…`; that planner has been told.
+`aa75bef2-1167-49fd-995a-bdee72226d36`, read from its two #247 entries
+in the dynasty queue and not yet confirmed by it. dff-central-planner:
+`986a10cc-2c8b-4d55-9600-5cc9306c91be`. The tools queue holds one entry
+for this planner, the deny rule (#247), still keyed to the old id;
+Tools-builder-manager was asked to re-key it. The dynasty queue holds
+none.
 
 **Merge line (Tools-builder-manager, one re-proof at a time, each merge
 word asked of Ben by button):** #236, PR #238 (the planner's), #239
