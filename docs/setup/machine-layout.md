@@ -20,10 +20,10 @@ resolving.
 
 | Root | Path | What lives there |
 |---|---|---|
-| User folder | `C:\Users\benha` | The three roots below. |
+| User folder | `C:\Users\benha` | The configuration folder and the live clone. |
 | Configuration folder | `C:\Users\benha\.claude` | A clone of the owner's private configuration repository: the global `CLAUDE.md`, the settings files, cross-project memory. Also the skill, agent and hook links, which are made on each machine and not tracked. |
-| GitHub folder | `C:\Users\benha\OneDrive\Documents\GitHub` | One main checkout per project, named for its repository. Role sessions and builders work in worktrees under a checkout's `.claude\worktrees`. |
-| Live clone | `C:\Users\benha\claude-live\skills-plugins-hooks-agents` | A second clone of this repository that only ever holds merged `main` and is never edited by hand. It is outside OneDrive on purpose. |
+| GitHub folder | `C:\source\Github` | One main checkout per project, named for its repository. Role sessions and builders work in worktrees under a checkout's `.claude\worktrees`. It is outside the user folder and outside any synced folder (#235). |
+| Live clone | `C:\Users\benha\claude-live\skills-plugins-hooks-agents` | A second clone of this repository that only ever holds merged `main` and is never edited by hand. |
 
 ## What depends on each
 
@@ -82,7 +82,7 @@ Test-Path "C:\Users\benha\.claude\settings.json"
 ```
 
 ```powershell
-Test-Path "C:\Users\benha\OneDrive\Documents\GitHub\skills-plugins-hooks-agents\skills"
+Test-Path "C:\source\Github\skills-plugins-hooks-agents\skills"
 ```
 
 ```powershell
@@ -93,7 +93,7 @@ The links are checked with a dry run, which changes nothing and must
 report nothing to create or repoint:
 
 ```powershell
-.\tools\relink_live.ps1 -Source C:\Users\benha\OneDrive\Documents\GitHub\skills-plugins-hooks-agents
+.\tools\relink_live.ps1 -Source C:\source\Github\skills-plugins-hooks-agents
 ```
 
 The two clones of this repository must sit at the same merged commit
@@ -105,8 +105,8 @@ section.
 
 A root is moved only by a change to this document first, in a PR, with
 the settings files, the links and the closeout pulls brought along in
-the same sitting. Moving the GitHub folder out of OneDrive is such a
-change.
+the same sitting. The GitHub folder's move out of OneDrive on
+2026-11-19 (#235) was such a change.
 
 ## Not covered here
 
