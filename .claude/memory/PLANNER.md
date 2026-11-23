@@ -12,12 +12,13 @@ in this file's git history:
 The last stacked version, with 26 session blocks, is that branch's commit
 before the #243 rewrite.
 
-Last state-back: 2026-11-23, at the start after the day's compact. The
-compact kept this planner's id. Since the prep: #250 was dispatched at
-once on Ben's word in the manager's chat, and its builder opened draft
-PR #252 with the Part 1 tests; the finding is not posted yet. Nothing
-has merged here. dff-central-builder-manager has not yet reported its
-own memory review (#243); nothing is owed to it.
+Last state-back: 2026-11-23, after the day's compact (which kept this
+planner's id). Since then: PR #246 merged; #250's Part 1 finding was
+ruled and its Part 2 is being built; the planner ruled on PRs #198,
+#181, #184 and #182 for the manager; PRs #227 and #184 have new heads;
+the user-level deny rule is committed in the private configuration
+repository. dff-central-builder-manager has not yet reported its own
+memory review (#243); nothing is owed to it.
 
 ## Current
 
@@ -32,24 +33,25 @@ this planner: both queues were empty at the start after the compact.
 
 **Merge line (Tools-builder-manager, one re-proof at a time, each merge
 word asked of Ben by button):** #236, PR #238 (the planner's), #239
-(#237), #242 (#231). #241 follows #239. Nothing has merged since
-`f1ff785` (2026-11-19).
-- **#244 goes first** (medium, `Profile: none`; Ben's "Go, first
-  (Recommended)", 2026-11-22; brief: issues/244
-  issuecomment-7082663876). Dispatched as builder `t244-pytest-hang`
-  (issuecomment-7083733874). Part 1 was stopped for low memory twice
-  (326 and 309 of 603 tests, 3.4 then 5.8 s a test). Ben's "Rule and
-  brief Part 2 (Recommended)": slow under memory pressure, not hung.
-  **Part 2 brief posted** (issuecomment-7085729098): `reproof.py` gets
-  `PYTEST_TIMEOUT = 5400` for pytest only, plus `--durations=25`, and one
-  test. It runs before the merge line, and #242 merges main in after it.
-  Part 2 is built as PR #246 at `9cb1145`; its review is closed (F1
-  fixed, F2 held on the brief; pull/246 issuecomment-7102207809). Its
-  re-proof started 2026-11-23 13:26Z on main's script, so still under
-  the 3600 s cap; the new cap and table apply from the first re-proof
-  after #246 merges. The speed-up stays with #187.
-- #242: the re-check accepted F1 and F2 at `b278602`. It needs only its
-  re-proof.
+(#237), #242 (#231). #241 follows #239. #236's re-proof started
+2026-11-23 14:30Z.
+- **#244 is done.** PR #246 merged as `aefbc68` on 2026-11-23, the first
+  merge since `f1ff785` (2026-11-19), and closed #244. Its re-proof took
+  3510.8 s for pytest, 89 s under the old 3600 s cap (pull/246
+  issuecomment-7103972437). From the next re-proof the cap is 5400 s and
+  the 25 slowest tests are printed; that table is #187's first evidence.
+  Both checkouts are at `aefbc68`. t244's worktree is left for the #250
+  script, on Ben's button in the manager's chat.
+- #242: the re-check accepted F1 and F2 at `b278602`. It merges main in
+  (#246 changed the same script), then needs its re-proof.
+- **PR #253** (#248, builder t248) is open at `d26b97c`; its first review
+  has no blocking finding (pull/253 issuecomment-7104380919). It adds
+  `tests/test_adr_readme.py`: every file in `docs/adr/` needs a row in
+  `docs/adr/README.md`. **After #253 merges, the planner merges main
+  into #184, #205 and #249 and adds each ADR's row**; #211 (ADR-0017) is
+  a builder PR and needs a follow-up to its builder. The README's roles
+  list names the dispatch role for ADR-0019; #249 puts that right when
+  it merges main in.
 
 **#247, the Supabase roles (grilled with Ben, 2026-11-23; the ten
 decisions are the ticket's body).** PR #249 is open: `supabase-router`
@@ -59,8 +61,10 @@ subagents rule in `session-rules`, ADR-0019. It merges after PR #205.
 - **The deny rule is done and tested** (2026-11-23, #247
   issuecomment-7103215501): `Agent(supabase-consultant)` is in Ben's user
   settings, the session form still starts, and a subagent start is
-  refused. Tools-builder-manager was told the queue entry can leave. A
-  second machine needs the same entry (noted for #223).
+  refused. The line is committed in the private configuration
+  repository (its PR 11, merged as `680e7d9` on Ben's "Merge now
+  (Recommended)"; #247 issuecomment-7104407619), so a restore carries
+  it. That folder is back on its main branch, clean.
 - **Dynasty's half** is dff-central-planner's own PR (`supabase-look.md`,
   draft dynasty PR #653, merges after #249)
   plus a `GOAL-RUN.md` line queued for Ben; a builder cannot write under
@@ -81,8 +85,8 @@ subagents rule in `session-rules`, ADR-0019. It merges after PR #205.
   nothing open). Then comment the outcome on #235 (item c), #217, #161
   and PR #197 (drop dispatch from `ROLES`).
 - **#248** (low): ADR hygiene. Ben's "Go, after line"
-  (issuecomment-7102642772); sent to Tools-builder-manager, dispatchable
-  after the merge line. The planner's roles answer is on the ticket.
+  (issuecomment-7102642772). Built as PR #253 (see the merge line). The
+  planner's roles answer is on the ticket.
 - The Tools planner now designs consultant, auditor and on-call
   subagent roles; `supabase-router` supplies drafts.
 
@@ -99,9 +103,23 @@ issues/250 issuecomment-7103259381; dynasty's half is dynasty #655).
   (issuecomment-7103443214): dispatched as builder `t250-closeout-script`
   from `f1ff785`, with one added paragraph that the builder runs no full
   suite until the manager gives the test line. Its plan is
-  issuecomment-7103465652. Draft PR #252 holds the Part 1 tests only, so
-  CI answers the Linux half. **The finding is not posted yet: rule on it
-  when it is.**
+  issuecomment-7103465652.
+  - **Part 1 is ruled.** Finding: issuecomment-7103861254, with a
+    correction (issuecomment-7104084566). On Windows a held-open file
+    stops `git worktree remove` part way while git drops its record,
+    and a junction inside a worktree is handled badly in two different
+    ways by two git versions (one deletes the target's contents).
+  - Ruling: issuecomment-7103994943; amendment:
+    issuecomment-7104205770. In-use check by rename, apply-only and
+    Windows-only; the script never fetches; a folder link that points
+    out refuses; the script checks the folder itself after git returns.
+  - **Ben's word on one point:** a clean worktree with no merged PR and
+    no commit of its own is removable when named ("Removable
+    (Recommended)", in the ruling; confirmed in the manager's chat,
+    issuecomment-7104196182). The list count shows those apart.
+  - Part 2 is being built in PR #252. Both hazards went to the dynasty
+    manager and planner as a report. The tools manager checks for
+    junctions by hand before any removal until the script lands.
 - **#251** (medium, `Profile: none`): the dispatch half. `setup` and
   `setupFull` lists, a switch on `dispatch.ps1`, and the brief line
   `venv: light, full or no`. Ben's "Go, after #189's PR (Recommended)"
@@ -141,15 +159,27 @@ issues/250 issuecomment-7103259381; dynasty's half is dynasty #655).
 
 **Open planner PRs** (each needs `origin/main` merged in and Ben's
 approval at its new head when its turn comes; an approval covers one
-head): #181 and #198 (old state-backs, likely to be closed instead), #184
-(#183, queue per project, ADR-0016), #205 (ADR-0018), #208 (`git restore`
-form), #210 (reset prompt as pointer, one Current block), #216 (ruleset
-setup), #222 (#195 docs), #227 (#223 setup doc), #238, #249 (#247, after
-#205).
+head): #184 (#183, queue per project, ADR-0016), #198 (this state
+branch), #205 (ADR-0018), #208 (`git restore` form), #210 (reset prompt
+as pointer, one Current block), #216 (ruleset setup), #222 (#195 docs),
+#227 (#223 setup doc), #238, #249 (#247, after #205).
+- **#184** was reworked on Ben's "Both PR repairs (Recommended)": head
+  `8acbb17`, main merged in, main's PROJECT-RULES text taken, ADR-0016
+  brought up to date (pull/184 issuecomment-7104281978).
+- **#227** is at `1b4200b`: the GitHub folder's path corrected after the
+  move, on Ben's "Fix the paths now (Recommended)". Ben's approval of
+  2026-11-15 covered `63c6445` and has lapsed (pull/227
+  issuecomment-7104213254).
+- **#198** is not in the merge line; the planner names its head at a
+  quiet point (pull/198 issuecomment-7104044082). Its branch is not
+  deleted outside that merge.
+- **#181** is closed as superseded by #198, on Ben's button in the
+  manager's chat.
 
 **Open builder PRs:** #182 (#175), #196 (#179), #197 (#161), #211 (#168),
-#214 (#207), #239, #242, #246 (#244), #252 (#250, draft, Part 1 tests
-only). #196 and #197 are planned by dff-central-planner. #137 and #111
+#214 (#207), #239, #242, #252 (#250, draft), #253 (#248). #182 keeps
+its place with no rework (pull/182 issuecomment-7104046736). #196 and
+#197 are planned by dff-central-planner. #137 and #111
 (the owner-queue mod) are with dff-central-planner for one refreshed
 design with auto-close, at Ben's word (#137 issuecomment-7103524615).
 
@@ -167,8 +197,9 @@ time); #203 and #191 after PR #205 (#191 only on the planner's word);
 #55. #47 runs alone (not beside #54). #51, #53 and #54 after #48.
 
 **Findings to rule on when posted:** #189, #187, #192, #191 (a real fork
-goes to Ben by button), #233, #250, #251. #200's design goes to Ben by
-button.
+goes to Ben by button), #233, #251. #200's design goes to Ben by
+button. #250's PR #252 comes to the planner for a plan-breach read if
+the manager asks.
 
 **Coming to Ben later (not waiting yet):**
 - The approvals of the open planner PRs above, each at its turn.
@@ -259,8 +290,6 @@ button.
   and setup guide do not say so. The same holds for a plugin's server
   that is not signed in: its sign-in tools are still offered
   (issuecomment-7103639275).
-- The user-level `Agent(supabase-consultant)` deny rule is per machine;
-  the machine setup document (#223, PR #227) does not list it.
 - The hook README's layered-defense note names only the `main` ruleset;
   the fix sentence goes in #215's brief.
 - The Tools planner has no role file; its read list goes into
@@ -315,6 +344,12 @@ button.
   fail, and gives the folder as a full path. Ben ran the #247 session
   check, could not tell whether its output was a pass, and asked for
   help (2026-11-23).
+- Check a gap's premise before offering its fix. The planner offered
+  Ben a deny-rule line for PR #227 unchecked; the document excludes
+  settings content and the settings file is tracked in the private
+  repository. The PR's real fault was stale paths (2026-11-23).
+- An unmerged PR written before a move or a role change goes stale
+  without a conflict: read its text again before its turn (#227, #184).
 - An Action that says "replace line N" quotes what line N holds now.
   "Restarted" means the app quit fully, tray included. Leave "Undo:"
   lines out of the steps.
