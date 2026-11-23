@@ -1,6 +1,6 @@
 # Retire the continual-learning hook
 
-- Status: accepted
+- Status: accepted; Revision 1, 2026-11-23, notes a leftover empty folder
 - Date: 2026-10-12
 - Scope: `hooks/continual-learning/` (removed), `~/.claude/settings.json` hook entries
 
@@ -41,3 +41,11 @@ nothing reads them any more. `.claude/learnings.db` stays in `.gitignore`.
 - Session start no longer carries a "Global learnings" block.
 - One fewer dependency on `sqlite3`/`jq` being on `PATH`.
 - The upstream evaluation notes in `README.md` and `PLAN.md` stay as history.
+
+## Revision 1 (2026-11-23): an empty folder remains
+
+Ticket: tools #248 (ADR hygiene). The Scope line says `hooks/continual-learning/`
+was removed. In git it was: no file of it is tracked. An empty, untracked
+folder of that name remains in the main checkout. It holds nothing and
+nothing reads it; the manager removes it at closeout. The decision is
+unchanged.
