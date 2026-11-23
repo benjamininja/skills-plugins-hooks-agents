@@ -27,10 +27,9 @@ reported its own memory review (#243); nothing is owed to it.
 `55edaa09-855e-454f-991a-371eb4875402`. dff-central-builder-manager:
 `aa75bef2-1167-49fd-995a-bdee72226d36`, read from its two #247 entries
 in the dynasty queue and not yet confirmed by it. dff-central-planner:
-`986a10cc-2c8b-4d55-9600-5cc9306c91be`. The tools queue holds one entry
-for this planner, the deny rule (#247), still keyed to the old id;
-Tools-builder-manager was asked to re-key it. The dynasty queue holds
-none.
+`986a10cc-2c8b-4d55-9600-5cc9306c91be`. The tools queue's one entry for
+this planner, the deny rule (#247), is done and leaves at the manager's
+next state-back. The dynasty queue holds none.
 
 **Merge line (Tools-builder-manager, one re-proof at a time, each merge
 word asked of Ben by button):** #236, PR #238 (the planner's), #239
@@ -58,9 +57,11 @@ decisions are the ticket's body).** PR #249 is open: `supabase-router`
 replaces the dispatch role file, the consultant is session-only with
 assignment from Ben alone, a `supabase-look` template, an on-call
 subagents rule in `session-rules`, ADR-0019. It merges after PR #205.
-- **Raised queue entry** (sent to Tools-builder-manager, `Session:` this
-  planner): "Add a deny rule so no session starts supabase-consultant as
-  a subagent (#247)". On Ben's report: record it on #247.
+- **The deny rule is done and tested** (2026-11-23, #247
+  issuecomment-7103215501): `Agent(supabase-consultant)` is in Ben's user
+  settings, the session form still starts, and a subagent start is
+  refused. Tools-builder-manager was told the queue entry can leave. A
+  second machine needs the same entry (noted for #223).
 - **Dynasty's half** is dff-central-planner's own PR (`supabase-look.md`,
   draft dynasty PR #653, merges after #249)
   plus a `GOAL-RUN.md` line queued for Ben; a builder cannot write under
@@ -149,8 +150,7 @@ goes to Ben by button), #233. #200's design goes to Ben by button.
 - The Action to remove the mod's old hand copy (#195).
 - The merge of the private configuration repository's working branch.
 
-**Waiting on Ben:** the deny-rule Action in the tools queue (#247). No
-button is pending.
+**Waiting on Ben:** nothing from this planner. No button is pending.
 
 ## Reference
 
