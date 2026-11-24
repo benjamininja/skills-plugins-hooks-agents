@@ -140,8 +140,21 @@ names the git version. It acts only on a worktree that
   exactly a merged PR's head. `git cherry` is not used: it shows every
   commit of a squash of several as missing;
 - **clean:** `git status --porcelain` prints nothing. Ignored files
-  (`.venv`, `builder-state/`) leave with the worktree;
-- **not locked;**
+  (`.venv`, `builder-state/`) leave with the worktree. Two kinds of line
+  hold no content and do not refuse (the owner's word, #250): a path
+  modified in the working tree only whose `git diff` is empty (a
+  line-ending effect, as `tools/build_catalog.py` leaves `CATALOG.md`),
+  and a tracked path deleted from the working tree only. In an apply run,
+  after every other check, the script restores exactly those paths with
+  `git restore --worktree`; if the status is then not empty, it refuses
+  and removes nothing. A staged change, an untracked file that is not
+  ignored, a real diff or a conflict refuses;
+- **not locked:** the refusal prints the lock's reason. The script never
+  unlocks. A lock left by a session that has ended is removed by hand;
+- **its HEAD can be read:** a record whose HEAD git cannot read is
+  `no readable HEAD` and is never judged further. It is repaired outside
+  the script;
+- **no open PR:** a branch with an open PR is `open PR`;
 - **its `.git` file is the main checkout's:** it points to the main
   checkout's record of that worktree, and the record points back. Only
   then does any git call run against it;
@@ -153,11 +166,13 @@ names the git version. It acts only on a worktree that
 
 There is no force option. Its only deletes are `git worktree remove`
 without `--force`, then `git branch -D` of the builder's branches on the
-same merged test. It never fetches, pushes, prunes or deletes a remote
-ref. It prints `removed` only when the folder is gone and git no longer
-lists it, whatever git's exit code; otherwise it prints what is left and
-exits 3. One `gh pr list --state merged` call gives the merged PRs; if
-`gh` fails, nothing is removed. A merged PR head that is not local is
+same merged test; its only other write is the restore above. It never
+fetches, pushes, unlocks, prunes or deletes a remote ref. It prints
+`removed` only when the folder is gone and git no longer lists it,
+whatever git's exit code; otherwise it prints what is left and exits 3.
+When any git read it needs fails, the verdict is a refusal with that
+reason. One `gh pr list --state all` call gives the merged and the open
+PRs; if `gh` fails, nothing is removed. A merged PR head that is not local is
 `unknown`, with the fetch to run (`git -C <main checkout> fetch origin
 pull/<n>/head`); run it, then the script again. The main branch is read
 from `refs/remotes/origin/HEAD`, so the pull of step 2 comes first.
@@ -166,12 +181,23 @@ Exit codes: 0 done (or, in a dry run, would be); 1 something refused or
 unknown; 2 the run itself refused; 3 a removal or the in-use check did
 not finish.
 
-**List-only mode** changes nothing. It prints every worktree under the
-folder with its verdict, every folder there that git does not know
-(never removed, scanned for links), and ends with one count line:
-`count: merged and still there <n>; no commit of its own <n>; unknown <n>`.
-The manager runs it at every state-back and writes the count line into
-the state file. A just-dispatched builder counts as "no commit of its
-own", so read that number against the builders running. A folder git
-does not know, or a git record whose folder is gone, is listed for the
-owner; pruning stays the manager's command.
+**List-only mode** changes nothing. It prints every worktree git knows
+with its verdict, whoever made it (a builder's, a planner's, a state
+branch, one the app made), every folder under `.claude/worktrees` that
+git does not know (never removed, scanned for links), and ends with one
+count line, one bucket per worktree:
+
+```
+count of worktrees: merged and still there <n>; no commit of its own <n>; unknown <n>; open PR <n>; locked <n>; no readable HEAD <n>; refused for another reason <n>; outside the folder <n>
+```
+
+A worktree outside the folder is printed and counted, and never acted
+on. The manager runs list-only mode at every state-back and writes the
+count line into the state file. A running builder's worktree is
+normally locked by git and counts as locked; an unlocked worktree just
+dispatched counts as "no commit of its own", so read that number
+against the builders running. A folder git does not know, or a git
+record whose folder is gone, is listed for the owner; pruning stays the
+manager's command. Closeout itself stays only for a builder this
+session dispatched: for the first cleanup, the owner names from the
+list the worktrees no manager dispatched.

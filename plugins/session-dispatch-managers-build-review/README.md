@@ -159,16 +159,20 @@ interpreter runs it. The manager runs it right after it merges a
 builder's PR and pulls: first the dry run, then with `--apply`. It
 removes the builder's worktree, then its local branch, only when the
 branch is merged (a merged PR's head or an ancestor of one, or nothing
-of its own beyond the remote main branch), `git status --porcelain`
-prints nothing, the worktree is not locked, no folder link in it points
-out, and, on Windows, nothing in it is open. There is no force option.
+of its own beyond the remote main branch) and has no open PR,
+`git status --porcelain` prints nothing (lines that hold no content, a
+line-ending flag with an empty diff or a deleted tracked file, are
+restored first), the worktree is not locked, its HEAD can be read, no
+folder link in it points out, and, on Windows, nothing in it is open.
+There is no force option.
 Everything it refuses is printed as one list for the owner's queue and
 left where it is.
 
-`--list` changes nothing. It prints every worktree under
-`.claude/worktrees` with its verdict and ends with
-`count: merged and still there <n>; no commit of its own <n>; unknown <n>`.
-The manager runs it at every state-back.
+`--list` changes nothing. It prints every worktree git knows with its
+verdict, and ends with one `count of worktrees:` line, one bucket per
+worktree: merged and still there, no commit of its own, unknown, open
+PR, locked, no readable HEAD, refused for another reason, outside the
+folder. The manager runs it at every state-back.
 
 The script's own git calls are not seen by the git-guardrails hook,
 which judges tool calls only. The script is the guard, which is why it

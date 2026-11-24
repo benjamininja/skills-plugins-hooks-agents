@@ -6,8 +6,10 @@
 Python 3.8 or later, standard library only, so any project's interpreter runs it.
 
 Without --apply it is a dry run: it prints what it would do and changes nothing.
---list takes no builder name, changes nothing, prints every worktree under
-<main checkout>/.claude/worktrees with its verdict, and ends with one count line.
+--list takes no builder name, changes nothing, prints every worktree git
+knows with its verdict (those outside <main checkout>/.claude/worktrees are
+never acted on) and every folder there git does not know, and ends with one
+count line of worktrees by verdict.
 
 It acts only on a worktree that `git worktree list --porcelain` names and that
 sits directly under <main checkout>/.claude/worktrees. A worktree is removed
@@ -17,8 +19,13 @@ only when all of these hold:
   one, or the tip (a detached HEAD included) is an ancestor of the remote main
   branch and so holds no commit of its own; a detached HEAD also passes when
   it is exactly a merged PR's head;
-- `git status --porcelain` prints nothing for it;
-- it is not locked;
+- `git status --porcelain` prints nothing for it, except lines that hold no
+  content: a path modified in the working tree only whose `git diff` is
+  empty, or a tracked path deleted from the working tree only. In an apply
+  run, after every other check, those paths are restored with
+  `git restore --worktree` and the status must then be empty;
+- it is not locked, its HEAD can be read and its branch has no open PR;
+- its `.git` file points to the main checkout's record of it, and back;
 - it holds no folder link (junction or folder symlink) that points out of it,
   no link that cannot be resolved, and its own top folder is not a link;
 - on Windows, at apply time, no file in it is open and no process runs in it
@@ -26,8 +33,9 @@ only when all of these hold:
 
 There is no force option of any kind. The only deletes are
 `git worktree remove` without --force and, after it, `git branch -D` of the
-builder's local branch on the same merged test. It never fetches, pushes,
-deletes a remote ref or prunes, and deletes no file itself.
+builder's local branch on the same merged test; the only other write is the
+restore above. It never fetches, pushes, unlocks, deletes a remote ref or
+prunes, and deletes no file itself.
 
 Exit codes: 0 all done (or would be); 1 something refused or unknown;
 2 the run itself is refused (bad arguments, not a main checkout);
@@ -51,6 +59,8 @@ NAME_SURROGATE = 0x20000000  # IsReparseTagNameSurrogate: junctions and symlinks
 FILE_ATTRIBUTE_DIRECTORY = 0x10
 
 MERGED, EMPTY, UNKNOWN, REFUSED = "merged", "no commit of its own", "unknown", "refused"
+OPEN, NOHEAD = "open PR", "no readable HEAD"
+ZEROS = re.compile(r"^0+$")
 
 
 # ---- plumbing -----------------------------------------------------------------
@@ -183,7 +193,8 @@ class Project:
         if code != 0:
             raise Refusal("git worktree list failed: " + err.strip())
         self.worktrees = parse_worktrees(out)
-        self.prs = None
+        self.prs = None  # merged PRs, once gh has answered
+        self.open_prs = []
         self.pr_note = ""
 
     def under_root(self, wt):
@@ -195,32 +206,48 @@ class Project:
         if exe is None:
             self.pr_note = "gh not found"
             return
-        code, out, err = run([exe, "pr", "list", "--state", "merged", "--limit", str(PR_LIMIT),
-                              "--json", "number,headRefName,headRefOid"], self.main)
+        code, out, err = run([exe, "pr", "list", "--state", "all", "--limit", str(PR_LIMIT),
+                              "--json", "number,headRefName,headRefOid,state"], self.main)
         if code != 0:
             self.pr_note = "gh failed: " + (err.strip().splitlines() or ["exit %d" % code])[-1]
             return
         try:
             prs = json.loads(out)
-            self.prs = [p for p in prs if isinstance(p, dict) and p.get("headRefOid")]
-        except ValueError:
-            self.pr_note = "gh printed no JSON"
+            prs = [p for p in prs if isinstance(p, dict) and p.get("headRefOid")]
+        except (ValueError, TypeError):
+            self.pr_note = "gh printed no JSON list"
             return
+        self.prs = [p for p in prs if p.get("state") == "MERGED"]
+        self.open_prs = [p for p in prs if p.get("state") == "OPEN"]
         if len(prs) >= PR_LIMIT:
-            self.pr_note = f"the merged PR list stopped at {PR_LIMIT} and may be cut"
+            self.pr_note = f"the PR list stopped at {PR_LIMIT} and may be cut"
 
     def oid(self, rev):
         code, out, _ = git(self.main, "rev-parse", "--verify", "--quiet", rev + "^{commit}")
         return out.strip() if code == 0 else None
 
     def ancestor(self, a, b):
-        return git(self.main, "merge-base", "--is-ancestor", a, b)[0] == 0
+        """True or False; a failed read raises Refusal, never a guess."""
+        code, _, err = git(self.main, "merge-base", "--is-ancestor", a, b)
+        if code in (0, 1):
+            return code == 0
+        raise Refusal(f"git merge-base failed for {a[:12]}: {err.strip() or 'exit %d' % code}")
 
     def merge_state(self, tip, branch):
-        """(state, detail) for a commit: MERGED, EMPTY, UNKNOWN or REFUSED."""
+        """(state, detail) for a commit: MERGED, EMPTY, OPEN, UNKNOWN or REFUSED."""
+        try:
+            return self._merge_state(tip, branch)
+        except Refusal as e:
+            return REFUSED, str(e)
+
+    def _merge_state(self, tip, branch):
         if tip is None:
             return REFUSED, "its commit cannot be read"
         if self.prs is not None:
+            opened = [p for p in self.open_prs
+                      if p["headRefOid"] == tip or (branch and p.get("headRefName") == branch)]
+            if opened:
+                return OPEN, f"PR #{opened[0]['number']} is open"
             mine = [p for p in self.prs if p["headRefOid"] == tip]
             if mine:
                 return MERGED, f"PR #{mine[0]['number']}"
@@ -246,7 +273,7 @@ class Project:
         if named:
             return REFUSED, f"commits after merged PR #{named[0]['number']}"
         note = f" ({self.pr_note})" if self.pr_note else ""
-        return REFUSED, "no merged PR" + note
+        return REFUSED, "commits and no merged or open PR" + note
 
 
 # ---- verdicts -----------------------------------------------------------------
@@ -256,10 +283,65 @@ class Verdict:
         self.name, self.path, self.branch = name, path, branch
         self.state, self.detail, self.reasons = None, "", []
         self.removed = False
+        self.locked = False
+        self.record = None
+        self.restore = []  # paths whose status line holds no content
 
     @property
     def removable(self):
         return self.state in (MERGED, EMPTY) and not self.reasons
+
+    @property
+    def bucket(self):
+        if self.state == NOHEAD:
+            return NOHEAD
+        if self.locked:
+            return "locked"
+        if self.state in (MERGED, EMPTY, UNKNOWN, OPEN):
+            return self.state
+        return "other"
+
+
+def wt_git(path, record, *args):
+    """A git call against a worktree whose record has been checked: its own .git is never read."""
+    return git(path, "--git-dir=" + record, "--work-tree=" + path, "--literal-pathspecs",
+               "-c", "core.fsmonitor=false", *args)
+
+
+def read_status(path, record):
+    """(restorable paths, blocking lines, error). Restorable: no-content lines only.
+
+    Kind 1: modified in the working tree only, with an empty `git diff`.
+    Kind 2: deleted in the working tree only.
+    Anything else blocks: a staged change, an untracked file that is not
+    ignored, a modified path whose diff is not empty, a conflict.
+    """
+    code, out, err = wt_git(path, record, "status", "--porcelain", "-z")
+    if code != 0:
+        return [], [], "git status failed: " + (err.strip() or "exit %d" % code)
+    fields = out.split("\0")
+    restore, block, i = [], [], 0
+    while i < len(fields):
+        entry = fields[i]
+        i += 1
+        if len(entry) < 4:
+            continue
+        xy, p = entry[:2], entry[3:]
+        if xy[0] in "RC":
+            i += 1  # the rename's source path follows
+        if xy == " D":
+            restore.append(p)
+        elif xy == " M":
+            rc, _, derr = wt_git(path, record, "diff", "--quiet", "--", p)
+            if rc == 0:
+                restore.append(p)
+            elif rc == 1:
+                block.append(f"{xy} {p}")
+            else:
+                return [], [], f"git diff failed for {p}: {derr.strip() or 'exit %d' % rc}"
+        else:
+            block.append(f"{xy} {p}")
+    return restore, block, None
 
 
 def admin_dir(project, path):
@@ -311,22 +393,26 @@ def judge(project, wt):
         v.reasons.append(f"scan error at {path}: {e.strerror or e}")
         return v
     if wt["locked"]:
+        v.locked = True
         v.reasons.append(f"locked: {wt['locked']}")
+    if wt["head"] and ZEROS.match(wt["head"]):
+        # git cannot read its HEAD, so nothing about it can be checked
+        v.state = NOHEAD
+        v.detail = ("git cannot read this worktree's HEAD, so it cannot be checked; "
+                    "repair the record outside the script, then run again")
+        return v
     v.reasons.extend(scan_links(path))
     try:
-        record = admin_dir(project, path)
+        v.record = admin_dir(project, path)
     except Refusal as e:
         v.reasons.append(str(e))
-        code, out, err = 0, "", ""
     else:
-        code, out, err = git(path, "--git-dir=" + record, "--work-tree=" + path,
-                             "-c", "core.fsmonitor=false", "status", "--porcelain")
-    if code != 0:
-        v.reasons.append("git status failed: " + err.strip())
-    elif out.strip():
-        lines = out.rstrip("\n").splitlines()
-        shown = ", ".join(x.strip() for x in lines[:5]) + (" ..." if len(lines) > 5 else "")
-        v.reasons.append(f"uncommitted: {len(lines)} line(s) of git status: {shown}")
+        v.restore, block, err = read_status(path, v.record)
+        if err:
+            v.reasons.append(err)
+        elif block:
+            shown = ", ".join(block[:5]) + (" ..." if len(block) > 5 else "")
+            v.reasons.append(f"uncommitted: {len(block)} line(s) of git status: {shown}")
     if wt["bare"]:
         v.reasons.append("a bare entry")
         return v
@@ -339,16 +425,20 @@ def describe(v, apply):
     head = f"{v.name}:"
     if v.removed:
         return f"{head} removed ({v.state}, {v.detail})"
-    if v.state is None or v.reasons or v.state in (UNKNOWN, REFUSED):
+    if v.state is None or v.reasons or v.state in (UNKNOWN, REFUSED, OPEN, NOHEAD):
         reasons = list(v.reasons)
-        if v.state == UNKNOWN:
-            reasons.insert(0, "unknown: " + v.detail)
+        if v.state in (UNKNOWN, OPEN, NOHEAD):
+            reasons.insert(0, f"{v.state}: {v.detail}")
         elif v.state == REFUSED:
             reasons.insert(0, v.detail)
         elif v.state in (MERGED, EMPTY):
             reasons.append(f"({v.state}, {v.detail})")
         return f"{head} refused: " + "; ".join(reasons)
-    extra = "; the in-use check runs at apply time" if WIN and not apply else ""
+    extra = ""
+    if v.restore:
+        extra += "; after restoring, as lines with no content: " + ", ".join(v.restore)
+    if WIN and not apply:
+        extra += "; the in-use check runs at apply time"
     return f"{head} would remove ({v.state}, {v.detail}){extra}"
 
 
@@ -416,6 +506,19 @@ def remove(project, v):
             v.reasons.append(msg)
             print(describe(v, True))
             return 3 if fatal else 1
+    if v.restore:
+        # the one write besides the deletes: restore exactly the no-content paths
+        names = ", ".join(v.restore)
+        rc, _, rerr = wt_git(v.path, v.record, "restore", "--worktree", "--", *v.restore)
+        restore, block, err = read_status(v.path, v.record)
+        left = block + [f"no-content line still there: {p}" for p in restore]
+        if rc != 0 or err or left:
+            why = (f"git restore failed: {rerr.strip()}" if rc != 0 else err or
+                   "git status still prints: " + ", ".join(left[:5]))
+            v.reasons.append(f"restored {names}; {why}; nothing removed")
+            print(describe(v, True))
+            return 1
+        print(f"{v.name}: restored {names} (no content)")
     code, _, err = git(project.main, "worktree", "remove", v.path)
     gone = not os.path.lexists(v.path)
     listed = still_listed(project, v.path)
@@ -432,22 +535,28 @@ def remove(project, v):
 
 # ---- modes --------------------------------------------------------------------
 
+COUNT_ORDER = [(MERGED, "merged and still there"), (EMPTY, "no commit of its own"),
+               (UNKNOWN, "unknown"), (OPEN, "open PR"), ("locked", "locked"),
+               (NOHEAD, "no readable HEAD"), ("other", "refused for another reason"),
+               ("outside", "outside the folder")]
+
+
 def list_mode(project):
     project.load_prs()
-    counts = {MERGED: 0, EMPTY: 0, UNKNOWN: 0}
-    refused, known, outside = [], set(), 0
+    counts = {k: 0 for k, _ in COUNT_ORDER}
+    refused, known = [], set()
     for wt in project.worktrees:
         if literal(wt["path"]) == literal(project.main):
             continue
         if not project.under_root(wt):
-            outside += 1
+            counts["outside"] += 1
+            print(f"{wt['path']}: outside {project.root}: never acted on")
             continue
         known.add(literal(wt["path"]))
         v = judge(project, wt)
         line = describe(v, False)
         print(line)
-        if v.state in counts:
-            counts[v.state] += 1
+        counts[v.bucket] += 1
         if not v.removable:
             refused.append(line)
     if os.path.isdir(project.root):
@@ -471,15 +580,11 @@ def list_mode(project):
             line = f"{entry}: {note}"
             print(line)
             refused.append(line)
-    if outside:
-        print(f"{outside} worktree(s) outside {project.root} are not looked at")
     print_refused(refused)
-    print(f"count: merged and still there {counts[MERGED]}; "
-          f"no commit of its own {counts[EMPTY]}; unknown {counts[UNKNOWN]}")
-    if project.prs is None:
+    if project.prs is None or project.pr_note:
         print(f"note: {project.pr_note}")
-        return 1
-    return 0
+    print("count of worktrees: " + "; ".join(f"{label} {counts[k]}" for k, label in COUNT_ORDER))
+    return 1 if project.prs is None else 0
 
 
 def print_refused(lines):

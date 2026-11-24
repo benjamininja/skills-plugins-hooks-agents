@@ -362,8 +362,8 @@ def proj(tmp_path, monkeypatch):
     p.prs = []
 
     def set_prs(prs):
-        p.prs = prs
-        prs_file.write_text(json.dumps(prs), encoding="utf-8")
+        p.prs = [{"state": "MERGED", **x} for x in prs]
+        prs_file.write_text(json.dumps(p.prs), encoding="utf-8")
     p.set_prs = set_prs
     set_prs([])
     return p
@@ -430,7 +430,7 @@ def test_refuses_unmerged_branch(proj, capsys):
     wt, _ = builder(proj, "b1")
     code, out = run_closeout(capsys, proj.main, "b1", "--apply")
     assert code == 1
-    assert "b1: refused: no merged PR" in out
+    assert "b1: refused: commits and no merged or open PR" in out
     assert "refused, for the owner queue:" in out
     assert wt.exists() and has_branch(proj, "worktree-b1")
 
@@ -477,7 +477,9 @@ def test_never_acts_on_a_worktree_outside_the_folder(proj, capsys):
     code, out = run_closeout(capsys, proj.main, "b5", "--apply")
     assert code == 1 and "no worktree of that name" in out and elsewhere.exists()
     code, out = run_closeout(capsys, proj.main, "--list")
-    assert "1 worktree(s) outside" in out
+    assert "elsewhere: outside" in out and "never acted on" in out
+    assert "outside the folder 1" in out.rstrip().splitlines()[-1]
+    assert elsewhere.exists()
 
 
 def test_refuses_folder_git_does_not_know(proj, capsys):
@@ -668,7 +670,7 @@ def test_pr_list_at_the_limit_says_it_may_be_cut(proj, capsys, monkeypatch):
     monkeypatch.setattr(closeout, "PR_LIMIT", 1)
     proj.set_prs([{"number": 1, "headRefName": "other", "headRefOid": "cd" * 20}])
     code, out = run_closeout(capsys, proj.main, "b1")
-    assert code == 1 and "no merged PR (the merged PR list stopped at 1 and may be cut)" in out
+    assert code == 1 and "commits and no merged or open PR (the PR list stopped at 1 and may be cut)" in out
 
 
 def test_main_checkout_in_another_case_and_slash(proj, capsys):
@@ -720,8 +722,10 @@ def test_list_mode(proj, capsys):
     assert "ghost: unknown to git: listed, never removed; folder link" in out
     assert f"e1{closeout.INUSE_SUFFIX}: an interrupted in-use check of e1" in out
     assert "g1: refused: git record only: the folder is gone" in out
-    assert out.rstrip().splitlines()[-1] == \
-        "count: merged and still there 2; no commit of its own 1; unknown 1"
+    assert out.rstrip().splitlines()[-1] == (
+        "count of worktrees: merged and still there 2; no commit of its own 1; unknown 1; "
+        "open PR 0; locked 0; no readable HEAD 0; refused for another reason 1; "
+        "outside the folder 0")
     assert snapshot(proj) == before and w2.exists()
 
 
@@ -734,6 +738,110 @@ def test_refuses_a_linked_worktree_as_main(proj, capsys):
     wt, _ = merged_builder(proj, "b1")
     code, out = run_closeout(capsys, wt, "b1")
     assert code == 2 and "not the main checkout" in out
+
+
+# Second amendment (points 16 to 20) ------------------------------------------
+
+def flagged_with_empty_diff(p, name):
+    """A merged worktree whose file git status flags while git diff shows nothing.
+
+    Under core.autocrlf a file checked out with CRLF and rewritten with LF has
+    the same content to git, the way tools/build_catalog.py leaves CATALOG.md.
+    Returns (worktree, path) or skips where no git shows the flag.
+    """
+    git(p.main, "config", "core.autocrlf", "true")
+    commit_file(p.main, "cat.md", "a\nb\n", "a catalog")
+    git(p.main, "push", "-q", "origin", "main")
+    git(p.main, "fetch", "-q", "origin")
+    wt, _ = merged_builder(p, name)
+    (wt / "cat.md").write_bytes(b"a\nb\n")
+    status = git(wt, "status", "--porcelain").stdout
+    diff = git(wt, "diff", "--quiet", "--", "cat.md", check=False).returncode
+    if " M cat.md" not in status or diff != 0:
+        pytest.skip(f"this git shows no flag with an empty diff here (status={status!r}, diff rc={diff})")
+    return wt
+
+
+def test_restores_flagged_file_with_empty_diff_then_removes(proj, capsys):
+    wt = flagged_with_empty_diff(proj, "b1")
+    code, out = run_closeout(capsys, proj.main, "b1")
+    assert code == 0 and "after restoring, as lines with no content: cat.md" in out, out
+    code, out = run_closeout(capsys, proj.main, "b1", "--apply")
+    assert code == 0, out
+    assert "b1: restored cat.md (no content)" in out and "b1: removed" in out
+    assert not wt.exists()
+
+
+def test_restores_deleted_tracked_file_then_removes(proj, capsys):
+    wt, _ = merged_builder(proj, "b1")
+    (wt / "b1-0.txt").unlink()
+    code, out = run_closeout(capsys, proj.main, "--list")
+    assert "b1: would remove (merged, PR #7); after restoring, as lines with no content: b1-0.txt" in out
+    code, out = run_closeout(capsys, proj.main, "b1", "--apply")
+    assert code == 0, out
+    assert "b1: restored b1-0.txt (no content)" in out and "b1: removed" in out
+    assert not wt.exists()
+
+
+def test_modified_file_with_real_diff_refuses(proj, capsys):
+    wt, _ = merged_builder(proj, "b1")
+    (wt / "b1-0.txt").write_text("other\n", encoding="utf-8")
+    code, out = run_closeout(capsys, proj.main, "b1", "--apply")
+    assert code == 1 and "uncommitted: 1 line(s) of git status:  M b1-0.txt" in out
+    assert (wt / "b1-0.txt").read_text(encoding="utf-8") == "other\n"
+
+
+def test_staged_deletion_refuses(proj, capsys):
+    wt, _ = merged_builder(proj, "b1")
+    git(wt, "rm", "-q", "b1-0.txt")
+    code, out = run_closeout(capsys, proj.main, "b1", "--apply")
+    assert code == 1 and "D  b1-0.txt" in out and wt.exists()
+
+
+def test_status_still_not_empty_after_restore_refuses(proj, capsys, monkeypatch):
+    wt, _ = merged_builder(proj, "b1")
+    (wt / "b1-0.txt").unlink()
+    real = closeout.wt_git
+
+    def fake(path, record, *args):
+        if "restore" in args:
+            return 0, "", ""  # a restore that changes nothing
+        return real(path, record, *args)
+    monkeypatch.setattr(closeout, "wt_git", fake)
+    code, out = run_closeout(capsys, proj.main, "b1", "--apply")
+    assert code == 1
+    assert "restored b1-0.txt; git status still prints: no-content line still there: b1-0.txt" in out
+    assert "nothing removed" in out and wt.exists() and has_branch(proj, "worktree-b1")
+
+
+def test_no_readable_head_is_its_own_verdict(proj, capsys):
+    wt, _ = merged_builder(proj, "b1")
+    admin = Path(git(wt, "rev-parse", "--absolute-git-dir").stdout.strip())
+    (admin / "HEAD").unlink()
+    code, out = run_closeout(capsys, proj.main, "b1", "--apply")
+    assert code == 1 and "b1: refused: no readable HEAD: git cannot read" in out, out
+    assert wt.exists()
+    code, out = run_closeout(capsys, proj.main, "--list")
+    assert "no readable HEAD 1" in out.rstrip().splitlines()[-1]
+
+
+def test_lock_reason_printed_and_counted_as_locked(proj, capsys):
+    wt = add_worktree(proj.main, "b1")  # no commit of its own, but locked
+    git(proj.main, "worktree", "lock", "--reason", "claude session 1234 pid 99", str(wt))
+    code, out = run_closeout(capsys, proj.main, "--list")
+    assert "locked: claude session 1234 pid 99" in out
+    last = out.rstrip().splitlines()[-1]
+    assert "locked 1" in last and "no commit of its own 0" in last
+    assert "locked" in git(proj.main, "worktree", "list", "--porcelain").stdout  # never unlocked
+
+
+def test_open_pr_is_its_own_verdict(proj, capsys):
+    wt, tip = builder(proj, "b1")
+    proj.set_prs([{"number": 21, "headRefName": "worktree-b1", "headRefOid": tip, "state": "OPEN"}])
+    code, out = run_closeout(capsys, proj.main, "b1", "--apply")
+    assert code == 1 and "b1: refused: open PR: PR #21 is open" in out and wt.exists()
+    code, out = run_closeout(capsys, proj.main, "--list")
+    assert "open PR 1" in out.rstrip().splitlines()[-1]
 
 
 def test_refuses_without_origin_head(proj, capsys):
