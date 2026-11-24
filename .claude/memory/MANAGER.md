@@ -6,128 +6,105 @@ alone. Rules are in the `session-rules` skill and in
 
 ## START HERE
 
-Written 2026-11-24 about 15:40Z by the tools manager (session
-Tools-builder-manager, queue id `e7026592`), at a compact prep on Ben's
+Written 2026-11-24 about 17:20Z by the tools manager (session
+Tools-builder-manager, queue id `e7026592`), at a clear prep on Ben's
 word. `origin/main`, the main checkout and the live clone are all at
-`6f67165`. A compact keeps the session id and `session-dispatch`; a
-clear needs Ben to type it again and a new queue id sent to both
-planners and dff-central-builder-manager (new id `c2116a9a`).
+`f6ce9b1` (#255 merged). After the clear: Ben types
+`/session-dispatch-managers-build-review:session-dispatch` again; send
+the new queue id to Tools-central-planner, dff-central-planner and
+dff-central-builder-manager. dff-central-builder-manager cleared too;
+its new id comes by message, and until then it is addressed by name.
 
-**PR #255's re-proof is RUNNING** in the background since 08:44:54
-local (about 14:45Z), from the live clone at `ec8d30d` on main
-`6f67165`; output goes to a session scratch file, and the summary
-prints only at the end. At 50 minutes it was still progressing
-(pytest keeps starting short `bash.exe` children for the git-guardrails
-tests), slow on a loaded machine; pytest's cap is 5400 s. Memory before:
-8.1 GB physical free, commit 37.7 of 57.5 GB. If the run is lost, run it
-again: `tools/reproof.py 255 ec8d30d0f5bfcdc493312f3ee30aee6a65d39aad`
-from the live clone with the main checkout's `.venv` interpreter.
+**PR #210's re-proof is RUNNING** in the background, started about
+16:05Z from the live clone at `a30c3fa` on main `f6ce9b1` (the last run
+took 61 min). Its output goes to a session scratch file, which the reset
+prompt names. Its summary prints only at the end. After a clear the
+finish notice does not come. Check for a python `reproof.py` process
+first. If none remains and there is no `RESULT:` line, run it again:
+`tools/reproof.py 210 a30c3fa7d232d3b6a17ec9371a35374e206b23dc` from the
+live clone with the main checkout's `.venv` interpreter, after a start
+notice to dynasty. `pre-commit run --all-files` at `a30c3fa` already
+**passed** (in a throwaway detached worktree; the hook is
+`python -m pre_commit` from the Python312 install, not the venv). It is
+not yet posted.
 
-**Test line, by Ben's button (Keep agreed order):** #255 ends (tools
-sends the end notice to dff-central-builder-manager), dynasty #685
-(about 5 min, with its end notice), tools PR #210, dynasty #684.
+**Test line** (agreed with dynasty): tools #210 (now), dynasty #684,
+dynasty #690, dynasty #689, then tools #267 and #268. One full run on
+the machine at a time, with start and end notices.
 
-**Ben's choice on the queue** (button, 2026-11-24 about 14:15Z): items
-that can wait stay as chat buttons at their turn, not queue entries,
-while Ben is in the chat. The queue file has no entries.
-
-**Role-file rule kept this session:** the merge word is asked of Ben by
-button at the re-proved head for every PR, a builder's included (role
-file, What you answer for). The older line here that a builder PR needs
-no further word is superseded by it.
+**Rules kept:** the merge word is asked of Ben by button at the
+re-proved head for every PR, a builder's included (role file). A go
+given in a planner's chat is a report: re-ask Ben by button, quoting the
+record. Every hand step in a queue entry names its file by full path in
+a code mark of its own (Ben's correction, 2026-11-24).
 
 Next, in order:
 
-0. **When #255's run ends:** post the output on PR #255; on GREEN ask
-   Ben's merge word by button at `ec8d30d`; squash-merge; closeout
-   pulls of both checkouts; close out t254. End notice to dynasty.
-   Then dispatch, each with Ben's go recorded on its ticket and a clean
-   dry run done (briefs are written; no double quote; rewrite them
-   from the ticket records below if lost). Order and names:
-   1. `t260-261-readbudget`, low: one PR for #260 and #261, stacked on
-      PR #210's branch (issues/261 issuecomment-7134928088 brief, the
-      next comment's correction: the manager runs pre-commit;
-      issuecomment-7135940410 the stacked start; go issuecomment-7135986437).
-   2. `t264-context-size`, medium, `-NoSetup` (docs find-out, no tests;
-      go issues/264 issuecomment-7136007534).
-   3. `t189-dispatch-base`, medium (finding first; merges main before
-      its PR; go issues/189 issuecomment-7135987529).
-   4. `t219-drift-check`, medium (comparison list first; go issues/219
-      issuecomment-7135988589).
-   5. `t206-token-check`, low (runs only its own test file; go issues/206
-      issuecomment-7135989792).
-   Send Tools-central-planner one line per dispatch.
-   Then re-prove PR #210 at `a30c3fa` on the new main after dynasty's
-   #685; merge on Ben's word **without `--delete-branch`**: the branch
-   `t161-reset-prompt-pointer` stays until the planner's PR #265 is
-   retargeted to main (tell the planner before deleting it). Planner PRs
-   #265 then #266 are stacked on #210, text only, not yet approved;
-   merge order #210, #265, #266. #265 and the #260/#261 PR meet in one
-   section and both raise the plugin version: the second takes main in
-   and the planner rules the wording. One line to the planner when #210
-   merges.
-   No code review is owed on #197, #242 or #259 (each reviewed at its
-   current head).
-
-1. **PR #255** (#254, `t254-gitattributes`, head `ec8d30d`, one file
-   `.gitattributes`): code review done, no findings (pull/255
-   issuecomment-7132924099). On dynasty's end notice: start notice,
-   re-prove, post, merge on Green (builder PR, no further word), pulls,
-   close out t254.
-2. **PR #259** (#257, `t257-autoclose`, head `85186e1`): version bumped
-   on the planner's ruling (issues/257 issuecomment-7133159600, no plan
-   breach). Code review: one advisory, F1, nothing blocking (pull/259
-   issuecomment-7133398803); F1 goes into #111's build brief and holds
-   nothing (issues/257 issuecomment-7133418739). `pre-commit` passed.
-   Re-prove with the plugin test step (`plugins/owner-queue/` is
-   touched), merge, close out t257 (it is idle-running: `claude stop`
-   first). It shares files with PR #197: the second to merge takes a
-   merge of main and the next version number.
-3. **PR #252** (#250, `t250-closeout-script`): review closed after two
-   rounds (round 1 pull/252 issuecomment-7133602626, F1 and F2 blocking,
-   upheld; round 2 issuecomment-7133842294, all resolved). The planner's
-   read: no breach, three text fixes (issuecomment-7133882719), done at
-   `447f3fc`. After #253, t250 was sent to merge main and add ADR-0020's
-   row to `docs/adr/README.md`; it reported green at `a417165` (main
-   merged, the row added, `test_adr_readme.py` and `test_closeout.py`
-   pass; state-back on #250). Check the three fixes and the row,
-   re-prove, merge.
-   After it merges: one Action for Ben with the real managers settings
-   text (the closeout allow rule plus the `git branch` force deny lines
-   from the example).
-4. **The planner's order** (asked at Ben's word; pull/198
-   issuecomment-7134281643). Test line: #255, #259, #252, then PR #197.
-   Dispatch now, in order, each go record checked on its ticket first
-   and each asked of Ben by button (a relay): #187 (medium, test speed
-   find-out), #189 (medium), #219 (medium), #206 (low), #167 (medium,
-   only after PR #242 merges), #192 first PR (medium). Nothing to close.
-   Planner PRs #205, #184 and #249 have main and their ADR rows; PR #210
-   at `a30c3fa` adds an In flight block to a manager's Current block
-   (answers #262's point 3), Ben's approval to come. #211's builder must
-   merge main and add ADR-0017's row.
-5. Gated, each needing Ben's go by button at its turn: #240 step 2
-   (ruled option A, brief issues/240 issuecomment-7133603553; after #259
-   and #197 merge); #111's build (ruled, issuecomment-7133339403 and
-   -7133604792; after #240 step 2); #260 and #261 (after PR #210); #262's
-   build (ruled, issues/262 issuecomment-7134266469: Ben types the
-   compact, the mod counts, a clear after the third; after #210, #260
-   and #197); #263, #264. **#262 asks the manager:** at its next compact,
-   check whether `session-dispatch` is still in force afterwards and
-   say so on #262.
-6. **#111 part 5** asks the manager: on the next real Mark done and
-   Submit of an entry whose Session line names another running session,
-   record on #111 whether that session's chat got the line, with both
-   times.
-7. Then #238 (merge word by button, before #239), #239, #242 (send the
-   lock format text to dff-central-planner for dynasty #620 after), and
-   the older PR line below, in the planner's order once it sends one.
-   ADR PRs need a README row now (#184, #205, #211, #249; #249 must also
-   correct the roles row; the planner is told).
-8. **t244 closeout** is left for #250's script, on Ben's button (pull/246
-   issuecomment-7104203919): branch `worktree-t244-pytest-hang` and its
-   worktree stay.
-9. Trim still owed (Ben's button, pull/236 issuecomment-7082192929):
-   once #231 and #237 close, drop the 2026-11-19 history.
+0. **When #210's run ends:** post the output and the pre-commit pass on
+   PR #210. On GREEN, ask Ben's merge word by button at `a30c3fa`, then
+   squash-merge **without `--delete-branch`** (PRs #265 and #266 are
+   stacked on `t161-reset-prompt-pointer`; tell the planner before that
+   branch is deleted). Closeout pulls of both checkouts. End notice to
+   dff-central-builder-manager. One line to the planner. Message
+   `t260-261-readbudget` to run `git fetch origin`, then
+   `git merge origin/main`, and build (Ben's button: wait for #210,
+   issues/261 issuecomment-7137335139).
+1. **PR #267** (#206, t206, head `b99dcae`): review closed, F1 to F4
+   fixed, N1 and N2 advisory (pull/267 issuecomment-7137992307). Only the
+   full re-proof is left (no pre-commit scope: `tools/` and `tests/`
+   only), at its turn on the line. Then Ben's merge word, merge, pulls,
+   close out t206.
+2. **PR #268** (#189, t189, head `c446faa`): round one is out to the
+   builder. F1 is blocking and confirmed by the manager: the `-Apply`
+   worktree add has no base. F2 is blocking: resolve
+   `refs/remotes/<base>`. F3 is advisory. Records: pull/268
+   issuecomment-7138014936, and the dry runs at issuecomment-7137993262.
+   On the builder's new head: a fresh reviewer re-checks (packet:
+   re-check, high), the manager decides, then the dry runs again, the full
+   re-proof and pre-commit, then Ben's word. Merge main first if #210
+   has landed. After it merges, dispatch takes `-Base origin/<branch>`
+   from a brief's `Base:` line.
+3. **t219** (#219, `750159d3`) is building on the ruling (issues/219
+   issuecomment-7137381521). Its PR comes with a state-back. The
+   re-proof also runs the script against the real files.
+4. **#269** (planner PR, route 2, no builder): the before figure is
+   posted (issues/269 issuecomment-7137665661, about 54.9k). After its PR
+   merges on Ben's word and the closeout pull, the **first builder
+   dispatched** gives the after figure: the first-turn usage in its
+   transcript, under `~/.claude/projects/<slug>/<session>.jsonl`. That
+   same builder runs `git log -1 --grep=shared-rule-trial` for the #219
+   trial (it must be denied). Post both results.
+5. **#219 trial:** the desktop result is posted: denied, live without a
+   restart (issues/219 issuecomment-7137847286). The rule is in
+   `C:\Users\benha\.claude\settings.json`, committed on branch
+   `settings/shared-rule-trial`, with PR benjamininja/dotclaude#12 for
+   Ben to merge. **`C:\Users\benha\.claude` is checked out on that
+   branch:** do not switch it to main before #12 merges, or the rule
+   leaves the live settings. After the merge, on Ben's word: switch to
+   main, then pull.
+6. **PR #259** (#257, head `85186e1`): review done, one advisory;
+   pre-commit passed. Re-prove with the plugin test step, Ben's word,
+   merge, close out t257 (`claude stop` first). It shares files with
+   #197: whichever merges second takes main and the next version.
+7. **PR #252** (#250, head `a417165`): review closed, the three fixes
+   and the ADR-0020 row verified. Re-prove, Ben's word, merge. Then one
+   Action with the managers settings text.
+8. **PR #197** (head `b7ef918`). Then planner PRs #265 and #266 (text,
+   stacked on #210, Ben's approval), #238 (before #239), #239, and #242
+   (then send the lock format text to dff-central-planner for dynasty
+   #620). Then the older line below, in the planner's order.
+9. Gated, each needing Ben's go by button at its turn: #240 step 2,
+   #111's build, #262's build, #263, and the planner's list (#187, #167
+   after #242, #192). **#262 asks the manager:** say on #262 whether
+   `session-dispatch` survives. It survived the compact of 2026-11-24,
+   and after this clear Ben retypes it. Not yet posted on #262.
+10. **#111 part 5:** on the next real Mark done of an entry naming
+    another running session, record on #111 whether that chat got the
+    line, with both times. (The 10:32 Mark done named this session, so
+    it does not count.)
+11. t244 closeout is left for #250's script (pull/246
+    issuecomment-7104203919). Trim still owed once #231 and #237 close
+    (pull/236 issuecomment-7082192929).
 
 **Windows hazard** (issues/250 issuecomment-7103861254): `git worktree
 remove` follows a junction. Scan first: `Get-ChildItem -Recurse -Force
@@ -137,19 +114,23 @@ remove` follows a junction. Scan first: `Get-ChildItem -Recurse -Force
 
 | Builder | Ticket | Tier | Session | PR | Stage |
 |---|---|---|---|---|---|
-| `t231-reproof-lock` | #231 | medium | `8506434b` | #242 at `b278602` | review closed; waiting for re-proof |
-| `t237-path-move` | #237 | low | `f0de4ab6` | #239 at `c64cf25` | review done; waiting for re-proof |
+| `t260-261-readbudget` | #260, #261 | low | `d7e77ffa` | none yet | holds until #210 merges, then merges origin/main |
+| `t189-dispatch-base` | #189 | medium | `2eb375b2` | #268 at `c446faa` | answering review round one (F1, F2 blocking) |
+| `t219-drift-check` | #219 | medium | `750159d3` | none yet | building on the ruling |
+| `t206-token-check` | #206 | low | `116a30e9` | #267 at `b99dcae` | review closed; waits for the full re-proof |
+| `t231-reproof-lock` | #231 | medium | `8506434b` | #242 at `b278602` | review closed; waits for re-proof |
+| `t237-path-move` | #237 | low | `f0de4ab6` | #239 at `c64cf25` | review done; waits for re-proof |
 | `t244-pytest-hang` | #244 | medium | `9fd98bc0` | #246 merged | stopped; left for #250's script |
-| `t250-closeout-script` | #250 | high | `08a25cd7` | #252 at `a417165` | reported green; waits for the re-proof (stop it before any resume) |
-| `t254-gitattributes` | #254 | low | `cd093765` | #255 at `ec8d30d` | waits for the re-proof |
-| `t257-autoclose` | #257 | low | `a72dcbd0` | #259 at `85186e1` | idle-running; waits for the re-proof |
+| `t250-closeout-script` | #250 | high | `08a25cd7` | #252 at `a417165` | waits for re-proof (stop it before any resume) |
+| `t257-autoclose` | #257 | low | `a72dcbd0` | #259 at `85186e1` | waits for re-proof |
 
 Closed out on 2026-11-24, each with no commit left and the worktree
-removed: `t248-adr-hygiene` (after #253's merge, on Ben's button, both
-branch copies deleted; the squash tree matched the tested tree),
-`t111-findout`, `t240-findout`, `t262-findout` (find-outs, one comment
-each). `t175-reproofrule` (`9144aeda`, old OneDrive path) is blocked
-with no pid; neither manager dispatched it, so it is left for Ben.
+removed: `t254-gitattributes` (after #255's merge, `git cherry` clean),
+`t264-context-size` (a find-out with no commits, issues/264
+issuecomment-7137410487), `t248-adr-hygiene`, `t111-findout`,
+`t240-findout`, `t262-findout`. `t175-reproofrule` (`9144aeda`, old
+OneDrive path) is blocked with no pid; neither manager dispatched it, so
+it is left for Ben.
 
 ## Open PRs
 
@@ -193,19 +174,29 @@ merging on Ben's button (pull/181, superseded by #198). Also open:
 
 ## Waiting on the owner (pointer to NEEDS-OWNER.md)
 
-The queue file has no entries; Ben chose chat buttons for waiting items
-while he is in the chat (2026-11-24). Coming later, each by button: the
-merge words for #238, #239, #242 and #256; the gos (relays) for the
-planner's dispatch list (item 4); after #252 merges, the managers
+The queue file has no entries. The #219 trial Action was done by Ben
+on 2026-11-24 and left the queue at this state-back. Waiting on Ben,
+by button at each turn: the merge words for #210, #267, #268, #259,
+#252, #197, #265, #266, #238, #239, #242, #256 and #269's PR; the
+merge of benjamininja/dotclaude#12; after #252 merges, the managers
 settings text as one Action.
 
 ## Queue entries raised
+
+- 2026-11-24, Action: trial deny rule in the user-level settings file
+  (#219), raised by the planner; Ben marked it done the same day and
+  the entry left the queue.
 
 - 2026-11-19, Decision: #231 builder parked at Part 1. Answered the same
   day: Ben chose "Rule from reading (Recommended)" (issues/231
   issuecomment-7024139524); the entry left the queue.
 
 ## Decided since
+
+- 2026-11-24, by Ben's buttons in the tools manager's chat: merge #255
+  (merged `f6ce9b1`); t260-261 waits for #210 rather than an allow rule
+  for another branch's merge (issues/261 issuecomment-7137335139); the
+  dotclaude trial rule is committed by branch and PR (dotclaude#12).
 
 - 2026-11-19: Ben's go for #231 after the move repair (issues/231
   issuecomment-7023959064); dispatched (issuecomment-7024077556).
@@ -270,6 +261,14 @@ settings text as one Action.
   recorded on its ticket (links in START HERE item 0).
 
 ## Lessons
+
+- Never pipe the dispatch script with `2>&1` in PowerShell 5.1: git's
+  progress line on stderr becomes an error, and the script stops after
+  the worktree add. Check the half-made worktree, remove it if clean,
+  and run again without the redirect.
+- A builder's brief that merges another branch is refused: builders may
+  merge only `origin/main`. Until #268 lands, a stacked builder waits for
+  its base to merge.
 
 - A re-proof that looks hung: check pytest's children
   (`Win32_Process` with `ParentProcessId=<pytest pid>`). New `bash.exe`
