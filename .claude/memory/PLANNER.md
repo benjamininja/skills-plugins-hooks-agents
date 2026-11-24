@@ -36,11 +36,12 @@ queue holds an entry for this planner; the tools queue is empty.
 
 **Merge line (Tools-builder-manager, one re-proof at a time, each merge
 word asked of Ben by button):** #236, PR #238 (the planner's), #239
-(#237), #242 (#231). #241 follows #239. By the manager's message of
-2026-11-24: #236's re-proof at `92acab5` on `aefbc68` ended GREEN on
-2026-11-23 15:26Z and its merge word is asked of Ben; the test line is
-with dynasty for one full run (dynasty PR #659); #253's re-proof
-follows dynasty's end notice and #236's merge.
+(#237), #242 (#231). #241 follows #239. **PR #236 merged as `20f0954`
+on 2026-11-24** (pull/236 issuecomment-7132452441); `origin/main` is
+there, and by the manager's message so are both checkouts. Every
+earlier Green is stale against it. The test line is with dynasty for
+one full run (dynasty PR #659); #253's re-proof follows dynasty's end
+notice. The manager's next state PR is #256.
 - **#244 is done.** PR #246 merged as `aefbc68` on 2026-11-23, the first
   merge since `f1ff785` (2026-11-19), and closed #244. Its re-proof took
   3510.8 s for pytest, 89 s under the old 3600 s cap (pull/246
@@ -143,12 +144,11 @@ issues/250 issuecomment-7103259381; dynasty's half is dynasty #655).
     2026-11-24). PR #252 left draft at `ab3c279` four minutes after the
     amendment was posted. Its body cites the ruling and the first
     amendment only, and its count line has three buckets. The planner
-    sent the comment to Tools-builder-manager again on 2026-11-24. The
-    manager answered: it had not gone to builder t250; the manager asks
-    Ben by button in its own chat, quoting point 16's recorded answer,
-    and sends the comment whole on his confirm. No code review and no
-    re-proof of #252 until t250 answers points 16 to 22 at a new head.
-    The manager's notice that it was sent is awaited.
+    sent the comment to Tools-builder-manager again on 2026-11-24, and
+    the manager sent it to builder t250 whole, on Ben's "Confirm, send
+    whole (Recommended)" in its chat (issuecomment-7132487415). No code
+    review and no re-proof of #252 until t250 answers points 16 to 22
+    at a new head.
   - The builder's state-back (issuecomment-7104691933) adds one check
     beyond the ruling, from its security review: the worktree's `.git`
     file is checked against the main checkout's record before any git
@@ -166,9 +166,9 @@ issues/250 issuecomment-7103259381; dynasty's half is dynasty #655).
   line in 15 of 31 merged tools worktrees. The planner reproduced it
   and tested the fix in its own worktree. Brief in the ticket's body;
   Ben's "File it and go, low (Recommended)" (issues/254
-  issuecomment-7104636475). Tools-builder-manager confirmed on
-  2026-11-24 that it is known; it asks Ben again by button in its own
-  chat, then dispatches.
+  issuecomment-7104636475). Dispatched on 2026-11-24 as builder
+  `t254-gitattributes`, on Ben's "Dispatch when level (Recommended)" in
+  the manager's chat (issues/254 issuecomment-7132504195).
 - **Planned planner PR, after #251's finding:** decision 10's two rules
   in `session-rules` (the main checkout's packages change only when no
   builder runs; a `requirements.txt` ticket gets `venv: full`).
@@ -179,9 +179,8 @@ issues/250 issuecomment-7103259381; dynasty's half is dynasty #655).
   manager has run no closeout yet, by its own state file.
 
 **Next for this planner, in order:**
-0. **Awaited from Tools-builder-manager:** its notice that the second
-   amendment went to builder t250 whole. If it asks, read #252's new
-   head against points 16 to 22. Tell dff-central-planner when PR #249
+0. **Awaited:** PR #252's new head from builder t250. If the manager
+   asks, read it against points 16 to 22. Tell dff-central-planner when PR #249
    merges (dynasty PR #653 goes ready then).
 1. **After #242 merges:** the planner's PR that replaces PROJECT-RULES'
    one-run message rule with the lock.
