@@ -134,12 +134,15 @@ names the git version. It acts only on a worktree that
 `git worktree list --porcelain` names and that sits directly under
 `<main checkout>/.claude/worktrees`, and removes it only when all hold:
 
-- **merged:** the branch's tip is a merged PR's head or an ancestor of
-  one, or the tip (a detached one too) is on the remote main branch and
+- **merged:** the branch's tip is the head of a PR merged into the main
+  branch (a PR merged into any other base does not count) or an ancestor
+  of one, or the tip (a detached one too) is on the remote main branch and
   so holds no commit of its own; a detached HEAD also passes when it is
   exactly a merged PR's head. `git cherry` is not used: it shows every
   commit of a squash of several as missing;
-- **clean:** `git status --porcelain` prints nothing. Ignored files
+- **clean:** `git status --porcelain --untracked-files=normal
+  --ignore-submodules=none` prints nothing, so no config hides an
+  untracked file or a submodule change. Ignored files
   (`.venv`, `builder-state/`) leave with the worktree. Two kinds of line
   hold no content and do not refuse (the owner's word, #250): a path
   modified in the working tree only whose `git diff` is empty (a

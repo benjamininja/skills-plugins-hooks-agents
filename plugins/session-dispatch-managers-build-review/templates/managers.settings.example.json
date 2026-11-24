@@ -10,7 +10,6 @@
       "Bash(git branch -d *)",
       "Bash(git push origin --delete *)",
       "Bash(git worktree list)",
-      "Bash(git worktree remove *)",
       "Bash(.venv/Scripts/python.exe <plugin folder>/scripts/closeout.py *)",
       "PowerShell(*session-dispatch-managers-build-review\\scripts\\dispatch.ps1 *)",
       "PowerShell(*claude.exe agents *)",

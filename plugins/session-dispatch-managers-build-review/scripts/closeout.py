@@ -189,6 +189,7 @@ class Project:
             raise Refusal("cannot tell the main branch: refs/remotes/origin/HEAD is not set "
                           f"(git -C {self.main} remote set-head origin --auto sets it)")
         self.main_ref = ref
+        self.main_branch = ref[len("origin/"):]
         code, out, err = git(self.main, "worktree", "list", "--porcelain")
         if code != 0:
             raise Refusal("git worktree list failed: " + err.strip())
@@ -207,7 +208,8 @@ class Project:
             self.pr_note = "gh not found"
             return
         code, out, err = run([exe, "pr", "list", "--state", "all", "--limit", str(PR_LIMIT),
-                              "--json", "number,headRefName,headRefOid,state"], self.main)
+                              "--json", "number,headRefName,headRefOid,state,baseRefName"],
+                             self.main)
         if code != 0:
             self.pr_note = "gh failed: " + (err.strip().splitlines() or ["exit %d" % code])[-1]
             return
@@ -217,7 +219,9 @@ class Project:
         except (ValueError, TypeError):
             self.pr_note = "gh printed no JSON list"
             return
-        self.prs = [p for p in prs if p.get("state") == "MERGED"]
+        # merged means merged into the main branch: a PR merged into another base is not
+        self.prs = [p for p in prs if p.get("state") == "MERGED"
+                    and p.get("baseRefName") == self.main_branch]
         self.open_prs = [p for p in prs if p.get("state") == "OPEN"]
         if len(prs) >= PR_LIMIT:
             self.pr_note = f"the PR list stopped at {PR_LIMIT} and may be cut"
@@ -305,7 +309,7 @@ class Verdict:
 def wt_git(path, record, *args):
     """A git call against a worktree whose record has been checked: its own .git is never read."""
     return git(path, "--git-dir=" + record, "--work-tree=" + path, "--literal-pathspecs",
-               "-c", "core.fsmonitor=false", *args)
+               "--no-optional-locks", "-c", "core.fsmonitor=false", *args)
 
 
 def read_status(path, record):
@@ -316,7 +320,9 @@ def read_status(path, record):
     Anything else blocks: a staged change, an untracked file that is not
     ignored, a modified path whose diff is not empty, a conflict.
     """
-    code, out, err = wt_git(path, record, "status", "--porcelain", "-z")
+    # pinned flags: no config of the owner's may hide an untracked file or a submodule change
+    code, out, err = wt_git(path, record, "status", "--porcelain", "-z",
+                            "--untracked-files=normal", "--ignore-submodules=none")
     if code != 0:
         return [], [], "git status failed: " + (err.strip() or "exit %d" % code)
     fields = out.split("\0")
@@ -332,7 +338,7 @@ def read_status(path, record):
         if xy == " D":
             restore.append(p)
         elif xy == " M":
-            rc, _, derr = wt_git(path, record, "diff", "--quiet", "--", p)
+            rc, _, derr = wt_git(path, record, "diff", "--quiet", "--ignore-submodules=none", "--", p)
             if rc == 0:
                 restore.append(p)
             elif rc == 1:
@@ -372,6 +378,8 @@ def admin_dir(project, path):
             back = f.readline().strip()
     except OSError:
         raise Refusal("the main checkout's worktree record has no gitdir file")
+    if not os.path.isabs(back):  # relative worktree links (git 2.48 and later)
+        back = os.path.join(record, back)
     if literal(back) != literal(dotgit):
         raise Refusal("the main checkout's worktree record points elsewhere")
     return record

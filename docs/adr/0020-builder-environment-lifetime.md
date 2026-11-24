@@ -113,7 +113,9 @@ Ben's, by button:
 - **A worktree is removed only when all of these hold:**
   - it is merged;
   - `git status --porcelain` prints nothing for it, once lines that hold
-    no content are restored (below). Ignored files leave with the
+    no content are restored (below). The read pins
+    `--untracked-files=normal --ignore-submodules=none`, so the owner's
+    config cannot hide an untracked file or a submodule change. Ignored files leave with the
     worktree;
   - it is not locked. The refusal prints the lock's reason, and the
     script never unlocks;
@@ -125,8 +127,9 @@ Ben's, by button:
     top folder is not a link;
   - on Windows, at apply time, it can be renamed to a sibling and back.
 - **Merged** means one of these:
-  - the branch's tip is the head of a merged PR, or an ancestor of one.
-    This covers #215's tip that is behind the head;
+  - the branch's tip is the head of a PR merged into the main branch, or
+    an ancestor of one. This covers #215's tip that is behind the head.
+    A PR merged into any other base (a stacked PR) does not count;
   - the tip, a detached one included, is an ancestor of the remote main
     branch, so it holds no commit of its own;
   - for a detached HEAD, it is exactly a merged PR's head.

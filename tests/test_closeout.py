@@ -362,7 +362,7 @@ def proj(tmp_path, monkeypatch):
     p.prs = []
 
     def set_prs(prs):
-        p.prs = [{"state": "MERGED", **x} for x in prs]
+        p.prs = [{"state": "MERGED", "baseRefName": "main", **x} for x in prs]
         prs_file.write_text(json.dumps(p.prs), encoding="utf-8")
     p.set_prs = set_prs
     set_prs([])
@@ -851,6 +851,63 @@ def test_open_pr_is_its_own_verdict(proj, capsys):
     assert code == 1 and "b1: refused: open PR: PR #21 is open" in out and wt.exists()
     code, out = run_closeout(capsys, proj.main, "--list")
     assert "open PR 1" in out.rstrip().splitlines()[-1]
+
+
+# Code review round 1 (F1, F2, F5, F6) ----------------------------------------
+
+def test_pr_merged_into_another_base_is_not_merged(proj, capsys):
+    """F1: a stacked PR merged into a side branch never reached the main branch."""
+    wt, tip = builder(proj, "b1")
+    proj.set_prs([{"number": 31, "headRefName": "worktree-b1", "headRefOid": tip,
+                   "baseRefName": "feature-a"}])
+    code, out = run_closeout(capsys, proj.main, "b1", "--apply")
+    assert code == 1 and "b1: refused: commits and no merged or open PR" in out
+    assert wt.exists() and has_branch(proj, "worktree-b1")
+
+
+def test_untracked_file_seen_whatever_status_config(proj, capsys):
+    """F2: status.showUntrackedFiles=no in the owner's config hides nothing."""
+    wt, _ = merged_builder(proj, "b1")
+    git(proj.main, "config", "status.showUntrackedFiles", "no")
+    (wt / "stray.txt").write_text("x\n", encoding="utf-8")
+    assert git(wt, "status", "--porcelain").stdout == ""  # plain git status is blind here
+    code, out = run_closeout(capsys, proj.main, "b1", "--apply")
+    assert code == 1 and "?? stray.txt" in out and (wt / "stray.txt").exists()
+
+
+def test_relative_record_gitdir_is_read_from_the_record(proj, capsys):
+    """F5: a record whose gitdir is relative (git 2.48 relative links) still checks."""
+    wt, _ = merged_builder(proj, "b1")
+    admin = Path(git(wt, "rev-parse", "--absolute-git-dir").stdout.strip())
+    rel = os.path.relpath(wt / ".git", admin).replace(os.sep, "/")
+    (admin / "gitdir").write_text(rel + "\n", encoding="utf-8")
+    code, out = run_closeout(capsys, proj.main, "b1")
+    assert code == 0 and "b1: would remove" in out, out
+
+
+def test_extra_branch_checked_out_elsewhere_is_kept(proj, capsys):
+    """F6: an extra --branch checked out in another worktree is never deleted."""
+    merged_builder(proj, "b1")
+    other = add_worktree(proj.main, "b2", branch="feat-x")
+    code, out = run_closeout(capsys, proj.main, "b1", "--apply", "--branch", "feat-x")
+    assert "b1: removed" in out
+    assert "kept: branch feat-x is checked out in a worktree" in out and code == 1
+    assert has_branch(proj, "feat-x") and other.exists()
+
+
+def test_failed_git_read_refuses_with_its_reason(proj, capsys, monkeypatch):
+    """F6, point 17: a git read that fails is a refusal with that reason, never a guess."""
+    wt = add_worktree(proj.main, "b1")  # would pass as no commit of its own
+    real = closeout.git
+
+    def fake(cwd, *args):
+        if args[:1] == ("merge-base",):
+            return 128, "", "fatal: broken"
+        return real(cwd, *args)
+    monkeypatch.setattr(closeout, "git", fake)
+    code, out = run_closeout(capsys, proj.main, "b1", "--apply")
+    assert code == 1 and "git merge-base failed" in out and "fatal: broken" in out
+    assert wt.exists()
 
 
 def test_refuses_without_origin_head(proj, capsys):
