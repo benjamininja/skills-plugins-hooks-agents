@@ -29,7 +29,7 @@ dff-central-builder-manager has not yet reported its own memory review
 (before it: `6b47c44d-e4cb-43be-8d0a-51ec2776881b`), sent to the three
 peers on 2026-11-24. Each peer's id is from its own message of
 2026-11-24. Tools-builder-manager:
-`5074d20f-d5f6-4edf-b1b1-e18d5f31db19`. dff-central-builder-manager:
+`e7026592-a1b4-4ccd-afea-61d5cf451e9f` (since its clear of 2026-11-24). dff-central-builder-manager:
 `695f05fc-6dff-445b-a9fd-af605c6997d9` (before:
 `aa75bef2-1167-49fd-995a-bdee72226d36`, which its two entries in the
 dynasty queue still named on 2026-11-24; the re-key is its own).
@@ -188,11 +188,13 @@ issues/250 issuecomment-7103259381; dynasty's half is dynasty #655).
    (Recommended)"** (pull/210 issuecomment-7134168914). Main is merged
    in and a manager's Current block gains an In flight section; head
    `a30c3fa` (pull/210 issuecomment-7134267607). **CI is green there and Ben approved it: "Approve at a30c3fa
-   (Recommended)"** (recorded on the PR; the manager is told). After it
-   merges: ask Ben's go for #260 and #261 as one builder PR. #261's
-   wording moves with #210 (the budget applies to the role file's read
-   list); amend #261 before that dispatch. #260 gains the sentence of
-   #262's ruling 5.
+   (Recommended)"** (recorded on the PR; the manager is told). The planner moved it
+   to the front of the manager's test line (2026-11-24, after the third
+   compact). #261 and #260 are amended (issues/261
+   issuecomment-7134902887, issues/260 issuecomment-7134903881) and
+   **Ben gave the go for both as one builder PR at #210's merge: "Go,
+   assistant waits"** (on #261). The personal-assistant proposes its
+   short preferences only after #261's PR merges; send it one line then.
 0b. Tell dff-central-planner when PR #249 merges (dynasty PR #653 goes
    ready then).
 1. **After #242 merges:** the planner's PR that replaces PROJECT-RULES'
@@ -398,7 +400,7 @@ the manager asks.
 - The merge of the private configuration repository's working branch.
 
 **Waiting on Ben:** nothing. Next asks, each by
-button at its turn: the go for #260 and #261, the go for #240's step 2 (after PR #259 and PR #197 merge), then #111's
+button at its turn: the go for #240's step 2 (after PR #259 and PR #197 merge), then #111's
 build brief, and any point of the cost plan the three sessions do not
 agree on.
 
