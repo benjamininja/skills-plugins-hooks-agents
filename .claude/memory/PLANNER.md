@@ -324,8 +324,9 @@ issuecomment-7133316206.
   ports the assistant's scripts to tracked code), **#264** (medium,
   fixed context find-out, lowest priority). **#262's find-out has Ben's
   "Go, find-out now"** (issues/262 issuecomment-7134018512, with the
-  brief; sent to the manager; the manager's view on three compacts is
-  at issuecomment-7133968750). Its finding comes to the planner to
+  brief; the manager's view on three compacts is at
+  issuecomment-7133968750). **Dispatched as builder `t262-findout`**
+  (issues/262 issuecomment-7134055165). Its finding comes to the planner to
   rule. The others are not dispatched; each go is asked of Ben by
   button at its turn. **The baseline is frozen on #258** (issuecomment-7134046140: 145.2
   million over 68 sessions, each reply counted once; the earlier 242
@@ -340,7 +341,9 @@ issuecomment-7133316206.
   issuecomment-7133650154). Plan-breach read at `5f253ba`: no breach,
   three text fixes before the merge (ADR-0020's stale count, the
   docstring and README, the settings example's note and deny lines;
-  pull/252 issuecomment-7133882719). After the merge the manager queues
+  pull/252 issuecomment-7133882719). **The fixes are in at head
+  `447f3fc`**; the manager checks them at re-proof, and no new planner
+  read is needed. After the merge the manager queues
   one Action for Ben with the text for his managers settings file.
   ADR-0020 needs an index row once PR #253 merges.
 - Each ticket number split out of #258 goes to the assistant when filed.
