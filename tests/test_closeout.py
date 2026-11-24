@@ -817,9 +817,18 @@ def test_status_still_not_empty_after_restore_refuses(proj, capsys, monkeypatch)
 def test_no_readable_head_is_its_own_verdict(proj, capsys):
     wt, _ = merged_builder(proj, "b1")
     admin = Path(git(wt, "rev-parse", "--absolute-git-dir").stdout.strip())
-    (admin / "HEAD").unlink()
+    # the shape of a damaged record (#250, issuecomment-7132907231): no HEAD,
+    # commondir or index; both links between record and worktree stay sound
+    for name in ("HEAD", "commondir", "index"):
+        (admin / name).unlink()
+    assert (admin / "gitdir").exists() and (wt / ".git").exists()
+    block = [b for b in git(proj.main, "worktree", "list", "--porcelain").stdout.split("\n\n")
+             if b.strip() and b.strip().splitlines()[0].endswith("/b1")][0]
+    assert "HEAD 0000000000" in block and "detached" in block
     code, out = run_closeout(capsys, proj.main, "b1", "--apply")
     assert code == 1 and "b1: refused: no readable HEAD: git cannot read" in out, out
+    assert ".git" not in out.split("b1: refused:")[1].splitlines()[0]
+    assert "detached at" not in out
     assert wt.exists()
     code, out = run_closeout(capsys, proj.main, "--list")
     assert "no readable HEAD 1" in out.rstrip().splitlines()[-1]
