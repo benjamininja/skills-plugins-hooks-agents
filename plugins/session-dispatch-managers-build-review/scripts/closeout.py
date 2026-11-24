@@ -15,11 +15,14 @@ It acts only on a worktree that `git worktree list --porcelain` names and that
 sits directly under <main checkout>/.claude/worktrees. A worktree is removed
 only when all of these hold:
 
-- its branch is merged: the tip is the head of a merged PR or an ancestor of
-  one, or the tip (a detached HEAD included) is an ancestor of the remote main
-  branch and so holds no commit of its own; a detached HEAD also passes when
-  it is exactly a merged PR's head;
-- `git status --porcelain` prints nothing for it, except lines that hold no
+- its branch is merged: the tip is the head of a PR merged into the main
+  branch (read from refs/remotes/origin/HEAD; a PR merged into any other base
+  does not count) or an ancestor of one, or the tip (a detached HEAD
+  included) is an ancestor of the remote main branch and so holds no commit
+  of its own; a detached HEAD also passes when it is exactly the head of a PR
+  merged into the main branch;
+- `git status --porcelain --untracked-files=normal --ignore-submodules=none`
+  (pinned, so no config hides a line) prints nothing for it, except lines that hold no
   content: a path modified in the working tree only whose `git diff` is
   empty, or a tracked path deleted from the working tree only. In an apply
   run, after every other check, those paths are restored with

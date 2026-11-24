@@ -158,9 +158,11 @@ Python 3.8 or later, standard library only, so any project's
 interpreter runs it. The manager runs it right after it merges a
 builder's PR and pulls: first the dry run, then with `--apply`. It
 removes the builder's worktree, then its local branch, only when the
-branch is merged (a merged PR's head or an ancestor of one, or nothing
-of its own beyond the remote main branch) and has no open PR,
-`git status --porcelain` prints nothing (lines that hold no content, a
+branch is merged (the head of a PR merged into the main branch, or an
+ancestor of one, or nothing of its own beyond the remote main branch; a
+PR merged into any other base does not count) and has no open PR,
+`git status --porcelain --untracked-files=normal --ignore-submodules=none`
+prints nothing, whatever the git config says (lines that hold no content, a
 line-ending flag with an empty diff or a deleted tracked file, are
 restored first), the worktree is not locked, its HEAD can be read, no
 folder link in it points out, and, on Windows, nothing in it is open.

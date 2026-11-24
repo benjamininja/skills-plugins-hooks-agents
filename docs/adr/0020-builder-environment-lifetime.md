@@ -22,9 +22,13 @@ merged, and 5 folders that git does not know. A dynasty venv is about
   and "an uncommitted file" was not defined anywhere.
 - No closeout record says step 4 ran, was skipped or failed. The cause
   stays inferred: closeout was not run to its end.
-- By the personal-assistant session's read-only count in dynasty, 73 of
-  82 worktrees were clean, so the uncommitted-file guard is not the main
-  cause.
+- By the personal-assistant session's corrected read-only count in
+  dynasty (#250, issuecomment-7104579581), 49 of 82 worktrees were clean,
+  9 had local changes, and in 24 the status check could not run (a
+  record with no readable HEAD). A first count of "73 of 82 clean" was
+  wrong. In this repository, `CATALOG.md` flagged with an empty diff was
+  the only status line in 15 of the 17 merged worktrees that were not
+  clean. The causes this points to are under Consequences.
 
 The builder's Part 1 finding (#250, issuecomment-7103861254, corrected in
 issuecomment-7104084566) tested git itself in throwaway repositories
