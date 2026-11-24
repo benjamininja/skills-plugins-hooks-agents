@@ -14,7 +14,7 @@
   plans, dispatches and merges here
 
 - [Program status](program-status.md) — the 3-goal restructure/saturation
-  program, all shipped; pointer file to PLAN.md/README/ADRs + one open
+  program, all shipped; pointer file to README/ADRs + one open
   question (agents catalog directory)
 
 ## Related decision records elsewhere
