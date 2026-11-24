@@ -187,9 +187,8 @@ issues/250 issuecomment-7103259381; dynasty's half is dynasty #655).
 0. **PR #210, brought forward on Ben's "Bring PR #210 forward
    (Recommended)"** (pull/210 issuecomment-7134168914). Main is merged
    in and a manager's Current block gains an In flight section; head
-   `a30c3fa` (pull/210 issuecomment-7134267607). **Next: check its CI
-   (`gh pr checks 210`), then ask Ben's approval at that head by
-   button**, then tell the manager it may enter the test line. After it
+   `a30c3fa` (pull/210 issuecomment-7134267607). **CI is green there and Ben approved it: "Approve at a30c3fa
+   (Recommended)"** (recorded on the PR; the manager is told). After it
    merges: ask Ben's go for #260 and #261 as one builder PR. #261's
    wording moves with #210 (the budget applies to the role file's read
    list); amend #261 before that dispatch. #260 gains the sentence of
@@ -398,8 +397,7 @@ the manager asks.
 - The Action to remove the mod's old hand copy (#195).
 - The merge of the private configuration repository's working branch.
 
-**Waiting on Ben:** nothing yet. First ask after the compact: his
-approval of PR #210 at `a30c3fa`, once its CI is green. Then, each by
+**Waiting on Ben:** nothing. Next asks, each by
 button at its turn: the go for #260 and #261, the go for #240's step 2 (after PR #259 and PR #197 merge), then #111's
 build brief, and any point of the cost plan the three sessions do not
 agree on.
