@@ -273,7 +273,12 @@ replaces the lane ruling of 2026-11-09. Tools-builder-manager is told.
   read-only find-out, brief at issues/240 issuecomment-7133315138, sent
   to the manager. Step 2, the fix, waits for the planner's ruling and
   for PR #259 and PR #197 to merge.
-- **Open, for Ben by button:** whether #137 closes now.
+  Dispatched as builder `t240-findout` on Ben's button in the manager's
+  chat.
+- **#137 closes as not planned,** on Ben's "Close now (Recommended)";
+  the manager closes it. PR #259's review advisory F1 (no test of an
+  entry that starts closed) goes into #111's build brief (issues/257
+  issuecomment-7133418739).
 - PR #255 (#254) is open with a clean code review; its re-proof follows
   #253's.
 - **Constraints from dynasty** (the handoff): the manager is the queue
@@ -335,8 +340,8 @@ the manager asks.
 - The Action to remove the mod's old hand copy (#195).
 - The merge of the private configuration repository's working branch.
 
-**Waiting on Ben:** the #137 close question, by button. After the trial
-compact: its result and a proposed rule, by button.
+**Waiting on Ben:** nothing yet. After the trial compact: its result
+and a proposed rule, by button.
 
 ## Reference
 
