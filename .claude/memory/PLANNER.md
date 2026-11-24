@@ -45,9 +45,17 @@ dff-central-builder-manager has not yet reported its own memory review
 - #262: the assistant's away-time report (issuecomment-7136470974) and
   Ben's confirmation of his practice (issuecomment-7136766826). The
   brief asks Ben whether leaving for over an hour is a fourth trigger.
-- Still to put to Ben from #264: the desktop app's Browser tools switch
-  (about 5.6k per planner or manager session), and the one desktop test
-  of a role file's tool line (bears on #233 and PR #266).
+- #264's Browser tools switch: Ben decides after #258's re-measure
+  (issues/264 issuecomment-7137743783; list on issues/258
+  issuecomment-7137744583). Still to put to Ben, with PR #266's
+  approval: the one desktop test of a role file's tool line (#233).
+- Ben's correction, 2026-11-24: the trial Action named no full path for
+  the settings file. A corrected step 1 went to the manager; its
+  confirmation was not yet seen. Lesson: a hand step names its file by
+  full path in a code mark of its own.
+- Clear prep done at Ben's word, 2026-11-24. Compacts since the last
+  clear: 4; the count restarts at the clear. After it: new queue id to
+  the four peers, then this line and the Ids paragraph are updated.
 - PR #267 (#206) is green by its builder; re-proof follows #210.
 
 **Ids (queue ids change at every clear).** This planner:
