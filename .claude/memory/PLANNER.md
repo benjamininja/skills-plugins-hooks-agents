@@ -208,6 +208,21 @@ issues/250 issuecomment-7103259381; dynasty's half is dynasty #655).
    reviews of PR #197, #259, #242 meanwhile (pull/198
    issuecomment-7135884969). Rule on #264's finding when posted and
    tell the assistant.
+   **#218 also stands before the assistant's trim** (its report, issues/218
+   issuecomment-7136008534; it did not name #264). Ben: "Write both now
+   (Recommended)" (issues/218 issuecomment-7136027605). Written and
+   open, stacked: **PR #265** (#217's choices 1, 2, 4 in session-rules;
+   branch `t217-portable-roles`, base PR #210's branch) and **PR #266**
+   (#218's role file; branch `t218-personal-assistant-role`, base
+   #265's branch). Merge order #210, #265, #266; each needs Ben's
+   approval at its head once CI is green, and main merged in after the
+   PR before it merges. Open point in #265's body: #260, #261 and
+   #262's ruling 5 still speak of a reset prompt; under choice 1 there
+   is none, so the planner rewords them when the PRs meet, or Ben
+   reverses choice 1. #266 asks Ben: model opus or fable.
+   dff-central-planner's id since its clear:
+   `125a6d6d-88c4-406a-8ea8-220374432d42`; it expects one line when
+   #249, #260, #261 or #262 merges and when PR #252's script first runs.
    **#262's rule-text brief:** write it when the #260/#261 PR opens (same
    section), then ask Ben's go by button. Its mod brief follows PR #197,
    after #240 step 2 and #111.
