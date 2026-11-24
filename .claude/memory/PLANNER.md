@@ -24,7 +24,44 @@ dff-central-builder-manager has not yet reported its own memory review
 
 ## Current
 
-**After the fourth compact, 2026-11-24 (newest; read first).**
+**Next, after the clear of 2026-11-24 (act on this list, in order).**
+
+0. Send the new queue id to Tools-builder-manager, dff-central-planner,
+   dff-central-builder-manager and personal-assistant; update the Ids
+   paragraph below; push.
+1. The assistant's path, which Ben wants worked actively: PR #210
+   (re-proof started at `a30c3fa`), then the #260/#261 builder, then PR
+   #265, then PR #266 (head `3c01e78`).
+2. When PR #210 is squash-merged: on `t217-portable-roles` merge
+   origin/main, push, `gh pr edit 265 --base main`, read CI, ask Ben's
+   approval at that head. Put to him: #260, #261 and #262's ruling 5
+   speak of a reset prompt, #217 choice 1 says none is kept. The same
+   for #266 after #265 merges; put to him: model opus or fable, and the
+   desktop test of a role file's tool line (#233).
+3. When the #260/#261 PR opens: write #262's rule-text brief, ask Ben's
+   go; it asks whether Ben leaving for over an hour is a fourth trigger.
+   When #261's PR merges: one line to personal-assistant and
+   dff-central-planner.
+4. Check the manager confirmed the corrected step 1 of the #219 trial
+   Action. When both trial results are on #219: list there the deny
+   entries common to every project.
+5. PR #270 needs Ben's approval at its turn; then the after figure on
+   #269; no drop from about 55k means a revert PR.
+6. Read builders' PRs against their tickets when the manager asks:
+   #189, #219, PR #267 (#206). #264 closes with #269's reading.
+7. After PR #259 and PR #197 merge: ask Ben's go for #240 step 2 (brief
+   at issues/240 issuecomment-7133603553); then #111's build brief; then
+   #262's mod brief (ruling issues/262 issuecomment-7134266469).
+8. Planner PRs #205, #184, #249 need Ben's approval at their turn. After
+   #249 merges: tell dff-central-planner, archive session
+   `local_6b981a48-1f7d-4986-93e6-6af76d316f28`, comment on #235, #217,
+   #161 and PR #197.
+9. #251's brief when #189's PR merges; the lock PR after #242 merges;
+   #263 has no go; #258 holds the re-measure list.
+
+Waiting on Ben: the #219 trial Action in the tools queue.
+
+**After the fourth compact, 2026-11-24.**
 
 - PR #255 merged (`f6ce9b1`). PR #210's re-proof started at `a30c3fa`.
   The #260/#261 builder waits for #210's merge, then merges origin/main
