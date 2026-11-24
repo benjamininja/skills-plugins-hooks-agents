@@ -199,6 +199,15 @@ issues/250 issuecomment-7103259381; dynasty's half is dynasty #655).
    one correction after it (issuecomment-7135557161: the manager runs
    pre-commit at re-proof). The manager reports Ben confirmed the
    dispatch in its chat; #210 is next in its line after #255.
+   **Ben wants the tickets ahead of the personal-assistant (#261, #264)
+   worked actively; the assistant holds** (his words on issues/261
+   issuecomment-7135940410). So the #260/#261 builder starts now,
+   stacked on PR #210's branch, and **#264 has Ben's go: "Go now
+   (Recommended)"** (issues/264 issuecomment-7135982334). Dispatch
+   order given to the manager: #260/#261, #264, #189, #219, #206; code
+   reviews of PR #197, #259, #242 meanwhile (pull/198
+   issuecomment-7135884969). Rule on #264's finding when posted and
+   tell the assistant.
    **#262's rule-text brief:** write it when the #260/#261 PR opens (same
    section), then ask Ben's go by button. Its mod brief follows PR #197,
    after #240 step 2 and #111.
