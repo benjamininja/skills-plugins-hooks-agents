@@ -285,6 +285,8 @@ save, with these sections in this order:
 - **Waiting:** on the owner, each queue entry the session raised, by
   its title and the `Session:` id it names; on anything else, what
   blocks it.
+- **In flight** (a manager's file): each running builder with its id
+  and ticket, and each open PR with its head and the gate it waits at.
 - **Peers:** names and ids.
 - **Reads and checks due:** each with its date or trigger.
 - **Decided since the last merged state PR:** one line per decision,
