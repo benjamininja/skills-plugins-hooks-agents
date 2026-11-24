@@ -12,34 +12,35 @@ in this file's git history:
 The last stacked version, with 26 session blocks, is that branch's commit
 before the #243 rewrite.
 
-Last state-back: 2026-11-23, clear prep at Ben's word ("prepare for
-clear boundary ... pause once prepared until clear"). Since the day's
-compact: PR #246 merged; #250's Part 1 finding was ruled, with two
-amendments, and its Part 2 is being built; the planner ruled on PRs
-#198, #181, #184 and #182 for the manager; PRs #227 and #184 have new
-heads; the user-level deny rule is committed in the private
-configuration repository; #254 is filed with Ben's go.
-Tools-builder-manager paused for its own clear at 14:58Z.
-dff-central-builder-manager has not yet reported its own memory review
-(#243); nothing is owed to it.
+Last state-back: 2026-11-24, at the start after the clear of
+2026-11-23. All four role sessions cleared and restarted; their new
+queue ids are below. Nothing has merged since `aefbc68` (PR #246,
+2026-11-23). The planner checked PR #252 against the second amendment
+and sent both owed items to Tools-builder-manager again; it answered
+both. dff-central-builder-manager has not yet reported its own memory
+review (#243); nothing is owed to it.
 
 ## Current
 
 **Ids (queue ids change at every clear).** This planner:
-`6b47c44d-e4cb-43be-8d0a-51ec2776881b` (before the clear of 2026-11-23:
-`019c4c0b-d63a-4262-9ee1-558f1408fd4f`); it changes at the clear of
-2026-11-23 and goes to the three peers. Tools-builder-manager:
-`55edaa09-855e-454f-991a-371eb4875402` until its own clear of
-2026-11-23; it sends its new id. dff-central-builder-manager:
-`aa75bef2-1167-49fd-995a-bdee72226d36`, read from its two #247 entries
-in the dynasty queue and not yet confirmed by it. dff-central-planner:
-`986a10cc-2c8b-4d55-9600-5cc9306c91be`. Neither queue holds an entry for
-this planner: both queues were empty at the start after the compact.
+`2f55ae6a-00e1-46b6-9f89-e3d2d939e0de` since the clear of 2026-11-23
+(before it: `6b47c44d-e4cb-43be-8d0a-51ec2776881b`), sent to the three
+peers on 2026-11-24. Each peer's id is from its own message of
+2026-11-24. Tools-builder-manager:
+`5074d20f-d5f6-4edf-b1b1-e18d5f31db19`. dff-central-builder-manager:
+`695f05fc-6dff-445b-a9fd-af605c6997d9` (before:
+`aa75bef2-1167-49fd-995a-bdee72226d36`, which its two entries in the
+dynasty queue still named on 2026-11-24; the re-key is its own).
+dff-central-planner: `cff0e612-f08d-401c-9bb6-2a60446c1492`. Neither
+queue holds an entry for this planner; the tools queue is empty.
 
 **Merge line (Tools-builder-manager, one re-proof at a time, each merge
 word asked of Ben by button):** #236, PR #238 (the planner's), #239
-(#237), #242 (#231). #241 follows #239. #236's re-proof started
-2026-11-23 14:30Z.
+(#237), #242 (#231). #241 follows #239. By the manager's message of
+2026-11-24: #236's re-proof at `92acab5` on `aefbc68` ended GREEN on
+2026-11-23 15:26Z and its merge word is asked of Ben; the test line is
+with dynasty for one full run (dynasty PR #659); #253's re-proof
+follows dynasty's end notice and #236's merge.
 - **#244 is done.** PR #246 merged as `aefbc68` on 2026-11-23, the first
   merge since `f1ff785` (2026-11-19), and closed #244. Its re-proof took
   3510.8 s for pytest, 89 s under the old 3600 s cap (pull/246
@@ -49,14 +50,16 @@ word asked of Ben by button):** #236, PR #238 (the planner's), #239
   script, on Ben's button in the manager's chat.
 - #242: the re-check accepted F1 and F2 at `b278602`. It merges main in
   (#246 changed the same script), then needs its re-proof.
-- **PR #253** (#248, builder t248) is open at `d26b97c`; its first review
-  has no blocking finding (pull/253 issuecomment-7104380919). It adds
-  `tests/test_adr_readme.py`: every file in `docs/adr/` needs a row in
-  `docs/adr/README.md`. **After #253 merges, the planner merges main
-  into #184, #205 and #249 and adds each ADR's row**; #211 (ADR-0017) is
-  a builder PR and needs a follow-up to its builder. The README's roles
-  list names the dispatch role for ADR-0019; #249 puts that right when
-  it merges main in.
+- **PR #253** (#248, builder t248) is open at `b958ffa`; its code review
+  is closed with no blocking finding (record: pull/253
+  issuecomment-7104501918). It adds `tests/test_adr_readme.py`: every
+  file in `docs/adr/` needs a row in `docs/adr/README.md`, linked in the
+  row's first cell. **After #253 merges, the planner merges main into
+  #184, #205 and #249 and adds each ADR's row**; #211 (ADR-0017) is a
+  builder PR and needs a follow-up to its builder. The README's roles
+  row says PR #249 replaces the dispatch role file with
+  `supabase-router` and updates the row (F2). That is not yet true of
+  #249; the planner makes it true when #249 merges main in.
 
 **#247, the Supabase roles (grilled with Ben, 2026-11-23; the ten
 decisions are the ticket's body).** PR #249 is open: `supabase-router`
@@ -82,8 +85,9 @@ subagents rule in `session-rules`, ADR-0019. It merges after PR #205.
   `GOAL-RUN.md`) merged as `97dbebb` (issuecomment-7103677619).
   dff-central-planner ruled that dynasty's builders also deny the
   separate, unauthenticated Supabase plugin server
-  (issuecomment-7103639275); its manager queues that line after #657.
-  The dynasty queue is empty.
+  (issuecomment-7103639275). Dynasty PR #657 merged as `6721d97`. The
+  second line is an Action for Ben in the dynasty queue, not yet ticked
+  on 2026-11-24 (#247 issuecomment-7104068971).
 - **After #249 merges:** archive the old session
   `local_6b981a48-1f7d-4986-93e6-6af76d316f28` (Ben's "Record, then
   archive after merge"; its final record: #247 issuecomment-7102435808,
@@ -135,10 +139,21 @@ issues/250 issuecomment-7103259381; dynasty's half is dynasty #655).
     never removed (dynasty has 24, 15.7 GB; their repair is dynasty's,
     #655). Locks are printed and counted apart. The list covers every
     worktree under the folder. An open PR is its own verdict.
-  - **Owed after both clears:** the second amendment was sent to
-    Tools-builder-manager at about the minute it paused for its clear.
-    Confirm it reached builder t250; if not, the manager sends the
-    comment whole.
+  - **The second amendment is not in the build yet** (checked
+    2026-11-24). PR #252 left draft at `ab3c279` four minutes after the
+    amendment was posted. Its body cites the ruling and the first
+    amendment only, and its count line has three buckets. The planner
+    sent the comment to Tools-builder-manager again on 2026-11-24. The
+    manager answered: it had not gone to builder t250; the manager asks
+    Ben by button in its own chat, quoting point 16's recorded answer,
+    and sends the comment whole on his confirm. No code review and no
+    re-proof of #252 until t250 answers points 16 to 22 at a new head.
+    The manager's notice that it was sent is awaited.
+  - The builder's state-back (issuecomment-7104691933) adds one check
+    beyond the ruling, from its security review: the worktree's `.git`
+    file is checked against the main checkout's record before any git
+    call runs in the worktree. It also names a stale line in the
+    manager reference, outside its brief (see Gaps).
 - **#251** (medium, `Profile: none`): the dispatch half. `setup` and
   `setupFull` lists, a switch on `dispatch.ps1`, and the brief line
   `venv: light, full or no`. Ben's "Go, after #189's PR (Recommended)"
@@ -151,8 +166,9 @@ issues/250 issuecomment-7103259381; dynasty's half is dynasty #655).
   line in 15 of 31 merged tools worktrees. The planner reproduced it
   and tested the fix in its own worktree. Brief in the ticket's body;
   Ben's "File it and go, low (Recommended)" (issues/254
-  issuecomment-7104636475). Sent to Tools-builder-manager as it paused:
-  confirm it is known.
+  issuecomment-7104636475). Tools-builder-manager confirmed on
+  2026-11-24 that it is known; it asks Ben again by button in its own
+  chat, then dispatches.
 - **Planned planner PR, after #251's finding:** decision 10's two rules
   in `session-rules` (the main checkout's packages change only when no
   builder runs; a `requirements.txt` ticket gets `venv: full`).
@@ -163,9 +179,10 @@ issues/250 issuecomment-7103259381; dynasty's half is dynasty #655).
   manager has run no closeout yet, by its own state file.
 
 **Next for this planner, in order:**
-0. **First after the clear:** send the new queue id to the three peers.
-   Then one message to Tools-builder-manager repeating what was owed
-   across its clear: the second amendment for t250 and #254's go.
+0. **Awaited from Tools-builder-manager:** its notice that the second
+   amendment went to builder t250 whole. If it asks, read #252's new
+   head against points 16 to 22. Tell dff-central-planner when PR #249
+   merges (dynasty PR #653 goes ready then).
 1. **After #242 merges:** the planner's PR that replaces PROJECT-RULES'
    one-run message rule with the lock.
 2. **#233's finding** when it comes: rule on it. Send the link to
@@ -329,6 +346,14 @@ the manager asks.
 - Tracked `.claude/agents` files are deleted from the folder in some
   old worktrees in both projects; which tool did it is not known (#250
   issuecomment-7104579581, finding 3).
+- `session-dispatch`'s `references/manager.md`, "Its own merges",
+  deletes the manager's own or the planner's merged PR branch once
+  `git cherry` shows nothing missing. `git cherry` compares commit by
+  commit, so after a squash of several commits it still lists them and
+  the test never passes. Reported by #250's builder
+  (issuecomment-7104691933); the planner read the line and has not
+  tested it. The fitting test is the closeout script's merged test, so
+  the text change waits for PR #252 to merge.
 - The hook README's layered-defense note names only the `main` ruleset;
   the fix sentence goes in #215's brief.
 - The Tools planner has no role file; its read list goes into
