@@ -312,10 +312,32 @@ issuecomment-7133316206.
 - **Ben's "Wait for numbers (Recommended)"; the rule's ticket is #260**
   (low): after a compact a role session reads the issue and PR lists and
   its queue files only. Dispatched after PR #210 merges (same section).
-- PR #252 (#250) is green at `3a33d6a`, its code review running; its
-  ADR-0020 needs an index row once PR #253 merges (the manager raises it).
-- Tickets split out of #258 are asked of Ben by button after both
-  planners' views are side by side; each number goes to the assistant.
+- **Ben chose all four further pieces for tickets** ("Start-up read
+  budget, Prefer compact to clear, Manager cost find-out, Fixed context
+  find-out"), then asked that the plan be agreed with
+  dff-central-planner and personal-assistant first. The draft plan and
+  the questions to each are at issuecomment-7133848772; both are
+  messaged. **No cost ticket is filed until both answer**; their answers
+  are recorded on #258, and a point the three do not agree on goes to
+  Ben by button. **dff-central-planner agrees, with three text changes**
+  (issuecomment-7133899219: what counts toward the five files; a done
+  item leaves Current at the state-back after its record exists; the
+  short list after a compact holds only if the prep just before was
+  done). The planner takes all three into the ticket bodies.
+  **personal-assistant has not answered yet.** The four ticket bodies are drafted locally and are
+  rewritten from that comment if lost. #260 was filed before the ask and
+  is in the plan the peers read.
+- The assistant's third data point (a clear with a short fixed list:
+  0.20 million, 126k) is at issuecomment-7133736829.
+- **PR #252 (#250):** code review closed with no blocking finding open.
+  The planner confirmed F1 (merged means merged into main; pull/252
+  issuecomment-7133650154). Plan-breach read at `5f253ba`: no breach,
+  three text fixes before the merge (ADR-0020's stale count, the
+  docstring and README, the settings example's note and deny lines;
+  pull/252 issuecomment-7133882719). After the merge the manager queues
+  one Action for Ben with the text for his managers settings file.
+  ADR-0020 needs an index row once PR #253 merges.
+- Each ticket number split out of #258 goes to the assistant when filed.
 
 **Planned, not opened:** the `session-rules` PR for #217's choices 1, 2
 and 4 with 245,000 (after PR #210; its text: #217
@@ -348,7 +370,8 @@ the manager asks.
 
 **Waiting on Ben:** nothing. Next asks, each by button at its turn: the
 go for #240's step 2 (after PR #259 and PR #197 merge), then #111's
-build brief, and which pieces of #258 get tickets.
+build brief, and any point of the cost plan the three sessions do not
+agree on.
 
 ## Reference
 
