@@ -64,9 +64,14 @@ Next, in order:
    re-proof and pre-commit, then Ben's word. Merge main first if #210
    has landed. After it merges, dispatch takes `-Base origin/<branch>`
    from a brief's `Base:` line.
-3. **t219** (#219, `750159d3`) is building on the ruling (issues/219
-   issuecomment-7137381521). Its PR comes with a state-back. The
-   re-proof also runs the script against the real files.
+3. **PR #271** (#219, t219 `750159d3`, head `d7795c9`): reported green
+   after the clear prep (state-back issues/219 issuecomment-7138242550;
+   `tests/test_drift_check.py` 45 passed). Not yet reviewed. Owed: the
+   code review (medium: full, high), then the full re-proof at its turn on the line,
+   and the script run against the real files (expect P11 to differ by 1,
+   the learning-script link, plus counts on P6 and P8). The PR body asks the planner
+   two things: how P6 handles allow rules, and that an optional template with no real file
+   prints skipped.
 4. **#269** (planner PR, route 2, no builder): the before figure is
    posted (issues/269 issuecomment-7137665661, about 54.9k). After its PR
    merges on Ben's word and the closeout pull, the **first builder
@@ -116,7 +121,7 @@ remove` follows a junction. Scan first: `Get-ChildItem -Recurse -Force
 |---|---|---|---|---|---|
 | `t260-261-readbudget` | #260, #261 | low | `d7e77ffa` | none yet | holds until #210 merges, then merges origin/main |
 | `t189-dispatch-base` | #189 | medium | `2eb375b2` | #268 at `c446faa` | answering review round one (F1, F2 blocking) |
-| `t219-drift-check` | #219 | medium | `750159d3` | none yet | building on the ruling |
+| `t219-drift-check` | #219 | medium | `750159d3` | #271 at `d7795c9` | reported green; review and re-proof owed |
 | `t206-token-check` | #206 | low | `116a30e9` | #267 at `b99dcae` | review closed; waits for the full re-proof |
 | `t231-reproof-lock` | #231 | medium | `8506434b` | #242 at `b278602` | review closed; waits for re-proof |
 | `t237-path-move` | #237 | low | `f0de4ab6` | #239 at `c64cf25` | review done; waits for re-proof |
