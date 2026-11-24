@@ -12,8 +12,8 @@ in this file's git history:
 The last stacked version, with 26 session blocks, is that branch's commit
 before the #243 rewrite.
 
-Last state-back: 2026-11-24, compact prep at Ben's word ("prepare for
-compact"). Since the clear of 2026-11-23: all four role sessions
+Last state-back: 2026-11-24, before the trial compact of #258 (Ben's
+go; see the #258 block). Since the clear of 2026-11-23: all four role sessions
 restarted with new queue ids; PR #236 merged as `20f0954`; #250's
 second amendment reached builder t250 and #254 is dispatched; the
 owner-queue mod lane moved to this planner, its design was decided
@@ -252,13 +252,28 @@ replaces the lane ruling of 2026-11-09. Tools-builder-manager is told.
   for the planner's ruling on that finding, PR #197's merge and #240's
   finding; the planner then posts the build brief and asks Ben's go.
   ADR 0014 is held for it. #137's F7 fold-in moved here.
-- **Both are dispatched** on Ben's buttons in the manager's chat:
-  builder `t257-autoclose` (issues/257 issuecomment-7133071425) and
-  builder `t111-findout` (issues/111 issuecomment-7133071967).
-- **Open, for Ben by button:** whether #137 closes now; and #240
-  (medium), which has no go and no place in the manager's line (#233,
-  #232, #189, #219, #241 after the open PRs). #111's build needs its
-  finding, so the planner reads #240, names its place and asks Ben.
+- **#257 is built as PR #259.** Planner read: no breach, and the
+  version constant (`register.tsx` line 48, `answer.test.ts` line 182)
+  goes to 0.11.1 (issues/257 issuecomment-7133159600). New head
+  `85186e1`; the manager's code review and re-proof follow.
+- **#111's first step is done and ruled** (finding:
+  issuecomment-7133152245; ruling: issuecomment-7133339403). A final
+  question is asked alone and single-select; `result.response` first,
+  then an exact label match. Nothing is staged on a timeout, a follow-up,
+  a deny or an error. The store crossing gets a live check, with no
+  code, before the build brief. What names a project in the store is
+  held for #240's finding.
+  - Ben's "Command plus fixed names" (issuecomment-7133391701, against
+    the planner's recommendation of the command only): `/owner planner`
+    plus role names fixed in the mod's code, matched exactly on
+    `$.session.info().agentType`. The names are set in the build brief;
+    the value is printed in `/owner id` and read live at re-proof. The
+    Tools planner has no role file, so it registers by the command.
+- **#240** (medium): Ben's "Find-out now (Recommended)". Step 1 is a
+  read-only find-out, brief at issues/240 issuecomment-7133315138, sent
+  to the manager. Step 2, the fix, waits for the planner's ruling and
+  for PR #259 and PR #197 to merge.
+- **Open, for Ben by button:** whether #137 closes now.
 - PR #255 (#254) is open with a clean code review; its re-proof follows
   #253's.
 - **Constraints from dynasty** (the handoff): the manager is the queue
@@ -275,7 +290,21 @@ ledger of 2026-11-24, held as a report. Managers and planners carry 55
 percent of the tokens, and most of every role's cost is context
 re-read per message. Open: whether a cost rule (model and effort per
 role, a lower clear point, a start-up read budget) is worth a ticket.
-The planner does a second look and a SWOT, then asks Ben by button.
+Part 3 (fixed context itemized; a compact costs about 0.15 million
+against a clear's median 0.71) and the planner's four answers are at
+issuecomment-7133316206.
+- **The trial compact, on Ben's go of 2026-11-24** (one compact of this
+  session only; the list is on #258 at issuecomment-7133403017). **After
+  the compact, read only:** `gh pr list`, `gh issue list`, the tools
+  queue file, the dynasty queue file. Not the reset prompt, the
+  preferences, the rules files, this file or the skill. Note anything
+  read beyond the list and why. Then post the result on #258 (what was
+  re-read, what the summary lost or got wrong, whether line numbers and
+  peer messages survived), tell personal-assistant so it can measure,
+  and bring Ben the result with a proposed rule by button. No edit to
+  `session-rules` or a role file comes from the trial.
+- Tickets split out of #258 are asked of Ben by button after both
+  planners' views are side by side; each number goes to the assistant.
 
 **Planned, not opened:** the `session-rules` PR for #217's choices 1, 2
 and 4 with 245,000 (after PR #210; its text: #217
@@ -291,7 +320,7 @@ time); #203 and #191 after PR #205 (#191 only on the planner's word);
 #201 after #191. Vendor lane: #50, then #176, then #57, then #52, then
 #55. #47 runs alone (not beside #54). #51, #53 and #54 after #48.
 
-**Findings to rule on when posted:** #111's first step, #240, #189, #187, #192, #191 (a real fork
+**Findings to rule on when posted:** #240 step 1, #189, #187, #192, #191 (a real fork
 goes to Ben by button), #233, #251. #200's design goes to Ben by
 button. #250's PR #252 comes to the planner for a plan-breach read if
 the manager asks.
@@ -306,7 +335,8 @@ the manager asks.
 - The Action to remove the mod's old hand copy (#195).
 - The merge of the private configuration repository's working branch.
 
-**Waiting on Ben:** nothing from this planner. No button is pending.
+**Waiting on Ben:** the #137 close question, by button. After the trial
+compact: its result and a proposed rule, by button.
 
 ## Reference
 
