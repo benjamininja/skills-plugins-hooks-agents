@@ -19,10 +19,22 @@ keeps it).
 **One full test run on the machine at a time**, by message with
 dff-central-builder-manager until #231's lock (PR #242) merges and is
 pulled: a start notice before, an end notice after. **The line is with
-dynasty** since 2026-11-24 about 13:05Z, for one full re-proof of
-dynasty PR #659; tools starts no full run until dynasty's end notice.
-A full run takes about 59 minutes (608 tests). Builders `t250` and
-`t254` run no full suite until the manager gives them the line.
+tools** since 2026-11-24 13:21Z, for the re-proof of PR #253 at
+`b958ffa` on `20f0954` (memory at start: 4.6 GB free, commit 41.8 of
+56.2 GB). When it ends: end notice at once, then **dynasty has the
+line next** (dynasty PR #659, about 5 minutes); PR #255's re-proof
+starts only after dynasty's end notice. A full run takes about 59
+minutes (608 tests). No builder runs a full suite without the line.
+
+**Written again at a compact prep, 2026-11-24 about 13:50Z.** Since
+the lines above: PR #256 is this file's PR; `check-in-hygiene` passed
+over #253's branch (run with the system Python 3.12,
+`python -m pre_commit run --from-ref origin/main --to-ref HEAD` in the
+builder's branch); PR #255 (#254, head `ec8d30d`) had its code review,
+no findings (pull/255 issuecomment-7132924099), and waits for its
+re-proof with `pre-commit` not needed (one file, `.gitattributes`).
+The owner-queue mod's planning moved to Tools-central-planner (issues/137
+issuecomment-7132702847); #137's Bring to Chat is not built.
 
 **#244 Part 2 is merged**: PR #246 at `aefbc68`. Its re-proof was GREEN
 with the pytest step at 3510.8s, 89s under the old 3600s cap (pull/246
@@ -114,7 +126,9 @@ Next, in order:
 | `t244-pytest-hang` | #244 | medium | `9fd98bc0` | #246 merged at `aefbc68` | stopped; branch and worktree left for #250's script (step 0) |
 | `t250-closeout-script` | #250 | high | `08a25cd7` | #252 at `ab3c279` | resumed 2026-11-24 with the second amendment; working; no full run without the test line |
 | `t248-adr-hygiene` | #248 | low | `f328d768` | #253 at `b958ffa` | stopped; review closed; waits for the re-proof (step 1a) |
-| `t254-gitattributes` | #254 | low | `cd093765` | none yet | dispatched 2026-11-24; working |
+| `t254-gitattributes` | #254 | low | `cd093765` | #255 at `ec8d30d` | reported green; review done, no findings; waits for the re-proof |
+| `t257-autoclose` | #257 | low | `a72dcbd0` | none yet | dispatched 2026-11-24 on Ben's "Dispatch now (Recommended)" (issues/257 issuecomment-7133071425); shares three files with PR #197 |
+| `t111-findout` | #111, first step | high | `6145f7ac` | none: it posts one comment | dispatched 2026-11-24 on Ben's "Dispatch now (Recommended)" (issues/111 issuecomment-7133071967); the build is not dispatched |
 
 The first two are not listed by `claude agents` since the app restart;
 check before closeout. `t244`'s first session `8ef7acf3` was stopped
