@@ -226,20 +226,30 @@ as pointer, one Current block), #216 (ruleset setup), #222 (#195 docs),
 **Open builder PRs:** #182 (#175), #196 (#179), #197 (#161), #211 (#168),
 #214 (#207), #239, #242, #252 (#250, draft), #253 (#248). #182 keeps
 its place with no rework (pull/182 issuecomment-7104046736). #196 and
-#197 are planned by dff-central-planner. #137 and #111
-(the owner-queue mod) are with dff-central-planner for one refreshed
-design with auto-close, at Ben's word (#137 issuecomment-7103524615).
+#197 were planned by dff-central-planner and are this planner's now,
+with the rest of the mod lane (above).
 
-**#137 and #111, the mod redesign with auto-close** (dff-central-planner
-designs and briefs it). At Ben's word on 2026-11-24 the Tools planner
-posted the tools side: #137 issuecomment-7132602474. Its part is one
-rule PR (`parking.md`, the queue template, the comment rule of #111),
-written once dff-central-planner answers whether auto-close changes the
-queue file or only what the pane draws. ADR 0014 stays held for the
-design. dff-central-planner's answer of 2026-11-24: the refresh is not
-started; it comes after dynasty PR #667's merge and a #548 ruling,
-unless Ben says otherwise in its chat. The file-or-pane point goes to
-Ben by button with the design.
+**The owner-queue mod lane is the Tools planner's since 2026-11-24.**
+Ben's "Transfer the whole mod lane" in dff-central-planner's chat
+(handoff: #137 issuecomment-7132677793), confirmed here by button,
+"Whole mod lane (Recommended)" (#137 issuecomment-7132702847). It
+replaces the lane ruling of 2026-11-09. Tools-builder-manager is told.
+- **First: #137 with #111 and auto-close, one design.** Nothing was
+  drafted by dff-central-planner and it holds no answer of Ben's. The
+  tools-side notes are at #137 issuecomment-7132602474. The design goes
+  to Ben by button: auto-close in the file or only in the pane (advice:
+  pane only), one button or two, the order against PRs #197 and #196.
+  Then the brief, tier and Ben's go, sent to the manager. ADR 0014 is
+  held for it. The rule text (`parking.md`, the queue template, #111's
+  comment rule) is one planner PR beside the mod PR.
+- **Constraints from dynasty** (the handoff): the manager is the queue
+  file's only writer and records every Note and Answer before the CLI
+  removes an entry; a message keeps the question, the answer and a
+  `Time:` line; nothing acts on an entry mid re-key. dff-central-planner
+  wants one line when the pane's behaviour changes.
+- **The lane's other open tickets, not yet read by this planner:** #240,
+  #234, #229, #226, #225, #202, #188, #185, #179 (PR #196), #161
+  (PR #197), #147, #142, #195.
 
 **Planned, not opened:** the `session-rules` PR for #217's choices 1, 2
 and 4 with 245,000 (after PR #210; its text: #217
@@ -284,7 +294,8 @@ the manager asks.
   on findings and on builder PRs when the manager asks; gaps in the
   session-dispatch plugin and this repo; `PROJECT-RULES.md`, the
   `session-rules` text and ADR-0018; the baseball handoff doc.
-- Not the owner-queue mod (dff-central-planner plans it). Never builds,
+- Also the owner-queue mod, since 2026-11-24 (#137
+  issuecomment-7132702847). Never builds,
   never dispatches, never writes a settings file or `.claude/dispatch.json`.
 - **Peers** (address by name from ListAgents): Tools-builder-manager
   (dispatches, re-proves, merges and writes this repo's queue);
