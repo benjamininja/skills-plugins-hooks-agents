@@ -264,6 +264,13 @@ replaces the lane ruling of 2026-11-09. Tools-builder-manager is told.
   #234, #229, #226, #225, #202, #188, #185, #179 (PR #196), #161
   (PR #197), #147, #142, #195.
 
+**#258, token cost by role** (`Tier: unset`): the personal-assistant's
+ledger of 2026-11-24, held as a report. Managers and planners carry 55
+percent of the tokens, and most of every role's cost is context
+re-read per message. Open: whether a cost rule (model and effort per
+role, a lower clear point, a start-up read budget) is worth a ticket.
+The planner does a second look and a SWOT, then asks Ben by button.
+
 **Planned, not opened:** the `session-rules` PR for #217's choices 1, 2
 and 4 with 245,000 (after PR #210; its text: #217
 issuecomment-6896675395, #161 issuecomment-6895988934); #212's PR
