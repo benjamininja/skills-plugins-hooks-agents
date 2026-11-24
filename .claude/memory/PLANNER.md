@@ -12,8 +12,8 @@ in this file's git history:
 The last stacked version, with 26 session blocks, is that branch's commit
 before the #243 rewrite.
 
-Last state-back: 2026-11-24, after the trial compact of #258 (its
-result, #260 and #240's ruling; see those blocks). Since the clear of 2026-11-23: all four role sessions
+Last state-back: 2026-11-24, before the second compact of the day (the
+cost tickets, PR #210 brought forward, #262 ruled, the work order). Since the clear of 2026-11-23: all four role sessions
 restarted with new queue ids; PR #236 merged as `20f0954`; #250's
 second amendment reached builder t250 and #254 is dispatched; the
 owner-queue mod lane moved to this planner, its design was decided
@@ -53,16 +53,19 @@ notice. The manager's next state PR is #256.
   script, on Ben's button in the manager's chat.
 - #242: the re-check accepted F1 and F2 at `b278602`. It merges main in
   (#246 changed the same script), then needs its re-proof.
-- **PR #253** (#248, builder t248) is open at `b958ffa`; its code review
-  is closed with no blocking finding (record: pull/253
-  issuecomment-7104501918). It adds `tests/test_adr_readme.py`: every
-  file in `docs/adr/` needs a row in `docs/adr/README.md`, linked in the
-  row's first cell. **After #253 merges, the planner merges main into
-  #184, #205 and #249 and adds each ADR's row**; #211 (ADR-0017) is a
-  builder PR and needs a follow-up to its builder. The README's roles
-  row says PR #249 replaces the dispatch role file with
-  `supabase-router` and updates the row (F2). That is not yet true of
-  #249; the planner makes it true when #249 merges main in.
+- **PR #253 (#248) merged as `6f67165` on 2026-11-24.** Every ADR file
+  now needs a row in `docs/adr/README.md` (`tests/test_adr_readme.py`).
+  **Done by the planner the same day:** main merged in and the row
+  added on #205 (`3bddb2c`), #184 (`540dfff`) and #249 (`c010847`, which
+  also makes the two Supabase role rows true). The three and PR #252
+  each add a row at the same place, so whichever merges second merges
+  main in again. #211 (ADR-0017) needs its builder to do the same; the
+  manager is told.
+- **The work order for the manager** (asked at Ben's request):
+  pull/198 issuecomment-7134281643. Dispatch now on recorded gos: #187,
+  #189, #219, #206, #167 (after #242), #192. Test line after #255, #259
+  and #252: #197 first, then #210, #242, #205 and #249, #239 and #238,
+  #211, #184, the rest. Nothing to close.
 
 **#247, the Supabase roles (grilled with Ben, 2026-11-23; the ten
 decisions are the ticket's body).** PR #249 is open: `supabase-router`
@@ -181,9 +184,18 @@ issues/250 issuecomment-7103259381; dynasty's half is dynasty #655).
   manager has run no closeout yet, by its own state file.
 
 **Next for this planner, in order:**
-0. **Awaited:** PR #252's new head from builder t250. If the manager
-   asks, read it against points 16 to 22. Tell dff-central-planner when PR #249
-   merges (dynasty PR #653 goes ready then).
+0. **PR #210, brought forward on Ben's "Bring PR #210 forward
+   (Recommended)"** (pull/210 issuecomment-7134168914). Main is merged
+   in and a manager's Current block gains an In flight section; head
+   `a30c3fa` (pull/210 issuecomment-7134267607). **Next: check its CI
+   (`gh pr checks 210`), then ask Ben's approval at that head by
+   button**, then tell the manager it may enter the test line. After it
+   merges: ask Ben's go for #260 and #261 as one builder PR. #261's
+   wording moves with #210 (the budget applies to the role file's read
+   list); amend #261 before that dispatch. #260 gains the sentence of
+   #262's ruling 5.
+0b. Tell dff-central-planner when PR #249 merges (dynasty PR #653 goes
+   ready then).
 1. **After #242 merges:** the planner's PR that replaces PROJECT-RULES'
    one-run message rule with the lock.
 2. **#233's finding** when it comes: rule on it. Send the link to
@@ -325,8 +337,17 @@ issuecomment-7133316206.
   fixed context find-out, lowest priority). **#262's find-out has Ben's
   "Go, find-out now"** (issues/262 issuecomment-7134018512, with the
   brief; the manager's view on three compacts is at
-  issuecomment-7133968750). **Dispatched as builder `t262-findout`**
-  (issues/262 issuecomment-7134055165). Its finding comes to the planner to
+  issuecomment-7133968750). Done by builder `t262-findout` (finding:
+  issuecomment-7134196482) and **ruled** (issuecomment-7134266469): the
+  owner types the compact; the mod counts, the state file is the
+  fallback; the boundary after the third compact is a clear; the reset
+  prompt is still written before a compact and read after it when a
+  background task ran or there was no prep. **This planner is not
+  tracked by the mod, so its count stands here: compacts since the last
+  clear (2026-11-23): 3 once the compact Ben asked for late on
+  2026-11-24 is done (two came earlier that day), so the boundary after
+  it is a clear, if the rule is applied before it is built.** The build
+  brief follows after PR #210, #260 and PR #197; go by button then. Its finding comes to the planner to
   rule. The others are not dispatched; each go is asked of Ben by
   button at its turn. **The baseline is frozen on #258** (issuecomment-7134046140: 145.2
   million over 68 sessions, each reply counted once; the earlier 242
@@ -377,8 +398,9 @@ the manager asks.
 - The Action to remove the mod's old hand copy (#195).
 - The merge of the private configuration repository's working branch.
 
-**Waiting on Ben:** nothing. Next asks, each by button at its turn: the
-go for #240's step 2 (after PR #259 and PR #197 merge), then #111's
+**Waiting on Ben:** nothing yet. First ask after the compact: his
+approval of PR #210 at `a30c3fa`, once its CI is green. Then, each by
+button at its turn: the go for #260 and #261, the go for #240's step 2 (after PR #259 and PR #197 merge), then #111's
 build brief, and any point of the cost plan the three sessions do not
 agree on.
 
