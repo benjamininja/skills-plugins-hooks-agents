@@ -252,9 +252,15 @@ replaces the lane ruling of 2026-11-09. Tools-builder-manager is told.
   for the planner's ruling on that finding, PR #197's merge and #240's
   finding; the planner then posts the build brief and asks Ben's go.
   ADR 0014 is held for it. #137's F7 fold-in moved here.
-- **Open:** whether #137 closes now (a button for Ben at a quiet
-  point); #240's go and place in the dispatch line (asked of the
-  manager).
+- **Both are dispatched** on Ben's buttons in the manager's chat:
+  builder `t257-autoclose` (issues/257 issuecomment-7133071425) and
+  builder `t111-findout` (issues/111 issuecomment-7133071967).
+- **Open, for Ben by button:** whether #137 closes now; and #240
+  (medium), which has no go and no place in the manager's line (#233,
+  #232, #189, #219, #241 after the open PRs). #111's build needs its
+  finding, so the planner reads #240, names its place and asks Ben.
+- PR #255 (#254) is open with a clean code review; its re-proof follows
+  #253's.
 - **Constraints from dynasty** (the handoff): the manager is the queue
   file's only writer and records every Note and Answer before the CLI
   removes an entry; a message keeps the question, the answer and a
