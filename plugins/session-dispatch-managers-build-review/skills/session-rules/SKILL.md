@@ -226,7 +226,7 @@ writes no file under `.claude/`.
 ### A role session's clear boundary
 
 A session run with a main-agent role (planner, manager, consultant,
-dispatch) prepares before every clear. A stage builder keeps the rules
+dispatch, assistant) prepares before every clear. A stage builder keeps the rules
 above instead.
 
 **When.** Any of three triggers: it has been idle about 45 minutes; its
