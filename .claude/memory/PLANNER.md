@@ -230,6 +230,17 @@ its place with no rework (pull/182 issuecomment-7104046736). #196 and
 (the owner-queue mod) are with dff-central-planner for one refreshed
 design with auto-close, at Ben's word (#137 issuecomment-7103524615).
 
+**#137 and #111, the mod redesign with auto-close** (dff-central-planner
+designs and briefs it). At Ben's word on 2026-11-24 the Tools planner
+posted the tools side: #137 issuecomment-7132602474. Its part is one
+rule PR (`parking.md`, the queue template, the comment rule of #111),
+written once dff-central-planner answers whether auto-close changes the
+queue file or only what the pane draws. ADR 0014 stays held for the
+design. dff-central-planner's answer of 2026-11-24: the refresh is not
+started; it comes after dynasty PR #667's merge and a #548 ruling,
+unless Ben says otherwise in its chat. The file-or-pane point goes to
+Ben by button with the design.
+
 **Planned, not opened:** the `session-rules` PR for #217's choices 1, 2
 and 4 with 245,000 (after PR #210; its text: #217
 issuecomment-6896675395, #161 issuecomment-6895988934); #212's PR
