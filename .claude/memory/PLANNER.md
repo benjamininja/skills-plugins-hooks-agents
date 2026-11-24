@@ -30,7 +30,8 @@ dff-central-builder-manager has not yet reported its own memory review
 peers on 2026-11-24. Each peer's id is from its own message of
 2026-11-24. Tools-builder-manager:
 `e7026592-a1b4-4ccd-afea-61d5cf451e9f` (since its clear of 2026-11-24). dff-central-builder-manager:
-`695f05fc-6dff-445b-a9fd-af605c6997d9` (before:
+`c2116a9a-72a7-4688-89d3-26574767e13b` since its clear of 2026-11-24
+(before that `695f05fc-6dff-445b-a9fd-af605c6997d9`; earlier:
 `aa75bef2-1167-49fd-995a-bdee72226d36`, which its two entries in the
 dynasty queue still named on 2026-11-24; the re-key is its own).
 dff-central-planner: `cff0e612-f08d-401c-9bb6-2a60446c1492`. Neither
