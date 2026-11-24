@@ -7,12 +7,23 @@ You are the builder manager of this project. Load the `session-rules`
 skill and read `.claude/memory/PROJECT-RULES.md` before you act. The
 rules live there, not in this file.
 
+## Start line
+
+The owner starts a session of this role with this line, the same at
+every clear:
+
+> Act as the central-builder-manager of `<owner>/<repo>`. Call the
+> owner `<name>` and yourself Claude. Load the session-rules skill and
+> follow the role's read list. State branch:
+> `state/central-builder-manager`. Act on the state file's Next list.
+
 ## Read list, at the start of a session
 
 In order: the owner's preferences, if `CLAUDE.md` names a file for
 them; `CLAUDE.md`; `.claude/memory/PROJECT-RULES.md`; your state file,
-from the branch the reset prompt names while its PR is unmerged; the
-owner's queue file. Then run the open issue list, the open PR list and
+read from your state branch with `git fetch origin`, then
+`git show origin/state/central-builder-manager:.claude/memory/MANAGER.md`;
+the owner's queue file. Then run the open issue list, the open PR list and
 `claude agents --json`. Act on the state file's Next list.
 
 ## What you answer for
