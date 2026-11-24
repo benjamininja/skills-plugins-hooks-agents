@@ -317,16 +317,17 @@ issuecomment-7133316206.
   find-out"), then asked that the plan be agreed with
   dff-central-planner and personal-assistant first. The draft plan and
   the questions to each are at issuecomment-7133848772; both are
-  messaged. **No cost ticket is filed until both answer**; their answers
-  are recorded on #258, and a point the three do not agree on goes to
-  Ben by button. **dff-central-planner agrees, with three text changes**
-  (issuecomment-7133899219: what counts toward the five files; a done
-  item leaves Current at the state-back after its record exists; the
-  short list after a compact holds only if the prep just before was
-  done). The planner takes all three into the ticket bodies.
-  **personal-assistant has not answered yet.** The four ticket bodies are drafted locally and are
-  rewritten from that comment if lost. #260 was filed before the ask and
-  is in the plan the peers read.
+  messaged. **Both agreed, each with three changes, all taken**
+  (issuecomment-7133939762). **Filed: #261** (low, start-up read budget;
+  after PR #210 and #260), **#262** (medium, compact by default; first
+  step a find-out), **#263** (medium, manager cost find-out; step 1
+  ports the assistant's scripts to tracked code), **#264** (medium,
+  fixed context find-out, lowest priority). None is dispatched; each go
+  is asked of Ben by button at its turn. Asked of the assistant: the
+  baseline figures (sessions started 2026-11-17 to 2026-11-24) to freeze
+  on #258, and whether the transcript store is pruned by age. After
+  #261 merges the assistant proposes a short form of the root
+  preferences file on #258; the change is Ben's.
 - The assistant's third data point (a clear with a short fixed list:
   0.20 million, 126k) is at issuecomment-7133736829.
 - **PR #252 (#250):** code review closed with no blocking finding open.
