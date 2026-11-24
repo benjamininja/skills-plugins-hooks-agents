@@ -12,13 +12,15 @@ in this file's git history:
 The last stacked version, with 26 session blocks, is that branch's commit
 before the #243 rewrite.
 
-Last state-back: 2026-11-24, at the start after the clear of
-2026-11-23. All four role sessions cleared and restarted; their new
-queue ids are below. Nothing has merged since `aefbc68` (PR #246,
-2026-11-23). The planner checked PR #252 against the second amendment
-and sent both owed items to Tools-builder-manager again; it answered
-both. dff-central-builder-manager has not yet reported its own memory
-review (#243); nothing is owed to it.
+Last state-back: 2026-11-24, compact prep at Ben's word ("prepare for
+compact"). Since the clear of 2026-11-23: all four role sessions
+restarted with new queue ids; PR #236 merged as `20f0954`; #250's
+second amendment reached builder t250 and #254 is dispatched; the
+owner-queue mod lane moved to this planner, its design was decided
+with Ben, #257 was filed and #111 refreshed, and both went to
+Tools-builder-manager. A compact keeps this planner's queue id.
+dff-central-builder-manager has not yet reported its own memory review
+(#243); nothing is owed to it.
 
 ## Current
 
@@ -399,6 +401,11 @@ the manager asks.
 
 ### Lessons
 
+- Read what the code does today before putting design options to Ben,
+  and ask what a word of his means before building options on it. For
+  "auto-close" the planner offered three ways to hide or remove an
+  entry; Ben meant the entry collapsing, and the closed row already
+  showed the staged choice (#137, #257, 2026-11-24).
 - Before filing a ticket or planning a PR, search open issues and PRs
   for the same file. #245 and a planned PR duplicated #237, #239 and
   #241 (2026-11-22).
