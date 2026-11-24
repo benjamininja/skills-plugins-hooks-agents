@@ -6,11 +6,16 @@
   The fixed steps of a dispatch, so no manager session types them by hand:
 
     1. read <main checkout>\.claude\dispatch.json (no file, no run)
-    2. take the tier's model, effort and turn cap (no tier, no dispatch)
+    2. take the tier's model, effort and turn cap (no tier, no dispatch);
+       -TurnCap may only lower the cap, and the cap is advice in the prompt:
+       the start command has no turn-limit option
     3. read the prompt file (a double quote in it is refused)
     4. read the deny list from the builders' settings file, and the
        -Profile's rules from the owner's profiles file (unknown: refused)
-    5. make the worktree .claude\worktrees\<Name> on branch worktree-<Name>
+    5. git fetch origin in the main checkout, then make the worktree
+       .claude\worktrees\<Name> on branch worktree-<Name>, with no upstream,
+       at -Base (default origin/main); a failed fetch or a missing base
+       stops the run before anything is made
     6. run the project's setup commands in it
     7. start the session in the background
     8. before step 5, read claude agents --json and set aside the ids of
@@ -21,7 +26,8 @@
        report what the list shows
 
   Dry run by default: steps 1 to 4 are done, every command of steps 5 to 8
-  is printed, and nothing is changed. Pass -Apply to act.
+  is printed, and nothing is changed. The dry run does not fetch: it prints
+  the base with its commit as of the last fetch. Pass -Apply to act.
 
   The permission mode is dontAsk. No parameter and no config key changes
   it, so a builder is never started in a mode that skips permission checks.
@@ -44,6 +50,7 @@ param(
     [string]$Tier,
     [Parameter(Mandatory = $true)][string]$PromptFile,
     [int]$TurnCap,
+    [string]$Base = 'origin/main',
     [string]$Profile,
     [string]$Project = (Get-Location).Path,
     [switch]$NoSetup,
@@ -79,6 +86,12 @@ if ($Name -notmatch '^[a-z0-9][a-z0-9-]{0,62}$') {
 $common = (& git -C $Project rev-parse --path-format=absolute --git-common-dir 2>$null)
 if ($LASTEXITCODE -ne 0 -or -not $common) { Refuse "not a git checkout: $Project" }
 $main = (Split-Path -Parent ($common -replace '/', '\')).TrimEnd('\')
+
+# The worktree's base: a remote-tracking branch of origin, never a bare value
+# that could pass for a flag of git.
+if ($Base -cnotmatch '^origin/[A-Za-z0-9_][A-Za-z0-9._/-]*$' -or $Base.Contains('..') -or $Base.EndsWith('/') -or $Base.EndsWith('.lock')) {
+    Refuse "-Base must be origin/<branch>, with the branch of an open PR or main: $Base"
+}
 
 $configPath = Join-Path $main '.claude\dispatch.json'
 if (-not (Test-Path -LiteralPath $configPath -PathType Leaf)) {
@@ -117,7 +130,15 @@ if ($over -and $over.PSObject.Properties[$Tier]) {
         if ($value -and $value.Value) { $chosen[$key] = $value.Value }
     }
 }
-if ($TurnCap -gt 0) { $chosen.turnCap = $TurnCap }
+$tierCap = [int]$chosen.turnCap
+if ($PSBoundParameters.ContainsKey('TurnCap')) {
+    # The flag only lowers the tier's cap; raising one is the owner's, in dispatch.json.
+    if ($TurnCap -le 0) { Refuse "-TurnCap must be above zero: $TurnCap" }
+    if ($TurnCap -gt $tierCap) {
+        Refuse "-TurnCap $TurnCap is above the $Tier tier's cap of $tierCap. The flag only lowers a cap; the owner raises one under tiers in the config file"
+    }
+    $chosen.turnCap = $TurnCap
+}
 
 # 3. The prompt.
 if (-not (Test-Path -LiteralPath $PromptFile -PathType Leaf)) { Refuse "no prompt file: $PromptFile" }
@@ -215,7 +236,10 @@ $worktree = Join-Path $main ".claude\worktrees\$Name"
 $branch = "worktree-$Name"
 $hasWorktree = Test-Path -LiteralPath $worktree -PathType Container
 
-$addWorktree = @('git', '-C', $main, 'worktree', 'add', ".claude/worktrees/$Name", '-b', $branch)
+$baseCommit = (& git -C $main rev-parse --verify --quiet "${Base}^{commit}" 2>$null)
+if ($LASTEXITCODE -ne 0) { $baseCommit = '' }
+$fetch = @('git', '-C', $main, 'fetch', '--quiet', 'origin')
+$addWorktree = @('git', '-C', $main, 'worktree', 'add', ".claude/worktrees/$Name", '-b', $branch, '--no-track', $Base)
 $start = @(
     $claude, '--bg', '-w', $Name, '--name', $Name,
     '--model', $chosen.model, '--effort', $chosen.effort,
@@ -234,6 +258,13 @@ Write-Output "name:      $Name"
 Write-Output "tier:      $Tier ($($chosen.model), effort $($chosen.effort), turn cap $($chosen.turnCap))"
 Write-Output "main:      $main"
 Write-Output "worktree:  $worktree$(if ($hasWorktree) { ' (already there)' })"
+if ($hasWorktree) {
+    Write-Output "base:      $Base (the worktree is already there; it is left as it is)"
+} elseif ($baseCommit) {
+    Write-Output "base:      $Base at $baseCommit (as of the last fetch; -Apply fetches first)"
+} else {
+    Write-Output "base:      $Base (not found yet; -Apply fetches first and refuses if it is still not there)"
+}
 if ($sharedSettingsPath) {
     Write-Output "settings:  $settingsPath (the profile's base file, in place of $sharedSettingsPath; it holds all $($deny.Count) shared deny rules)"
 } else {
@@ -267,6 +298,7 @@ if (-not $Apply) {
     Write-Output ''
     Write-Output 'DRY RUN. Nothing was changed. These would run, in this order:'
     Write-Output "  [first; if it cannot be read, nothing is started. Rows already named $Name are set aside] $(Show $check)"
+    Write-Output "  [then, in this order; if either fails, nothing is started] $(Show $fetch)"
     if (-not $hasWorktree) { Write-Output "  $(Show $addWorktree)" }
     if ($NoSetup) {
         Write-Output '  (no setup: -NoSetup)'
@@ -320,7 +352,14 @@ $first = Get-Rows
 if (-not $first.Ok) { Refuse "nothing was started: $($first.Why)" }
 $before = @($first.Rows | ForEach-Object { Get-ShortId $_ })
 
-# 5. The worktree.
+# 5. The base, fetched now, then the worktree at it. A base that cannot be
+# fetched or found stops the run before anything is made.
+$fetchArgs = $fetch[1..($fetch.Count - 1)]
+& git @fetchArgs
+if ($LASTEXITCODE -ne 0) { Refuse "git fetch origin failed in $main (exit $LASTEXITCODE); nothing was started" }
+$baseCommit = (& git -C $main rev-parse --verify --quiet "${Base}^{commit}" 2>$null)
+if ($LASTEXITCODE -ne 0 -or -not $baseCommit) { Refuse "the base $Base does not exist after the fetch; nothing was started" }
+Write-Output "base:      $Base at $baseCommit (fetched)"
 if (-not $hasWorktree) {
     & git -C $main worktree add ".claude/worktrees/$Name" -b $branch
     if ($LASTEXITCODE -ne 0) { Refuse "git could not make the worktree $worktree" }

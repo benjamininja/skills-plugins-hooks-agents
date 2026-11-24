@@ -19,6 +19,6 @@
   "//readLine": "The first lines of every builder's prompt: what it reads before it works. No double quote.",
   "readLine": "Read .claude/memory/PROJECT-RULES.md and .claude/memory/NEEDS-OWNER.md, then load the session-rules skill.",
 
-  "//tiers": "Optional. Overrides of the plugin's tier table, per tier: model, effort, turnCap. Leave it out to use the defaults (low: claude-sonnet-5-5, medium, 30 turns; medium: claude-sonnet-5-5, high, 80; high: claude-opus-5-5, medium, 200).",
+  "//tiers": "Optional. Overrides of the plugin's tier table, per tier: model, effort, turnCap. Leave it out to use the defaults (haiku: claude-haiku-5-5, medium, 15 turns; low: claude-sonnet-5-5, medium, 30 turns; medium: claude-sonnet-5-5, high, 80; high: claude-opus-5-5, medium, 200).",
   "tiers": {}
 }

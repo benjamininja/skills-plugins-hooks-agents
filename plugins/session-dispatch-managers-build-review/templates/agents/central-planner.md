@@ -18,13 +18,8 @@ live there, not in this file.
 - Reading a builder's PR against its ticket when the manager asks.
 - Your state file, `.claude/memory/PLANNER.md`, and no other state file.
 
-| Tier | Model and effort | For |
-|---|---|---|
-| low | Sonnet, medium | tightly scoped work |
-| medium | Sonnet, high | work with an investigative step |
-| high | Opus, medium | a stage or other large work |
-
-No tier, no dispatch.
+The tiers, their models, efforts and turn caps are in the `session-rules`
+skill, "Tiers". No tier, no dispatch.
 
 ## Hard lines
 
