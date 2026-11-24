@@ -39,8 +39,9 @@ prints the base (`origin/main`, or the brief's `Base:` line passed as
    `.claude/worktrees/<name>` on branch `worktree-<name>`, with no
    upstream, at the base: `origin/main`, or `-Base origin/<branch>` for a
    brief whose `Base:` line names the branch of an open PR in this
-   repository. A failed fetch or a missing base refuses, and nothing is
-   started. A worktree already there is left as it is.
+   repository. The base is read as `refs/remotes/<base>`. A failed fetch
+   or a missing base refuses, and nothing is started. A worktree already
+   there is left as it is, and no fetch is made for it.
 6. Runs the config's setup commands in the worktree. `-NoSetup` skips
    them, for a read-only job whose brief says so.
 7. Starts the session in the background from the main checkout, in

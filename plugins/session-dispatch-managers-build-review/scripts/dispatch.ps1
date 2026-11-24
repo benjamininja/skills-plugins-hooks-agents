@@ -12,10 +12,11 @@
     3. read the prompt file (a double quote in it is refused)
     4. read the deny list from the builders' settings file, and the
        -Profile's rules from the owner's profiles file (unknown: refused)
-    5. git fetch origin in the main checkout, then make the worktree
-       .claude\worktrees\<Name> on branch worktree-<Name>, with no upstream,
-       at -Base (default origin/main); a failed fetch or a missing base
-       stops the run before anything is made
+    5. unless the worktree is there: git fetch origin in the main checkout,
+       then make the worktree .claude\worktrees\<Name> on branch
+       worktree-<Name>, with no upstream, at refs/remotes/<-Base> (default
+       origin/main); a failed fetch or a missing base stops the run before
+       anything is made
     6. run the project's setup commands in it
     7. start the session in the background
     8. before step 5, read claude agents --json and set aside the ids of
@@ -236,10 +237,14 @@ $worktree = Join-Path $main ".claude\worktrees\$Name"
 $branch = "worktree-$Name"
 $hasWorktree = Test-Path -LiteralPath $worktree -PathType Container
 
-$baseCommit = (& git -C $main rev-parse --verify --quiet "${Base}^{commit}" 2>$null)
+# The base is read and used by its full ref name: a short name would find a
+# local branch or tag called origin/<x> before the remote-tracking ref.
+$baseRef = "refs/remotes/$Base"
+$baseCommit = (& git -C $main rev-parse --verify --quiet "${baseRef}^{commit}" 2>$null)
 if ($LASTEXITCODE -ne 0) { $baseCommit = '' }
 $fetch = @('git', '-C', $main, 'fetch', '--quiet', 'origin')
-$addWorktree = @('git', '-C', $main, 'worktree', 'add', ".claude/worktrees/$Name", '-b', $branch, '--no-track', $Base)
+# The one worktree command: the dry run prints this array and -Apply runs it.
+$addWorktree = @('git', '-C', $main, 'worktree', 'add', ".claude/worktrees/$Name", '-b', $branch, '--no-track', $baseRef)
 $start = @(
     $claude, '--bg', '-w', $Name, '--name', $Name,
     '--model', $chosen.model, '--effort', $chosen.effort,
@@ -298,8 +303,10 @@ if (-not $Apply) {
     Write-Output ''
     Write-Output 'DRY RUN. Nothing was changed. These would run, in this order:'
     Write-Output "  [first; if it cannot be read, nothing is started. Rows already named $Name are set aside] $(Show $check)"
-    Write-Output "  [then, in this order; if either fails, nothing is started] $(Show $fetch)"
-    if (-not $hasWorktree) { Write-Output "  $(Show $addWorktree)" }
+    if (-not $hasWorktree) {
+        Write-Output "  [then, in this order; if either fails, nothing is started] $(Show $fetch)"
+        Write-Output "  $(Show $addWorktree)"
+    }
     if ($NoSetup) {
         Write-Output '  (no setup: -NoSetup)'
     } else {
@@ -354,14 +361,16 @@ $before = @($first.Rows | ForEach-Object { Get-ShortId $_ })
 
 # 5. The base, fetched now, then the worktree at it. A base that cannot be
 # fetched or found stops the run before anything is made.
-$fetchArgs = $fetch[1..($fetch.Count - 1)]
-& git @fetchArgs
-if ($LASTEXITCODE -ne 0) { Refuse "git fetch origin failed in $main (exit $LASTEXITCODE); nothing was started" }
-$baseCommit = (& git -C $main rev-parse --verify --quiet "${Base}^{commit}" 2>$null)
-if ($LASTEXITCODE -ne 0 -or -not $baseCommit) { Refuse "the base $Base does not exist after the fetch; nothing was started" }
-Write-Output "base:      $Base at $baseCommit (fetched)"
+# A worktree already there does not use the base, so it is not fetched for.
 if (-not $hasWorktree) {
-    & git -C $main worktree add ".claude/worktrees/$Name" -b $branch
+    $fetchArgs = $fetch[1..($fetch.Count - 1)]
+    & git @fetchArgs
+    if ($LASTEXITCODE -ne 0) { Refuse "git fetch origin failed in $main (exit $LASTEXITCODE); nothing was started" }
+    $baseCommit = (& git -C $main rev-parse --verify --quiet "${baseRef}^{commit}" 2>$null)
+    if ($LASTEXITCODE -ne 0 -or -not $baseCommit) { Refuse "the base $Base does not exist after the fetch; nothing was started" }
+    Write-Output "base:      $Base at $baseCommit (fetched)"
+    $addArgs = $addWorktree[1..($addWorktree.Count - 1)]
+    & git @addArgs
     if ($LASTEXITCODE -ne 0) { Refuse "git could not make the worktree $worktree" }
 }
 

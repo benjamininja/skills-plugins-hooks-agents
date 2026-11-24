@@ -149,8 +149,10 @@ The script refuses, with exit code 2 and one line that begins
 - `-TurnCap` is zero, negative, or above the tier's cap;
 - `-Base` is not `origin/<branch>`, or starts with a hyphen;
 - `-Apply` is given and the project is not on the owner's list;
-- `-Apply` is given and `git fetch origin` fails in the main checkout, or
-  the base does not exist after it (nothing is started).
+- `-Apply` is given, the worktree is not there yet, and `git fetch origin`
+  fails in the main checkout, or the base (`refs/remotes/<base>`, so a
+  local branch or tag of the same name cannot stand in for it) does not
+  exist after it (nothing is started).
 
 The dry run prints the base, `origin/main` unless `-Base` names another,
 with its commit as of the last fetch. It does not fetch.
@@ -161,7 +163,8 @@ file and not the checkout's branch), makes the worktree
 no upstream, runs the setup lines, starts the session in the
 background, and checks that the session is alive and runs in its
 worktree. If the check fails it stops the session and says so. A worktree
-already there is left as it is, at whatever base it has.
+already there is left as it is, at whatever base it has, and no fetch is
+made for it.
 
 `-Base` is for a stacked brief: the brief's `Base:` line names
 `origin/<branch>` of an open PR in the same repository, and the manager

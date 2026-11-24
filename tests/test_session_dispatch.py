@@ -150,7 +150,7 @@ def test_the_dry_run_without_origin_prints_the_base_and_does_not_fail(project):
     assert "base:      origin/main (not found yet; -Apply fetches first" in out
     assert "git -C" in out and "fetch --quiet origin" in out
     add = next(line for line in out.splitlines() if "worktree add" in line)
-    assert add.endswith("-b worktree-fix-42 --no-track origin/main")
+    assert add.endswith("-b worktree-fix-42 --no-track refs/remotes/origin/main")
     assert out.index("fetch --quiet origin") < out.index("worktree add")
 
 
@@ -185,7 +185,50 @@ def test_a_base_is_taken_and_printed(project):
     out = dispatch(project, "-Tier", "medium", "-Base", "origin/stack").stdout
 
     assert f"base:      origin/stack at {sha}" in out
-    assert "--no-track origin/stack" in out
+    assert "--no-track refs/remotes/origin/stack" in out
+
+
+def test_a_local_tag_or_branch_named_like_the_base_does_not_hide_the_remote_ref(project):
+    sha = _origin_main(project)
+    git = ["git", "-C", str(project), "-c", "user.name=t", "-c", "user.email=t@example.com"]
+    subprocess.run([*git, "commit", "-q", "--allow-empty", "-m", "later"], check=True)
+    later = subprocess.run(
+        [*git, "rev-parse", "HEAD"], check=True, capture_output=True, text=True
+    ).stdout.strip()
+    assert later != sha
+    subprocess.run([*git, "tag", "origin/main", later], check=True)
+    subprocess.run([*git, "branch", "origin/stack", later], check=True)
+
+    out = dispatch(project, "-Tier", "medium").stdout
+    stacked = dispatch(project, "-Tier", "medium", "-Base", "origin/stack").stdout
+
+    assert f"base:      origin/main at {sha} " in out
+    assert f"base:      origin/stack at {sha} " in stacked
+    assert later not in out + stacked
+
+
+def test_a_worktree_already_there_is_not_fetched_for(project):
+    (project / ".claude" / "worktrees" / "fix-42").mkdir(parents=True)
+
+    out = dispatch(project, "-Tier", "medium").stdout
+
+    assert "(already there)" in out
+    assert "the worktree is already there; it is left as it is" in out
+    assert "fetch --quiet origin" not in out
+    assert "worktree add" not in out
+
+
+def test_apply_runs_the_one_worktree_command_the_dry_run_prints():
+    # -Apply cannot run in a test: it needs the owner's list in the user
+    # profile and the claude CLI. So the executed command is the printed
+    # array, and no second spelling of it may stand in the script.
+    text = SCRIPT.read_text(encoding="utf-8")
+
+    assert text.count("'worktree', 'add'") == 1
+    assert "worktree add" not in text
+    assert "$addArgs = $addWorktree[1..($addWorktree.Count - 1)]" in text
+    assert "& git @addArgs" in text
+    assert "--no-track" in text and "$baseRef" in text
 
 
 @pytest.mark.parametrize(
