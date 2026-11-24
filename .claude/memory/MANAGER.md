@@ -59,8 +59,11 @@ Next, in order:
    worktree add has no base. F2 is blocking: resolve
    `refs/remotes/<base>`. F3 is advisory. Records: pull/268
    issuecomment-7138014936, and the dry runs at issuecomment-7137993262.
-   On the builder's new head: a fresh reviewer re-checks (packet:
-   re-check, high), the manager decides, then the dry runs again, the full
+   **Answered after the clear prep at new head `8272b9a`** (pull/268
+   issuecomment-7138070336): F1, F2 and F3 are all fixed. The F1 guard is a test that reads the
+   script, because `-Apply` cannot run in a test; F2 has a dry-run test with a local tag and
+   branch named like the base. 57 tests pass, and CI is green. Next: a fresh reviewer re-checks at
+   `8272b9a` (packet: re-check, high), the manager decides, then the dry runs again, the full
    re-proof and pre-commit, then Ben's word. Merge main first if #210
    has landed. After it merges, dispatch takes `-Base origin/<branch>`
    from a brief's `Base:` line.
@@ -120,7 +123,7 @@ remove` follows a junction. Scan first: `Get-ChildItem -Recurse -Force
 | Builder | Ticket | Tier | Session | PR | Stage |
 |---|---|---|---|---|---|
 | `t260-261-readbudget` | #260, #261 | low | `d7e77ffa` | none yet | holds until #210 merges, then merges origin/main |
-| `t189-dispatch-base` | #189 | medium | `2eb375b2` | #268 at `c446faa` | answering review round one (F1, F2 blocking) |
+| `t189-dispatch-base` | #189 | medium | `2eb375b2` | #268 at `8272b9a` | round one answered; re-check owed |
 | `t219-drift-check` | #219 | medium | `750159d3` | #271 at `d7795c9` | reported green; review and re-proof owed |
 | `t206-token-check` | #206 | low | `116a30e9` | #267 at `b99dcae` | review closed; waits for the full re-proof |
 | `t231-reproof-lock` | #231 | medium | `8506434b` | #242 at `b278602` | review closed; waits for re-proof |
