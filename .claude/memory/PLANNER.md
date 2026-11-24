@@ -24,6 +24,32 @@ dff-central-builder-manager has not yet reported its own memory review
 
 ## Current
 
+**After the fourth compact, 2026-11-24 (newest; read first).**
+
+- PR #255 merged (`f6ce9b1`). PR #210's re-proof started at `a30c3fa`.
+  The #260/#261 builder waits for #210's merge, then merges origin/main
+  (issues/261 issuecomment-7137335139).
+- Rulings posted: #189 A1, B1, C1, build (issuecomment-7137380656);
+  #219 D1 to D4, build (issuecomment-7137381521); #264 accepted, no PR,
+  builder ends (issuecomment-7137382595).
+- #264 follow-up: Ben's go for route 1; ticket #269; a builder cannot
+  edit the agents folder, so it is planner PR #270 (branch
+  `t269-builder-tools`, head `0535c32`), which needs Ben's approval at
+  its turn. Before figure on issues/269 issuecomment-7137665661 (about
+  55k first-turn input). After the merge and pull the manager posts the
+  after figure; no drop means the planner opens a revert.
+- #219 sharing question: Ben chose the user-level file, trial first
+  (issuecomment-7137646647). The trial Action is in the tools queue with
+  the manager's Session line. After both results pass, the planner lists
+  the deny entries common to every project as a proposal on #219.
+- #262: the assistant's away-time report (issuecomment-7136470974) and
+  Ben's confirmation of his practice (issuecomment-7136766826). The
+  brief asks Ben whether leaving for over an hour is a fourth trigger.
+- Still to put to Ben from #264: the desktop app's Browser tools switch
+  (about 5.6k per planner or manager session), and the one desktop test
+  of a role file's tool line (bears on #233 and PR #266).
+- PR #267 (#206) is green by its builder; re-proof follows #210.
+
 **Ids (queue ids change at every clear).** This planner:
 `2f55ae6a-00e1-46b6-9f89-e3d2d939e0de` since the clear of 2026-11-23
 (before it: `6b47c44d-e4cb-43be-8d0a-51ec2776881b`), sent to the three
