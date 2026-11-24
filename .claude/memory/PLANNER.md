@@ -327,9 +327,10 @@ issuecomment-7133316206.
   brief; sent to the manager; the manager's view on three compacts is
   at issuecomment-7133968750). Its finding comes to the planner to
   rule. The others are not dispatched; each go is asked of Ben by
-  button at its turn. Asked of the assistant: the
-  baseline figures (sessions started 2026-11-17 to 2026-11-24) to freeze
-  on #258, and whether the transcript store is pruned by age. After
+  button at its turn. **The baseline is frozen on #258** (issuecomment-7134046140: 145.2
+  million over 68 sessions, each reply counted once; the earlier 242
+  million used another rule). #263 amendment 1 carries its two rules.
+  No retention setting is asked of Ben. After
   #261 merges the assistant proposes a short form of the root
   preferences file on #258; the change is Ben's.
 - The assistant's third data point (a clear with a short fixed list:
