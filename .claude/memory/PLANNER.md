@@ -195,6 +195,13 @@ issues/250 issuecomment-7103259381; dynasty's half is dynasty #655).
    **Ben gave the go for both as one builder PR at #210's merge: "Go,
    assistant waits"** (on #261). The personal-assistant proposes its
    short preferences only after #261's PR merges; send it one line then.
+   The one brief for both is issues/261 issuecomment-7134928088, with
+   one correction after it (issuecomment-7135557161: the manager runs
+   pre-commit at re-proof). The manager reports Ben confirmed the
+   dispatch in its chat; #210 is next in its line after #255.
+   **#262's rule-text brief:** write it when the #260/#261 PR opens (same
+   section), then ask Ben's go by button. Its mod brief follows PR #197,
+   after #240 step 2 and #111.
 0b. Tell dff-central-planner when PR #249 merges (dynasty PR #653 goes
    ready then).
 1. **After #242 merges:** the planner's PR that replaces PROJECT-RULES'
