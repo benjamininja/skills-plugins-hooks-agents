@@ -220,7 +220,13 @@ issues/250 issuecomment-7103259381; dynasty's half is dynasty #655).
    PR before it merges. Open point in #265's body: #260, #261 and
    #262's ruling 5 still speak of a reset prompt; under choice 1 there
    is none, so the planner rewords them when the PRs meet, or Ben
-   reverses choice 1. #266 asks Ben: model opus or fable.
+   reverses choice 1. #266 asks Ben: model opus or fable. The
+   assistant read #266 and its six points are in at head `3c01e78`
+   (pull/266 issuecomment-7136204252). **Next on these two:** when PR
+   #210 is squash-merged, merge origin/main into `t217-portable-roles`,
+   retarget #265 to main (`gh pr edit 265 --base main`), read CI, ask
+   Ben's approval at that head; the same for #266 after #265. The
+   manager keeps PR #210's branch until #265 is retargeted.
    dff-central-planner's id since its clear:
    `125a6d6d-88c4-406a-8ea8-220374432d42`; it expects one line when
    #249, #260, #261 or #262 merges and when PR #252's script first runs.
@@ -379,7 +385,10 @@ issuecomment-7133316206.
   tracked by the mod, so its count stands here: compacts since the last
   clear (2026-11-23): 3 once the compact Ben asked for late on
   2026-11-24 is done (two came earlier that day), so the boundary after
-  it is a clear, if the rule is applied before it is built.** The build
+  it is a clear, if the rule is applied before it is built. Ben asked
+  for a further compact later that day ("prepare for compact"): 4 once
+  it is done, one past the ruling's three. The prep serves a clear as
+  well; the boundary after it is a clear.** The build
   brief follows after PR #210, #260 and PR #197; go by button then. Its finding comes to the planner to
   rule. The others are not dispatched; each go is asked of Ben by
   button at its turn. **The baseline is frozen on #258** (issuecomment-7134046140: 145.2
