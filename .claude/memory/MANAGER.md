@@ -6,24 +6,23 @@ alone. Rules are in the `session-rules` skill and in
 
 ## START HERE
 
-Written 2026-11-23, prep for a clear at 14:55Z, by the tools manager
-(session Tools-builder-manager). **This copy is one local commit ahead
-of `origin`**: it is not pushed, because PR #236's re-proof runs at
-`92acab5` and a push moves the head. Read it from the worktree
-(`.claude/worktrees/state-tools-manager`) until #236 merges; then push
-it and open a new PR for the state branch. `origin/main`, the main
-checkout and the live clone are all at `aefbc68` (PR #246 merged and
-pulled). The role is in full ("Hand-over done" on #228).
-`session-dispatch` must be typed again after every clear (a compact
+Written 2026-11-24 13:25Z by the tools manager (session
+Tools-builder-manager, id `5074d20f`), after the clear of 2026-11-23.
+**PR #236 is merged** at `20f0954` on Ben's "Post and merge
+(Recommended)" (pull/236 issuecomment-7132452441). `origin/main`, the
+main checkout and the live clone are all at `20f0954`. The state
+branch took a merge of `main` and goes on in a new PR. The role is in
+full ("Hand-over done" on #228). `session-dispatch` was typed by Ben
+in this session; it must be typed again after every clear (a compact
 keeps it).
 
 **One full test run on the machine at a time**, by message with
 dff-central-builder-manager until #231's lock (PR #242) merges and is
-pulled: a start notice before, an end notice after. The line is with
-tools: dynasty said at 14:27Z it needs no full run now and asks tools
-before its next one. A full run takes about 59 minutes (608 tests).
-Builders `t248` and `t250` run no full suite until the manager gives
-them the line.
+pulled: a start notice before, an end notice after. **The line is with
+dynasty** since 2026-11-24 about 13:05Z, for one full re-proof of
+dynasty PR #659; tools starts no full run until dynasty's end notice.
+A full run takes about 59 minutes (608 tests). Builders `t250` and
+`t254` run no full suite until the manager gives them the line.
 
 **#244 Part 2 is merged**: PR #246 at `aefbc68`. Its re-proof was GREEN
 with the pytest step at 3510.8s, 89s under the old 3600s cap (pull/246
@@ -44,16 +43,15 @@ Next, in order:
    ("Leave for #250 (Recommended)", pull/246 issuecomment-7104203919):
    its branch `worktree-t244-pytest-hang` and its worktree stay. No
    `claude rm` was run.
-1. **#236** (this file): its re-proof at `92acab5` started 14:29Z and
-   ends about 15:28Z (the reset prompt names the output file). On GREEN:
-   log memory, end notice to dff-central-builder-manager, post the
-   output, then the merge word by button. No push to this branch
-   between the re-proof and the merge.
+1. **#236** is merged (above). Its Green is spent: every other PR is
+   re-proved on `20f0954` or later.
 1a. **#253** (#248's builder PR, `b958ffa`): code review closed, six
    advisories all fixed and accepted (pull/253
-   issuecomment-7104501918). Re-prove after #236, with `pre-commit` run
-   by the manager (the PR touches `docs/adr/`); read Windows CI green on
-   one read. A builder PR for a dispatched ticket: merge on Green with
+   issuecomment-7104501918). Re-prove next, once dynasty's end notice
+   arrives, with a start notice first and `pre-commit` run
+   by the manager (the PR touches `docs/adr/`; the main checkout's
+   `.venv` holds no `pre-commit` and none is on PATH, so find the
+   runner first); read Windows CI green on one read. A builder PR for a dispatched ticket: merge on Green with
    no further word. After it merges, every PR that adds an ADR needs a
    row in `docs/adr/README.md` or its re-proof fails (#184, #205, #211,
    #249; the planner is told), and #249 must correct the roles row.
@@ -87,25 +85,25 @@ Next, in order:
    **#250**: the planner's ruling on Part 1 (issues/250
    issuecomment-7103994943) and its amendment (issuecomment-7104205770)
    went to `t250` whole, on Ben's "Confirm, send (Recommended)"
-   (issuecomment-7104196182). The builder is on Part 2 and asks the
-   manager for the test line before any full run. **#251** (medium)
+   (issuecomment-7104196182). The second amendment (points 16 to 22,
+   issuecomment-7104581056) went whole by resume on 2026-11-24, on
+   Ben's "Confirm, send whole (Recommended)" (issuecomment-7132487415).
+   PR #252 at `ab3c279` predates it: no code review (full, high) and no
+   re-proof until `t250` answers points 16 to 22 at a new head. The
+   builder asks the manager for the test line before any full run.
+   **#254** (low, Profile none): dispatched 2026-11-24 as
+   `t254-gitattributes` on Ben's "Dispatch when level (Recommended)"
+   (issues/254 issuecomment-7132504195). **#251** (medium)
    only once the planner posts its brief after #189's PR merges (Ben's
    go given here 2026-11-23). **#137** Bring to Chat + auto-close: Ben
    chose a planner refresh; dff-central-planner folds #137 and #111 and
    adds auto-close (issues/137 issuecomment-7103524615); ask Ben's go by
    button when its brief is posted. PRs #196/#197 touch the same file.
    **#249** (planner PR, #247) joins the planner PRs after #205.
-8. At the state-back after #236 merges, trim this file (Ben's button,
-   pull/236 issuecomment-7082192929): drop "What this session answers
-   for" and, once #231 and #237 close, the 2026-11-19 history.
-
-## What this session answers for
-
-As the role file `.claude/agents/tools-central-builder-manager.md`
-says: dispatch, the owner's queue (`.claude/memory/NEEDS-OWNER.md` in the
-main checkout), re-proof and the code review, the merge (each merge word
-asked of Ben by button at the re-proved head), closeout and the closeout
-pulls of the main checkout and the live clone, and this file.
+8. Trim still owed (Ben's button, pull/236 issuecomment-7082192929):
+   once #231 and #237 close, drop the 2026-11-19 history. "What this
+   session answers for" was dropped on 2026-11-24; the role file holds
+   it.
 
 ## Builders running
 
@@ -114,8 +112,9 @@ pulls of the main checkout and the live clone, and this file.
 | `t231-reproof-lock` | #231 | medium | `8506434b` | #242 at `b278602` | review closed; waiting for re-proof (state-back issues/231 issuecomment-7025354702) |
 | `t237-path-move` | #237 | low | `f0de4ab6` | #239 at `c64cf25` | review done; waiting for re-proof |
 | `t244-pytest-hang` | #244 | medium | `9fd98bc0` | #246 merged at `aefbc68` | stopped; branch and worktree left for #250's script (step 0) |
-| `t250-closeout-script` | #250 | high | `08a25cd7` | #252, draft, at `c8a0f14` | Part 2, working; no full run without the test line |
+| `t250-closeout-script` | #250 | high | `08a25cd7` | #252 at `ab3c279` | resumed 2026-11-24 with the second amendment; working; no full run without the test line |
 | `t248-adr-hygiene` | #248 | low | `f328d768` | #253 at `b958ffa` | stopped; review closed; waits for the re-proof (step 1a) |
+| `t254-gitattributes` | #254 | low | `cd093765` | none yet | dispatched 2026-11-24; working |
 
 The first two are not listed by `claude agents` since the app restart;
 check before closeout. `t244`'s first session `8ef7acf3` was stopped
@@ -125,7 +124,7 @@ pid; neither manager dispatched it, so it is left for Ben.
 
 ## Open PRs
 
-In the line now: #236, #238, #239, #242 (above). The older line, each
+In the line now: #253, #238, #239, #242 (above). The older line, each
 read again before its re-proof:
 
 | PR | Head | Subject |
@@ -149,7 +148,7 @@ Read-only pass of 2026-11-23 at `f1ff785`: #222, #216, #214, #211,
 ruled on the other four on Ben's button ("Send to planner
 (Recommended)"); the rulings are in the table. #181 is closed without
 merging on Ben's button (pull/181, superseded by #198). Also open:
-#249 (planner PR, #247) and #252 (t250's draft).
+#249 (planner PR, #247) and #252 (t250's, out of draft).
 
 ## Dispatch, as proven
 
@@ -167,7 +166,11 @@ merging on Ben's button (pull/181, superseded by #198). Also open:
 
 The queue file is empty. The owner-queue line came back in this
 session's system prompt on 2026-11-19 (relevant to #240); after a clear,
-send the new queue id to both planners and the dynasty manager.
+send the new queue id to both planners and the dynasty manager (done
+2026-11-24). Coming later, each by button when it is ready: the merge
+words for #238, #239 and #242 after their re-proofs; the removal of
+the empty `hooks/continual-learning/` folder after #253 merges; the
+go for #137 once dff-central-planner posts its brief.
 
 ## Queue entries raised
 
@@ -213,6 +216,13 @@ send the new queue id to both planners and the dynasty manager.
 - 2026-11-23: PR #253's code review closed (pull/253
   issuecomment-7104501918); the reviewers' four read-only calls beyond
   their packets are recorded on #248.
+- 2026-11-24: Ben's three buttons after the clear: "Post and merge
+  (Recommended)" for PR #236, merged at `20f0954` on the GREEN
+  re-proof of 2026-11-23 (pull/236 issuecomment-7132452441), both
+  checkouts pulled; "Confirm, send whole (Recommended)" for #250's
+  second amendment (issues/250 issuecomment-7132487415); "Dispatch
+  when level (Recommended)" for #254 (issues/254
+  issuecomment-7132504195).
 
 ## Lessons
 
@@ -247,6 +257,9 @@ send the new queue id to both planners and the dynasty manager.
 - A squash merge leaves `git cherry` listing the branch's commits as
   missing. Compare trees (`git diff origin/main <branch>`) and list the
   branch for Ben; the cherry rule is not met by a tree match alone.
+- After a squash merge of a state PR, the state branch takes a merge
+  of `origin/main`; the state file conflicts (add/add) and the
+  branch's copy is kept.
 - Peers: Tools-central-planner, dff-central-planner,
   dff-central-builder-manager. Find them with ListAgents by name; ids
   change at a relaunch.
