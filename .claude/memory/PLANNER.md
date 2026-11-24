@@ -322,8 +322,12 @@ issuecomment-7133316206.
   after PR #210 and #260), **#262** (medium, compact by default; first
   step a find-out), **#263** (medium, manager cost find-out; step 1
   ports the assistant's scripts to tracked code), **#264** (medium,
-  fixed context find-out, lowest priority). None is dispatched; each go
-  is asked of Ben by button at its turn. Asked of the assistant: the
+  fixed context find-out, lowest priority). **#262's find-out has Ben's
+  "Go, find-out now"** (issues/262 issuecomment-7134018512, with the
+  brief; sent to the manager; the manager's view on three compacts is
+  at issuecomment-7133968750). Its finding comes to the planner to
+  rule. The others are not dispatched; each go is asked of Ben by
+  button at its turn. Asked of the assistant: the
   baseline figures (sessions started 2026-11-17 to 2026-11-24) to freeze
   on #258, and whether the transcript store is pruned by age. After
   #261 merges the assistant proposes a short form of the root
