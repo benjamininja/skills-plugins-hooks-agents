@@ -15,7 +15,14 @@ the new queue id to Tools-central-planner, dff-central-planner and
 dff-central-builder-manager. dff-central-builder-manager cleared too;
 its new id comes by message, and until then it is addressed by name.
 
-**PR #210's re-proof is RUNNING** in the background, started about
+**Update after the clear prep: PR #210 re-proved GREEN** at `a30c3fa`
+(609 passed, 1 skipped, 58 min; pull/210 issuecomment-7138847392,
+pre-commit pass included). The end notice is sent; the line is with
+dynasty #684, then #690, #689, then tools #267, #268 and #271. Next is Ben's
+merge word by button (item 0 below, minus the run). The note below is
+the history of the run.
+
+PR #210's re-proof was RUNNING in the background, started about
 16:05Z from the live clone at `a30c3fa` on main `f6ce9b1` (the last run
 took 61 min). Its output goes to a session scratch file, which the reset
 prompt names. Its summary prints only at the end. After a clear the
