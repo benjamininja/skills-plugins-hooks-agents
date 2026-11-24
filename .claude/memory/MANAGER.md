@@ -6,30 +6,68 @@ alone. Rules are in the `session-rules` skill and in
 
 ## START HERE
 
-Written 2026-11-24 about 14:40Z by the tools manager (session
-Tools-builder-manager, id `5074d20f`), at a clear prep on Ben's word.
-`origin/main`, the main checkout and the live clone are all at
-`6f67165` (**PR #253 merged** 14:20Z on a GREEN re-proof, pull/253
-issuecomment-7134126115). `session-dispatch` must be typed by Ben again
-after the clear. After the clear, send the new queue id to both planners
-and the dynasty manager.
+Written 2026-11-24 about 15:40Z by the tools manager (session
+Tools-builder-manager, queue id `e7026592`), at a compact prep on Ben's
+word. `origin/main`, the main checkout and the live clone are all at
+`6f67165`. A compact keeps the session id and `session-dispatch`; a
+clear needs Ben to type it again and a new queue id sent to both
+planners and dff-central-builder-manager (new id `c2116a9a`).
 
-**One full test run on the machine at a time**, by start and end notices
-with dff-central-builder-manager until #231's lock (PR #242) merges and
-is pulled. Dynasty's #669 run ended GREEN; tools gave the line to
-dynasty for its #671 while it clears, so **wait for dynasty's end
-notice for #671**, then tools takes the line for #255. A full
-run now takes about 26 minutes (609 tests, the pytest step 1575s on
-2026-11-24), not 59. Log memory before and after.
+**PR #255's re-proof is RUNNING** in the background since 08:44:54
+local (about 14:45Z), from the live clone at `ec8d30d` on main
+`6f67165`; output goes to a session scratch file, and the summary
+prints only at the end. At 50 minutes it was still progressing
+(pytest keeps starting short `bash.exe` children for the git-guardrails
+tests), slow on a loaded machine; pytest's cap is 5400 s. Memory before:
+8.1 GB physical free, commit 37.7 of 57.5 GB. If the run is lost, run it
+again: `tools/reproof.py 255 ec8d30d0f5bfcdc493312f3ee30aee6a65d39aad`
+from the live clone with the main checkout's `.venv` interpreter.
 
-**The app restarted about 13:40Z** and killed #253's first background
-run (no result); a long run never depends on the session staying up.
+**Test line, by Ben's button (Keep agreed order):** #255 ends (tools
+sends the end notice to dff-central-builder-manager), dynasty #685
+(about 5 min, with its end notice), tools PR #210, dynasty #684.
 
 **Ben's choice on the queue** (button, 2026-11-24 about 14:15Z): items
 that can wait stay as chat buttons at their turn, not queue entries,
 while Ben is in the chat. The queue file has no entries.
 
+**Role-file rule kept this session:** the merge word is asked of Ben by
+button at the re-proved head for every PR, a builder's included (role
+file, What you answer for). The older line here that a builder PR needs
+no further word is superseded by it.
+
 Next, in order:
+
+0. **When #255's run ends:** post the output on PR #255; on GREEN ask
+   Ben's merge word by button at `ec8d30d`; squash-merge; closeout
+   pulls of both checkouts; close out t254. End notice to dynasty.
+   Then dispatch, each with Ben's go recorded on its ticket and a clean
+   dry run done (briefs are written; no double quote; rewrite them
+   from the ticket records below if lost). Order and names:
+   1. `t260-261-readbudget`, low: one PR for #260 and #261, stacked on
+      PR #210's branch (issues/261 issuecomment-7134928088 brief, the
+      next comment's correction: the manager runs pre-commit;
+      issuecomment-7135940410 the stacked start; go issuecomment-7135986437).
+   2. `t264-context-size`, medium, `-NoSetup` (docs find-out, no tests;
+      go issues/264 issuecomment-7136007534).
+   3. `t189-dispatch-base`, medium (finding first; merges main before
+      its PR; go issues/189 issuecomment-7135987529).
+   4. `t219-drift-check`, medium (comparison list first; go issues/219
+      issuecomment-7135988589).
+   5. `t206-token-check`, low (runs only its own test file; go issues/206
+      issuecomment-7135989792).
+   Send Tools-central-planner one line per dispatch.
+   Then re-prove PR #210 at `a30c3fa` on the new main after dynasty's
+   #685; merge on Ben's word **without `--delete-branch`**: the branch
+   `t161-reset-prompt-pointer` stays until the planner's PR #265 is
+   retargeted to main (tell the planner before deleting it). Planner PRs
+   #265 then #266 are stacked on #210, text only, not yet approved;
+   merge order #210, #265, #266. #265 and the #260/#261 PR meet in one
+   section and both raise the plugin version: the second takes main in
+   and the planner rules the wording. One line to the planner when #210
+   merges.
+   No code review is owed on #197, #242 or #259 (each reviewed at its
+   current head).
 
 1. **PR #255** (#254, `t254-gitattributes`, head `ec8d30d`, one file
    `.gitattributes`): code review done, no findings (pull/255
@@ -225,7 +263,18 @@ settings text as one Action.
   (Recommended)" (pull/253 issuecomment-7134178626); Ben chose "Keep
   asking in chat" for the queue.
 
+- 2026-11-24, after the 14:50Z clear: Ben's buttons in the tools
+  manager's chat: #260/#261 go ("Dispatch after #210", then "Dispatch
+  stacked"); #189, #219, #206 all chosen, timing "After #255 ends";
+  #264 "Dispatch second"; test line "Keep agreed order". Each is
+  recorded on its ticket (links in START HERE item 0).
+
 ## Lessons
+
+- A re-proof that looks hung: check pytest's children
+  (`Win32_Process` with `ParentProcessId=<pytest pid>`). New `bash.exe`
+  children with fresh creation times mean the git-guardrails tests are
+  still running; pytest's own CPU stays near zero while they do.
 
 - The git-guardrails hook blocks a chained command that holds a push:
   one git command per call, and push with
