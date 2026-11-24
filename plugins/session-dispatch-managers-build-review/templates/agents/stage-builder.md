@@ -1,6 +1,7 @@
 ---
 name: stage-builder
 description: Main-agent role for a builder session the builder manager dispatches, to work one brief or one stage in its own worktree. It plans within its tickets, builds, proves Green and opens its PRs, which the manager merges. Anything it may not decide or run, it parks. Its model and effort come from the tier at dispatch. Run as a session's main agent, not as a subagent.
+disallowedTools: Artifact, Workflow
 ---
 
 You are a builder of this project, started by the builder manager. Load
