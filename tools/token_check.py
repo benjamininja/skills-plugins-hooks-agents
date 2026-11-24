@@ -32,6 +32,7 @@ GIT_CREDENTIAL = ["-c", "credential.helper=", "-c", "credential.helper=!gh auth 
 TIMEOUT = 300
 PASS, FAIL = "PASS", "FAIL"
 NOT_RUN = "not run"
+NOTE = "note"
 
 
 def scrub(text: str) -> str:
@@ -106,13 +107,17 @@ class Check:
 
     # ---- one call -------------------------------------------------------
 
-    def step(self, rid: str, argv: list[str], shown: list[str] | None = None) -> tuple[bool, str]:
+    def step(self, rid: str, argv: list[str], shown: list[str] | None = None,
+             ok_if: str | None = None) -> tuple[bool, str]:
         try:
             code, out, err = self.runner(argv)
         except Exception as exc:  # a runner that raises is a failed call, not a crash
             code, out, err = 1, "", f"{type(exc).__name__}: {exc}"
         ok = code == 0
         detail = "" if ok else first_line(err) or first_line(out) or f"exit {code}"
+        if not ok and ok_if and ok_if in f"{err}\n{out}":
+            # the call worked and the answer is "nothing there", e.g. no check run yet
+            ok, detail = True, detail + " (the call was answered)"
         self.rows.append((rid, shlex.join(shown or argv), PASS if ok else FAIL, detail))
         return ok, out
 
@@ -182,7 +187,9 @@ class Check:
         r = self.repo
         self.gh(f"A1{tag}", "pr", "view", n, "-R", r, "--json", "mergeStateStatus,statusCheckRollup",
                 "--jq", "[.mergeStateStatus, (.statusCheckRollup | length)] | @tsv")
-        self.gh(f"A2{tag}", "pr", "checks", n, "-R", r, "--json", "state", "--jq", "length")
+        # Right after a pull request opens it has no check run, and gh exits 1 with this text.
+        self.step(f"A2{tag}", ["gh", "pr", "checks", n, "-R", r, "--json", "state",
+                               "--jq", "length"], ok_if="no checks reported")
 
     # ---- writes ---------------------------------------------------------
 
@@ -195,11 +202,22 @@ class Check:
                                       "--jq", ".object.sha")
         if not default or not sha:
             return False
+        # git pushes the sha from this checkout: it must hold that commit, and an
+        # origin that is not https tests that transport's key, not the window's login.
+        ok, _ = self.step("C4 precheck", ["git", "cat-file", "-e", f"{sha}^{{commit}}"])
+        if not ok:
+            self.rows[-1] = (*self.rows[-1][:3],
+                             "this checkout lacks the default branch head: run git fetch origin first")
+            return False
+        code, url, _ = self.runner(["git", "remote", "get-url", "origin"])
+        if code == 0 and not url.strip().startswith("https://") and not self.stored_git:
+            self.rows.append(("C4 note", "git remote get-url origin", NOTE,
+                              "origin is not https: git tests that transport's key, not the window's login"))
         for name in (self.base, self.head):
-            self.branches.append(name)  # recorded first: a half-made push is still cleaned
             ok, _ = self.git("C4", "push", "origin", f"{sha}:refs/heads/{name}")
             if not ok:
                 return False
+            self.branches.append(name)
         content = base64.b64encode(f"token test {self.stamp}\n".encode()).decode()
         ok, _ = self.gh("commit", "api", "-X", "PUT", f"repos/{r}/contents/{self.label}.txt",
                         "-f", f"message={self.label}", "-f", f"content={content}",
@@ -248,9 +266,10 @@ class Check:
         self.pr = None
         self.git("C2", "fetch", "--refmap=", "--no-tags", "--no-recurse-submodules",
                  "origin", f"refs/heads/{self.base}")
-        ok, _ = self.git("C5", "push", "origin", "--delete", self.head, self.base)
-        if ok:
-            self.branches = []
+        for name in (self.head, self.base):  # one call each: one gone already must not hide the other
+            ok, _ = self.git("C5", "push", "origin", "--delete", name)
+            if ok and name in self.branches:
+                self.branches.remove(name)
         return True
 
     # ---- cleanup --------------------------------------------------------
@@ -266,9 +285,9 @@ class Check:
         if self.pr:
             ok, _ = self.gh("cleanup pr", "pr", "close", self.pr, "-R", r)
             self.left(ok, f"pull request #{self.pr} may still be open")
-        if self.branches:
-            ok, _ = self.git("cleanup branches", "push", "origin", "--delete", *self.branches)
-            self.left(ok, "branches left: " + ", ".join(self.branches))
+        for name in list(self.branches):
+            ok, _ = self.git("cleanup branch", "push", "origin", "--delete", name)
+            self.left(ok, f"branch {name} may still exist")
 
     def left(self, ok: bool, what: str) -> None:
         if not ok:

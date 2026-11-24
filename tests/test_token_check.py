@@ -33,6 +33,7 @@ class Fake:
         self.calls: list[list[str]] = []
         self.fail = fail or {}
         self.leak = leak
+        self.origin = f"https://github.com/{REPO}.git\n"
 
     def __call__(self, argv):
         self.calls.append(list(argv))
@@ -54,6 +55,8 @@ class Fake:
             return 0, f"https://github.com/{REPO}/issues/41\n", ""
         if argv[:3] == ["gh", "pr", "create"]:
             return 0, f"https://github.com/{REPO}/pull/42\n", ""
+        if argv[:4] == ["git", "remote", "get-url", "origin"]:
+            return 0, self.origin, ""
         if "headRefOid" in text:
             return 0, "b" * 40 + "\n", ""
         return 0, "1\n", ""
@@ -122,7 +125,8 @@ def test_pull_request_base_is_the_throwaway_branch_never_the_default():
     # branches are made from the default branch's head and removed at the end
     pushes = [c for c in fake.calls if c[0] == "git" and "push" in c]
     assert [f"{SHA}:refs/heads/{BASE}"] == [a for a in pushes[0] if a.startswith(SHA)]
-    assert pushes[-1][-3:] == ["--delete", HEAD, BASE]
+    assert pushes[-2][-2:] == ["--delete", HEAD]
+    assert pushes[-1][-2:] == ["--delete", BASE]
 
 
 def test_every_name_made_starts_with_token_test_and_the_timestamp():
@@ -140,13 +144,14 @@ def test_every_name_made_starts_with_token_test_and_the_timestamp():
 def test_git_calls_take_the_credential_from_gh_unless_told_otherwise():
     fake = Fake()
     run_main(fake)
-    git_calls = [c for c in fake.calls if c[0] == "git"]
+    local = ("cat-file", "remote")  # these never reach GitHub
+    git_calls = [c for c in fake.calls if c[0] == "git" and c[1] not in local]
     assert git_calls
     for c in git_calls:
         assert c[1:5] == ["-c", "credential.helper=", "-c", "credential.helper=!gh auth git-credential"]
     fake2 = Fake()
     run_main(fake2, "--stored-git-credential")
-    for c in (c for c in fake2.calls if c[0] == "git"):
+    for c in (c for c in fake2.calls if c[0] == "git" and c[1] not in local):
         assert "credential.helper=" not in c
 
 
@@ -168,7 +173,8 @@ def test_cleanup_runs_after_a_failed_call():
     assert not fake.has("gh", "pr", "merge")
     # and the branches this run pushed are deleted, last
     assert fake.calls[-1][0] == "git"
-    assert fake.calls[-1][-3:] == ["--delete", BASE, HEAD] or fake.calls[-1][-3:] == ["--delete", HEAD, BASE]
+    assert sorted(c[-1] for c in fake.calls[-2:]) == sorted([BASE, HEAD])
+    assert all(c[-2] == "--delete" for c in fake.calls[-2:])
     assert "ended early" in out
 
 
@@ -234,3 +240,58 @@ def test_no_row_and_no_output_holds_a_gh_token_value(monkeypatch, capsys):
 def test_the_argument_parser_takes_no_token():
     with pytest.raises(SystemExit):
         token_check.main([REPO, "--token", "x"], runner=Fake(), now=fixed_now)
+
+
+def test_a2_with_no_check_run_yet_is_a_pass_not_a_fail():
+    # F2: right after the pull request opens, gh pr checks exits 1 with this text
+    fake = Fake(fail={"pr checks": (1, "no checks reported on the 'x' branch")})
+    code, out = run_main(fake)
+    a2 = [l for l in out.splitlines() if l.startswith("| A2")]
+    assert len(a2) == 2 and all("| PASS |" in l for l in a2)
+    assert code == 0
+
+
+def test_a2_with_another_error_is_still_a_fail():
+    fake = Fake(fail={"pr checks": (1, "HTTP 403: forbidden")})
+    code, out = run_main(fake)
+    a2 = [l for l in out.splitlines() if l.startswith("| A2")]
+    assert all("| FAIL | HTTP 403: forbidden |" in l for l in a2)
+    assert code == 1
+
+
+def test_branches_are_deleted_one_call_each_so_one_gone_hides_nothing():
+    # F1: the head ref is already gone; the base must still be deleted
+    fake = Fake(fail={f"--delete {HEAD}": (1, "remote ref does not exist")})
+    code, out = run_main(fake)
+    deletes = [c[-1] for c in fake.calls if c[0] == "git" and "--delete" in c]
+    assert HEAD in deletes and BASE in deletes
+    assert f"branch {HEAD} may still exist" in out
+    assert f"branch {BASE} may still exist" not in out
+
+
+def test_a_failed_head_push_leaves_only_the_made_branch_to_cleanup():
+    # F3: the head was never made, so cleanup must not delete or report it
+    fake = Fake(fail={f"{SHA}:refs/heads/{HEAD}": (1, "denied")})
+    code, out = run_main(fake)
+    deletes = [c[-1] for c in fake.calls if c[0] == "git" and "--delete" in c]
+    assert deletes == [BASE]
+    assert HEAD not in out.split("cleanup branch")[-1]
+    assert code == 1
+
+
+def test_a_checkout_without_the_default_head_stops_before_any_push():
+    # F4: no fetched commit is a precondition failure, not a login failure
+    fake = Fake(fail={"cat-file": (1, "fatal: Not a valid object name")})
+    code, out = run_main(fake)
+    assert not [c for c in fake.calls if c[0] == "git" and "push" in c]
+    assert "run git fetch origin first" in out
+    assert code == 1
+
+
+def test_a_non_https_origin_is_noted():
+    fake = Fake()
+    fake.origin = "git@github.com:someone/some-repo.git\n"
+    code, out = run_main(fake)
+    assert "| C4 note |" in out and "not the window's login" in out
+    quiet = Fake()
+    assert "C4 note" not in run_main(quiet)[1]
