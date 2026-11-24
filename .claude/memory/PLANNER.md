@@ -234,14 +234,25 @@ Ben's "Transfer the whole mod lane" in dff-central-planner's chat
 (handoff: #137 issuecomment-7132677793), confirmed here by button,
 "Whole mod lane (Recommended)" (#137 issuecomment-7132702847). It
 replaces the lane ruling of 2026-11-09. Tools-builder-manager is told.
-- **First: #137 with #111 and auto-close, one design.** Nothing was
-  drafted by dff-central-planner and it holds no answer of Ben's. The
-  tools-side notes are at #137 issuecomment-7132602474. The design goes
-  to Ben by button: auto-close in the file or only in the pane (advice:
-  pane only), one button or two, the order against PRs #197 and #196.
-  Then the brief, tier and Ben's go, sent to the manager. ADR 0014 is
-  held for it. The rule text (`parking.md`, the queue template, #111's
-  comment rule) is one planner PR beside the mod PR.
+- **The design is decided, by four buttons here on 2026-11-24.**
+  - Auto-close is an entry collapsing at the press of an option or Mark
+    done; no entry is hidden and the file is untouched (#137
+    issuecomment-7132851563). It needs no rule text.
+  - The button is "Ask planner only": #111 is its ticket, and #137's
+    Bring to Chat is not built (#137 issuecomment-7132901826).
+  - "Two tickets, auto-close first (Recommended)", which is also the go
+    for both items below.
+- **#257** (low, `Profile: none`): auto-close. Brief in the body; go at
+  issues/257 issuecomment-7132994645. Sent to the manager.
+- **#111** (high): amendment 2 refreshes it against mod 0.11.0 and
+  holds the brief for its first step, a find-out with no code change
+  (issuecomment-7133007701). Sent to the manager. **The build waits**
+  for the planner's ruling on that finding, PR #197's merge and #240's
+  finding; the planner then posts the build brief and asks Ben's go.
+  ADR 0014 is held for it. #137's F7 fold-in moved here.
+- **Open:** whether #137 closes now (a button for Ben at a quiet
+  point); #240's go and place in the dispatch line (asked of the
+  manager).
 - **Constraints from dynasty** (the handoff): the manager is the queue
   file's only writer and records every Note and Answer before the CLI
   removes an entry; a message keeps the question, the answer and a
@@ -265,7 +276,7 @@ time); #203 and #191 after PR #205 (#191 only on the planner's word);
 #201 after #191. Vendor lane: #50, then #176, then #57, then #52, then
 #55. #47 runs alone (not beside #54). #51, #53 and #54 after #48.
 
-**Findings to rule on when posted:** #189, #187, #192, #191 (a real fork
+**Findings to rule on when posted:** #111's first step, #240, #189, #187, #192, #191 (a real fork
 goes to Ben by button), #233, #251. #200's design goes to Ben by
 button. #250's PR #252 comes to the planner for a plan-breach read if
 the manager asks.
