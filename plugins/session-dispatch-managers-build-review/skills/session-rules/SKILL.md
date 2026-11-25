@@ -406,7 +406,8 @@ never decided by an agent:
 ## Green, and the two-key merge
 
 "Green" is the project's list of proofs, in the project rules file, plus
-every CI check passing on one read. A builder opens its PR and does not
+the CI checks the repository's ruleset requires, passing on one read
+("CI as a gate", below). A builder opens its PR and does not
 merge. When the PR is green by its own check it messages the manager,
 ends its turn and waits. A builder that runs the security-review skill
 continues in the same turn, with the commit, the push, the PR, the
@@ -416,6 +417,38 @@ the output on the PR. It merges only after that, and only in a session
 where the owner has invoked the `session-dispatch` skill. A PR that is
 not green goes back with the failing output.
 Nothing reaches the main branch on one session's own report.
+
+**CI as a gate.** A check holds a merge for what it stops, not because
+it exists. Five lines, the same in every project:
+
+1. **One list.** The CI part of Green is the ruleset's required checks:
+   no more, no fewer. A session waits for nothing else, and no rule
+   text keeps a check list of its own.
+2. **What earns a gate.** A check is required when the harm it stops
+   cannot be undone after a merge (a secret or personal data published,
+   a migration applied, data published), whatever it costs, on the PRs
+   that can cause that harm. A check whose harm a revert undoes is
+   required when it is cheap; when it is costly it runs on the push to
+   the main branch.
+3. **The main branch stays green.** Before a merge the manager reads
+   the last finished run on the main branch. If it is red, the fix or
+   the revert goes first. This gives every after-merge check a reader
+   and covers the merged tree. It is a read, never a wait.
+4. **A skip fails safe.** A check skips by `if:` and only for paths
+   named as harmless; a path nobody listed runs it.
+5. **One table per project,** in its rules file: each check, what it
+   protects, which PRs run it, its measured time, required or not.
+   Changing the required column is the owner's button, in either
+   direction, and the ruleset itself is the owner's to change. The
+   planner re-reads the times at its sweep. A PR that changes a
+   workflow file is read by the planner before its merge.
+
+Until a project's table is written and the owner has set its ruleset
+from it, that project's Green keeps every check its rules file names
+today: line 1 takes no check away before the owner has looked at it.
+
+No wait in minutes is written here: a project's default waits come out
+of its own measurements, on the owner's button.
 
 **The code review.** Before it posts the re-proof of a builder's PR that
 touches code (or, where the repo's ruleset asks, only rule or skill
