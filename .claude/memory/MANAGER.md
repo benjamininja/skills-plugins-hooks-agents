@@ -8,28 +8,28 @@ alone. Rules are in the `session-rules` skill and in
 
 Written 2026-11-25 by the tools manager (session
 Tools-builder-manager, queue id `dabbbcd0-2b97-445e-a2d9-4502691fb617`),
-at a compact prep on Ben's word. A compact keeps the session id and the
-`session-dispatch` skill; after a clear Ben retypes
+at a second compact prep on Ben's word. A compact keeps the session id
+and the `session-dispatch` skill; after a clear Ben retypes
 `/session-dispatch-managers-build-review:session-dispatch` and the new
 queue id goes to the peers. `origin/main`, the main checkout and the
-live clone are all at `f873dd3` (#210 merged 2026-11-25).
+live clone are all at `450ee52` (#267 merged 2026-11-25, after #210 at
+`f873dd3`).
 
 Peers: Tools-central-planner (`ad857488`), dff-central-builder-manager
 (`4ff97ebc`), dff-central-planner (by name).
 
-**Running at the prep:** PR #267's full re-proof, in the background from
-the live clone: `tools/reproof.py 267
-b99dcae193d8282cb8591f2ee393460d320bab6c`, main checkout `.venv`
-interpreter, main `f873dd3`. Its output goes to a session scratch file
-named in the reset prompt; the summary prints only at the end. After a
-clear the finish notice does not come: check for a python `reproof.py`
-process; if none and no `RESULT:` line, run it again after a start
-notice to dynasty. No pre-commit scope (`tools/`, `tests/` only).
+**Nothing tools runs at the prep.** Dynasty holds the test line for its
+#689 and #692, back to back; its end notice hands the line to tools for
+PR #274.
 
-**Test line** (agreed with dynasty): tools #267 (running), dynasty #689
-(about 8 min; the #267 end notice hands it over), then tools #259 (Ben's
-button 2026-11-25, ahead of #268), #268, #265 and #272, #271. One full
-run on the machine at a time, with start and end notices.
+**Test line** (agreed with dynasty): dynasty #689, #692 (running), then
+tools #274 (Ben's button 2026-11-25), #259, #268, #265 and #272, #271.
+One full run on the machine at a time, with start and end notices.
+**After #274 merges and is pulled, its rules replace these** (#273): CI
+at the PR's head with merge state CLEAN is the test proof, no local full
+run except an owner-queue PR's `reproof.py`; a Green holds while the head
+is unchanged; read CI on main after each merge; one merge-word question
+may name several PRs.
 
 **Rules kept:** the merge word is asked of Ben by button at the
 re-proved head for every PR (role file). A go or approval given in a
@@ -39,16 +39,20 @@ harness moves the session's working directory; use `git -C`.
 
 Next, in order:
 
-1. **#267's run ends:** post the output on PR #267. End notice to
-   dff-central-builder-manager (line to #689). On GREEN, ask Ben's merge
-   word by button at `b99dcae`; a merge makes every other GREEN stale.
-   Merge, closeout pulls, close out t206 (`claude stop` first; it is not
-   running now). Planner plan read: no breach (pull/267
-   issuecomment-7162498982).
+1. **PR #274** (planner, #273, head `72453f7`; all three of the
+   manager's points taken, pull/274 issuecomment-7164121459): after
+   dynasty's end notice, start notice, full re-proof under today's rules,
+   pre-commit (it touches PROJECT-RULES.md and the role file), Ben's
+   merge word, merge, closeout pulls with the rules-change notice to the
+   other manager and both planners first. #267 is closed: GREEN at
+   `b99dcae` (pull/267 issuecomment-7164176257), merged at `450ee52`;
+   builder t206's branch and worktree are left for Ben (squash merge, so
+   `git cherry` lists its commits; the files match main).
 2. **PR #259** (#257, click to close, head `85186e1`): review done, one
-   advisory; pre-commit passed. After dynasty's #689 end notice: re-prove
-   with the owner-queue plugin test, Ben's word, merge, pull the live
-   clone, tell Ben a new session loads the mod. Shares files with #197.
+   advisory; pre-commit passed. Re-prove with the owner-queue plugin test
+   (it keeps `reproof.py` under #274 too), Ben's word, merge, pull the
+   live clone, tell Ben a new session loads the mod. Shares files with
+   #197.
 3. **PR #268** (#189, head `8272b9a`): re-check accepted F1 to F3,
    ruling posted (pull/268 issuecomment-7162472269); planner no breach
    (issuecomment-7162486091); dry runs clean (issuecomment-7162725979).
@@ -105,7 +109,7 @@ its saved options).
 | `t260-261-readbudget` | #260, #261 | low | `d7e77ffa` | #272 at `869b260` | resumed 2026-11-25; reported green; waits for re-proof |
 | `t219-drift-check` | #219 | medium | `750159d3` | #271 at `7621bed` | resumed 2026-11-25; review closed; waits for re-proof |
 | `t189-dispatch-base` | #189 | medium | `2eb375b2` | #268 at `8272b9a` | not running; review closed; waits for re-proof |
-| `t206-token-check` | #206 | low | `116a30e9` | #267 at `b99dcae` | not running; re-proof running |
+| `t206-token-check` | #206 | low | `116a30e9` | #267 merged `450ee52` | not running; branch and worktree left for Ben |
 | `t231-reproof-lock` | #231 | medium | `8506434b` | #242 at `b278602` | not running; waits for re-proof |
 | `t237-path-move` | #237 | low | `f0de4ab6` | #239 at `c64cf25` | not running; waits for re-proof |
 | `t244-pytest-hang` | #244 | medium | `9fd98bc0` | #246 merged | stopped; left for #250's script |
@@ -155,7 +159,7 @@ merging on Ben's button (pull/181, superseded by #198). Also open:
 
 The queue file has no entries. The #219 trial Action was done by Ben
 on 2026-11-24 and left the queue at this state-back. Waiting on Ben,
-by button at each turn: the merge words for #267, #268, #259,
+by button at each turn: the merge words for #274, #268, #259,
 #252, #197, #265, #266, #238, #239, #242, #256 and #269's PR; the
 merge of benjamininja/dotclaude#12; after #252 merges, the managers
 settings text as one Action.
@@ -171,6 +175,18 @@ settings text as one Action.
   issuecomment-7024139524); the entry left the queue.
 
 ## Decided since
+
+- 2026-11-25, later, by Ben's buttons in the tools manager's chat:
+  #274 goes next on the line, ahead of #259 (the planner wrote #273's
+  simpler merge rule on Ben's word; the manager's three points, all
+  taken, at pull/274 issuecomment-7164081041); merge PR #267 at
+  `b99dcae` (GREEN, 640 passed, 61 min; merged `450ee52`, both
+  checkouts pulled). Ben approved #227 at `1b4200b` and #265 at
+  `8f4b89e` in the planner's chat (reports). #252 conflicts with main
+  after #210 (pull/252 issuecomment-7163590008). Done ahead of the line:
+  pre-commit passed on #268 at `8272b9a`, skipped on #272 (no files in
+  scope); #271's drift check against the real files posted
+  (issuecomment-7163837481).
 
 - 2026-11-25, by Ben's buttons in the tools manager's chat: merge PR
   #210 at `a30c3fa` (merged `f873dd3`, both checkouts pulled, notices and
