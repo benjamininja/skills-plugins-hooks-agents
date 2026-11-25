@@ -8,91 +8,74 @@ alone. Rules are in the `session-rules` skill and in
 
 Written 2026-11-25 by the tools manager (session
 Tools-builder-manager, queue id `dabbbcd0-2b97-445e-a2d9-4502691fb617`),
-at a second compact prep on Ben's word. A compact keeps the session id
+at a third compact prep on Ben's word. A compact keeps the session id
 and the `session-dispatch` skill; after a clear Ben retypes
 `/session-dispatch-managers-build-review:session-dispatch` and the new
 queue id goes to the peers. `origin/main`, the main checkout and the
-live clone are all at `450ee52` (#267 merged 2026-11-25, after #210 at
-`f873dd3`).
+live clone are all at `a445087` (#272), after #274 `a6d23d6`, #268
+`4c5e387`, #271 `e1fed0c`.
 
-Peers: Tools-central-planner (`ad857488`), dff-central-builder-manager
-(`4ff97ebc`), dff-central-planner (by name).
+Peers: Tools-central-planner (`2c14b7ab`, new after its clear),
+dff-central-builder-manager (`4ff97ebc`), dff-central-planner (by name).
 
-**Nothing tools runs at the prep.** Dynasty holds the test line for its
-#689 and #692, back to back; its end notice hands the line to tools for
-PR #274.
+**The #273 rules are in force (PR #274, merged and pulled).** Green is
+every CI check at the PR's head and merge state CLEAN on one read, the
+hygiene hook, the review; no local full run except an owner-queue PR's
+`tools/reproof.py`. A Green holds while the head is unchanged. After
+each merge, read CI on main's new commit before the next merge. One
+merge-word question may name several PRs. The merge word is still asked
+of Ben in this chat; a go in the planner's chat is a report. Ben's
+merge on Green without asking (issues/273 issuecomment-7165533423) is
+NOT in force until the planner's shared session-rules PR merges.
+Main's ruleset now requires the three checks (#273
+issuecomment-7165200203). The stored GitHub login is the narrowed
+fine-grained token (#204 issuecomment-7166147428): a call refused that
+worked before is a finding for #204, never a retry.
 
-**Test line** (agreed with dynasty): dynasty #689, #692 (running), then
-tools #274 (Ben's button 2026-11-25), #259, #268, #265 and #272, #271.
-One full run on the machine at a time, with start and end notices.
-**After #274 merges and is pulled, its rules replace these** (#273): CI
-at the PR's head with merge state CLEAN is the test proof, no local full
-run except an owner-queue PR's `reproof.py`; a Green holds while the head
-is unchanged; read CI on main after each merge; one merge-word question
-may name several PRs.
-
-**Rules kept:** the merge word is asked of Ben by button at the
-re-proved head for every PR (role file). A go or approval given in a
-planner's chat is a report: re-ask Ben by button, quoting the record.
-Never `cd` into a builder worktree in a Bash or PowerShell call: the
-harness moves the session's working directory; use `git -C`.
+**Ben's merge word given in this chat (2026-11-25) for #259, #265,
+#271, #272.** #271 and #272 are merged. #265's is re-asked at its new
+head (role file: a head that takes main is asked again).
 
 Next, in order:
 
-1. **PR #274** (planner, #273, head `72453f7`; all three of the
-   manager's points taken, pull/274 issuecomment-7164121459): after
-   dynasty's end notice, start notice, full re-proof under today's rules,
-   pre-commit (it touches PROJECT-RULES.md and the role file), Ben's
-   merge word, merge, closeout pulls with the rules-change notice to the
-   other manager and both planners first. #267 is closed: GREEN at
-   `b99dcae` (pull/267 issuecomment-7164176257), merged at `450ee52`;
-   builder t206's branch and worktree are left for Ben (squash merge, so
-   `git cherry` lists its commits; the files match main).
-2. **PR #259** (#257, click to close, head `85186e1`): review done, one
-   advisory; pre-commit passed. Re-prove with the owner-queue plugin test
-   (it keeps `reproof.py` under #274 too), Ben's word, merge, pull the
-   live clone, tell Ben a new session loads the mod. Shares files with
-   #197.
-3. **PR #268** (#189, head `8272b9a`): re-check accepted F1 to F3,
-   ruling posted (pull/268 issuecomment-7162472269); planner no breach
-   (issuecomment-7162486091); dry runs clean (issuecomment-7162725979).
-   Owed: merge main if needed, full re-proof, pre-commit, Ben's word.
-   After it merges, dispatch takes `-Base origin/<branch>`; the first
-   real `-Apply` is the proof of that path.
-4. **PR #265** (planner, head `8f4b89e`, base main): Ben approved in the
-   planner's chat (pull/265 issuecomment-7162899681), a report: re-ask.
-   Keep branch `t217-portable-roles` after the merge until the planner
-   retargets #266. **PR #272** (t260-261, #260/#261, head `869b260`,
-   rule text only): light review, one advisory folded into #262
-   (pull/272 issuecomment-7163121752); planner no breach
-   (issuecomment-7163106276). #265 and #272 both set 0.4.0 and edit the
-   clear-boundary section: the second to merge takes main (the planner
-   reads that merge). #268 meets #265 in the two role templates.
-5. **PR #271** (#219, head `7621bed`): review closed, all six accepted
-   (pull/271 issuecomment-7163450315); planner no breach and F1 ruling
-   (issuecomment-7162651862). Owed: full re-proof, and the script run
-   against the real files.
-6. **#262 dispatch** (medium, Profile none, Base origin/main): brief
-   issues/262 issuecomment-7162955348 plus amendment -7163139510 (point
-   11). Ben's go in the planner's chat (-7163080874) is to dispatch after
-   #265 and #272 both merge: then ask Ben by button quoting it, dry run,
-   `-Apply`.
-7. **#269** (planner PR #270, head `0535c32`, approved by Ben in the
-   planner's chat at pull/270 issuecomment-7162436664, a report): joins
-   the line; after it merges, the first builder dispatched gives the after
-   figure and runs `git log -1 --grep=shared-rule-trial` for the #219
-   trial (it must be denied).
-8. **#219 trial:** `C:\Users\benha\.claude` is on branch
-   `settings/shared-rule-trial` until Ben merges benjamininja/dotclaude#12;
-   do not switch it. Record: issues/219 issuecomment-7162465174.
-9. **PR #252** (#250, head `a417165`; conflicts with main in `templates/MANAGER.md` after #210, so t250 merges main first, on Ben's button to resume it, pull/252 issuecomment-7163590008), **#197**, **#242**, **#239**,
-   **#238**, **#266** (stacked on #265), then the older line below.
-   Gated on Ben's go by button: #240 step 2, #111's build, #263, #187,
-   #167, #192.
-10. **#111 part 5** and the t244 closeout leftovers: as before
-    (pull/246 issuecomment-7104203919; pull/236 issuecomment-7082192929).
-11. Branch `t161-reset-prompt-pointer` (#210's, merged) is not a builder
-    branch: on the owner's list, left in place.
+1. **PR #259** (#257, click to close, head `85186e1`): GREEN, 640
+   passed and plugin test 79/79 (pull/259 issuecomment-7166376912).
+   Merge after CI on main at `a445087` passes, then read CI on main,
+   pull both checkouts, tell Ben a new session loads the mod.
+2. **PR #252** (#250, closeout script, head `dd24cbf`): t250 merged main
+   by the planner's ruling (pull/252 issuecomment-7165863809); the merge
+   commit's review found nothing (issuecomment-7166148080). Waits on its
+   Windows check (BLOCKED until then), then Ben's merge word at
+   `dd24cbf` by button. t250's working copy of CATALOG.md differs in
+   line endings only (its restore was refused): list it for Ben at
+   closeout. #252 holds dynasty's 24 records (#655).
+3. **PR #265** (planner, `t217-portable-roles`, head `8f4b89e`):
+   conflicts with main in session-rules SKILL.md, the read list
+   paragraph; the manager sent the planner the hunk and two asks (keep
+   #272's budget wording and #265's state-branch sections; step
+   plugin.json to 0.5.0). After the planner pushes: CI and CLEAN at the
+   new head, then Ben's merge word there. Keep the branch until #266 is
+   retargeted.
+4. **#251** (t251-venv-setup, medium, session `4c191e7f`, idle after
+   Part 1): finding at issues/251 issuecomment-7165986505. Ben made
+   `.venv-light` by hand; its `.pth` needed `-Encoding ascii` (utf8
+   writes a byte-order mark Python cannot read: issuecomment-7166256853);
+   now pytest 9.2.0 loads (issuecomment-7166332814). Owed: rows 3 (full
+   suite from `.venv-light/Scripts/python.exe -m pytest -q tests`) and 4
+   (the hook) when the machine has no other full run; ask Ben by button
+   first, since the permission check refused the manager making that
+   venv. Post on #251; the planner rules, then t251 is resumed for Part 2.
+5. **#262 dispatch** after #265 and #272 both merge: ask Ben quoting
+   issues/262 issuecomment-7163080874; brief -7162955348 plus
+   -7163139510 (point 11) plus -7164631610 (point 12). Then the
+   planner's shared session-rules PR (issues/273 issuecomment-7164630571).
+6. **#266** retargets to main after #265 merges; #270 (planner, #269),
+   #242, #239, #238, #216, #222, #227, #197 at their turn, each by the
+   #273 rules. Gated on Ben's go: #240 step 2, #111's build, #263,
+   #187, #167, #192.
+7. Left for Ben: t206's branch and worktree; branch
+   `t161-reset-prompt-pointer`. `C:\Users\benha\.claude` stays on
+   `settings/shared-rule-trial` until dotclaude#12 merges.
 
 **Windows hazard** (issues/250 issuecomment-7103861254): `git worktree
 remove` follows a junction. Scan first: `Get-ChildItem -Recurse -Force
@@ -100,21 +83,18 @@ remove` follows a junction. Scan first: `Get-ChildItem -Recurse -Force
 
 ## Builders running
 
-After the app restart before 2026-11-25 no tools builder was listed;
-two were resumed on Ben's buttons with `resume_plain.ps1` (each woke with
-its saved options).
-
 | Builder | Ticket | Tier | Session | PR | Stage |
 |---|---|---|---|---|---|
-| `t260-261-readbudget` | #260, #261 | low | `d7e77ffa` | #272 at `869b260` | resumed 2026-11-25; reported green; waits for re-proof |
-| `t219-drift-check` | #219 | medium | `750159d3` | #271 at `7621bed` | resumed 2026-11-25; review closed; waits for re-proof |
-| `t189-dispatch-base` | #189 | medium | `2eb375b2` | #268 at `8272b9a` | not running; review closed; waits for re-proof |
+| `t251-venv-setup` | #251 | medium | `4c191e7f` | none yet | dispatched 2026-11-25; Part 1 posted; idle until rows 3-4 and the planner's ruling |
+| `t250-closeout-script` | #250 | high | `08a25cd7` | #252 at `dd24cbf` | resumed 2026-11-25 for the main merge; idle; waits for Windows CI and Ben's word |
+| `t257-autoclose` | #257 | low | `a72dcbd0` | #259 at `85186e1` | not running; GREEN; merges after main CI |
+| `t260-261-readbudget` | #260, #261 | low | `d7e77ffa` | #272 merged `a445087` | done; closeout owed |
+| `t219-drift-check` | #219 | medium | `750159d3` | #271 merged `e1fed0c` | done; closeout owed |
+| `t189-dispatch-base` | #189 | medium | `2eb375b2` | #268 merged `4c5e387` | done; closeout owed |
 | `t206-token-check` | #206 | low | `116a30e9` | #267 merged `450ee52` | not running; branch and worktree left for Ben |
-| `t231-reproof-lock` | #231 | medium | `8506434b` | #242 at `b278602` | not running; waits for re-proof |
-| `t237-path-move` | #237 | low | `f0de4ab6` | #239 at `c64cf25` | not running; waits for re-proof |
+| `t231-reproof-lock` | #231 | medium | `8506434b` | #242 at `b278602` | not running; waits for its turn |
+| `t237-path-move` | #237 | low | `f0de4ab6` | #239 at `c64cf25` | not running; waits for its turn |
 | `t244-pytest-hang` | #244 | medium | `9fd98bc0` | #246 merged | stopped; left for #250's script |
-| `t250-closeout-script` | #250 | high | `08a25cd7` | #252 at `a417165` | not running; waits for re-proof |
-| `t257-autoclose` | #257 | low | `a72dcbd0` | #259 at `85186e1` | not running; next after #689 |
 
 ## Open PRs
 
@@ -157,12 +137,14 @@ merging on Ben's button (pull/181, superseded by #198). Also open:
 
 ## Waiting on the owner (pointer to NEEDS-OWNER.md)
 
-The queue file holds one Action, #204 step 3 (the login test's write half, raised by the planner 2026-11-25, issues/204 issuecomment-7164228109). The #219 trial Action was done by Ben
-on 2026-11-24 and left the queue at this state-back. Waiting on Ben,
-by button at each turn: the merge words for #274, #268, #259,
-#252, #197, #265, #266, #238, #239, #242, #256 and #269's PR; the
-merge of benjamininja/dotclaude#12; after #252 merges, the managers
-settings text as one Action.
+The queue file is empty at this state-back. Four Actions came and went
+on 2026-11-25, all done by Ben: #204 step 3 (the login test here), the
+dynasty login test, the login switch to the narrowed token (#204), and
+the three required CI checks on main (#273). Waiting on Ben, by button
+at each turn: the merge word for #252 at `dd24cbf`, #265 at its new
+head, then #266, #270, #242, #239, #238, #216, #222, #227, #197, #256;
+rows 3 and 4 of #251's test; the merge of benjamininja/dotclaude#12;
+after #252 merges, the managers settings text as one Action.
 
 ## Queue entries raised
 
@@ -175,6 +157,17 @@ settings text as one Action.
   issuecomment-7024139524); the entry left the queue.
 
 ## Decided since
+
+- 2026-11-25, third prep, by Ben's words and buttons in the tools
+  manager's chat: stop #274's local run and merge on CI green (merged
+  `a6d23d6`, pull/274 issuecomment-7164741435), after Ben asked why
+  45-minute local runs were spent on text-only PRs; merge #268, #271,
+  #272 (merged `4c5e387`, `e1fed0c`, `a445087`); 259, 265, 272 and 271
+  approved to merge; dispatch #251 now (t251-venv-setup); resume t250
+  for #252's main merge; Ben runs the `.venv-light` lines himself after
+  the manager's permission check refused them. Ben made the three CI
+  checks required on main and switched the stored login to the narrowed
+  token (#204).
 
 - 2026-11-25, later, by Ben's buttons in the tools manager's chat:
   #274 goes next on the line, ahead of #259 (the planner wrote #273's
@@ -331,3 +324,8 @@ settings text as one Action.
 - Never `cd` (Bash) or `Set-Location` (PowerShell) into a builder
   worktree: the harness moves the session's working directory there.
   Use `git -C`, or run a script by its full path.
+- Never add `2>&1` to a `dispatch.ps1` or other script call in Windows
+  PowerShell 5.1: git writes progress to stderr, and the redirect turns
+  it into an error that stops the script (2026-11-25, #251).
+- A `.pth` or other file Python reads is written with `-Encoding ascii`
+  in PowerShell 5.1; `utf8` adds a byte-order mark (#251).
