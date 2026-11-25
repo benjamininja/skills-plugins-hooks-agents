@@ -65,14 +65,24 @@ acts on the Next list in `PLANNER.md`.
 
 ## Green means all of
 
-- every CI check (`pytest (ubuntu-latest)`, `pytest (windows-latest)`,
-  `CATALOG.md is current`) passes at the PR's head, and
-  `mergeStateStatus` is `CLEAN`, on one read of
+- the two required CI checks, `pytest (ubuntu-latest)` and
+  `CATALOG.md is current`, pass at the PR's head, and the PR has no
+  conflict, on one read of
   `gh pr view <n> --json headRefOid,mergeStateStatus,statusCheckRollup`.
-  Any other merge state is not Green.
-  CI runs the whole test suite on both systems and the `CATALOG.md`
-  check, and that run is the proof of both (#273). A builder still runs
-  the tests and rebuilds `CATALOG.md` before it opens its PR;
+  `mergeStateStatus` is `CLEAN`, or `UNSTABLE` where the Windows job is
+  the only check not passed. Any other merge state is not Green.
+  **Windows is not part of Green on a PR until the owner says so**
+  (the owner's word of 2026-11-25, #187): a `pytest (windows-latest)`
+  job that is running, red or absent holds no merge and nobody waits
+  for it. It comes back to a PR only after all three, in this order:
+  #187's research has scoped it (where the time goes, and what a
+  Windows check on a PR would cost each time); the dynasty planner
+  (`dff-central-planner`) has been consulted on the plan and has
+  approved it; and the owner has said so. The Ubuntu job runs the whole test suite, and that run and
+  the `CATALOG.md` check are the proof (#273). Windows runs on main
+  after a merge; the manager reads that run once and reports a red one,
+  which is fixed forward. A builder still runs the tests it touched and
+  rebuilds `CATALOG.md` before it opens its PR;
 - the `check-in-hygiene` pre-commit hook passes on the commit;
 - after any change under `plugins/owner-queue/`:
   `claude plugin test plugins/owner-queue` passes on the merged tree.
