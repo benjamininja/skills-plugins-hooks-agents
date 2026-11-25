@@ -12,15 +12,17 @@ in this file's git history:
 The last stacked version, with 26 session blocks, is that branch's commit
 before the #243 rewrite.
 
-Last state-back: 2026-11-25, about 15:50Z, before a compact Ben asked
-for. Compacts since the clear of 2026-11-25: 1 once that compact is
-done. A compact keeps this planner's queue id.
+Last state-back: 2026-11-25, about 16:55Z, before a clear Ben asked
+for. Compacts since the clear of 2026-11-25: 1. A clear gives this
+planner a new queue id: send it to the four peers.
 
 ## Current
 
-**Rules in force since 2026-11-25 (PR #274, `a6d23d6`, #273).** Green is
-CI at the PR's head, merge state `CLEAN`, the code review, the hygiene
-hook; no local full test run for a merge, except a PR that touches
+**Rules in force since 2026-11-25 (PR #274, #286, #287, #288).** Green is
+the ruleset's required checks at the PR's head (Ubuntu and the catalog
+check; Windows is no part of it), no conflict, the code review, the
+hygiene hook; the manager reads main's last finished run before each
+merge; no local full test run for a merge, except a PR that touches
 `plugins/owner-queue/`. A Green holds while the head is unchanged. One
 merge word in the manager's chat may name several PRs and is also the
 approval of a planner's PR, so the planner asks no separate approval
@@ -29,172 +31,148 @@ PRs are open, except for a real defect (its own rule, on #273).
 
 **Next (act on this list, in order).**
 
-0. **STOP, Ben's word of 2026-11-25, about 15:35Z: everything stops
-   until the cost of CI as the merge gate is fixed** (issues/187
-   issuecomment-7167028313 and issuecomment-7167039858). Only PR #284
-   (#283) and #187 go on; all four peers were told. Items 1 to 15 below
-   wait. Fixed, as the planner reads it: PR #284 merged and #187's
-   change merged. The planner's part: rule on #187's finding the moment
-   the manager says it is posted; push nothing meanwhile (each push to
-   an open PR starts a long Windows run, this state branch included, so
-   this save is committed and not pushed until PR #284 has merged);
-   when both are in, ask Ben by button to lift the stop.
-   **Since then, all by Ben's buttons (records on #187):** the stop
-   covers the tools repository only, dynasty goes on; PR #252, #265 and
-   #270 merge now on the words already given; Ben took
-   `pytest (windows-latest)` off the ruleset's required checks at about
-   15:40Z, until #187 is fixed (a text-only PR is Green without it, a
-   code PR still waits for it by the manager's read; ask Ben by button
-   to put it back when #187's change merges); **text-only work restarts
-   when PR #284 has merged**, code work when #187's change has. PR #284
-   failed Ubuntu at `24a50f3`; the repair ruling is pull/284
-   issuecomment-7167082432 (fetch-depth 2, diff of `HEAD^1 HEAD`). #204:
-   the retried workflow push went through, recorded. Owed after the
-   stop: a line on #219 that one drift_check test's exit code depends
-   on the clone it runs in.
-   **At about 16:10Z:** Ben merged PR #265 himself as `ab37521`; PR
-   #252 merged as `f70ebe2`. GitHub had an incident from about 15:45Z
-   (writes failing); PR #284's repair `71d45e1` is on its branch but
-   not yet on the PR; PR #270 waits behind #284 by Ben's word in the
-   manager's chat. **PR #266 is ready locally and NOT pushed:** branch
-   `t218-personal-assistant-role` holds the merge of main and the
-   commit with Ben's "All eight as recommended" (his button in the
-   planner's chat). **OWED the moment GitHub takes writes:** post that
-   button and the eight points as a comment on PR #266 (the text is in
-   that commit's message and in pull/266 issuecomment-7167371670 and
-   issuecomment-7166704829). Push the branch when PR #284 has merged;
-   check the PR's base reads main; then it needs Ben's merge word.
-   #285 is cut: the boards-token script, medium, code work, after the
-   stop. The personal-assistant reports Ben's words in its chat, about
-   16:05Z: the stop is lifted once the poor design is removed, and the
-   fault is a practice in the tools area; the planner's answer is a
-   shared rule in the next planner PR (a gate's cost and its effect on
-   open work are stated with figures before it is made a rule).
-1. **PR #265 is on main's tip at head `88d0549`** (pull/265
-   issuecomment-7166413824): the read list takes both texts, the plugin
-   version is 0.5.0, PR #272 merged as `a445087`. It waits on the
-   Windows check, then on Ben's merge word at that head in the
-   manager's chat. The manager sends one line when it has merged. PR
-   #272's compact paragraph still says reset prompt, on purpose: #262's
-   build rewords it (brief point 6).
-2. **When PR #265 is squash-merged:** merge origin/main into
-   `t218-personal-assistant-role` (the personal-assistant's trial merge
-   onto `88d0549` was clean); fix or answer each point of the pre-read
-   (pull/266 issuecomment-7164841158); push; `gh pr edit 266 --base
-   main` if its base is not main; read CI; then one button round with
-   Ben on the six questions. The assistant's draft of the six, with a
-   seventh point (two lines of section 7 disagree on root memory), is
-   posted as advice at pull/266 issuecomment-7166704829; an eighth
-   point, the boards duty Ben gave the assistant on 2026-11-25, is at
-   pull/266 issuecomment-7167371670 (confirm with Ben in the round,
-   then the role text takes the boards exception): check each,
-   write the recommendation, ask. PR #266 is a role file, so it merges
-   on Ben's word. Then tell the manager it may drop
-   `t217-portable-roles`.
-3. **When PR #265 has merged: one planner PR, text only.** (a) The
-   shared rules, on Ben's button (issues/273 issuecomment-7164630571):
-   in `session-rules`, the four merge points once for every project; in
+1. **The CI gate fix: what is in, and what is left.** Ben's first
+   priority of 2026-11-25; every word and button of his is on
+   issues/187 from issuecomment-7167028313 on.
+   - **In force (all merged 2026-11-25):** a PR runs Ubuntu (the whole
+     suite, about 90 seconds) and the catalog check only; Windows runs
+     on a push to main; a newer head cancels the older run (PR #284,
+     `04b91c1`). Green on a PR has no Windows part (PR #286, `cb7fc13`).
+     The manager reads main's last finished run before each merge and a
+     red one stops merges (PR #287, `8bdf0da`). `session-rules` has "CI
+     as a gate", five lines and a transition sentence, plugin 0.5.1 (PR
+     #288, `acae1e7`, merged by the planner on Ben's "Yes, merge both").
+     Ben took `pytest (windows-latest)` off the ruleset's required
+     checks himself.
+   - **Who signs off:** the dynasty planner leads every shared CI-gate
+     text and signs off (Ben's word, relayed by the personal-assistant).
+     Each head goes to it for approve or change before Ben; a new head
+     needs a new read; its answer is recorded on the PR.
+   - **Windows returns to a PR only after, in order:** #187's research;
+     the dynasty planner consulted and approving the plan; Ben's word.
+     Putting the check back on the ruleset is Ben's own step.
+   - **Left, a:** #187's builder `t187-windows-time` posts its finding:
+     where the Windows minutes go, plus the planner's four questions
+     (issuecomment-7167820842) and the lead's five
+     (issuecomment-7167826636). Ben wants no budget figure before the
+     facts. Facts already counted: Windows was the only red check twice
+     in 98 code-PR runs (PR #252, PR #162, both the dispatch plugin's
+     scripts and a test file), never in 208 text-only runs
+     (issuecomment-7168385547).
+   - **Left, b:** then the planner writes the plan for Windows on code
+     PRs (the lead's reading: a skip list by `if:`, skipped only when
+     every changed path is text; required or not depends on its time
+     once fixed), sends it to the lead, and only after its approval
+     asks Ben by button.
+   - **Left, c, text-only, may start now:** the tools table of checks in
+     `PROJECT-RULES.md` (line 5 of the rule: each check, what it
+     protects, which PRs run it, its measured time, required or not);
+     the CI line of `CLAUDE.md`, which still says both systems on every
+     PR; a look at ADR-0004 for the same. To the lead before Ben.
+2. **The stop.** Ben stopped all tools work until the fix was in
+   (issuecomment-7167039858); it covers the tools repository only.
+   Text-only work restarted when PR #284 merged (his button). **Work
+   that touches code stays stopped until Ben lifts it:** ask him by
+   button when #187's change has merged, or earlier if he raises it.
+   Held meanwhile: #285, the first real closeout run (#250), #251's
+   build, every other dispatch. Running: `t187-windows-time` only, as
+   far as the planner knows.
+3. **One planner PR, text only, still owed (the rest of #273):** in
+   `session-rules`, the four merge points once for every project; in
    `references/code-review.md`, one reviewer per PR, advisories posted
-   once, only a blocking finding gets the answer and the re-check; and
-   merge on Green with gate exceptions, on Ben's button (issues/273
-   issuecomment-7165533423). (b) In `PROJECT-RULES.md`, the planner's
-   read list names the state file's Current block (PR #272's advisory
-   F1). Send the link to dff-central-planner for its read. Also one
-   line each to personal-assistant and dff-central-planner that #260
-   and #261 merged (PR #272, `a445087`), and the merge date on #262.
-4. **#262's rule-text build** is dispatched by the manager after #265
-   merges. The brief is issues/262 issuecomment-7162955348 plus point
-   11 (issuecomment-7163139510) and point 12 (issuecomment-7164631610);
-   Ben's go and answers: issuecomment-7163080874. After it merges: the
-   tools manager's role file line (the finding's 1i, a planner PR), the
-   merge date on #262, one line to dff-central-planner.
-5. **#204: the narrowed token is the stored login, live-checked**
-   (issues/204 issuecomment-7166147428). The first switch was undone by
-   the Action's go-back command (issuecomment-7165942573); Ben redid it
-   on "Redo now". Ben's "Keep open till revoke"
-   (issuecomment-7166163846): the ticket closes when Ben has revoked
-   the old wide login, after a day of clean use. **First refusal:** a
-   push that changes a workflow file (issuecomment-7166430722). Ben's
-   "Add Workflows (Recommended)", then "Saved"
-   (issuecomment-7166536169). **Owed:** the result of the dynasty
-   builder's one retried push, from dff-central-builder-manager; record
-   it on #204. Not yet ticketed: a row in `tools/token_check.py` that
-   pushes a workflow file; no table on record for the other
-   repositories on the token (the Action's step 5). Wording rule the
-   planner keeps: a login Action asks only PASS or FAIL per row, and a
-   way back stands in Context, never in a numbered step.
-6. **#283, CI scope** (medium, `Profile: none`): Ben's "Paths + cancel
-   (Recommended)" on his question whether tests run that should not.
-   A text-only PR runs the three text test files on Windows; Ubuntu
-   always runs everything (amendment 1, issuecomment-7166691620); a
-   newer head cancels the older run. Dispatched on Ben's button in the
-   manager's chat as builder `t283-ci-scope`, from `c915c9f` (record on
-   #283). After it merges: the manager posts the first
-   text-only PR's scope line on #283, and the planner's PR rewords the
-   Green line of `PROJECT-RULES.md` that says CI runs the whole suite
-   on both systems.
-7. **#251:** the brief is posted (issues/251 issuecomment-7165576142)
-   and builder `t251-venv-setup` was running on 2026-11-25. Rule on its
-   finding when the manager says it is posted.
-8. **PR #252 (#250):** the conflict's placement is ruled (pull/252
-   issuecomment-7165863809: main's template whole, the Leftover line
-   under In flight). The builder merged main; head `dd24cbf`, all three
-   checks pass, merge state `CLEAN` at about 15:50Z. By the manager's
-   message it is Green there with Ben's merge word, and merges once
-   main's CI at `c915c9f` (PR #259's merge) passes. After
-   the merge: the manager's Action with the text for Ben's managers
-   settings file; each manager runs `--list` at its next state-back;
-   the personal-assistant sends fresh counts as text just before the
-   first run and the planner posts them on #250 (that role comments on
-   no issue). One line to dff-central-planner at the first real run.
-9. **PR #270** (approved at `0535c32`, `CLEAN`): after its merge and
-   pull the manager posts the after figure on #269; no drop from about
-   55k means a revert PR. #264 closes with #269's reading.
-10. **#219:** PR #271 merged as `e1fed0c`. The trial's builder result
-    is owed from the next builder dispatched; when it is on #219, list
-    there the deny entries common to every project and ask Ben by
-    button what happens to the private configuration repository's PR
-    12 (pointer: issues/219 issuecomment-7162465533).
-11. **PR #227** (approved at `1b4200b`, pull/227
+   once, only a blocking finding gets the answer and the re-check
+   (issues/273 issuecomment-7164630571); merge on Green with gate
+   exceptions (issuecomment-7165533423), chosen but NOT in force until
+   this merges. In `PROJECT-RULES.md`: the planner's read list names
+   the state file's Current block, its state branch and its start line
+   as the rule of PR #265 now asks. Two dynasty practices to offer:
+   builders run targeted tests only; no re-proof of a merged tree. Send
+   the head to the dynasty planner. Also owed: one line each to the
+   personal-assistant and the dynasty planner that #260 and #261 merged
+   (PR #272, `a445087`), and the merge date on #262.
+4. **#204:** the narrowed token is the stored login; the Workflows
+   permission is added and the retried workflow push went through
+   (issuecomment-7167053023). The ticket stays open until Ben revokes
+   the old wide login. Open: a pattern to test once GitHub is healthy,
+   whether the token can merge a PR that changes a workflow file
+   (issuecomment-7167819547; GitHub had an incident on 2026-11-25 from
+   about 15:45Z, which explains the failures so far). Not ticketed: a
+   `tools/token_check.py` row for a workflow push.
+5. **#285, the boards token script** (medium): Ben approved the design
+   (issues/204 issuecomment-7167394643) with no exemption from the
+   stop. When code work restarts the manager dispatches it; the planner
+   then posts the two hand steps for Ben as an Action. PR #266 merged
+   with the boards duty as section 8 of the personal-assistant's role
+   file; no board is edited before #285 merges. Owed from PR #266: the
+   first session started from the merged role file tests its tools
+   line, result on #233. The assistant will send Ben a design for one
+   board over both repositories; both planners read it first.
+6. **#262's rule-text build** is dispatched by the manager, now that PR
+   #265 merged (`ab37521`), once the stop allows. Brief: issues/262
+   issuecomment-7162955348 plus point 11 (issuecomment-7163139510) and
+   point 12 (issuecomment-7164631610); Ben's go:
+   issuecomment-7163080874. After it merges: the tools manager's role
+   file line (a planner PR), the merge date on #262, one line to the
+   dynasty planner.
+7. **#250 and #251:** PR #252 merged (`f70ebe2`); the closeout
+   prediction is on #250 (issuecomment-7167294872). The first real run
+   waits for the stop; then the manager's Action with the text for
+   Ben's managers settings file, and one line to the dynasty planner.
+   #251: rule on its finding when the manager says it is posted.
+8. **#219:** PR #271 merged (`e1fed0c`). Owed: a line there that one
+   drift_check test's exit code depends on the clone it runs in (seen
+   on PR #284); the trial's builder result from the next builder
+   dispatched; then the deny entries common to every project and Ben's
+   button on the private configuration repository's PR 12 (pointer:
+   issues/219 issuecomment-7162465533).
+9. **PR #270 merged** (`7064f34`): the manager posts the after figure
+   on #269; no drop from about 55k means a revert PR. #264 closes with
+   #269's reading.
+10. **PR #227** (approved at `1b4200b`, pull/227
     issuecomment-7163729381): after its merge, the pointer-line Action
     for the private restore guide.
-12. **PR #259 merged on 2026-11-25.** After PR #197 merges: ask Ben's
-    go for #240 step 2 (brief at issues/240 issuecomment-7133603553);
-    then #111's build brief; then #262's mod brief (ruling issues/262
-    issuecomment-7134266469).
-13. After PR #249 merges: tell dff-central-planner, archive session
+11. **After PR #197 merges:** ask Ben's go for #240 step 2 (brief at
+    issues/240 issuecomment-7133603553); then #111's build brief; then
+    #262's mod brief (ruling issues/262 issuecomment-7134266469).
+12. After PR #249 merges (it read DIRTY on 2026-11-25): tell the
+    dynasty planner, archive session
     `local_6b981a48-1f7d-4986-93e6-6af76d316f28`, comment on #235,
     #217, #161 and PR #197. PRs #205, #184, #216 and #222 wait on the
     manager's line.
-14. The lock PR after #242 merges; #263 has no go; #258 holds the
-    re-measure list. After the line clears: weigh whether #231, #187
-    and PR #182 still earn their place (#273, out of scope list). #187
-    still matters for the PRs that touch code (#283's evidence).
-15. **Coming to Ben later, by button:** what the owner-queue pane does
+13. Weigh whether #231, PR #242, PR #182 and #167 still earn their
+    place now that no merge takes a local full run (#273) and CI's
+    cost is being scoped (#187). #263 has no go; #258 holds the
+    re-measure list.
+14. **Coming to Ben later, by button:** what the owner-queue pane does
     with terminal output pasted into a Note (the personal-assistant's
     report of 2026-11-25; nothing reached GitHub). Not asked yet.
 
-**Waiting on Ben:** nothing in this chat. In the manager's chat: the
-merge word for PR #265 at `88d0549`. Ben's own later step: revoking the old wide
-login (#204). Ben's standing word, 2026-11-25: a session that needs him
-asks by pop-up in its own chat.
+**Waiting on Ben:** nothing in this chat. His own later steps:
+revoking the old wide login (#204); putting the Windows check back on
+the ruleset, only after item 1's three conditions. Ben's standing
+word, 2026-11-25: a session that needs him asks by pop-up in its own
+chat.
 
-**No Done list is kept here from 2026-11-25** (the dynasty planner's
-point on #273): the ticket is the record. Earlier state is in this
-file's git history.
+**A lesson the planner keeps (Ben's words: unacceptably poor systems
+thinking):** #273 made CI the gate before its cost was read, and the
+first fix was put to Ben without saying that open PRs would keep
+paying. Before any recommendation that adds or moves a gate: its cost
+each time, how often it is paid, and what happens to work already
+open, with figures; no figures, no recommendation yet. Every question
+to Ben says what it costs him.
+
+**No Done list is kept here** (the dynasty planner's point on #273):
+the ticket is the record. Earlier state is in this file's git history.
 
 **Ids (queue ids change at every clear).** This planner:
-`2c14b7ab-3b12-4984-ae56-5c6526f96566` since the clear of 2026-11-25
-(before it: `ad857488-55b0-4c62-90d5-3ee43f4e0c99`), sent to the four
-peers the same day. Each peer confirmed its id on 2026-11-25, all
-unchanged (each compacted, none cleared). Tools-builder-manager:
-`dabbbcd0-2b97-445e-a2d9-4502691fb617`. dff-central-builder-manager:
-`4ff97ebc-bfd4-4723-997c-406160d975ba`. dff-central-planner:
-`9bcc0c9c-574c-4ebb-b4f4-18edc03af9aa`. personal-assistant:
-`ce570d7d-13b6-4160-97f8-58dee1c1a39a`. The tools queue holds no entry
-of this planner's: the login-switch Action was ticked by Ben and has
-left the file. The #219 trial's builder result is still owed, from the
-next builder dispatched.
+`2c14b7ab-3b12-4984-ae56-5c6526f96566` since the clear of 2026-11-25,
+until the next clear. Peers, all unchanged on 2026-11-25:
+Tools-builder-manager `dabbbcd0-2b97-445e-a2d9-4502691fb617`;
+dff-central-builder-manager `4ff97ebc-bfd4-4723-997c-406160d975ba`;
+dff-central-planner `9bcc0c9c-574c-4ebb-b4f4-18edc03af9aa`;
+personal-assistant `ce570d7d-13b6-4160-97f8-58dee1c1a39a` (it was
+prepared for a clear on 2026-11-25 and sends a new id after it). The tools
+queue holds no entry of this planner's.
 
 **Merge line (Tools-builder-manager, one re-proof at a time, each merge
 word asked of Ben by button):** #236, PR #238 (the planner's), #239
