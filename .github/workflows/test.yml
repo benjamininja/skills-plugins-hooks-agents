@@ -25,7 +25,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 0
+          # Two commits: on a pull request the checkout is the merge commit,
+          # and its two parents are what the scope step compares. Full history
+          # would add an origin/main ref, which tests/test_drift_check.py reads.
+          fetch-depth: 2
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
@@ -36,13 +39,13 @@ jobs:
         shell: bash
         env:
           EVENT_NAME: ${{ github.event_name }}
-          BASE_SHA: ${{ github.event.pull_request.base.sha }}
           HEAD_SHA: ${{ github.event.pull_request.head.sha }}
         run: |
           scope=tests
           count=not-asked
           if [ "$EVENT_NAME" = "pull_request" ] && [ "$RUNNER_OS" = "Windows" ]; then
-            if git -c core.quotepath=false diff --name-only --no-renames "$BASE_SHA...$HEAD_SHA" > "$RUNNER_TEMP/changed.txt"; then
+            # HEAD is the merge commit: HEAD^1 is the base, HEAD^2 must be the PR head.
+            if [ "$(git rev-parse HEAD^2)" = "$HEAD_SHA" ] && git -c core.quotepath=false diff --name-only --no-renames HEAD^1 HEAD > "$RUNNER_TEMP/changed.txt"; then
               count=$(wc -l < "$RUNNER_TEMP/changed.txt" | tr -d ' ')
               scope=$(python tools/ci_scope.py < "$RUNNER_TEMP/changed.txt") || scope=tests
             else
