@@ -16,6 +16,8 @@ stacked here (`session-rules`, "A state file holds").
 
 ### In flight
 
+Leftover worktrees (`closeout.py <main checkout> --list`, its last line, at every state-back):
+
 ### Peers
 
 ### Reads and checks due
