@@ -66,7 +66,10 @@ PRs are open, except for a real defect (its own rule, on #273).
    main` if its base is not main; read CI; then one button round with
    Ben on the six questions. The assistant's draft of the six, with a
    seventh point (two lines of section 7 disagree on root memory), is
-   posted as advice at pull/266 issuecomment-7166704829: check each,
+   posted as advice at pull/266 issuecomment-7166704829; an eighth
+   point, the boards duty Ben gave the assistant on 2026-11-25, is at
+   pull/266 issuecomment-7167371670 (confirm with Ben in the round,
+   then the role text takes the boards exception): check each,
    write the recommendation, ask. PR #266 is a role file, so it merges
    on Ben's word. Then tell the manager it may drop
    `t217-portable-roles`.
