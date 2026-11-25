@@ -83,8 +83,9 @@ PRs are open, except for a real defect (its own rule, on #273).
    (Recommended)" on his question whether tests run that should not.
    A text-only PR runs the three text test files on Windows; Ubuntu
    always runs everything (amendment 1, issuecomment-7166691620); a
-   newer head cancels the older run. Sent to the manager, who asks Ben
-   for the dispatch. After it merges: the manager posts the first
+   newer head cancels the older run. Dispatched on Ben's button in the
+   manager's chat as builder `t283-ci-scope`, from `c915c9f` (record on
+   #283). After it merges: the manager posts the first
    text-only PR's scope line on #283, and the planner's PR rewords the
    Green line of `PROJECT-RULES.md` that says CI runs the whole suite
    on both systems.
@@ -94,8 +95,9 @@ PRs are open, except for a real defect (its own rule, on #273).
 8. **PR #252 (#250):** the conflict's placement is ruled (pull/252
    issuecomment-7165863809: main's template whole, the Leftover line
    under In flight). The builder merged main; head `dd24cbf`, all three
-   checks pass, merge state `CLEAN` at about 15:50Z. Next is the
-   manager's: the review of the merge commit and Ben's merge word. After
+   checks pass, merge state `CLEAN` at about 15:50Z. By the manager's
+   message it is Green there with Ben's merge word, and merges once
+   main's CI at `c915c9f` (PR #259's merge) passes. After
    the merge: the manager's Action with the text for Ben's managers
    settings file; each manager runs `--list` at its next state-back;
    the personal-assistant sends fresh counts as text just before the
@@ -129,8 +131,7 @@ PRs are open, except for a real defect (its own rule, on #273).
     report of 2026-11-25; nothing reached GitHub). Not asked yet.
 
 **Waiting on Ben:** nothing in this chat. In the manager's chat: the
-merge word for PR #265 at `88d0549` and for PR #252 at `dd24cbf`, and
-the dispatch of #283. Ben's own later step: revoking the old wide
+merge word for PR #265 at `88d0549`. Ben's own later step: revoking the old wide
 login (#204). Ben's standing word, 2026-11-25: a session that needs him
 asks by pop-up in its own chat.
 
