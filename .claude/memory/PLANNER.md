@@ -29,6 +29,16 @@ PRs are open, except for a real defect (its own rule, on #273).
 
 **Next (act on this list, in order).**
 
+0. **STOP, Ben's word of 2026-11-25, about 15:35Z: everything stops
+   until the cost of CI as the merge gate is fixed** (issues/187
+   issuecomment-7167028313 and issuecomment-7167039858). Only PR #284
+   (#283) and #187 go on; all four peers were told. Items 1 to 15 below
+   wait. Fixed, as the planner reads it: PR #284 merged and #187's
+   change merged. The planner's part: rule on #187's finding the moment
+   the manager says it is posted; push nothing meanwhile (each push to
+   an open PR starts a long Windows run, this state branch included, so
+   this save is committed and not pushed until PR #284 has merged);
+   when both are in, ask Ben by button to lift the stop.
 1. **PR #265 is on main's tip at head `88d0549`** (pull/265
    issuecomment-7166413824): the read list takes both texts, the plugin
    version is 0.5.0, PR #272 merged as `a445087`. It waits on the
