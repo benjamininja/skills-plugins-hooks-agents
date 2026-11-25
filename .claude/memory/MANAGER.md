@@ -81,7 +81,7 @@ Next, in order:
 8. **#219 trial:** `C:\Users\benha\.claude` is on branch
    `settings/shared-rule-trial` until Ben merges benjamininja/dotclaude#12;
    do not switch it. Record: issues/219 issuecomment-7162465174.
-9. **PR #252** (#250, head `a417165`), **#197**, **#242**, **#239**,
+9. **PR #252** (#250, head `a417165`; conflicts with main in `templates/MANAGER.md` after #210, so t250 merges main first, on Ben's button to resume it, pull/252 issuecomment-7163590008), **#197**, **#242**, **#239**,
    **#238**, **#266** (stacked on #265), then the older line below.
    Gated on Ben's go by button: #240 step 2, #111's build, #263, #187,
    #167, #192.
