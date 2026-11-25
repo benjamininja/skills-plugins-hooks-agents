@@ -80,8 +80,14 @@ acts on the Next list in `PLANNER.md`.
   (`dff-central-planner`) has been consulted on the plan and has
   approved it; and the owner has said so. The Ubuntu job runs the whole test suite, and that run and
   the `CATALOG.md` check are the proof (#273). Windows runs on main
-  after a merge; the manager reads that run once and reports a red one,
-  which is fixed forward. A builder still runs the tests it touched and
+  after a merge, and the manager is the one who reads it: before each
+  merge it reads main's last finished run, without waiting for one
+  that is still going. A red run on main stops every further merge
+  until main is green again, by a fix PR or a revert PR, which is the
+  one PR that may merge meanwhile; the manager tells the owner and the
+  planner the same turn. About 56 tests and this repository's hooks
+  run only on Windows, so that read is what stands in for the check on
+  a PR. A builder still runs the tests it touched and
   rebuilds `CATALOG.md` before it opens its PR;
 - the `check-in-hygiene` pre-commit hook passes on the commit;
 - after any change under `plugins/owner-queue/`:
