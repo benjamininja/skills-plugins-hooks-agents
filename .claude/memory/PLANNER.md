@@ -98,8 +98,21 @@ Waiting on Ben: see the 2026-11-25 block below.
   main checkout or a listed live clone. F1 to F3 hold its merge until
   the builder answers and the re-check. The #260/#261 builder
   (`t260-261-readbudget`) is building.
-- The #260/#261 builder PR is not open yet; #262's rule-text brief
-  follows it. dff-central-planner still expects one line at each merge
+- **The #260/#261 builder PR is PR #272** (base main, on PR #210's
+  text). It and PR #265 both edit the clear-boundary section and both
+  set the plugin version to 0.4.0: whichever merges second merges main
+  in, and the planner reads that merge and rewords the reset-prompt
+  sentences to start line and state file. PR #272's plan read waits for
+  the manager's ask.
+- **#262's rule-text brief is posted and has Ben's go** (brief:
+  issues/262 issuecomment-7162955348; go and answers:
+  issuecomment-7163080874). Dispatch after PR #265 and PR #272 merge;
+  the manager is told. Ben's answers: the away trigger is built (point
+  9); a running background task is named in the state file with no
+  local path (point 6). Owed by the planner after that PR merges: the
+  tools manager's role file line (the finding's 1i, a planner PR), and
+  the three merge dates on #262 for the re-measure. #262's mod brief
+  still follows PR #197, #240 step 2 and #111. dff-central-planner still expects one line at each merge
   of #249, #260, #261, #262 and at PR #252's first run.
 
 **After the fourth compact, 2026-11-24.**
