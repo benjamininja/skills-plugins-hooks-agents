@@ -1,6 +1,6 @@
 # Server-side CI is the enforcement gate; a local pre-PR hook is not a substitute
 
-- Status: accepted
+- Status: accepted; revised 2026-11-25 (Revision 1 below: what CI runs)
 - Date: 2026-07-11
 - Scope: applies to the regression-testing standard's deferred CI item, and
   generally to any future "tests must pass before merge" decision across
@@ -61,3 +61,23 @@ catch).
   procedural habit (or a lightweight local hook doing exactly that) — this
   is a fast-feedback nicety, not a merge gate, and doesn't need a subagent
   to "interrogate" anything.
+
+## Revision 1 (2026-11-25): what CI runs depends on the changed paths
+
+Ticket: tools #283, chosen by the owner by button on 2026-11-25. The
+decision above is unchanged: CI is the gate. This revision records what the
+gate runs.
+
+- A pull request whose changed paths are all `.md` files, none under a
+  `tests` folder, runs three test files on the Windows job:
+  `tests/test_skills_frontmatter.py`, `tests/test_agents_frontmatter.py` and
+  `tests/test_adr_readme.py`. Any other pull request runs the whole suite.
+- The Ubuntu job and every push to main always run the whole suite. Windows
+  is about 92% of the job minutes, so the saving is there and only there.
+- An empty list, an unreadable list or any error runs the whole suite.
+- The rule is decided in one place, `tools/ci_scope.py`, and tested in
+  `tests/test_ci_scope.py`. The `pytest` job in `.github/workflows/test.yml`
+  calls it and prints the scope it took in one log line. The check names do
+  not change, so every job still reports on every pull request.
+- A newer head on a pull request cancels the run on the older head. A run on
+  main is never cancelled.

@@ -8,6 +8,12 @@ on:
 permissions:
   contents: read
 
+# A newer head on a PR cancels the run on the older head. A push to main has
+# its own group (its commit), so a run on main is never cancelled (#283).
+concurrency:
+  group: test-${{ github.event.pull_request.number || github.sha }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
   pytest:
     name: pytest (${{ matrix.os }})
@@ -18,11 +24,36 @@ jobs:
         os: [ubuntu-latest, windows-latest]
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
+      # tools/ci_scope.py decides (#283). Only the Windows job on a pull
+      # request asks it; Ubuntu and every push to main run the whole suite.
+      - name: Choose the pytest scope
+        id: scope
+        shell: bash
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          scope=tests
+          count=not-asked
+          if [ "$EVENT_NAME" = "pull_request" ] && [ "$RUNNER_OS" = "Windows" ]; then
+            if git -c core.quotepath=false diff --name-only --no-renames "$BASE_SHA...$HEAD_SHA" > "$RUNNER_TEMP/changed.txt"; then
+              count=$(wc -l < "$RUNNER_TEMP/changed.txt" | tr -d ' ')
+              scope=$(python tools/ci_scope.py < "$RUNNER_TEMP/changed.txt") || scope=tests
+            else
+              count=diff-failed
+            fi
+            [ -n "$scope" ] || scope=tests
+          fi
+          echo "ci_scope: scope=$scope changed_paths=$count event=$EVENT_NAME os=$RUNNER_OS"
+          echo "args=$scope" >> "$GITHUB_OUTPUT"
       - run: python -m pip install pytest pyyaml
-      - run: python -m pytest -q tests
+      - run: python -m pytest -q ${{ steps.scope.outputs.args }}
 
   catalog:
     name: CATALOG.md is current
