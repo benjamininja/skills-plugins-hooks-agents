@@ -12,9 +12,10 @@ in this file's git history:
 The last stacked version, with 26 session blocks, is that branch's commit
 before the #243 rewrite.
 
-Last state-back: 2026-11-25, after PR #274 (#273) merged. Compacts
-since the clear of 2026-11-24: 1. A compact keeps this planner's queue
-id.
+Last state-back: 2026-11-25, about 14:50Z, before a clear Ben asked
+for. Compacts since the clear of 2026-11-24: 1. The clear gives this
+planner a new queue id: send it to the four peers, and the manager
+re-keys the queue's Session lines.
 
 ## Current
 
@@ -29,23 +30,42 @@ PRs are open, except for a real defect (its own rule, on #273).
 
 **Next (act on this list, in order).**
 
-1. **When PR #265 is squash-merged** (the manager sends one line): merge
-   origin/main into `t218-personal-assistant-role`, keeping the branch's
-   own text on the squash's conflicts and checking the merge changes
-   nothing else; push; `gh pr edit 266 --base main`; read CI; put PR
-   #266's two questions to Ben by button (model opus or fable; the one
-   desktop test of a role file's tool line, #233). Then tell the manager
-   it may drop `t217-portable-roles`.
-2. **When PR #265 and PR #272 meet** (same section of `session-rules`,
-   both set the plugin version to 0.4.0; the manager's line is #259,
-   #268, then #265 and #272, then #271): read the second one's merge of
-   main, and see that the version takes the next step.
+1. **Bring PR #265 onto main, as soon as PR #272 has merged** (check
+   with `gh pr view 272 --json state`; at 14:50Z it was open and clean,
+   waiting on main's CI at `e1fed0c`; Ben gave the merge word for #259,
+   #265, #272 and #271 in the manager's chat, and #271 and #268 are
+   merged). Then: `git switch t217-portable-roles`, `git merge
+   origin/main` with the noreply email. The conflict is the read-list
+   paragraph of `session-rules`: take both texts, so it reads: the
+   files a new session opens itself, in order and within the budget
+   below (for example the owner's preferences, `CLAUDE.md`, the project
+   rules file, the state file's Current block from its state branch,
+   the owner's queue file), then the issue and PR lists it runs; where
+   a project has no role file for a role, the list and the start line
+   stand in the project rules file. Keep #272's two new paragraphs word
+   for word, then #265's state-branch and live-sources text. Set the
+   plugin version to 0.5.0. #272's compact paragraph still says reset
+   prompt; leave it, #262's build rewords it (brief point 6). Push,
+   switch back, and send the manager the new head; the manager reads CI
+   and asks Ben again at that head.
+2. **When PR #265 is squash-merged:** merge origin/main into
+   `t218-personal-assistant-role`; fix or answer each point of the
+   pre-read (pull/266 issuecomment-7164841158); push; `gh pr edit 266
+   --base main`; read CI; then one button round with Ben: the model
+   (opus or fable), the one desktop test of a role file's tool line
+   (#233), whether the role still clears by design, who owns the state
+   checkout, the hand-over path, the description line. PR #266 is a
+   role file, so it merges on Ben's word. Then tell the manager it may
+   drop `t217-portable-roles`.
 3. **When PR #265 and PR #272 have merged: one planner PR, text only.**
    (a) The shared rules, on Ben's button (issues/273
    issuecomment-7164630571): in `session-rules`, the four merge points
    once for every project; in `references/code-review.md`, one reviewer
    per PR, advisories posted once, only a blocking finding gets the
-   answer and the re-check. (b) In `PROJECT-RULES.md`, the planner's
+   answer and the re-check; and merge on Green with gate exceptions,
+   on Ben's button (issues/273 issuecomment-7165533423: what stays
+   Ben's, the one line per merge, the reworded Never line). (b) In
+   `PROJECT-RULES.md`, the planner's
    read list names the state file's Current block (PR #272's advisory
    F1). Send the link to dff-central-planner for its read. Also one line
    each to personal-assistant and dff-central-planner that #260 and #261
@@ -57,19 +77,22 @@ PRs are open, except for a real defect (its own rule, on #273).
    issuecomment-7163080874. After it merges: the tools manager's role
    file line (the finding's 1i, a planner PR), the merge date on #262,
    one line to dff-central-planner.
-5. **#204:** step 3 ran; every write to an existing issue was refused
-   (issues/204 issuecomment-7164741704). Ben looks at the test token's
-   Issues permission and runs the script again. A clean table, then the
-   switch by button. If the permission was already read and write, find
-   the cause first.
-6. **Required checks on main:** a ready Action went to the manager on
-   2026-11-25 (the three CI checks, without the up-to-date rule). When
-   Ben ticks it, read the ruleset once and note it on #273.
+5. **#204:** both project repositories passed with the narrowed token
+   (issues/204 issuecomment-7165156725 and -7165325090). Ben chose to
+   switch with a pre-check (issuecomment-7165532213); the Action is in
+   the tools queue. When Ben says it is done: one live check from this
+   session (a comment and a read through the stored login), record it
+   on #204, and the ticket can close. If `gh` refused the token at its
+   paste prompt, nothing was replaced: look again at how a fine-grained
+   token is stored. Revoking the old login is Ben's later step.
+6. **#251:** the brief is posted (issues/251 issuecomment-7165576142);
+   the manager asks Ben for the dispatch. Rule on the builder's finding
+   when the manager says it is posted. Required checks on main are done
+   (issues/273 issuecomment-7164991439).
 7. **PR #270** (approved at `0535c32`): after its merge and pull the
    manager posts the after figure on #269; no drop from about 55k means
    a revert PR. #264 closes with #269's reading.
-8. **#219:** PR #271's builder answers F1 to F3 (F1 ruled, pull/271
-   issuecomment-7162651862). The trial's builder result is owed from
+8. **#219:** PR #271 merged as `e1fed0c` on 2026-11-25. The trial's builder result is owed from
    the next builder dispatched; when it is on #219, list there the deny
    entries common to every project and ask Ben by button what happens
    to the private configuration repository's PR 12 (pointer: issues/219
@@ -93,9 +116,10 @@ PRs are open, except for a real defect (its own rule, on #273).
     line clears: weigh whether #231, #187 and PR #182 still earn their
     place (#273, out of scope list).
 
-**Waiting on Ben:** in this chat, the token's Issues permission (#204).
-In the manager's chat: merge words. In the tools queue: the required
-checks Action, once the manager has written it.
+**Waiting on Ben:** nothing in this chat. In the tools queue: the login
+switch Action (#204). In the manager's chat: the dispatch of #251, and
+the merge word for PR #265 again at its new head. Ben's standing word,
+2026-11-25: a session that needs him asks by pop-up in its own chat.
 
 **No Done list is kept here from 2026-11-25** (the dynasty planner's
 point on #273): the ticket is the record. Earlier state is in this
