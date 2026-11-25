@@ -157,7 +157,7 @@ merging on Ben's button (pull/181, superseded by #198). Also open:
 
 ## Waiting on the owner (pointer to NEEDS-OWNER.md)
 
-The queue file has no entries. The #219 trial Action was done by Ben
+The queue file holds one Action, #204 step 3 (the login test's write half, raised by the planner 2026-11-25, issues/204 issuecomment-7164228109). The #219 trial Action was done by Ben
 on 2026-11-24 and left the queue at this state-back. Waiting on Ben,
 by button at each turn: the merge words for #274, #268, #259,
 #252, #197, #265, #266, #238, #239, #242, #256 and #269's PR; the
