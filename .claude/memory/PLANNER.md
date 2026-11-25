@@ -52,6 +52,24 @@ PRs are open, except for a real defect (its own rule, on #273).
    the retried workflow push went through, recorded. Owed after the
    stop: a line on #219 that one drift_check test's exit code depends
    on the clone it runs in.
+   **At about 16:10Z:** Ben merged PR #265 himself as `ab37521`; PR
+   #252 merged as `f70ebe2`. GitHub had an incident from about 15:45Z
+   (writes failing); PR #284's repair `71d45e1` is on its branch but
+   not yet on the PR; PR #270 waits behind #284 by Ben's word in the
+   manager's chat. **PR #266 is ready locally and NOT pushed:** branch
+   `t218-personal-assistant-role` holds the merge of main and the
+   commit with Ben's "All eight as recommended" (his button in the
+   planner's chat). **OWED the moment GitHub takes writes:** post that
+   button and the eight points as a comment on PR #266 (the text is in
+   that commit's message and in pull/266 issuecomment-7167371670 and
+   issuecomment-7166704829). Push the branch when PR #284 has merged;
+   check the PR's base reads main; then it needs Ben's merge word.
+   #285 is cut: the boards-token script, medium, code work, after the
+   stop. The personal-assistant reports Ben's words in its chat, about
+   16:05Z: the stop is lifted once the poor design is removed, and the
+   fault is a practice in the tools area; the planner's answer is a
+   shared rule in the next planner PR (a gate's cost and its effect on
+   open work are stated with figures before it is made a rule).
 1. **PR #265 is on main's tip at head `88d0549`** (pull/265
    issuecomment-7166413824): the read list takes both texts, the plugin
    version is 0.5.0, PR #272 merged as `a445087`. It waits on the
