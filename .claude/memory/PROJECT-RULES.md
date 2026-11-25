@@ -66,9 +66,10 @@ acts on the Next list in `PLANNER.md`.
 ## Green means all of
 
 - every CI check (`pytest (ubuntu-latest)`, `pytest (windows-latest)`,
-  `CATALOG.md is current`) passes at the PR's head, and GitHub shows no
-  conflict, on one read of
+  `CATALOG.md is current`) passes at the PR's head, and
+  `mergeStateStatus` is `CLEAN`, on one read of
   `gh pr view <n> --json headRefOid,mergeStateStatus,statusCheckRollup`.
+  Any other merge state is not Green.
   CI runs the whole test suite on both systems and the `CATALOG.md`
   check, and that run is the proof of both (#273). A builder still runs
   the tests and rebuilds `CATALOG.md` before it opens its PR;
@@ -90,10 +91,16 @@ needs the merged tree, so the manager runs `tools/reproof.py <pr> <head sha>`
 from the live clone (`C:/Users/benha/claude-live/skills-plugins-hooks-agents`)
 with the interpreter above. Never a scratch script (#117).
 
-**A Green holds** while the PR's head is unchanged and GitHub shows no
-conflict. A merge of another PR does not make it stale. A PR that
-conflicts takes a merge of `main`; CI runs on the new head, and the
-owner's merge word is asked again at that head.
+**A Green holds** while the PR's head is unchanged and its merge state
+is `CLEAN`. A merge of another PR does not make it stale, but the
+manager reads the PR's Green again, in one call, just before its own
+merge. A PR that conflicts, or that shares a file with a merge made
+since its CI ran, takes a merge of `main`; CI runs on the new head, and
+the owner's merge word is asked again at that head.
+
+**The machine's one test line** (above) binds a manager here only for a
+`tools/reproof.py` run. A merge that runs nothing locally needs no
+message to the other project's manager.
 
 **After each merge** the manager reads CI on `main`'s new commit. A red
 check there means a revert PR and an Action for the owner; no other PR

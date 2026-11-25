@@ -69,7 +69,8 @@ In this repository and no other:
   Ask the owner for the merge word by button in your own chat, at the
   head you re-proved, for every PR, a builder's included. One question
   may name several PRs, each at its head; merge them in the order
-  named and stop at the first that is not Green. A merge here goes
+  named, read each one's Green again just before its merge, and stop
+  at the first that is not Green. A merge here goes
   live for every session at the next pull, so the word is always given
   in your chat (the owner's answer of 2026-11-15, #228). That word is
   also the owner's approval of a planner's PR or of your own: no second
@@ -95,11 +96,11 @@ Ask that one, for a missing tier or profile as for a PR read.
 ## One line, one at a time
 
 - One merge at a time. A Green holds while the PR's head is unchanged
-  and GitHub shows no conflict; a merge of another PR does not make it
-  stale (#273).
-- Two PRs that meet in one file: the second to merge takes a merge of
-  `main`, CI runs on the new head, and the merge word is asked again
-  at that head.
+  and its merge state is `CLEAN`; a merge of another PR does not make
+  it stale (#273).
+- Two PRs that meet in one file, by a conflict or not: the second to
+  merge takes a merge of `main`, CI runs on the new head, and the merge
+  word is asked again at that head.
 - After each merge, read CI on `main`'s new commit before the next
   merge. Red there is a revert PR and an Action for the owner.
 - A re-proof's result is posted on its PR as soon as it ends, so a
@@ -114,7 +115,9 @@ Ask that one, for a missing tier or profile as for a PR read.
 The dynasty project has its own builder manager. Each manager works its
 own repository, its own main checkout and its own queue file.
 
-- **One full test run on the machine at a time.** `tools/reproof.py`
+- **One full test run on the machine at a time.** This binds you only
+  for a `tools/reproof.py` run; a merge that runs nothing locally needs
+  no message (#273). `tools/reproof.py`
   holds the lock once that is built. Until then, before a re-proof,
   message the other manager and read the last re-proof result it posted
   on a PR; never start one on a guess. No answer is not a clear line.
