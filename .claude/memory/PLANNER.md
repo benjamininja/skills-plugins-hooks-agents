@@ -59,9 +59,38 @@ dff-central-builder-manager has not yet reported its own memory review
 9. #251's brief when #189's PR merges; the lock PR after #242 merges;
    #263 has no go; #258 holds the re-measure list.
 
-Waiting on Ben: the merge word for PR #210, in the manager's chat.
-Item 0 is done (2026-11-25). Item 4's first half is done: the Action
-was answered; the builder's trial result is still owed.
+Waiting on Ben: see the 2026-11-25 block below.
+
+**After the clear, 2026-11-25.**
+
+- Item 0 is done: ids exchanged with all four peers (Ids paragraph).
+- **PR #210 squash-merged as `f873dd3`**; both tools checkouts are there
+  (the manager's message). Item 2's first half is done: main merged into
+  `t217-portable-roles`, PR #265 retargeted to main, new head `8f4b89e`.
+  The conflicts were the squash's; the branch's own text was kept, and
+  the merge changed only `.gitattributes`. PR #265's body still says
+  stacked on PR #210. PR #266 stays stacked on #265's branch.
+- **Ben approved PR #270 at `0535c32`** (pull/270
+  issuecomment-7162436664); the manager is told. Next: its re-proof and
+  merge, then the after figure on #269.
+- Item 4: the #219 trial Action was answered (Ben marked it done,
+  2026-11-24); the desktop result is denied (issues/219
+  issuecomment-7137847286); the builder's result is owed from the next
+  builder dispatched. The trial's entry is committed as the private
+  configuration repository's PR 12, and that checkout sits on the trial
+  branch meanwhile (pointer: issues/219 issuecomment-7162465533). After
+  both results: the common deny list on #219, and a button for Ben on
+  PR 12.
+- **Plan reads posted, both no breach:** PR #268 at `8272b9a` (pull/268
+  issuecomment-7162486091) and PR #267 at `b99dcae` (pull/267
+  issuecomment-7162498982). Owed from #267's read: one line in #204's
+  hand step, to run the script from a checkout of the repository named.
+  PR #271's two clarifications are accepted (pull/271
+  issuecomment-7162422722); its plan read waits for the manager's word,
+  after its first code review.
+- The #260/#261 builder PR is not open yet; #262's rule-text brief
+  follows it. dff-central-planner still expects one line at each merge
+  of #249, #260, #261, #262 and at PR #252's first run.
 
 **After the fourth compact, 2026-11-24.**
 
