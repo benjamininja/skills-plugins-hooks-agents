@@ -85,9 +85,11 @@ Waiting on Ben: see the 2026-11-25 block below.
   issuecomment-7162486091) and PR #267 at `b99dcae` (pull/267
   issuecomment-7162498982). Owed from #267's read: one line in #204's
   hand step, to run the script from a checkout of the repository named.
-  PR #271's two clarifications are accepted (pull/271
-  issuecomment-7162422722); its plan read waits for the manager's word,
-  after its first code review.
+  PR #271 at `d7795c9`: no breach, and F1 of its code review is ruled
+  (pull/271 issuecomment-7162651862): P11 accepts a target inside the
+  main checkout or a listed live clone. F1 to F3 hold its merge until
+  the builder answers and the re-check. The #260/#261 builder
+  (`t260-261-readbudget`) is building.
 - The #260/#261 builder PR is not open yet; #262's rule-text brief
   follows it. dff-central-planner still expects one line at each merge
   of #249, #260, #261, #262 and at PR #252's first run.
