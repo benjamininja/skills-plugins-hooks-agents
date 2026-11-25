@@ -62,22 +62,23 @@ catch).
   is a fast-feedback nicety, not a merge gate, and doesn't need a subagent
   to "interrogate" anything.
 
-## Revision 1 (2026-11-25): what CI runs depends on the changed paths
+## Revision 1 (2026-11-25): what CI runs on a pull request and on main
 
-Ticket: tools #283, chosen by the owner by button on 2026-11-25. The
-decision above is unchanged: CI is the gate. This revision records what the
-gate runs.
+Ticket: tools #283, on the owner's word of 2026-11-25 (the ticket's
+Amendment 2). The decision above is unchanged: CI is the gate. This revision
+records what the gate runs.
 
-- A pull request whose changed paths are all `.md` files, none under a
-  `tests` folder, runs three test files on the Windows job:
-  `tests/test_skills_frontmatter.py`, `tests/test_agents_frontmatter.py` and
-  `tests/test_adr_readme.py`. Any other pull request runs the whole suite.
-- The Ubuntu job and every push to main always run the whole suite. Windows
-  is about 92% of the job minutes, so the saving is there and only there.
-- An empty list, an unreadable list or any error runs the whole suite.
-- The rule is decided in one place, `tools/ci_scope.py`, and tested in
-  `tests/test_ci_scope.py`. The `pytest` job in `.github/workflows/test.yml`
-  calls it and prints the scope it took in one log line. The check names do
-  not change, so every job still reports on every pull request.
+- A pull request runs `pytest (ubuntu-latest)`, the whole suite, and
+  `CATALOG.md is current`. No pull request waits for a Windows result.
+- A push to main runs the whole suite on both systems, as before. A red
+  Windows run on main is reported and fixed forward.
+- Windows was about 92% of the job minutes (median 17.7 minutes against 1.2
+  on Ubuntu over 25 pull requests). The cost: the tests that run only on
+  Windows, and any Windows-only fault in code, are seen after a merge and not
+  before it, until #187 makes the Windows run fast enough to return to pull
+  requests.
+- The rule is one expression in `.github/workflows/test.yml`: the matrix's
+  list of systems is Ubuntu alone on a `pull_request` event and both systems
+  otherwise. The check names do not change.
 - A newer head on a pull request cancels the run on the older head. A run on
   main is never cancelled.

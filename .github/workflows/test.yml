@@ -21,42 +21,16 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, windows-latest]
+        # A pull request runs Ubuntu only: no PR waits on the Windows run. A
+        # push to main runs both systems (#283, Amendment 2).
+        os: ${{ fromJSON(github.event_name == 'pull_request' && '["ubuntu-latest"]' || '["ubuntu-latest","windows-latest"]') }}
     steps:
       - uses: actions/checkout@v4
-        with:
-          # Two commits: on a pull request the checkout is the merge commit,
-          # and its two parents are what the scope step compares. Full history
-          # would add an origin/main ref, which tests/test_drift_check.py reads.
-          fetch-depth: 2
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      # tools/ci_scope.py decides (#283). Only the Windows job on a pull
-      # request asks it; Ubuntu and every push to main run the whole suite.
-      - name: Choose the pytest scope
-        id: scope
-        shell: bash
-        env:
-          EVENT_NAME: ${{ github.event_name }}
-          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
-        run: |
-          scope=tests
-          count=not-asked
-          if [ "$EVENT_NAME" = "pull_request" ] && [ "$RUNNER_OS" = "Windows" ]; then
-            # HEAD is the merge commit: HEAD^1 is the base, HEAD^2 must be the PR head.
-            if [ "$(git rev-parse HEAD^2)" = "$HEAD_SHA" ] && git -c core.quotepath=false diff --name-only --no-renames HEAD^1 HEAD > "$RUNNER_TEMP/changed.txt"; then
-              count=$(wc -l < "$RUNNER_TEMP/changed.txt" | tr -d ' ')
-              scope=$(python tools/ci_scope.py < "$RUNNER_TEMP/changed.txt") || scope=tests
-            else
-              count=diff-failed
-            fi
-            [ -n "$scope" ] || scope=tests
-          fi
-          echo "ci_scope: scope=$scope changed_paths=$count event=$EVENT_NAME os=$RUNNER_OS"
-          echo "args=$scope" >> "$GITHUB_OUTPUT"
       - run: python -m pip install pytest pyyaml
-      - run: python -m pytest -q ${{ steps.scope.outputs.args }}
+      - run: python -m pytest -q tests
 
   catalog:
     name: CATALOG.md is current
