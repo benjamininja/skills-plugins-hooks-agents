@@ -59,7 +59,9 @@ dff-central-builder-manager has not yet reported its own memory review
 9. #251's brief when #189's PR merges; the lock PR after #242 merges;
    #263 has no go; #258 holds the re-measure list.
 
-Waiting on Ben: the #219 trial Action in the tools queue.
+Waiting on Ben: the merge word for PR #210, in the manager's chat.
+Item 0 is done (2026-11-25). Item 4's first half is done: the Action
+was answered; the builder's trial result is still owed.
 
 **After the fourth compact, 2026-11-24.**
 
@@ -90,23 +92,25 @@ Waiting on Ben: the #219 trial Action in the tools queue.
   the settings file. A corrected step 1 went to the manager; its
   confirmation was not yet seen. Lesson: a hand step names its file by
   full path in a code mark of its own.
-- Clear prep done at Ben's word, 2026-11-24. Compacts since the last
-  clear: 4; the count restarts at the clear. After it: new queue id to
-  the four peers, then this line and the Ids paragraph are updated.
+- Cleared on 2026-11-24 at Ben's word; compacts since that clear: 0.
+  The new queue id went to the four peers on 2026-11-25. PR #210 is
+  GREEN at `a30c3fa` by the manager's re-proof and waits on Ben's merge
+  word in the manager's chat.
 - PR #267 (#206) is green by its builder; re-proof follows #210.
 
 **Ids (queue ids change at every clear).** This planner:
-`2f55ae6a-00e1-46b6-9f89-e3d2d939e0de` since the clear of 2026-11-23
-(before it: `6b47c44d-e4cb-43be-8d0a-51ec2776881b`), sent to the three
-peers on 2026-11-24. Each peer's id is from its own message of
-2026-11-24. Tools-builder-manager:
-`e7026592-a1b4-4ccd-afea-61d5cf451e9f` (since its clear of 2026-11-24). dff-central-builder-manager:
-`c2116a9a-72a7-4688-89d3-26574767e13b` since its clear of 2026-11-24
-(before that `695f05fc-6dff-445b-a9fd-af605c6997d9`; earlier:
-`aa75bef2-1167-49fd-995a-bdee72226d36`, which its two entries in the
-dynasty queue still named on 2026-11-24; the re-key is its own).
-dff-central-planner: `cff0e612-f08d-401c-9bb6-2a60446c1492`. Neither
-queue holds an entry for this planner; the tools queue is empty.
+`ad857488-55b0-4c62-90d5-3ee43f4e0c99` since the clear of 2026-11-24
+(before it: `2f55ae6a-00e1-46b6-9f89-e3d2d939e0de`), sent to the four
+peers on 2026-11-25. Each peer's id is from its own message of
+2026-11-25, after its own clear. Tools-builder-manager:
+`dabbbcd0-2b97-445e-a2d9-4502691fb617`. dff-central-builder-manager:
+`4ff97ebc-bfd4-4723-997c-406160d975ba`. dff-central-planner:
+`9bcc0c9c-574c-4ebb-b4f4-18edc03af9aa`. personal-assistant: cleared on
+2026-11-25; it sends its id once Ben has printed it. The tools queue is
+empty on 2026-11-25. The #219 trial Action left it answered: Ben marked
+it done on 2026-11-24, and the desktop result (denied, live without a
+restart) is at issues/219 issuecomment-7137847286. The builder's result
+is still owed, from the next builder dispatched.
 
 **Merge line (Tools-builder-manager, one re-proof at a time, each merge
 word asked of Ben by button):** #236, PR #238 (the planner's), #239
@@ -299,7 +303,7 @@ issues/250 issuecomment-7103259381; dynasty's half is dynasty #655).
    Ben's approval at that head; the same for #266 after #265. The
    manager keeps PR #210's branch until #265 is retargeted.
    dff-central-planner's id since its clear:
-   `125a6d6d-88c4-406a-8ea8-220374432d42`; it expects one line when
+   `9bcc0c9c-574c-4ebb-b4f4-18edc03af9aa`; it expects one line when
    #249, #260, #261 or #262 merges and when PR #252's script first runs.
    **#262's rule-text brief:** write it when the #260/#261 PR opens (same
    section), then ask Ben's go by button. Its mod brief follows PR #197,
