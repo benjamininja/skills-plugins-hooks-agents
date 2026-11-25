@@ -443,6 +443,10 @@ it exists. Five lines, the same in every project:
    planner re-reads the times at its sweep. A PR that changes a
    workflow file is read by the planner before its merge.
 
+Until a project's table is written and the owner has set its ruleset
+from it, that project's Green keeps every check its rules file names
+today: line 1 takes no check away before the owner has looked at it.
+
 No wait in minutes is written here: a project's default waits come out
 of its own measurements, on the owner's button.
 
