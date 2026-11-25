@@ -110,7 +110,11 @@ Waiting on Ben: see the 2026-11-25 block below.
   issuecomment-7163080874). Dispatch after PR #265 and PR #272 merge;
   the manager is told. Ben's answers: the away trigger is built (point
   9); a running background task is named in the state file with no
-  local path (point 6). Owed by the planner after that PR merges: the
+  local path (point 6). **Amended on Ben's button** (issuecomment-7163139510):
+  point 11, both role templates' read lists name the Current block
+  (PR #272's advisory F1). Owed by the planner after PR #272 merges: a
+  small PR that makes the Tools planner's read list in
+  `PROJECT-RULES.md` name the Current block too. Owed by the planner after that PR merges: the
   tools manager's role file line (the finding's 1i, a planner PR), and
   the three merge dates on #262 for the re-measure. #262's mod brief
   still follows PR #197, #240 step 2 and #111. dff-central-planner still expects one line at each merge
