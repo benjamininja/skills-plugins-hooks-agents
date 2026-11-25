@@ -1,5 +1,6 @@
-Tier: <low | medium | high>
+Tier: <haiku | low | medium | high>
 Ticket: #<n>
+Base: origin/main <or origin/<branch> of an open PR in this repository, for a stacked brief; the manager passes it to dispatch.ps1 as -Base>
 venv: <yes | no>
 Profile: <optional: a profile from the owner's profiles file, for example research or probe; leave the line out for none>
 Hosts: <with Profile: probe only, the hosts the probe may reach; the script's ALLOWED_HOSTS is checked against them at closeout>

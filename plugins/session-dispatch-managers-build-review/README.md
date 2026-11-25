@@ -102,17 +102,27 @@ change that.
 
 | Tier | Model | Effort | Turn cap |
 |---|---|---|---|
+| haiku | claude-haiku-5-5 | medium | 15 |
 | low | claude-sonnet-5-5 | medium | 30 |
 | medium | claude-sonnet-5-5 | high | 80 |
 | high | claude-opus-5-5 | medium | 200 |
 
 No tier, no dispatch: the script refuses a run without `-Tier`.
 
+The turn cap is advice, not a limit. The `claude` start command has no
+turn-limit option (`claude --bg` is an interactive session, and the one
+budget option, `--max-budget-usd`, works only with `--print`), so the
+script adds "Or stop after N turns." to the prompt and nothing stops a
+session that runs past it. What the script does enforce is the number:
+`-TurnCap` can only lower the tier's cap. Raising a cap is the owner's, in
+the config's `tiers`.
+
 ## Dispatch
 
 ```
-dispatch.ps1 -Name <name> -Tier <low|medium|high> -PromptFile <file>
-             [-Profile <name>] [-TurnCap <n>] [-NoSetup] [-Project <folder>] [-Apply]
+dispatch.ps1 -Name <name> -Tier <haiku|low|medium|high> -PromptFile <file>
+             [-Profile <name>] [-TurnCap <n>] [-Base origin/<branch>] [-NoSetup]
+             [-Project <folder>] [-Apply]
 ```
 
 Without `-Apply` the script reads the config, the brief, the deny list
@@ -136,12 +146,29 @@ The script refuses, with exit code 2 and one line that begins
   hyphens, the profile has no rule and no base file, a rule is not a
   string, holds a double quote or ends in a backslash, or its base file is missing, not JSON or lacks a shared
   deny rule;
-- `-Apply` is given and the project is not on the owner's list.
+- `-TurnCap` is zero, negative, or above the tier's cap;
+- `-Base` is not `origin/<branch>`, or starts with a hyphen;
+- `-Apply` is given and the project is not on the owner's list;
+- `-Apply` is given, the worktree is not there yet, and `git fetch origin`
+  fails in the main checkout, or the base (`refs/remotes/<base>`, so a
+  local branch or tag of the same name cannot stand in for it) does not
+  exist after it (nothing is started).
 
-With `-Apply` it makes the worktree `.claude/worktrees/<name>` on branch
-`worktree-<name>`, runs the setup lines, starts the session in the
+The dry run prints the base, `origin/main` unless `-Base` names another,
+with its commit as of the last fetch. It does not fetch.
+
+With `-Apply` it fetches `origin` in the main checkout (that moves no
+file and not the checkout's branch), makes the worktree
+`.claude/worktrees/<name>` on branch `worktree-<name>` at the base, with
+no upstream, runs the setup lines, starts the session in the
 background, and checks that the session is alive and runs in its
-worktree. If the check fails it stops the session and says so.
+worktree. If the check fails it stops the session and says so. A worktree
+already there is left as it is, at whatever base it has, and no fetch is
+made for it.
+
+`-Base` is for a stacked brief: the brief's `Base:` line names
+`origin/<branch>` of an open PR in the same repository, and the manager
+passes it on. The default is `origin/main`.
 
 Follow-up and closeout are not in the script in 0.1.0. Their commands
 are in `skills/session-dispatch/references/dispatch.md`.
