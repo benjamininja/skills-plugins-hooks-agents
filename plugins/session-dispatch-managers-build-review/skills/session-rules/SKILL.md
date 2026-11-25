@@ -271,10 +271,35 @@ them out before pasting it into a GitHub record. For example:
 > list. Local files: `<paths, or none>`.
 
 **The read list** stands in the role file: the files a new session
-reads, in order (the owner's preferences, `CLAUDE.md`, the project
-rules file, the state file, the owner's queue file), then the issue and
-PR lists it runs. Where a project has no role file for a role, the list
+opens itself, in order and within the budget below (for example the
+owner's preferences, `CLAUDE.md`, the project rules file, the state
+file's Current block, the owner's queue file), then the issue and PR
+lists it runs. Where a project has no role file for a role, the list
 stands in the project rules file.
+
+**The start-up read budget.** A role's read list names at most five
+files for a new session to open itself, about 20,000 tokens in all, and
+for the state file it names the Current block only. `CLAUDE.md`, the
+role file, the skill and the output of the Do first checks (the queue
+files, the issue and PR lists) are outside the count. The skill, the
+Never lines, the Do first list and what waits on the owner are always
+read. Everything else (the state file's Reference part, another role's
+file, an ADR, a brief) is read when a step needs it. A done item leaves
+the Current block at the state-back after its GitHub record exists: it
+is linked, not carried. The five and the 20,000 are first settings,
+re-measured against the ledger on #258. Which files make up a role's
+five is the project's choice, written in its role file.
+
+**After a compact, not a clear.** A compact keeps the session's id and
+leaves a summary; the skill and `CLAUDE.md` come back by themselves. The
+prep before it is the same (close the step, record, state-back). After
+it the session reads only the issue list, the PR list and the owner's
+queue files it works from. It opens the reset prompt, a rules file or
+the state file only when a step needs one, and says which and why. The
+reset prompt is still written before a compact, and the session reads
+it after the compact when a background task was running or when the
+compact came with no prep. A clear keeps the full start-up from the
+reset prompt.
 
 **A state file holds** one Current block, rewritten whole at every
 save, with these sections in this order:
