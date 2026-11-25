@@ -74,7 +74,11 @@ acts on the Next list in `PLANNER.md`.
   **Windows is not part of Green on a PR until the owner says so**
   (the owner's word of 2026-11-25, #187): a `pytest (windows-latest)`
   job that is running, red or absent holds no merge and nobody waits
-  for it. The Ubuntu job runs the whole test suite, and that run and
+  for it. It comes back to a PR only after all three, in this order:
+  #187's research has scoped it (where the time goes, and what a
+  Windows check on a PR would cost each time); the dynasty planner
+  (`dff-central-planner`) has been consulted on the plan and has
+  approved it; and the owner has said so. The Ubuntu job runs the whole test suite, and that run and
   the `CATALOG.md` check are the proof (#273). Windows runs on main
   after a merge; the manager reads that run once and reports a red one,
   which is fixed forward. A builder still runs the tests it touched and
