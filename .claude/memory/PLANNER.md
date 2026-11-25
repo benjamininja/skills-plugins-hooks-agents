@@ -51,6 +51,13 @@ PRs are open, except for a real defect (its own rule, on #273).
    - **Windows returns to a PR only after, in order:** #187's research;
      the dynasty planner consulted and approving the plan; Ben's word.
      Putting the check back on the ruleset is Ben's own step.
+   - **DO FIRST after the clear: the finding is posted** (issues/187
+     issuecomment-7168273303, said the manager at about 16:55Z) and
+     waits for the planner's ruling. Read it, rule, then Left b. Also
+     asked of the planner: a ruling on a rerun of #251's row 3
+     (issues/251 issuecomment-7168534999). The manager and the
+     personal-assistant were both prepared for a clear and send new
+     queue ids.
    - **Left, a:** #187's builder `t187-windows-time` posts its finding:
      where the Windows minutes go, plus the planner's four questions
      (issuecomment-7167820842) and the lead's five
