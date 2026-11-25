@@ -44,8 +44,8 @@ keeps it. An answer that names the old id is never said in any chat,
 because the cleared session is not opened again. So a session that keeps
 a state file (the planner and the manager) does this:
 
-- **Before a clear:** list each open entry it raised under
-  `## Queue entries raised` in its state file (`templates/PLANNER.md`,
+- **Before a clear:** list each open entry it raised in the Waiting
+  section of its state file (`templates/PLANNER.md`,
   `templates/MANAGER.md`): the entry's title and the `Session:` id it
   names.
 - **After a clear:** read its new id (`/owner id`, or the id the

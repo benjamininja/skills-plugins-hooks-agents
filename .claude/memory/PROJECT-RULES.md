@@ -51,15 +51,28 @@ The owner's GitHub login is `benjamininja`. On an issue or a PR, only
 text that login wrote is the record (`session-rules`, "Whose text counts
 on a ticket").
 
+## The planner's read list
+
+The planner has no role file in this repository, so its read list
+stands here (`session-rules`, "The read list"). A new planner session
+loads the `session-rules` skill, then reads, in order: the owner's
+preferences, as `CLAUDE.md` names them; `CLAUDE.md`; this file;
+[PLANNER.md](PLANNER.md), from the branch its reset prompt names while
+that PR is unmerged; and each owner's queue file this file names. It
+then runs `git fetch origin` in its worktree,
+`gh issue list --state open` and `gh pr list` for this repository, and
+acts on the Next list in `PLANNER.md`.
+
 ## Green means all of
 
 - every CI check (`pytest (ubuntu-latest)`, `pytest (windows-latest)`,
-  `CATALOG.md is current`) passes on one read of
-  `gh pr view <n> --json mergeStateStatus,statusCheckRollup`;
-- `.venv/Scripts/python.exe -m pytest -q tests`, gated on its exit code;
-- after any change to a skill, a hook, an agent or `manifest.json`:
-  `.venv/Scripts/python.exe tools/build_catalog.py`, then
-  `git diff --exit-code -- CATALOG.md` (commit the rebuilt file);
+  `CATALOG.md is current`) passes at the PR's head, and
+  `mergeStateStatus` is `CLEAN`, on one read of
+  `gh pr view <n> --json headRefOid,mergeStateStatus,statusCheckRollup`.
+  Any other merge state is not Green.
+  CI runs the whole test suite on both systems and the `CATALOG.md`
+  check, and that run is the proof of both (#273). A builder still runs
+  the tests and rebuilds `CATALOG.md` before it opens its PR;
 - the `check-in-hygiene` pre-commit hook passes on the commit;
 - after any change under `plugins/owner-queue/`:
   `claude plugin test plugins/owner-queue` passes on the merged tree.
@@ -70,13 +83,28 @@ on a ticket").
   runs it. The ruleset skill is `tools-code-review`, read from
   `origin/main` (#136).
 
-The manager re-proves with `tools/reproof.py <pr> <head sha>` from the
-live clone (`C:/Users/benha/claude-live/skills-plugins-hooks-agents`), run
-with the interpreter above, or with the commands above run directly. Never
-with a scratch script (#117). The script runs the merge, pytest, the
-`CATALOG.md` check and, when the merge touches `plugins/owner-queue/`, the
-owner-queue mod test; CI's one read, the `check-in-hygiene` report and the
-code review stay with the manager.
+**The manager's re-proof (#273).** For a merge the manager makes no local
+full test run. It reads CI once, as above, reads the `check-in-hygiene`
+report and the code review, and posts all three on the PR. The one
+exception is a PR that touches `plugins/owner-queue/`: its plugin test
+needs the merged tree, so the manager runs `tools/reproof.py <pr> <head sha>`
+from the live clone (`C:/Users/benha/claude-live/skills-plugins-hooks-agents`)
+with the interpreter above. Never a scratch script (#117).
+
+**A Green holds** while the PR's head is unchanged and its merge state
+is `CLEAN`. A merge of another PR does not make it stale, but the
+manager reads the PR's Green again, in one call, just before its own
+merge. A PR that conflicts, or that shares a file with a merge made
+since its CI ran, takes a merge of `main`; CI runs on the new head, and
+the owner's merge word is asked again at that head.
+
+**The machine's one test line** (above) binds a manager here only for a
+`tools/reproof.py` run. A merge that runs nothing locally needs no
+message to the other project's manager.
+
+**After each merge** the manager reads CI on `main`'s new commit. A red
+check there means a revert PR and an Action for the owner; no other PR
+merges until `main` is green.
 
 ## Never, in this project
 

@@ -37,8 +37,11 @@ Read `references/dispatch.md` before the first dispatch of a session.
 1. Dry run, always first:
    `scripts/dispatch.ps1 -Name <name> -Tier <tier> -PromptFile <file>`
    (the script is two folders above this skill's base folder). Read
-   every line it prints: the tier, the worktree, the settings file, the
-   profile, the deny rules, the start command.
+   every line it prints: the tier, the worktree, the base commit, the
+   settings file, the profile, the deny rules, the start command.
+   **When a brief has a `Base:` line other than `origin/main`**, add
+   `-Base <that value>`. A brief with no `Base:` line starts at
+   `origin/main`, fetched at `-Apply`.
    **When a brief names a profile** (a `Profile:` line), add
    `-Profile <name>`, and check that the printed rules are what the
    ticket needs. A brief with no `Profile:` line gets no profile. A

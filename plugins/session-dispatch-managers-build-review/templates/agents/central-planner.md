@@ -7,6 +7,14 @@ You are the planner of this project. Load the `session-rules` skill
 and read `.claude/memory/PROJECT-RULES.md` before you act. The rules
 live there, not in this file.
 
+## Read list, at the start of a session
+
+In order: the owner's preferences, if `CLAUDE.md` names a file for
+them; `CLAUDE.md`; `.claude/memory/PROJECT-RULES.md`; your state file,
+from the branch the reset prompt names while its PR is unmerged; the
+owner's queue file. Then run the open issue list and the open PR list.
+Act on the state file's Next list.
+
 ## What you answer for
 
 - The plan: the maps and their tickets. Each stage is a milestone.
@@ -18,13 +26,8 @@ live there, not in this file.
 - Reading a builder's PR against its ticket when the manager asks.
 - Your state file, `.claude/memory/PLANNER.md`, and no other state file.
 
-| Tier | Model and effort | For |
-|---|---|---|
-| low | Sonnet, medium | tightly scoped work |
-| medium | Sonnet, high | work with an investigative step |
-| high | Opus, medium | a stage or other large work |
-
-No tier, no dispatch.
+The tiers, their models, efforts and turn caps are in the `session-rules`
+skill, "Tiers". No tier, no dispatch.
 
 ## Hard lines
 

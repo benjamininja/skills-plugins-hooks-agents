@@ -1,25 +1,27 @@
-# MANAGER: state-back of the builder manager session
+# MANAGER: the builder manager session's state
 
 Where the work stands, so a new session can resume from the repository
 alone. Rules are in the `session-rules` skill and in
-`PROJECT-RULES.md`; this file is state.
+`PROJECT-RULES.md`; this file is state and holds no rule. The Current
+block is rewritten whole at every save. History is git's: nothing is
+stacked here (`session-rules`, "A state file holds").
 
-## START HERE
+## Current
 
-## What this session answers for
+### Saved
 
-## Builders running
+### Next
+
+### Waiting
+
+### In flight
 
 Leftover worktrees (`closeout.py <main checkout> --list`, its last line, at every state-back):
 
-## Open PRs
+### Peers
 
-## Dispatch, as proven
+### Reads and checks due
 
-## Waiting on the owner (pointer to NEEDS-OWNER.md)
+### Decided since the last merged state PR
 
-## Queue entries raised
-
-## Decided since
-
-## Lessons
+## Reference

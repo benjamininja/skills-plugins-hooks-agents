@@ -238,32 +238,66 @@ current step and prepares before it takes new work.
 2. **Record.** Every decision, finding and open item since the last prep
    goes on its GitHub record, as above. What is in chat alone is lost at
    the clear.
-3. **State-back.** Update the role's state file on a branch, with a PR.
+3. **State-back.** Rewrite the Current block of the role's state file
+   on a branch, with a PR ("A state file holds", below).
 4. **Flush memory**, only on a real signal.
 5. **Reset prompt, written last**, to the `owner-queue` mod's store by
    the mod's own route. If the session works on after the prep, it
    repeats steps 2 to 5 before it ends the turn, so the stored prompt is
    never older than the session's last turn.
 
-**A reset prompt holds**, in this order:
+**A reset prompt is a pointer.** It holds four things, in this order,
+and no state:
 
-1. the role's name and repository, and how to name the parties;
-2. the skills to load, then the files to read in order: the owner's
-   preferences, `CLAUDE.md`, the project rules file, the state file. If
-   the state-back PR has not merged, read the file from its branch, with
-   the exact `git show` command;
-3. the worktree to enter, then the first commands, one per call;
-4. the owner's queue file to read, and the issue and PR lists to run;
-5. the peers' app session ids;
-6. the **Do first** list, in order, each item with its record (issue,
-   PR or comment) and its next action;
-7. what waits on the owner.
+1. the role's name and repository;
+2. how to name the parties;
+3. the state file and its branch. While the state-back PR has not
+   merged, it gives the exact `git show` command that reads the file
+   from that branch;
+4. the local-only paths the next session needs, such as its worktree,
+   or "none".
 
-It never holds a secret's value or an item with no GitHub record: it
-points to the record and does not stand in for it. Keep it to about 400
-words. It may name local paths, because it is stored outside every
-repository and never committed. Take them out before pasting it into a
-GitHub record.
+It holds no Do-first list, no peers, no waiting list and no rule: those
+stand in the state file, the role file and this skill. It never holds a
+secret's value. Keep it to about 60 words. It may name local paths,
+because it is stored outside every repository and never committed. Take
+them out before pasting it into a GitHub record. For example:
+
+> Act as the central-planner of `<owner>/<repo>`. Call the owner
+> `<name>` and yourself Claude. Load the session-rules skill and follow
+> the role's read list. State: `.claude/memory/PLANNER.md` on branch
+> `<branch>` (PR #N), read with
+> `git show origin/<branch>:.claude/memory/PLANNER.md`. Act on its Next
+> list. Local files: `<paths, or none>`.
+
+**The read list** stands in the role file: the files a new session
+reads, in order (the owner's preferences, `CLAUDE.md`, the project
+rules file, the state file, the owner's queue file), then the issue and
+PR lists it runs. Where a project has no role file for a role, the list
+stands in the project rules file.
+
+**A state file holds** one Current block, rewritten whole at every
+save, with these sections in this order:
+
+- **Saved:** the time and the session's id.
+- **Next:** the ordered list. Each item says what, its record (issue,
+  PR or comment) and the next action.
+- **Waiting:** on the owner, each queue entry the session raised, by
+  its title and the `Session:` id it names; on anything else, what
+  blocks it.
+- **In flight** (a manager's file): each running builder with its id
+  and ticket, and each open PR with its head and the gate it waits at.
+- **Peers:** names and ids.
+- **Reads and checks due:** each with its date or trigger.
+- **Decided since the last merged state PR:** one line per decision,
+  linked to its ticket comment. It is emptied when the state PR merges.
+
+Below it stands one **Reference** block for what changes slowly: maps,
+milestones and standing facts of the project. Nothing is stacked, and
+no dated block is kept: history is git's. The state PR's diff shows
+what moved and what was decided, and that diff is what the owner reads
+before the merge. A state file holds no rule and no item without a
+GitHub record: it points to the record and does not stand in for it.
 
 ## Parking: what waits on the owner
 
