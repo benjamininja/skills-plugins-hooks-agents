@@ -39,6 +39,19 @@ PRs are open, except for a real defect (its own rule, on #273).
    an open PR starts a long Windows run, this state branch included, so
    this save is committed and not pushed until PR #284 has merged);
    when both are in, ask Ben by button to lift the stop.
+   **Since then, all by Ben's buttons (records on #187):** the stop
+   covers the tools repository only, dynasty goes on; PR #252, #265 and
+   #270 merge now on the words already given; Ben took
+   `pytest (windows-latest)` off the ruleset's required checks at about
+   15:40Z, until #187 is fixed (a text-only PR is Green without it, a
+   code PR still waits for it by the manager's read; ask Ben by button
+   to put it back when #187's change merges); **text-only work restarts
+   when PR #284 has merged**, code work when #187's change has. PR #284
+   failed Ubuntu at `24a50f3`; the repair ruling is pull/284
+   issuecomment-7167082432 (fetch-depth 2, diff of `HEAD^1 HEAD`). #204:
+   the retried workflow push went through, recorded. Owed after the
+   stop: a line on #219 that one drift_check test's exit code depends
+   on the clone it runs in.
 1. **PR #265 is on main's tip at head `88d0549`** (pull/265
    issuecomment-7166413824): the read list takes both texts, the plugin
    version is 0.5.0, PR #272 merged as `a445087`. It waits on the
