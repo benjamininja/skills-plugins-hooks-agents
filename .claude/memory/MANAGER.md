@@ -6,76 +6,77 @@ alone. Rules are in the `session-rules` skill and in
 
 ## START HERE
 
-Written 2026-11-25 by the tools manager (session
-Tools-builder-manager, queue id `dabbbcd0-2b97-445e-a2d9-4502691fb617`),
-at a third compact prep on Ben's word. A compact keeps the session id
-and the `session-dispatch` skill; after a clear Ben retypes
+Written 2026-11-25 by the tools manager (session Tools-builder-manager,
+queue id `dabbbcd0-2b97-445e-a2d9-4502691fb617`), at a clear prep on
+Ben's word. After the clear Ben retypes
 `/session-dispatch-managers-build-review:session-dispatch` and the new
 queue id goes to the peers. `origin/main`, the main checkout and the
-live clone are all at `a445087` (#272), after #274 `a6d23d6`, #268
-`4c5e387`, #271 `e1fed0c`.
+live clone are all at `acae1e7` (#288).
 
-Peers: Tools-central-planner (`2c14b7ab`, new after its clear),
-dff-central-builder-manager (`4ff97ebc`), dff-central-planner (by name).
+Peers: Tools-central-planner (`c4259ce4`), personal-assistant
+(`ff1e3261`), dff-central-builder-manager, dff-central-planner (lead
+reader for shared rules; Ben's condition for Windows' return), builders
+t187-windows-time and t283-ci-scope by name.
 
-**The #273 rules are in force (PR #274, merged and pulled).** Green is
-every CI check at the PR's head and merge state CLEAN on one read, the
-hygiene hook, the review; no local full run except an owner-queue PR's
-`tools/reproof.py`. A Green holds while the head is unchanged. After
-each merge, read CI on main's new commit before the next merge. One
-merge-word question may name several PRs. The merge word is still asked
-of Ben in this chat; a go in the planner's chat is a report. Ben's
-merge on Green without asking (issues/273 issuecomment-7165533423) is
-NOT in force until the planner's shared session-rules PR merges.
-Main's ruleset now requires the three checks (#273
-issuecomment-7165200203). The stored GitHub login is the narrowed
-fine-grained token (#204 issuecomment-7166147428): a call refused that
-worked before is a finding for #204, never a retry.
+**Ben's CI stop (issues/187, from issuecomment-7167028313).** First
+priority across all sessions: the cost of CI as the merge gate. Code
+work stays stopped until #187's change is in; text-only PRs move again
+since #284 merged (the planner's reading of Ben's button).
 
-**Ben's merge word given in this chat (2026-11-25) for #259, #265,
-#271, #272.** #271 and #272 are merged. #265's is re-asked at its new
-head (role file: a head that takes main is asked again).
+**Green now (PROJECT-RULES via #286, session-rules 0.5.1 via #288,
+#287):** the ruleset's required checks (`pytest (ubuntu-latest)`,
+`CATALOG.md is current`), no conflict (CLEAN, or UNSTABLE from a
+Windows job alone), the hygiene hook, the review where due. Windows is
+not part of Green on a PR until Ben says so; his conditions for its
+return: the #187 research scopes it and dff-central-planner approves.
+PRs run no Windows job at all (#284, `04b91c1`); Windows runs on a push
+to main only. **Before each merge, read main's last finished run
+(#287): red stops all merges until a fix or revert.** One merge-word
+question may name several PRs; a head that takes main is asked again.
+The merge word is Ben's in this chat; a go in the planner's chat
+arrives as a report. GitHub's API had an incident on 2026-11-25
+(GraphQL merge and comment calls failed for about 30 minutes); Ben
+merged #265, #270 and #284 on the web page then.
+
+Merged on 2026-11-25 since the last prep: #259 `c915c9f`, #252
+`f70ebe2`, #265 `ab37521`, #270 `7064f34`, #284 `04b91c1`, #286
+`cb7fc13`, #266 `15196f2`, #198 `3d6ed6d`, #287 `8bdf0da`, #288
+`acae1e7` (merged by the planner on Ben's word there). Branch
+`t217-portable-roles` deleted on Ben's word.
 
 Next, in order:
 
-1. **PR #259** (#257, click to close, head `85186e1`): GREEN, 640
-   passed and plugin test 79/79 (pull/259 issuecomment-7166376912).
-   Merge after CI on main at `a445087` passes, then read CI on main,
-   pull both checkouts, tell Ben a new session loads the mod.
-2. **PR #252** (#250, closeout script, head `dd24cbf`): t250 merged main
-   by the planner's ruling (pull/252 issuecomment-7165863809); the merge
-   commit's review found nothing (issuecomment-7166148080). Waits on its
-   Windows check (BLOCKED until then), then Ben's merge word at
-   `dd24cbf` by button. t250's working copy of CATALOG.md differs in
-   line endings only (its restore was refused): list it for Ben at
-   closeout. #252 holds dynasty's 24 records (#655).
-3. **PR #265** (planner, `t217-portable-roles`, head `8f4b89e`):
-   conflicts with main in session-rules SKILL.md, the read list
-   paragraph; the manager sent the planner the hunk and two asks (keep
-   #272's budget wording and #265's state-branch sections; step
-   plugin.json to 0.5.0). After the planner pushes: CI and CLEAN at the
-   new head, then Ben's merge word there. Keep the branch until #266 is
-   retargeted.
-4. **#251** (t251-venv-setup, medium, session `4c191e7f`, idle after
-   Part 1): finding at issues/251 issuecomment-7165986505. Ben made
-   `.venv-light` by hand; its `.pth` needed `-Encoding ascii` (utf8
-   writes a byte-order mark Python cannot read: issuecomment-7166256853);
-   now pytest 9.2.0 loads (issuecomment-7166332814). Owed: rows 3 (full
-   suite from `.venv-light/Scripts/python.exe -m pytest -q tests`) and 4
-   (the hook) when the machine has no other full run; ask Ben by button
-   first, since the permission check refused the manager making that
-   venv. Post on #251; the planner rules, then t251 is resumed for Part 2.
-5. **#262 dispatch** after #265 and #272 both merge: ask Ben quoting
-   issues/262 issuecomment-7163080874; brief -7162955348 plus
-   -7163139510 (point 11) plus -7164631610 (point 12). Then the
-   planner's shared session-rules PR (issues/273 issuecomment-7164630571).
-6. **#266** retargets to main after #265 merges; #270 (planner, #269),
-   #242, #239, #238, #216, #222, #227, #197 at their turn, each by the
-   #273 rules. Gated on Ben's go: #240 step 2, #111's build, #263,
-   #187, #167, #192.
-7. Left for Ben: t206's branch and worktree; branch
+1. **Main's Windows runs** at `04b91c1` onward were still running at
+   the prep. Read the last finished run first; a Windows result on
+   `04b91c1` goes on #283 as the push half of amendment 2's proof.
+2. **#187** (t187-windows-time, medium, session `2bc62b36`): finding
+   posted (issues/187 issuecomment-7168273303): about 80% of Windows
+   time is `test_git_guardrails.py` (Git Bash plus 150 to 250 child
+   processes per hook run); 722 tests baseline; 2 Windows-only failures
+   in 413 runs, none on main; options a to g, a/b/c/e/f need Ben, g
+   ruled out. Waits for the planner's ruling; then resume t187 for
+   Part 2 (the change, one PR). #283's addition (facts for a Windows
+   budget, four points) was sent to t187 and is in the finding.
+3. **Closeouts owed** (closeout script from #252 now on main): t283
+   (`8cbd6fb8`, #284 merged), t250 (#252 merged; its CATALOG.md working
+   copy differs in line endings only), t257 (#259), t260-261 (#272),
+   t219 (#271), t189 (#268). Each after its builder has stopped.
+4. **#251** (t251, `4c191e7f`): rows 3 and 4 on record (issuecomment-7168534999);
+   row 3 stopped at 39% with no failure. The planner rules whether it
+   reruns, then t251 resumes for Part 2.
+5. **#262 dispatch** on Ben's button once code work restarts (brief:
+   issues/262 issuecomment-7162955348, -7163139510, -7164631610).
+6. Then, each by the rules above: text PRs #238, #239, #216, #222,
+   #227, #205, #208, #184, #197, #196, #256 (this state file); code PRs
+   #242, #214, #211, #182 after the stop lifts. Gated on Ben's go:
+   #240 step 2, #111's build, #263, #167, #192. #249 is the Supabase
+   dispatcher's.
+7. A code review for #284 and #288 was not run (Ben and the planner
+   merged first); the planner takes any finding as a follow-up PR.
+8. Left for Ben: t206's branch and worktree; branch
    `t161-reset-prompt-pointer`. `C:\Users\benha\.claude` stays on
-   `settings/shared-rule-trial` until dotclaude#12 merges.
+   `settings/shared-rule-trial` until dotclaude#12 merges. After #252,
+   the managers settings text as one Action (still owed).
 
 **Windows hazard** (issues/250 issuecomment-7103861254): `git worktree
 remove` follows a junction. Scan first: `Get-ChildItem -Recurse -Force
@@ -85,21 +86,23 @@ remove` follows a junction. Scan first: `Get-ChildItem -Recurse -Force
 
 | Builder | Ticket | Tier | Session | PR | Stage |
 |---|---|---|---|---|---|
-| `t251-venv-setup` | #251 | medium | `4c191e7f` | none yet | dispatched 2026-11-25; Part 1 posted; idle until rows 3-4 and the planner's ruling |
-| `t250-closeout-script` | #250 | high | `08a25cd7` | #252 at `dd24cbf` | resumed 2026-11-25 for the main merge; idle; waits for Windows CI and Ben's word |
-| `t257-autoclose` | #257 | low | `a72dcbd0` | #259 at `85186e1` | not running; GREEN; merges after main CI |
+| `t187-windows-time` | #187 | medium | `2bc62b36` | none yet | dispatched 2026-11-25; finding posted; waits for the planner's ruling |
+| `t283-ci-scope` | #283 | medium | `8cbd6fb8` | #284 merged `04b91c1` | done; closeout owed; its #283 state-back may be unposted (GitHub incident) |
+| `t251-venv-setup` | #251 | medium | `4c191e7f` | none yet | Part 1 posted; rows 3-4 on record; waits for the planner |
+| `t250-closeout-script` | #250 | high | `08a25cd7` | #252 merged `f70ebe2` | done; closeout owed |
+| `t257-autoclose` | #257 | low | `a72dcbd0` | #259 merged `c915c9f` | done; closeout owed |
 | `t260-261-readbudget` | #260, #261 | low | `d7e77ffa` | #272 merged `a445087` | done; closeout owed |
 | `t219-drift-check` | #219 | medium | `750159d3` | #271 merged `e1fed0c` | done; closeout owed |
 | `t189-dispatch-base` | #189 | medium | `2eb375b2` | #268 merged `4c5e387` | done; closeout owed |
 | `t206-token-check` | #206 | low | `116a30e9` | #267 merged `450ee52` | not running; branch and worktree left for Ben |
-| `t231-reproof-lock` | #231 | medium | `8506434b` | #242 at `b278602` | not running; waits for its turn |
+| `t231-reproof-lock` | #231 | medium | `8506434b` | #242 at `b278602` | not running; code PR, waits for the stop to lift |
 | `t237-path-move` | #237 | low | `f0de4ab6` | #239 at `c64cf25` | not running; waits for its turn |
 | `t244-pytest-hang` | #244 | medium | `9fd98bc0` | #246 merged | stopped; left for #250's script |
 
 ## Open PRs
 
-In the line now: #253, #238, #239, #242 (above). The older line, each
-read again before its re-proof:
+The line now is START HERE item 6. The older table, each read again
+before its re-proof (#198 merged as `3d6ed6d`):
 
 | PR | Head | Subject |
 |---|---|---|
@@ -137,14 +140,12 @@ merging on Ben's button (pull/181, superseded by #198). Also open:
 
 ## Waiting on the owner (pointer to NEEDS-OWNER.md)
 
-The queue file is empty at this state-back. Four Actions came and went
-on 2026-11-25, all done by Ben: #204 step 3 (the login test here), the
-dynasty login test, the login switch to the narrowed token (#204), and
-the three required CI checks on main (#273). Waiting on Ben, by button
-at each turn: the merge word for #252 at `dd24cbf`, #265 at its new
-head, then #266, #270, #242, #239, #238, #216, #222, #227, #197, #256;
-rows 3 and 4 of #251's test; the merge of benjamininja/dotclaude#12;
-after #252 merges, the managers settings text as one Action.
+The queue file is empty at this state-back. Waiting on Ben, by button
+at each turn: merge words for the text PRs in START HERE item 6; the
+#262 dispatch once code work restarts; Ben's say on Windows' return to
+PRs (after #187's research and dff-central-planner's approval); the
+merge of benjamininja/dotclaude#12; the managers settings text as one
+Action.
 
 ## Queue entries raised
 
@@ -157,6 +158,17 @@ after #252 merges, the managers settings text as one Action.
   issuecomment-7024139524); the entry left the queue.
 
 ## Decided since
+
+- 2026-11-25, fourth prep, by Ben's words and buttons in the tools
+  manager's chat: merge #252, #265, #270, #286, #266, #198, #287;
+  dispatch #283 (t283-ci-scope) and #187 (t187-windows-time); amendment
+  2's matrix proven by CI, the builder's refused docs read not routed
+  elsewhere; Ben discarded a stray uncommitted test.yml line in the main
+  checkout (command shown to him); delete branch t217-portable-roles;
+  run #251 rows 3 and 4 (row 3 later stopped for #187's timings). Ben's
+  CI stop and Green rule are on issues/187 (from issuecomment-7167028313)
+  and in PROJECT-RULES (#286). Lesson: a command for Ben goes inside the
+  pop-up too, since the pop-up may be all he sees.
 
 - 2026-11-25, third prep, by Ben's words and buttons in the tools
   manager's chat: stop #274's local run and merge on CI green (merged
