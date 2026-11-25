@@ -5,14 +5,19 @@
 `scripts/dispatch.ps1` (Windows PowerShell), from the plugin's folder:
 
 ```
-dispatch.ps1 -Name <name> -Tier <low|medium|high> -PromptFile <file>
-             [-Profile <name>] [-TurnCap <n>] [-NoSetup] [-Project <folder>] [-Apply]
+dispatch.ps1 -Name <name> -Tier <haiku|low|medium|high> -PromptFile <file>
+             [-Profile <name>] [-TurnCap <n>] [-Base origin/<branch>] [-NoSetup]
+             [-Project <folder>] [-Apply]
 ```
 
-It is a dry run unless `-Apply` is given. In order:
+It is a dry run unless `-Apply` is given. The dry run does not fetch: it
+prints the base (`origin/main`, or the brief's `Base:` line passed as
+`-Base`) with its commit as of the last fetch. In order:
 
 1. Reads `<main checkout>/.claude/dispatch.json`. No file, no run.
 2. Takes the tier's model, effort and turn cap. No tier, no dispatch.
+   `-TurnCap` may only lower the cap; a value above it, zero or a
+   negative is refused.
 3. Reads the prompt file. A double quote in it is refused: PowerShell
    cuts a prompt off at the first one.
 4. Reads `permissions.deny` from the builders' settings file the config
@@ -29,13 +34,21 @@ It is a dry run unless `-Apply` is given. In order:
    With `-Apply` it first checks that the main checkout is on the
    owner's list, `<user profile>/.claude/dispatch-projects.json`, and
    refuses if it is not.
-5. Makes the worktree `.claude/worktrees/<name>` on branch
-   `worktree-<name>`, unless it is there.
+5. Runs `git fetch origin` in the main checkout (it moves no file and not
+   the checkout's branch), then makes the worktree
+   `.claude/worktrees/<name>` on branch `worktree-<name>`, with no
+   upstream, at the base: `origin/main`, or `-Base origin/<branch>` for a
+   brief whose `Base:` line names the branch of an open PR in this
+   repository. The base is read as `refs/remotes/<base>`. A failed fetch
+   or a missing base refuses, and nothing is started. A worktree already
+   there is left as it is, and no fetch is made for it.
 6. Runs the config's setup commands in the worktree. `-NoSetup` skips
    them, for a read-only job whose brief says so.
 7. Starts the session in the background from the main checkout, in
    `dontAsk` mode, with the config's agent. The prompt is the config's
-   read line, the brief, then "Or stop after N turns."
+   read line, the brief, then "Or stop after N turns." That sentence is
+   advice, not a limit: the start command has no turn-limit option, so a
+   session that runs past it is stopped by hand.
 8. Before step 5 it reads `claude agents --json` and sets aside the ids
    of rows already named `<name>`; if that read fails, nothing is
    started. After step 7 it reads the list every 2 seconds, for up to

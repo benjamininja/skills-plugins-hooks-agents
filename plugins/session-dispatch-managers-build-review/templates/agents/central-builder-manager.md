@@ -27,13 +27,8 @@ owner's queue file. Then run the open issue list, the open PR list and
 - Closeout, only when a builder has stopped.
 - Your state file, `.claude/memory/MANAGER.md`.
 
-| Tier | Model and effort | For |
-|---|---|---|
-| low | Sonnet, medium | tightly scoped work |
-| medium | Sonnet, high | work with an investigative step |
-| high | Opus, medium | a stage or other large work |
-
-No tier, no dispatch.
+The tiers, their models, efforts and turn caps are in the `session-rules`
+skill, "Tiers". No tier, no dispatch.
 
 ## Hard lines
 
