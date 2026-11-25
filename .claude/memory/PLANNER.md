@@ -102,8 +102,9 @@ Waiting on Ben: see the 2026-11-25 block below.
   text). It and PR #265 both edit the clear-boundary section and both
   set the plugin version to 0.4.0: whichever merges second merges main
   in, and the planner reads that merge and rewords the reset-prompt
-  sentences to start line and state file. PR #272's plan read waits for
-  the manager's ask.
+  sentences to start line and state file. **PR #272's plan read at
+  `869b260`: no breach** (pull/272 issuecomment-7163106276). The
+  manager's line: #267, #259, #268, then #265 and #272, then #271.
 - **#262's rule-text brief is posted and has Ben's go** (brief:
   issues/262 issuecomment-7162955348; go and answers:
   issuecomment-7163080874). Dispatch after PR #265 and PR #272 merge;
