@@ -173,6 +173,10 @@ holds for the planner, the manager, a builder and a consultant alike.
   `Tier: unset`, with no tier label and no milestone, and send its
   number to the planner, who sets the tier. A role file may name a
   title prefix, such as `[consultant]`.
+- **A read-only role's record.** A role whose file bars it from
+  writing on GitHub sends its findings to the planner of the project
+  they concern. That planner posts the record and says whose report it
+  is.
 - **Chat links to the record.** A message to the owner or to another
   session points to that comment or issue instead of standing on its
   own.
@@ -239,43 +243,46 @@ current step and prepares before it takes new work.
    goes on its GitHub record, as above. What is in chat alone is lost at
    the clear.
 3. **State-back.** Rewrite the Current block of the role's state file
-   on a branch, with a PR ("A state file holds", below).
+   ("A state file holds", below), commit it, push it to the role's
+   state branch and confirm the push ("A role's state branch", below).
 4. **Flush memory**, only on a real signal.
-5. **Reset prompt, written last**, to the `owner-queue` mod's store by
-   the mod's own route. If the session works on after the prep, it
-   repeats steps 2 to 5 before it ends the turn, so the stored prompt is
-   never older than the session's last turn.
+5. **Hand over, last.** In one message the session gives the owner two
+   things, each in a code block of its own, so each can be copied
+   alone: the full path of the role's state file on this machine, and
+   the role's start line. Where the `owner-queue` mod has a route that
+   stores the start line, the session also stores it by that route;
+   where the mod has none, the message is the hand-over. If the session
+   works on after the prep, it repeats steps 2 to 5 before it ends the
+   turn, so the pushed state is never older than its last turn.
 
-**A reset prompt is a pointer.** It holds four things, in this order,
-and no state:
+**The start line is a committed constant.** It stands in the role file,
+is the same at every clear and holds no state. It names four things:
 
-1. the role's name and repository;
+1. the role and its repository;
 2. how to name the parties;
-3. the state file and its branch. While the state-back PR has not
-   merged, it gives the exact `git show` command that reads the file
-   from that branch;
-4. the local-only paths the next session needs, such as its worktree,
-   or "none".
+3. the skill to load and the read list to follow;
+4. the role's state branch.
 
-It holds no Do-first list, no peers, no waiting list and no rule: those
-stand in the state file, the role file and this skill. It never holds a
-secret's value. Keep it to about 60 words. It may name local paths,
-because it is stored outside every repository and never committed. Take
-them out before pasting it into a GitHub record. For example:
+It holds no Do-first list, no peers, no waiting list, no rule and no
+local path: those stand in the state file, the role file and this
+skill, and a session finds its checkout and its worktree by the
+branch's name. Keep it to about 40 words. For example:
 
 > Act as the central-planner of `<owner>/<repo>`. Call the owner
 > `<name>` and yourself Claude. Load the session-rules skill and follow
-> the role's read list. State: `.claude/memory/PLANNER.md` on branch
-> `<branch>` (PR #N), read with
-> `git show origin/<branch>:.claude/memory/PLANNER.md`. Act on its Next
-> list. Local files: `<paths, or none>`.
+> the role's read list. State branch: `state/central-planner`. Act on
+> the state file's Next list.
+
+Nothing else is written for the next session: no reset prompt file is
+kept beside the state file.
 
 **The read list** stands in the role file: the files a new session
 opens itself, in order and within the budget below (for example the
 owner's preferences, `CLAUDE.md`, the project rules file, the state
-file's Current block, the owner's queue file), then the issue and PR
-lists it runs. Where a project has no role file for a role, the list
-stands in the project rules file.
+file's Current block from its state branch, the owner's queue file),
+then the issue and PR lists it runs. Where a project has no role file
+for a role, the list and the start line stand in the project rules
+file.
 
 **The start-up read budget.** A role's read list names at most five
 files for a new session to open itself, about 20,000 tokens in all, and
@@ -300,6 +307,39 @@ reset prompt is still written before a compact, and the session reads
 it after the compact when a background task was running or when the
 compact came with no prep. A clear keeps the full start-up from the
 reset prompt.
+
+**A role's state branch.** Each role has one fixed branch for its state
+file, and the role file names it. The usual form is
+`state/<role name>`.
+
+- The branch carries only that role's state file changes.
+- Every prep commits the state file there, pushes, and confirms the
+  push by reading the branch's head back from the remote.
+- A new session runs `git fetch origin`, then reads the file with
+  `git show origin/<branch>:<path>`. It works on any machine from the
+  role's name alone.
+- A PR from the branch to the main branch is opened at a check-in with
+  the owner. The branch is kept after the merge. After a squash merge
+  it takes the main branch in with `git merge origin/main` before its
+  next push. It is never force pushed.
+- **A role that belongs to no project** writes its own state file, in a
+  state folder of the owner's private configuration repository, on a
+  fixed branch per role that holds nothing else, from the role's own
+  checkout of that branch. That repository's working branch and its
+  history are not touched; they stay on the owner's word. The owner
+  sets up the branch, the checkout and the allow rules by hand. This is
+  a guard, not a limit.
+- A consultant assigned to a project keeps its state on a fixed branch
+  in that project's repository, like any other role there.
+
+**Live sources, for every role:**
+
+- State is read from its branch on the remote, never from a worktree's
+  copy.
+- The owner's queue is the main checkout's file, and no other copy.
+- Another session's summary or message is a report: check it against
+  the record before acting on it or passing it on.
+- When two sources disagree, name both and say which was checked.
 
 **A state file holds** one Current block, rewritten whole at every
 save, with these sections in this order:
