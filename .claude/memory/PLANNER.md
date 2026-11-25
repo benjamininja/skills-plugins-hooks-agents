@@ -68,8 +68,16 @@ Waiting on Ben: see the 2026-11-25 block below.
   (the manager's message). Item 2's first half is done: main merged into
   `t217-portable-roles`, PR #265 retargeted to main, new head `8f4b89e`.
   The conflicts were the squash's; the branch's own text was kept, and
-  the merge changed only `.gitattributes`. PR #265's body still says
-  stacked on PR #210. PR #266 stays stacked on #265's branch.
+  the merge changed only `.gitattributes`. **Ben approved PR #265 at
+  `8f4b89e`** with CI green (pull/265 issuecomment-7162899681); choice 1
+  stands, so the planner rewords #260, #261 and #262's ruling 5 to say
+  start line and state file when those PRs meet it. The manager is
+  told and keeps `t217-portable-roles` after the merge. Next: when #265
+  is squash-merged, merge origin/main into
+  `t218-personal-assistant-role` (keep the branch's own text on the
+  squash's conflicts, check the merge changes nothing else), push,
+  `gh pr edit 266 --base main`, read CI, ask Ben's approval with the
+  two questions (model opus or fable; the #233 desktop test).
 - **Ben approved PR #270 at `0535c32`** (pull/270
   issuecomment-7162436664); the manager is told. Next: its re-proof and
   merge, then the after figure on #269.
