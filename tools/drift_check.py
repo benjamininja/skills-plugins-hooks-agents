@@ -42,7 +42,7 @@ import re
 import subprocess
 import sys
 import time
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 
 ORIGIN = "origin/main"
@@ -200,6 +200,7 @@ class World:
     projects: list[Path] | None
     plugin_entries: list[Path] | None
     live_clones: list[Path]
+    bad_projects: list[str] = field(default_factory=list)  # listed, but not a git checkout here
 
     @classmethod
     def find(cls, home: Path, tools_dir: Path) -> "World":
@@ -213,13 +214,17 @@ class World:
             pass
 
         projects = None
+        bad_projects: list[str] = []
         try:
             listed = read_json(cfg / "dispatch-projects.json")
-            entries = listed.get("projects", []) if isinstance(listed, dict) else []
-            projects = []
-            for entry in entries:
-                if isinstance(entry, str) and (Path(entry) / ".git").exists():
-                    projects.append(Path(entry))
+            entries = listed.get("projects") if isinstance(listed, dict) else None
+            if isinstance(entries, list):
+                projects = []
+                for entry in entries:
+                    if isinstance(entry, str) and entry.strip() and (Path(entry) / ".git").exists():
+                        projects.append(Path(entry))
+                    else:
+                        bad_projects.append(name_of(entry) if isinstance(entry, str) and entry.strip() else "entry")
         except Unreadable:
             projects = None
 
@@ -227,7 +232,8 @@ class World:
         live: list[Path] = []
         try:
             settings = read_json(cfg / "settings.json")
-            value = ((settings.get("env") or {}).get("CLAUDE_CODE_PLUGIN_DIRS")) if isinstance(settings, dict) else None
+            env = settings.get("env") if isinstance(settings, dict) else None
+            value = env.get("CLAUDE_CODE_PLUGIN_DIRS") if isinstance(env, dict) else None
             if isinstance(value, str) and value.strip():
                 parts = value.split(";") if ";" in value else [value]
                 plugin_entries = [Path(p.strip()) for p in parts if p.strip()]
@@ -237,7 +243,7 @@ class World:
                         live.append(top)
         except Unreadable:
             plugin_entries = None
-        return cls(home, cfg, tools_main, projects, plugin_entries, live)
+        return cls(home, cfg, tools_main, projects, plugin_entries, live, bad_projects)
 
     def config_repo(self) -> Path | None:
         return self.cfg if (self.cfg / ".git").exists() else None
@@ -455,11 +461,15 @@ def p6(w: World) -> list[Result]:
             else:
                 out.append(unreadable("P6", label, "no real file"))
             continue
-        if where == "project" and not optional:
-            have = {who for who, _ in existing}
-            for who, _ in real_locations(w, rname, where):
-                if who not in have:
-                    out.append(unreadable("P6", f"{label} [{who}]", "no real file"))
+        have = {who for who, _ in existing}
+        for who, _ in real_locations(w, rname, where):
+            if who in have:
+                continue
+            if where == "project" and not optional:
+                out.append(unreadable("P6", f"{label} [{who}]", "no real file"))
+            elif where == "user+project":
+                # the file may live at either place; a line says this place holds none
+                out.append(Result("P6", f"{label} [{who}]", SKIPPED, reason="no copy here, another place holds it"))
         for who, path in existing:
             try:
                 count = settings_difference(template, read_json(path), mode)
@@ -685,7 +695,7 @@ def p10(w: World) -> list[Result]:
 
 
 def p11(w: World) -> list[Result]:
-    label = "config folder links vs main checkout"
+    label = "config folder links vs checkouts"
     if w.tools_main is None:
         return [unreadable("P11", label, "no tools main checkout")]
     if not w.cfg.is_dir():
@@ -697,19 +707,22 @@ def p11(w: World) -> list[Result]:
         folder = w.cfg / sub
         if folder.is_dir():
             candidates += sorted(folder.iterdir())
-    root = real(w.tools_main)
+    # A good target is inside the main checkout or a live clone the script lists,
+    # and its folder holds a tracked file on origin/main in that checkout.
+    roots = [w.tools_main] + [c for c in w.live_clones if norm(c) != norm(w.tools_main)]
     bad = 0
     try:
         for entry in candidates:
             if not is_link(entry):
                 continue
             target = Path(os.path.realpath(str(entry)))
-            if not target.exists() or not within(target, root):
+            holder = next((r for r in roots if within(target, real(r))), None)
+            if not target.exists() or holder is None:
                 bad += 1
                 continue
-            rel = rel_real(target, w.tools_main)
-            tracked = git(w.tools_main, "ls-tree", "-r", "--name-only", ORIGIN, "--", rel + "/")
-            if not tracked.strip():
+            rel = rel_real(target, holder)
+            spec = [] if rel == "." else ["--", rel + "/"]
+            if not git(holder, "ls-tree", "-r", "--name-only", ORIGIN, *spec).strip():
                 bad += 1
     except (GitError, OSError):
         return [unreadable("P11", label, "git could not read it")]
@@ -724,16 +737,19 @@ def p0(w: World) -> list[Result]:
     if w.tools_main is None:
         return [unreadable("P0", label, "no tools main checkout")]
     try:
-        remote = git(w.tools_main, "ls-remote", "origin", "main").split()
+        asked = git(w.tools_main, "ls-remote", "origin", "refs/heads/main").splitlines()
         local = git(w.tools_main, "rev-parse", ORIGIN).strip()
     except (GitError, OSError, subprocess.TimeoutExpired):
         return [unreadable("P0", label, "the remote could not be asked")]
-    if not remote:
+    # a pattern matches the tail of a ref name, so keep only the exact branch
+    heads = [ln.split("\t")[0] for ln in asked if ln.split("\t")[-1].strip() == "refs/heads/main"]
+    if not heads:
         return [unreadable("P0", label, "the remote has no main")]
-    return [same_or_differs("P0", label, int(remote[0] != local), "heads")]
+    return [same_or_differs("P0", label, int(heads[0] != local), "heads")]
 
 
 PAIRS = [p1, p2, p3, p4, p5, p6, p7, p8, p9, p10, p11]
+PROJECT_PAIRS = (p6, p7, p8, p9, p10)  # the pairs that walk the owner's list of projects
 
 
 def fetch_age(w: World) -> str:
@@ -751,12 +767,18 @@ def fetch_age(w: World) -> str:
 
 
 def run(home: Path, tools_dir: Path, remote: bool = False) -> tuple[str, list[Result]]:
-    world = World.find(home, tools_dir)
+    try:
+        world = World.find(home, tools_dir)
+    except Exception:  # a malformed file never stops the run: every pair then says unreadable
+        world = World(home, home / ".claude", None, None, None, [])
     results: list[Result] = []
     pairs = ([p0] if remote else []) + PAIRS
     for fn in pairs:
         try:
             results += fn(world)
+            if fn in PROJECT_PAIRS:
+                results += [unreadable(fn.__name__.upper(), f"listed project [{n}]", "not a git checkout")
+                            for n in world.bad_projects]
         except Exception as exc:  # one pair failing never stops the others
             results.append(unreadable(fn.__name__.upper(), "pair", type(exc).__name__))
     return fetch_age(world), results

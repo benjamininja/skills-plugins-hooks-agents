@@ -297,8 +297,14 @@ def test_p6_dispatch_compares_key_names_only(world):
 
 def test_p6_note_keys_are_ignored(world):
     write_json(world.cfg / "managers.settings.json", {**MANAGERS, "//note": "anything"})
-    rows = [r for r in by(results(world), "P6") if r.label.startswith("managers")]
+    rows = [r for r in by(results(world), "P6") if r.label.startswith("managers") and "[user]" in r.label]
     assert rows[0].status == dc.SAME
+
+
+def test_p6_project_without_a_copy_prints_a_skipped_line(world):
+    rows = [r for r in by(results(world), "P6") if r.label.startswith("managers") and "[proj-one]" in r.label]
+    assert [(r.status, r.reason) for r in rows] == [(dc.SKIPPED, "no copy here, another place holds it")]
+    assert dc.exit_code(results(world)) == 0
 
 
 def test_p6_required_template_without_real_file_is_unreadable(world):
@@ -434,6 +440,33 @@ def test_p11_good_link_is_same(world):
     assert one(results(world), "P11").status == dc.SAME
 
 
+def test_p11_link_into_a_listed_live_clone_is_same(world):
+    """F1: a machine whose links come from the live clone is not drift."""
+    if not world.linked:
+        pytest.skip("cannot make a link here")
+    assert make_link(world.cfg / "hooks" / "from-live", world.live / "hooks" / "git-guardrails")
+    assert one(results(world), "P11").status == dc.SAME
+
+
+def test_p11_link_into_a_folder_no_checkout_holds_differs(world):
+    if not world.linked:
+        pytest.skip("cannot make a link here")
+    outside = world.tmp / "not-a-listed-checkout"
+    write(outside / "f.txt", "x\n")
+    assert make_link(world.cfg / "hooks" / "elsewhere", outside)
+    r = one(results(world), "P11")
+    assert (r.status, r.count) == (dc.DIFFERS, 1)
+
+
+def test_p11_live_clone_link_to_a_folder_with_no_tracked_file_differs(world):
+    if not world.linked:
+        pytest.skip("cannot make a link here")
+    (world.live / "hooks" / "scratch").mkdir()
+    write(world.live / "hooks" / "scratch" / "u.txt", "u\n")
+    assert make_link(world.cfg / "hooks" / "scratch", world.live / "hooks" / "scratch")
+    assert (one(results(world), "P11").status, one(results(world), "P11").count) == (dc.DIFFERS, 1)
+
+
 # ---------------------------------------------------------------- the three limits
 
 
@@ -521,6 +554,87 @@ def test_remote_flag_adds_p0(world):
     assert one(res, "P0").status == dc.SAME
     advance_origin(world)
     assert one(results(world, remote=True), "P0").status == dc.DIFFERS
+
+
+def test_remote_flag_ignores_other_refs_ending_in_main(world):
+    """F2: a branch fix/main and a tag main must not stand for refs/heads/main."""
+    git(world.seed, "switch", "-c", "fix/main")
+    write(world.seed / "other.txt", "o\n")
+    commit_all(world.seed)
+    git(world.seed, "push", "origin", "fix/main")
+    git(world.seed, "tag", "main")
+    git(world.seed, "push", "origin", "refs/tags/main")
+    assert one(results(world, remote=True), "P0").status == dc.SAME
+
+
+# ---------------------------------------------------------------- malformed input (F3) and unlisted projects (F4)
+
+
+def set_projects_list(world, projects):
+    """Write the owner's list and commit it, so P8 has nothing to say about it."""
+    write_json(world.cfg / "dispatch-projects.json", {"projects": projects})
+    git(world.cfg, "add", "dispatch-projects.json")
+    git(world.cfg, "commit", "-m", "list")
+
+
+@pytest.mark.parametrize("projects", [None, "text", 5, [None, 7]])
+def test_malformed_projects_list_never_stops_the_run(world, projects):
+    set_projects_list(world, projects)
+    age, res = dc.run(world.home, world.tools / "tools")
+    assert {r.pair for r in res} == {f"P{n}" for n in range(1, 12)}
+    text = "\n".join(r.line() for r in res)
+    assert str(world.tmp) not in text and "Traceback" not in text
+    assert dc.exit_code(res) == 2
+
+
+@pytest.mark.parametrize("env", [[], "x", 3, None])
+def test_malformed_env_in_settings_never_stops_the_run(world, env):
+    write_json(world.cfg / "settings.json", {"env": env})
+    _, res = dc.run(world.home, world.tools / "tools")
+    assert {r.pair for r in res} == {f"P{n}" for n in range(1, 12)}
+    assert one(res, "P4").status == dc.UNREADABLE
+
+
+def test_a_find_that_raises_still_prints_every_pair(world, monkeypatch):
+    def boom(cls, home, tools_dir):
+        raise TypeError("C:/secret/place")
+    monkeypatch.setattr(dc.World, "find", classmethod(boom))
+    _, res = dc.run(world.home, world.tools / "tools")
+    assert {r.pair for r in res} == {f"P{n}" for n in range(1, 12)}
+    assert "secret" not in "\n".join(r.line() for r in res)
+    assert dc.exit_code(res) == 2
+
+
+def test_script_with_malformed_files_exits_2_and_prints_no_traceback(world):
+    write_json(world.cfg / "dispatch-projects.json", {"projects": None})
+    done = subprocess.run([sys.executable, str(SCRIPT), "--home", str(world.home)],
+                          capture_output=True, text=True, cwd=world.tmp)
+    # the script's own checkout is the tools side here, so any code but 0 is fine: the point is no crash
+    assert done.returncode in (1, 2)
+    assert "Traceback" not in done.stderr + done.stdout
+    assert str(world.home) not in done.stdout + done.stderr
+
+
+def test_listed_project_that_is_not_a_checkout_is_unreadable_never_same(world):
+    clone_later = world.tmp / "not-cloned-yet"
+    set_projects_list(world, [str(world.proj), str(clone_later)])
+    res = results(world)
+    for pair in ("P6", "P7", "P8", "P9", "P10"):
+        rows = [r for r in by(res, pair) if "not-cloned-yet" in r.label]
+        assert [(r.status, r.reason) for r in rows] == [(dc.UNREADABLE, "not a git checkout")], pair
+    assert [r.line() for r in res if r.status == dc.DIFFERS] == []
+    assert dc.exit_code(res) == 2
+    assert str(world.tmp) not in "\n".join(r.line() for r in res)
+
+
+# ---------------------------------------------------------------- a head the main checkout does not hold (P3 fallback)
+
+
+def test_p3_head_the_main_checkout_does_not_hold(world):
+    write(world.live / "local.txt", "l\n")
+    commit_all(world.live)
+    r = one(results(world), "P3")
+    assert (r.status, r.count, r.unit) == (dc.DIFFERS, 1, "heads")
 
 
 def test_default_run_has_no_p0(world):
