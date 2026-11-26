@@ -210,7 +210,9 @@ holds for the planner, the manager, a builder and a consultant alike.
 - **Which repo:** project work goes in the project's repo; role and
   rules work goes in the central repo.
 - A state file (`PLANNER.md`, `MANAGER.md`) and the queue file are
-  working copies. They link to the record; they do not replace it.
+  working copies. They link to the record; they do not replace it. The
+  queue file is gitignored by name, and nothing may depend on it
+  surviving: what an entry parks is on its ticket.
 
 ### A builder's state
 
@@ -372,10 +374,12 @@ GitHub record: it points to the record and does not stand in for it.
 
 ## Parking: what waits on the owner
 
-Every session gets what it leaves with the owner into the queue file
-(`NEEDS-OWNER.md`), never into chat alone. Only the manager writes that
-file; a builder and the planner send it a ready entry. A queue entry
-links to the GitHub record of what it parks. Read
+Every session gets what it leaves with the owner into a queue file
+(`NEEDS-OWNER.md`), never into chat alone. Each project has one, and an
+entry goes to the queue of the project whose repo holds its ticket. Only
+that queue's manager writes it; a builder and the planner send it a
+ready entry. A queue entry links to the GitHub record of what it parks,
+by the ticket's full link. A queue file is never committed. Read
 `references/parking.md`
 for the five steps, the entry format and relayed answers. Always parked,
 never decided by an agent:
