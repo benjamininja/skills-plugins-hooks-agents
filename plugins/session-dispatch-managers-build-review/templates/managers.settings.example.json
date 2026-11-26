@@ -1,5 +1,5 @@
 {
-  "//": "A proposal. The project owner copies this text into the real file and edits it by hand; no agent creates or changes a settings file. Add the project's own proof commands to allow and its own fenced-off commands to deny. This key is a note: delete it in the real file.",
+  "//": "A proposal. The project owner copies this text into the real file and edits it by hand; no agent creates or changes a settings file. Add the project's own proof commands to allow and its own fenced-off commands to deny. In the closeout rule, replace <plugin folder> with the plugin folder's absolute path, written with forward slashes: one exact rule for the one tracked script. A builder's worktree and branches are removed only by that script, so there is no git worktree remove rule. The git branch -d rule stays for the manager's own merged PR branches (references/manager.md): lower-case -d refuses a branch not merged into HEAD, and the git branch deny lines keep it from being used with any flag added (-f, --force, -D, -df), before or after the branch name. Each needs a space then a hyphen, so the plain git branch -d <name> and a branch name holding -f or -d are not caught, whichever way case is matched. A bare git branch -D or -df matches no allow rule at all. This key is a note: delete it in the real file.",
   "permissions": {
     "allow": [
       "Bash(gh pr merge * --squash --delete-branch)",
@@ -10,7 +10,7 @@
       "Bash(git branch -d *)",
       "Bash(git push origin --delete *)",
       "Bash(git worktree list)",
-      "Bash(git worktree remove *)",
+      "Bash(.venv/Scripts/python.exe <plugin folder>/scripts/closeout.py *)",
       "PowerShell(*session-dispatch-managers-build-review\\scripts\\dispatch.ps1 *)",
       "PowerShell(*claude.exe agents *)",
       "PowerShell(*claude.exe --resume *)",
@@ -19,6 +19,10 @@
     ],
     "deny": [
       "Bash(git worktree remove*--force*)",
+      "Bash(git branch* -f*)",
+      "Bash(git branch*--force*)",
+      "Bash(git branch -d -*)",
+      "Bash(git branch -d * -*)",
       "Edit(.claude/settings.json)",
       "Write(.claude/settings.json)",
       "Edit(.claude/settings.local.json)",

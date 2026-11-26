@@ -12,9 +12,9 @@ in this file's git history:
 The last stacked version, with 26 session blocks, is that branch's commit
 before the #243 rewrite.
 
-Last state-back: 2026-11-25, about 16:55Z, before a clear Ben asked
-for. Compacts since the clear of 2026-11-25: 1. A clear gives this
-planner a new queue id: send it to the four peers.
+Last state-back: 2026-11-26, after the start-up from the clear of
+2026-11-25 and the #187 ruling and plan. Compacts since that clear: 0.
+A clear gives this planner a new queue id: send it to the four peers.
 
 ## Current
 
@@ -51,26 +51,29 @@ PRs are open, except for a real defect (its own rule, on #273).
    - **Windows returns to a PR only after, in order:** #187's research;
      the dynasty planner consulted and approving the plan; Ben's word.
      Putting the check back on the ruleset is Ben's own step.
-   - **DO FIRST after the clear: the finding is posted** (issues/187
-     issuecomment-7168273303, said the manager at about 16:55Z) and
-     waits for the planner's ruling. Read it, rule, then Left b. Also
-     asked of the planner: a ruling on a rerun of #251's row 3
-     (issues/251 issuecomment-7168534999). The manager and the
-     personal-assistant were both prepared for a clear and send new
-     queue ids.
-   - **Left, a:** #187's builder `t187-windows-time` posts its finding:
-     where the Windows minutes go, plus the planner's four questions
-     (issuecomment-7167820842) and the lead's five
-     (issuecomment-7167826636). Ben wants no budget figure before the
-     facts. Facts already counted: Windows was the only red check twice
-     in 98 code-PR runs (PR #252, PR #162, both the dispatch plugin's
-     scripts and a test file), never in 208 text-only runs
-     (issuecomment-7168385547).
-   - **Left, b:** then the planner writes the plan for Windows on code
-     PRs (the lead's reading: a skip list by `if:`, skipped only when
-     every changed path is text; required or not depends on its time
-     once fixed), sends it to the lead, and only after its approval
-     asks Ben by button.
+   - **Done 2026-11-26: the finding is ruled** (finding: issues/187
+     issuecomment-7168273303; ruling: issuecomment-7191498749). About
+     80% of the Windows job is process starts in
+     `tests/test_git_guardrails.py`. Shards split by position are the
+     route for part 2, which measures 4 and 6 shards and one
+     `pytest-xdist` run on a draft PR and merges nothing; the part 2
+     brief is the ruling's point 4. The hook's process starts (option
+     b) are a separate ticket, **not opened**: ask Ben first.
+   - **Done 2026-11-26: the plan is posted and sent to the lead**
+     (issuecomment-7191499374): a skip list (`.md` outside `tests/`
+     skips), shards plus one reporting job `pytest (windows)`, required
+     or not on the measured time with about 6 minutes proposed as
+     "cheap", the cost each time and for the 9 open PRs with a
+     non-`.md` path.
+   - **WAITING on the lead's approve or change, recorded on #187.**
+     Then, in order: one line to Tools-builder-manager that part 2 may
+     start (it is told to hold t187 until then); part 2's figures; the
+     button to Ben with the measured time (required on code PRs, or
+     stay on main). Ben is not asked before both are in.
+   - **#251's row 3 is ruled** (issues/251 issuecomment-7191499904):
+     no whole local rerun; the manager runs the suite without the
+     guardrails file in the light venv, about 10 minutes, and posts the
+     count. A brief names `python -m pre_commit`.
    - **Left, c, text-only, may start now:** the tools table of checks in
      `PROJECT-RULES.md` (line 5 of the rule: each check, what it
      protects, which PRs run it, its measured time, required or not);
@@ -94,9 +97,10 @@ PRs are open, except for a real defect (its own rule, on #273).
    the state file's Current block, its state branch and its start line
    as the rule of PR #265 now asks. Two dynasty practices to offer:
    builders run targeted tests only; no re-proof of a merged tree. Send
-   the head to the dynasty planner. Also owed: one line each to the
-   personal-assistant and the dynasty planner that #260 and #261 merged
-   (PR #272, `a445087`), and the merge date on #262.
+   the head to the dynasty planner. The lines that #260 and #261 merged
+   (PR #272, `a445087`) went to the personal-assistant and the dynasty
+   planner on 2026-11-26, and the date is on #262
+   (issuecomment-7191511586).
 4. **#204:** the narrowed token is the stored login; the Workflows
    permission is added and the retried workflow push went through
    (issuecomment-7167053023). The ticket stays open until Ben revokes
@@ -172,14 +176,16 @@ to Ben says what it costs him.
 the ticket is the record. Earlier state is in this file's git history.
 
 **Ids (queue ids change at every clear).** This planner:
-`2c14b7ab-3b12-4984-ae56-5c6526f96566` since the clear of 2026-11-25,
-until the next clear. Peers, all unchanged on 2026-11-25:
-Tools-builder-manager `dabbbcd0-2b97-445e-a2d9-4502691fb617`;
-dff-central-builder-manager `4ff97ebc-bfd4-4723-997c-406160d975ba`;
-dff-central-planner `9bcc0c9c-574c-4ebb-b4f4-18edc03af9aa`;
-personal-assistant `ce570d7d-13b6-4160-97f8-58dee1c1a39a` (it was
-prepared for a clear on 2026-11-25 and sends a new id after it). The tools
-queue holds no entry of this planner's.
+`a09ca279-6faa-4a61-a313-10328ff9c39d` since the start of 2026-11-26,
+until the next clear. Peers, all new on 2026-11-26 after their own
+clears, each sent by the peer itself:
+Tools-builder-manager `3bac2fdb-b847-4732-b572-e582ae2af312`;
+dff-central-builder-manager `9d28e196-d848-4cf7-a3d6-f97cbe859143`;
+dff-central-planner `536a467f-4989-475e-bcc0-c7a14917d52a`;
+personal-assistant `6f53e894-fbd7-4d4b-894d-55ffd90c0f71` (it was
+started from a local pointer, so its role file's start line is still
+untested; owed on #233). The tools queue is empty. PR #198 merged on
+2026-11-25; this branch has main merged in since and no open PR.
 
 **Merge line (Tools-builder-manager, one re-proof at a time, each merge
 word asked of Ben by button):** #236, PR #238 (the planner's), #239
