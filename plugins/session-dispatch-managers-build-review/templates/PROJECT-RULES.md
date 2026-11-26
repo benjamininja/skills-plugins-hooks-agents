@@ -19,8 +19,10 @@ these names from this line, on `main`, and from nowhere else.
 The proofs a PR must pass, each a command a builder may run under the
 builders' settings file, or marked "manager runs it".
 
-- every CI check passing on one read of
-  `gh pr view <n> --json mergeStateStatus,statusCheckRollup`;
+- the CI checks the ruleset requires, passing on one read of
+  `gh pr view <n> --json mergeStateStatus,statusCheckRollup`
+  (`session-rules`, "CI as a gate"; the project's table of checks
+  stands below this list);
 - `<the project's test command>`;
 - `<each further check, one per line>`;
 - on a PR the code review covers: no blocking finding the manager

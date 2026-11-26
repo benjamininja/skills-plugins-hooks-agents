@@ -5,14 +5,19 @@
 `scripts/dispatch.ps1` (Windows PowerShell), from the plugin's folder:
 
 ```
-dispatch.ps1 -Name <name> -Tier <low|medium|high> -PromptFile <file>
-             [-Profile <name>] [-TurnCap <n>] [-NoSetup] [-Project <folder>] [-Apply]
+dispatch.ps1 -Name <name> -Tier <haiku|low|medium|high> -PromptFile <file>
+             [-Profile <name>] [-TurnCap <n>] [-Base origin/<branch>] [-NoSetup]
+             [-Project <folder>] [-Apply]
 ```
 
-It is a dry run unless `-Apply` is given. In order:
+It is a dry run unless `-Apply` is given. The dry run does not fetch: it
+prints the base (`origin/main`, or the brief's `Base:` line passed as
+`-Base`) with its commit as of the last fetch. In order:
 
 1. Reads `<main checkout>/.claude/dispatch.json`. No file, no run.
 2. Takes the tier's model, effort and turn cap. No tier, no dispatch.
+   `-TurnCap` may only lower the cap; a value above it, zero or a
+   negative is refused.
 3. Reads the prompt file. A double quote in it is refused: PowerShell
    cuts a prompt off at the first one.
 4. Reads `permissions.deny` from the builders' settings file the config
@@ -29,13 +34,21 @@ It is a dry run unless `-Apply` is given. In order:
    With `-Apply` it first checks that the main checkout is on the
    owner's list, `<user profile>/.claude/dispatch-projects.json`, and
    refuses if it is not.
-5. Makes the worktree `.claude/worktrees/<name>` on branch
-   `worktree-<name>`, unless it is there.
+5. Runs `git fetch origin` in the main checkout (it moves no file and not
+   the checkout's branch), then makes the worktree
+   `.claude/worktrees/<name>` on branch `worktree-<name>`, with no
+   upstream, at the base: `origin/main`, or `-Base origin/<branch>` for a
+   brief whose `Base:` line names the branch of an open PR in this
+   repository. The base is read as `refs/remotes/<base>`. A failed fetch
+   or a missing base refuses, and nothing is started. A worktree already
+   there is left as it is, and no fetch is made for it.
 6. Runs the config's setup commands in the worktree. `-NoSetup` skips
    them, for a read-only job whose brief says so.
 7. Starts the session in the background from the main checkout, in
    `dontAsk` mode, with the config's agent. The prompt is the config's
-   read line, the brief, then "Or stop after N turns."
+   read line, the brief, then "Or stop after N turns." That sentence is
+   advice, not a limit: the start command has no turn-limit option, so a
+   session that runs past it is stopped by hand.
 8. Before step 5 it reads `claude agents --json` and sets aside the ids
    of rows already named `<name>`; if that read fails, nothing is
    started. After step 7 it reads the list every 2 seconds, for up to
@@ -102,12 +115,105 @@ dispatched.
    request and redirect hop, and the script must change no data.
    Anything else is listed for the owner.
 2. `git pull --ff-only` on the main checkout.
-3. Delete that builder's remaining branches, each only after
-   `git cherry` against the main branch shows nothing missing.
-4. Remove that builder's worktree, only if it has no uncommitted file.
-   `claude rm <id>` belongs here and nowhere earlier.
+3. Right after the merge and the pull, with no separate word from the
+   owner, run the closeout script for that builder (below): the dry run,
+   then the same line with `--apply`. Name each other branch the builder
+   opened a PR from with `--branch`. Never remove a worktree or delete a
+   branch of a builder any other way.
+4. Only when the script printed `removed` for that builder, run
+   `claude rm <id>`. A refused worktree keeps its session, so the owner
+   can resume it to finish the work.
 5. State-back, then report to the owner with the commands and their
-   output.
+   output. The script's `refused, for the owner queue:` list goes to the
+   queue as one entry.
 
-Anything unmerged, uncommitted or not that builder's is listed for the
-owner and left where it is.
+An `in use` refusal: close any terminal or editor in the folder, check
+that the builder's session has ended, and run the script again. A second
+`in use` refusal is listed for the owner. Anything unmerged, uncommitted
+or not that builder's is listed for the owner and left where it is.
+
+## The closeout script
+
+`scripts/closeout.py` (Python 3.8 or later, standard library only), run
+with the project's interpreter as one plain command:
+
+```
+closeout.py <main checkout> <builder name> [--branch <name>]... [--apply]
+closeout.py <main checkout> --list
+```
+
+Without `--apply` it is a dry run and changes nothing. Its first line
+names the git version. It acts only on a worktree that
+`git worktree list --porcelain` names and that sits directly under
+`<main checkout>/.claude/worktrees`, and removes it only when all hold:
+
+- **merged:** the branch's tip is the head of a PR merged into the main
+  branch (a PR merged into any other base does not count) or an ancestor
+  of one, or the tip (a detached one too) is on the remote main branch and
+  so holds no commit of its own; a detached HEAD also passes when it is
+  exactly a merged PR's head. `git cherry` is not used: it shows every
+  commit of a squash of several as missing;
+- **clean:** `git status --porcelain --untracked-files=normal
+  --ignore-submodules=none` prints nothing, so no config hides an
+  untracked file or a submodule change. Ignored files
+  (`.venv`, `builder-state/`) leave with the worktree. Two kinds of line
+  hold no content and do not refuse (the owner's word, #250): a path
+  modified in the working tree only whose `git diff` is empty (a
+  line-ending effect, as `tools/build_catalog.py` leaves `CATALOG.md`),
+  and a tracked path deleted from the working tree only. In an apply run,
+  after every other check, the script restores exactly those paths with
+  `git restore --worktree`; if the status is then not empty, it refuses
+  and removes nothing. A staged change, an untracked file that is not
+  ignored, a real diff or a conflict refuses;
+- **not locked:** the refusal prints the lock's reason. The script never
+  unlocks. A lock left by a session that has ended is removed by hand;
+- **its HEAD can be read:** a record whose HEAD git cannot read is
+  `no readable HEAD` and is never judged further. It is repaired outside
+  the script;
+- **no open PR:** a branch with an open PR is `open PR`;
+- **its `.git` file is the main checkout's:** it points to the main
+  checkout's record of that worktree, and the record points back. Only
+  then does any git call run against it;
+- **no link out:** no junction or folder symlink in it points out of it,
+  no link fails to resolve, and its top folder is not a link;
+- **not in use** (Windows, at apply time): it renames the folder to
+  `<name>.closeout-inuse` and back. An open file or a process running in
+  the folder stops the rename, before anything is deleted.
+
+There is no force option. Its only deletes are `git worktree remove`
+without `--force`, then `git branch -D` of the builder's branches on the
+same merged test; its only other write is the restore above. It never
+fetches, pushes, unlocks, prunes or deletes a remote ref. It prints
+`removed` only when the folder is gone and git no longer lists it,
+whatever git's exit code; otherwise it prints what is left and exits 3.
+When any git read it needs fails, the verdict is a refusal with that
+reason. One `gh pr list --state all` call gives the merged and the open
+PRs; if `gh` fails, nothing is removed. A merged PR head that is not local is
+`unknown`, with the fetch to run (`git -C <main checkout> fetch origin
+pull/<n>/head`); run it, then the script again. The main branch is read
+from `refs/remotes/origin/HEAD`, so the pull of step 2 comes first.
+
+Exit codes: 0 done (or, in a dry run, would be); 1 something refused or
+unknown; 2 the run itself refused; 3 a removal or the in-use check did
+not finish.
+
+**List-only mode** changes nothing. It prints every worktree git knows
+with its verdict, whoever made it (a builder's, a planner's, a state
+branch, one the app made), every folder under `.claude/worktrees` that
+git does not know (never removed, scanned for links), and ends with one
+count line, one bucket per worktree:
+
+```
+count of worktrees: merged and still there <n>; no commit of its own <n>; unknown <n>; open PR <n>; locked <n>; no readable HEAD <n>; refused for another reason <n>; outside the folder <n>
+```
+
+A worktree outside the folder is printed and counted, and never acted
+on. The manager runs list-only mode at every state-back and writes the
+count line into the state file. A running builder's worktree is
+normally locked by git and counts as locked; an unlocked worktree just
+dispatched counts as "no commit of its own", so read that number
+against the builders running. A folder git does not know, or a git
+record whose folder is gone, is listed for the owner; pruning stays the
+manager's command. Closeout itself stays only for a builder this
+session dispatched: for the first cleanup, the owner names from the
+list the worktrees no manager dispatched.
