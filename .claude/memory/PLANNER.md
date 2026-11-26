@@ -14,8 +14,9 @@ before the #243 rewrite.
 
 Last state-back: 2026-11-26, after the compact Ben asked for; the
 lead approved the Windows plan, part 2 runs (draft PR #291), #289 is
-filed and PR #290 is merged (`e3a342f`).
-Compacts since that clear: 1.
+filed and PR #290 is merged (`e3a342f`). Second compact prep of the day,
+on Ben's ask, at the finding's ruling.
+Compacts since that clear: 2 once this compact is done.
 A clear gives this planner a new queue id: send it to the four peers.
 
 ## Current
@@ -101,15 +102,23 @@ PRs are open, except for a real defect (its own rule, on #273).
    deal of faith and needs to know the hole is corrected. Do not call
    it corrected before the ruleset names `pytest (windows)` and a
    code PR has been seen blocked by a red Windows run. Order:
-   (a) the builder posts its finding and makes the workflow PR from
-   draft #291 (ruling sent to the manager); (b) the planner checks
-   four points: count proof, the skip case on an `.md`-only PR, the
-   reporting job against GitHub's documentation, the xdist time;
-   (c) code review, the dynasty planner's read, Ben's merge word;
-   (d) Ben adds `pytest (windows)` to the ruleset by hand, steps
-   written by the planner with full paths; (e) draft PR #292 (the
-   table of checks, head `3665fe6`, with the dynasty planner for its
-   read) leaves draft and merges on Ben's word.
+   The finding is posted (issuecomment-7193555986) and ruled on
+   (issuecomment-7193574558): six shards, no xdist, a digest of the
+   ordered test ids on each shard's line is required. Order:
+   (a) the builder makes the workflow PR from draft #291; the manager
+   runs the full code review and sends the head to the planner;
+   (b) the planner checks: six equal digests and kept counts that sum
+   to the total (782 collected on 2026-11-26), and the reporting
+   job's shape against GitHub's documentation (not done yet: needs a
+   read of the docs on required checks and skipped jobs);
+   (c) the dynasty planner's read, then Ben's merge word by the
+   manager; (d) draft PR #292 (the table of checks, head `3665fe6`,
+   `.md` files only, with the dynasty planner for its read) takes
+   main: its run is the proof of the skip case; (e) Ben adds
+   `pytest (windows)` to the ruleset by hand, steps written by the
+   planner with full paths; (f) PR #292 leaves draft and merges on
+   Ben's word; (g) a code PR is seen held by the Windows check, and
+   only then is Ben told the hole is closed.
 2. **The stop is lifted** (Ben, 2026-11-26, button "Lift, hold
    closeout run (Recommended)" and his typed line in the planner's
    chat; issues/187 issuecomment-7193345327). Code work and code
