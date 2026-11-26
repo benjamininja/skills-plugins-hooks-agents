@@ -1,135 +1,147 @@
 # MANAGER: state-back of the builder manager session
 
 Where the work stands, so a new session can resume from the repository
-alone. Rules are in the `session-rules` skill (0.5.2 since #290) and in
-`PROJECT-RULES.md`; this file is state.
+alone. Rules are in the `session-rules` skill and in `PROJECT-RULES.md`
+(the table of checks and "Merging on Green" since #292); this file is
+state.
 
 ## Current
 
 ### Saved
 
-2026-11-26, about 13:45Z, by Tools-builder-manager, queue id
-`3bac2fdb-b847-4732-b572-e582ae2af312`, at a compact prep on Ben's word.
-`origin/main`, the main checkout and the live clone are at `63b678f`
-(#208). Ben invoked `session-dispatch` in this session. A compact keeps
-it; a clear needs it typed again.
+2026-11-26, about 15:00Z, by Tools-builder-manager, queue id
+`3bac2fdb-b847-4732-b572-e582ae2af312`, at a clear prep on Ben's word.
+`origin/main`, the main checkout and the live clone are at `3bdba9c`
+(#292). After the clear the id changes: send the new one to the peers,
+and Ben types `/session-dispatch-managers-build-review:session-dispatch`
+again before any dispatch, merge or closeout.
 
 ### Next
 
-1. **#187, Ben's top priority.** Ben's decision (issues/187
-   issuecomment-7193473530): Windows returns to code PRs as a required
-   check, 6 shards, check names fixed (`pytest (ubuntu-latest)`,
-   `CATALOG.md is current`, `pytest (windows)`). Relayed word for word
-   to t187-windows-time. The planner ruled on its finding
-   (issuecomment-7193574558): six shards, no xdist, and a digest of the
-   ordered test ids on each shard's line is required. The reporting job
-   fails on unequal digests where the workflow can do it; otherwise the
-   manager reads the six digests at re-proof. Relayed. When t187 reports
-   a green head: the full code review at medium (`high`), then send the
-   head to Tools-central-planner (digests, counts, GitHub's docs), then
-   the dff-central-planner's read as lead, then Ben's merge word. **Right
-   after the merge, tell the planner at once**, so #292 takes main and
-   shows the skip case. Ben changes the ruleset only after #292's run
-   shows the skip.
-2. **The next text round:** #227 `5b7eba2`, #222 `f86692c`, #205
-   `4046027`, #184 `def65a8`. Main `63b678f` is merged into each, and CI
-   is green. To do: re-prove each one (hygiene in a detached checkout,
-   no review for planner PRs), then ask Ben's word. #205 and #184 share
-   `docs/adr/README.md` and session-rules SKILL.md, so they can't merge
-   in the same round. #249 takes main after #205.
-3. **Before the next merge,** read main's run on `63b678f`. At the prep
-   the runs on `ede2171`, `94ce7e2`, `35302b6` and `63b678f` were still
-   going; the last finished run was `e3a342f`, success.
-4. **The code stop is lifted** (Ben, issues/187 issuecomment-7193345327).
-   Each code ticket still needs Ben's go by button in this chat: #289
-   (find-out first), #285, #262's rule-text build, #251's build. Merge
-   questions: #214, #196, #242; #211 after Claude reads F11's class
-   (pull/211 issuecomment-7193291072: blocking means a fresh re-check
-   and a ruling, advisory means record that no round is owed; #211
-   before #289); #182 after it takes main (pull/182
-   issuecomment-7193290392; keep both passages against #290). #197 is
-   rework, and the planner writes the brief.
-5. **#251's bounded run** (issues/251 issuecomment-7191499904), when the
-   machine has no other full run: in the t251 worktree,
+1. **Merging on Green is live** (PROJECT-RULES since #292; the ruleset
+   read is on issues/187 issuecomment-7194905033). A builder PR whose
+   paths are all under `tools/`, `tests/`, `docs/` outside `docs/adr/`,
+   or the catalog files merges on Green alone. Any other path
+   (`skills/`, `plugins/`, `hooks/`, `.claude/agents/`, `docs/adr/`, a
+   root file, a settings file) keeps Ben's word, asked by button in
+   this chat.
+2. **Every open code PR takes main** before its next re-proof. Their
+   heads predate #291, so they never reported `pytest (windows)` and
+   show BLOCKED: #242, #214, #211, #196; #182 is also DIRTY (conflict).
+   The builder merges `origin/main`; the manager re-proves at the new
+   head and checks each one's paths against item 1.
+3. **#211** (git-guardrails, #168): F11 is advisory, recorded
+   (pull/211 issuecomment-7193764388). Owed: take main (28+ behind),
+   then a fresh reviewer re-checks the ten blocking findings F1 to F10
+   (all `fixed at 60248a6`; text in the draft advisory), then the
+   re-proof, then Ben's word (hooks path). Before #289.
+4. **Code gos owed from Ben**, by button: #289 (find-out first), #285,
+   #262's rule-text build, #251's build. Merge questions once main is
+   in: #214, #196, #242; #182 (keep both passages against #290, pull/182
+   issuecomment-7193290392). #197 is rework; the planner writes the
+   brief.
+5. **#251's bounded run** (issues/251 issuecomment-7191499904), when no
+   other full run is on the machine: in the t251 worktree,
    `.venv-light/Scripts/python.exe -m pytest -q tests --ignore=tests/test_git_guardrails.py`
    (about 10 minutes). Post the count on #251.
-6. **#256**, this state branch's PR. Refresh it and ask Ben's word at a
-   check-in.
+6. **#293** (owner-queue: an Options field whose second key has no `;`
+   before it parses as one option). `Tier: unset`, sent to the planner
+   to tier. dff-central-builder-manager was asked to post the two exact
+   Options lines.
+7. **#256**, this state branch's PR: BLOCKED (head predates #291). At a
+   check-in: merge `origin/main` into the state branch (the state file
+   conflicts add/add; keep the branch's copy), push, ask Ben's word.
 
 ### Waiting
 
-- On Ben: merge words for item 2, the #187 workflow PR's merge word
-  (after the review and the lead's read), the code tickets' gos in item
-  4, the dotclaude#12 merge, and the managers settings text as one
-  Action (still owed). The queue file is empty.
-- On builders: t187-windows-time's green head.
+- On Ben: the code gos and merge questions in items 3 and 4, the
+  dotclaude#12 merge, and the managers settings text as one Action
+  (still owed). The queue file holds no open entry.
+- On the planner: #293's tier, #197's rework brief.
+- On builders: each code PR taking main (item 2).
 - Left for Ben: worktree `s70-guard` (untracked `builder-state/`),
   `t112-closeout-pulls` (commits after merged PR #198), and branch
   `t161-reset-prompt-pointer`. `C:\Users\benha\.claude` stays on
-  `settings/shared-rule-trial` until dotclaude#12 merges.
+  `settings/shared-rule-trial` until dotclaude#12 merges. The remote
+  branch `worktree-t187-windows-time` is kept (merged at `e8b6973`).
 
 ### In flight
 
 | Builder | Ticket | Tier | Session | PR | Stage |
 |---|---|---|---|---|---|
-| `t187-windows-time` | #187 | medium | `2bc62b36` | draft #291 at `13c4399` | working on the xdist run, the finding and the PR to merge |
 | `t251-venv-setup` | #251 | medium | `4c191e7f` | none | not running; keeps `.venv-light` for the bounded run; build waits for Ben's go |
-| `t175-reproofrule` | #175 | low | `9144aeda` | #182 at `5632555` | listed as blocked; #182 takes main |
-| `t231-reproof-lock` | #231 | medium | `8506434b` | #242 at `b278602` | not running; merge question now open |
-| `t207-resumechecks` | #207 | low | n/a | #214 at `a6d7a6c` | merge question |
-| `t168-gitgate` | #168 | high | n/a | #211 at `7c1bafb` | F11's class read owed |
-| `t179-answerhold` | #179 | low | n/a | #196 at `7b8f1e9` | merge question |
-| `t161-queuemod` | #161 | high | n/a | #197 at `b7ef918` | rework, the planner's brief |
+| `t175-reproofrule` | #175 | low | `9144aeda` | #182 at `5632555` | listed as blocked; DIRTY, takes main |
+| `t231-reproof-lock` | #231 | medium | `8506434b` | #242 at `b278602` | not running; BLOCKED, takes main |
+| `t207-resumechecks` | #207 | low | n/a | #214 at `a6d7a6c` | takes main |
+| `t168-gitgate` | #168 | high | n/a | #211 at `7c1bafb` | takes main, then the F1-F10 re-check |
+| `t179-answerhold` | #179 | low | n/a | #196 at `7b8f1e9` | takes main |
+| `t161-queuemod` | #161 | high | n/a | #197 at `b7ef918` | DIRTY; rework, the planner's brief |
 
-Open PRs: 292, 291, 256, 249, 242, 227, 222, 214, 211, 205, 197, 196,
-184, 182.
+Open PRs: 256, 242, 214, 211, 197, 196, 182. Main's run on `6e4cc59`
+is green; the runs on `40e5847` and `3bdba9c` were still going at the
+save.
 
 ### Peers
 
 Tools-central-planner (session `a09ca279-6faa-4a61-a313-10328ff9c39d`),
-personal-assistant (`ff1e3261`), dff-central-builder-manager
-(`9d28e196-d848-4cf7-a3d6-f97cbe859143`), dff-central-planner (the lead
-for shared rules and the CI gate). Reach them by name with ListAgents.
+personal-assistant (`6f53e894`), dff-central-builder-manager
+(`9d28e196-d848-4cf7-a3d6-f97cbe859143`), dff-central-planner
+(`536a467f`, the lead for shared rules and the CI gate). Reach them by
+name with ListAgents.
 
 ### Reads and checks due
 
-- Main's last finished run before each merge, and a red run stops
-  merges (#287).
+- Main's last finished run before each merge; a red run stops merges.
 - Before a pull that changes session-rules, session-dispatch, a role
-  file, a hook or the mod: notice to dff-central-builder-manager and
-  both planners, with both heads sent after.
-- The closeout script is at the live clone's plugin `scripts/closeout.py`,
-  run with the main checkout's `.venv`. Hygiene runs with
-  `C:\Users\benha\AppData\Local\Programs\Python\Python312\python.exe -m pre_commit`
-  in a temporary detached checkout of the PR head, which is removed
-  after a junction scan. Its scope is CLAUDE/README/PLAN/GLOSSARY.md,
-  docs/adr and `.claude/memory/MEMORY.md` only.
+  file, a hook, the mod or PROJECT-RULES: notice to
+  dff-central-builder-manager and both planners, with both heads sent
+  after.
+- A PR that changes `.github/workflows/` is read by the planner and by
+  the dynasty planner as lead before its merge.
+- Closeout: the live clone's plugin `scripts/closeout.py`, with the main
+  checkout's `.venv`. Run `claude rm <id>` only after it prints
+  `removed`, never in the same command.
+- Hygiene:
+  `C:\Users\benha\AppData\Local\Programs\Python\Python312\python.exe -m pre_commit run check-in-hygiene --from-ref origin/main --to-ref HEAD`
+  in a temporary detached checkout of the PR head, removed after a
+  junction scan.
 
 ### Decided since the last merged state PR
 
 - 2026-11-26, Ben's buttons in the tools manager's chat:
   - Resume t187 for #187 Part 2 (issues/187 issuecomment-7191766144).
-  - Ben unlocked t283's stale worktree lock, and t283 was closed out
+  - Ben unlocked t283's stale worktree lock; t283 closed out
     (issues/283 issuecomment-7191791109).
-  - Merge #290, keeping the skills/plugins/hooks/agents line (merged
-    `e3a342f`).
+  - Merge #290 (`e3a342f`); #239, #238, #216, #208 (`ede2171`,
+    `94ce7e2`, `35302b6`, `63b678f`; #237 closed).
   - Ignore the Google Sheet in the browser pane.
-  - After Ben signed in again, t187 was followed up (issues/187
-    issuecomment-7193035709).
-  - Merge #239, #238, #216 and #208 (merged `ede2171`, `94ce7e2`,
-    `35302b6`, `63b678f`; #237 closed).
-  - Clear the closeout backlog now: 32 of 32 removed (issues/250
+  - Clear the closeout backlog: 32 of 32 removed (issues/250
     issuecomment-7193535351).
-- 2026-11-26, closed out: t250, t257, t260-261, t219, t189, t283, t237.
+  - Merge #227, #222, #205 when main is green (`0c996a8`, `dd6277d`,
+    `4a4b2c7`).
+  - Merge #184 (`8f12b86`), #249 (`40e5847`), #291 (`6e4cc59`) and #292
+    (`3bdba9c`), each after the lead's read.
+  - The tools manager may run `gh pr ready 291` (it was already ready).
+  - Ben added `pytest (windows)` to ruleset 27266678 (issues/187
+    issuecomment-7194856150; it took a second save).
+- 2026-11-26, closed out: t250, t257, t260-261, t219, t189, t283, t237,
+  t187 (issues/187 issuecomment-7194664435).
+- 2026-11-26, F11 on #211 ruled advisory (pull/211
+  issuecomment-7193764388).
 - 2026-11-26, Ben's buttons in the planner's chat (reports, on record):
   the stop lifted (issues/187 issuecomment-7193345327); Windows
   required, 6 shards (issuecomment-7193473530).
-- Lesson: Ben reads "hold closeout run" as being about CI. Claude
-  explains first that closeout is a local script run with no CI.
+- Lesson: Ben reads "hold closeout run" as being about CI. Explain first
+  that closeout is a local script run with no CI.
 - Lesson: a builder's expired Claude login shows as `blocked`, with
-  "Login expired · Please run /login" in its transcript. Ben signs in
-  again (`claude`, then `/login`), and the follow-up goes by SendMessage
-  while the builder is listed.
+  "Login expired · Please run /login" in its transcript.
+- Lesson: `claude rm` chained after a refused closeout still removes the
+  worktree and local branch. Run it only after `removed`.
+- Lesson: in the main checkout `git pull --ff-only` can refuse with
+  "Cannot fast-forward to multiple branches"; use `git fetch origin`,
+  then `git merge --ff-only origin/main`.
+- Lesson: a ruleset save is read back from the API before the step is
+  recorded.
 
 ## Reference
 
