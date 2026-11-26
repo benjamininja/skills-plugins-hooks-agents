@@ -24,6 +24,7 @@ merged ADR. A row is added in the same PR that adds the ADR
 | 0014 | unused | none | none | The number was never used. There is no file. |
 | [0015](0015-code-review-at-re-proof.md) | A code review at re-proof | accepted, revised | 2026-11-09 | Revision 1 (2026-11-11); Revision 2 (2026-11-12, current: it reverses the original decision in place, before the reversal rule below) |
 | [0016](0016-one-owner-queue-per-project.md) | One owner queue per project, untracked, routed by the ticket's repo | accepted | 2026-11-14 | none (brought up to date on 2026-11-23, before it merged) |
+| [0020](0020-builder-environment-lifetime.md) | A builder's environment: light at dispatch, removed at closeout by one script | accepted | 2026-11-23 | none |
 
 An ADR on an open pull request (0016, 0017, 0019) adds its own row in that
 pull request, so `tests/test_adr_readme.py` passes on the merged tree.

@@ -8,6 +8,12 @@ on:
 permissions:
   contents: read
 
+# A newer head on a PR cancels the run on the older head. A push to main has
+# its own group (its commit), so a run on main is never cancelled (#283).
+concurrency:
+  group: test-${{ github.event.pull_request.number || github.sha }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
   pytest:
     name: pytest (${{ matrix.os }})
@@ -15,7 +21,9 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, windows-latest]
+        # A pull request runs Ubuntu only: no PR waits on the Windows run. A
+        # push to main runs both systems (#283, Amendment 2).
+        os: ${{ fromJSON(github.event_name == 'pull_request' && '["ubuntu-latest"]' || '["ubuntu-latest","windows-latest"]') }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
