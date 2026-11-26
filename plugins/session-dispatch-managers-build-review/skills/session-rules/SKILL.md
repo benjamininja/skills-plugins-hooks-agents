@@ -80,7 +80,8 @@ double quote. Template:
 - Starting a builder, merging, or deleting a branch or a worktree on its
   own initiative. Only a manager does these, only for a named ticket,
   and only in a session where the owner has invoked the
-  `session-dispatch` skill. The one exception: a session the owner tells
+  `session-dispatch` skill. A merge there is of a Green PR, with the
+  owner's word wherever "Merging on Green" keeps it. The one exception: a session the owner tells
   directly to merge a named PR or delete a named branch or worktree does
   that item.
 - Weakening a test, a check or a rule to make work pass.
@@ -412,11 +413,58 @@ merge. When the PR is green by its own check it messages the manager,
 ends its turn and waits. A builder that runs the security-review skill
 continues in the same turn, with the commit, the push, the PR, the
 state-back comment and the message to the manager. The review's report
-is one step of the turn, not its end. The manager re-proves every item itself, posts
-the output on the PR. It merges only after that, and only in a session
-where the owner has invoked the `session-dispatch` skill. A PR that is
-not green goes back with the failing output.
+is one step of the turn, not its end. The manager re-proves every item
+itself and posts the output on the PR. It merges only after that, and
+only in a session where the owner has invoked the `session-dispatch`
+skill. A PR that is not green goes back with the failing output.
 Nothing reaches the main branch on one session's own report.
+
+**Four merge points, the same in every project.**
+
+1. **CI at the PR's head is the proof of the tests.** The manager
+   re-proves what CI ran by reading it once at that head, and runs by
+   hand only what CI does not run. A builder runs the tests its change
+   touches, and CI runs the whole suite. A project's rules file lists
+   what its CI does not run.
+2. **A Green holds** while the head is unchanged and the merge state is
+   clean. A merge of another PR does not make it stale and asks no
+   re-run on any open PR. A PR that conflicts takes a merge of the main
+   branch, and Green is read again at the new head.
+3. **The main branch is read, not waited for,** as line 3 of "CI as a
+   gate" says. A project's rules file may add a read after each merge.
+4. **One word may name several PRs.** Where the owner's word is needed
+   (below), one line may name a list of PRs, each at its head. The
+   manager merges them in the order named, reads each one's Green again
+   just before its merge and stops at the first that is not Green.
+
+**Merging on Green.** A manager merges a Green PR without asking the
+owner, in a session where the owner has invoked the `session-dispatch`
+skill. That invocation arms the session once; it is not asked again per
+PR. At each merge the manager posts one line on the PR: the head, the
+checks it read, and that no exception below applied.
+
+**The owner's word stays for:**
+
+- a PR that changes a gate: a workflow file, the text of
+  `session-rules` or `session-dispatch`, a role file, a project rules
+  file, a hook, a review ruleset skill, a settings example;
+- a PR with a changed path that no required check covers: that is no
+  gate in place. A path is covered when the project's table of checks
+  (line 5 of "CI as a gate", below) names a required check for it and
+  that check ran, not skipped, at the PR's head. Until a project's
+  table is written and the owner has set its ruleset from it, no path
+  is covered and every PR keeps the owner's word;
+- anything on the parking list ("Parking", above);
+- a merge that applies a migration, publishes data, or can publish a
+  secret or personal data: the three harms of line 2 of "CI as a gate";
+- a planner's or a manager's own PR, since those are rule or state
+  text. The word for it is also the owner's approval of that PR: no
+  second question is asked in another chat.
+
+The word is given for one head, in the manager's chat, by button. An
+approval the owner gave in another session, or at another head, is
+context for that question and never the word. A project's rules file
+may keep the owner's word for more; it never keeps it for less.
 
 **CI as a gate.** A check holds a merge for what it stops, not because
 it exists. Five lines, the same in every project:
@@ -453,13 +501,14 @@ of its own measurements, on the owner's button.
 **The code review.** Before it posts the re-proof of a builder's PR that
 touches code (or, where the repo's ruleset asks, only rule or skill
 text), the manager starts a read-only reviewer with a packet,
-and posts what it finds. One round follows: the builder answers each
-finding once (fixed at a commit, or disputed with a reason), a fresh
-reviewer re-checks, and the manager decides each finding still open,
-asking the planner on a design question. Only when they disagree does it
+and posts what it finds. One reviewer reads a PR, never two. For
+blocking findings one round follows: the builder answers each once
+(fixed at a commit, or disputed with a reason), a fresh reviewer
+re-checks, and the manager decides each one still open, asking the
+planner on a design question. Only when they disagree does it
 go to the owner, as a Decision. Green then has one more item: no
 blocking finding the manager upheld is still open. Findings that are not
-blocking are posted and never hold a merge. Read
+blocking are posted once, get no answer round and never hold a merge. Read
 `references/code-review.md` for which PRs, the packet, the effort per
 tier, the finding classes and the record.
 

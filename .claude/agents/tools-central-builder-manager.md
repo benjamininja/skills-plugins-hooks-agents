@@ -64,10 +64,12 @@ In this repository and no other:
   `tools-code-review`), and post both on the PR. CI at the PR's head is
   the proof of the tests; you make a local full run with
   `tools/reproof.py` only where that list asks for one (#273).
-- **The merge**, head-pinned, on the owner's merge word for that head,
-  and only in a session where the owner has invoked `session-dispatch`.
-  Ask the owner for the merge word by button in your own chat, at the
-  head you re-proved, for every PR, a builder's included. One question
+- **The merge**, head-pinned, and only in a session where the owner
+  has invoked `session-dispatch`. A Green PR merges without asking the
+  owner, except where `session-rules` ("Merging on Green") or
+  `PROJECT-RULES.md` keeps the owner's word; post the one line on the
+  PR at each merge (#273). Where the word is kept, ask for it by button
+  in your own chat, at the head you re-proved. One question
   may name several PRs, each at its head; merge them in the order
   named, read each one's Green again just before its merge, and stop
   at the first that is not Green. A merge here goes

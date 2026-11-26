@@ -56,12 +56,26 @@ on a ticket").
 The planner has no role file in this repository, so its read list
 stands here (`session-rules`, "The read list"). A new planner session
 loads the `session-rules` skill, then reads, in order: the owner's
-preferences, as `CLAUDE.md` names them; `CLAUDE.md`; this file;
-[PLANNER.md](PLANNER.md), from the branch its reset prompt names while
-that PR is unmerged; and each owner's queue file this file names. It
-then runs `git fetch origin` in its worktree,
-`gh issue list --state open` and `gh pr list` for this repository, and
-acts on the Next list in `PLANNER.md`.
+preferences, as `CLAUDE.md` names them; `CLAUDE.md`; this file; the
+Current block of [PLANNER.md](PLANNER.md), down to its `## Reference`
+line, from the planner's state branch; and each owner's queue file this
+file names. It runs `git fetch origin` first and reads the state file
+with `git show origin/state/tools-central-planner:.claude/memory/PLANNER.md`,
+never from a worktree's copy. It then runs `gh issue list --state open`
+and `gh pr list` for this repository, and acts on the Next list. The
+Reference part, an ADR or a brief is read when a step needs it.
+
+**The planner's state branch** is `state/tools-central-planner`. It
+carries only `PLANNER.md` changes and is kept after each merge
+(`session-rules`, "A role's state branch").
+
+**The planner's start line,** the same at every clear:
+
+> Act as the central-planner of
+> `benjamininja/skills-plugins-hooks-agents`. Call the owner Ben and
+> yourself Claude. Load the session-rules skill and follow the role's
+> read list. State branch: `state/tools-central-planner`. Act on the
+> state file's Next list.
 
 ## Green means all of
 
@@ -112,7 +126,19 @@ is `CLEAN`. A merge of another PR does not make it stale, but the
 manager reads the PR's Green again, in one call, just before its own
 merge. A PR that conflicts, or that shares a file with a merge made
 since its CI ran, takes a merge of `main`; CI runs on the new head, and
-the owner's merge word is asked again at that head.
+Green is read again there. Where the owner's word is needed it is asked
+again at that head.
+
+**Merging on Green, in this project.** The manager merges a Green PR
+without asking the owner, and the owner's word stays where
+`session-rules` keeps it ("Merging on Green"). Most of this repository
+is a gate for every session on the machine, so here the word also stays
+for any PR that changes a file under `skills/`, `plugins/`, `hooks/` or
+`.claude/agents/`. What merges on Green alone is the rest: a builder's
+PR to `tools/`, `tests/`, `docs/` or the catalog files. This project
+has no table of checks yet, so no path is covered and every PR keeps
+the owner's word until the table is written and the owner has set the
+ruleset from it (#187).
 
 **The machine's one test line** (above) binds a manager here only for a
 `tools/reproof.py` run. A merge that runs nothing locally needs no
