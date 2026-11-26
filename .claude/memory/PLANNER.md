@@ -131,7 +131,22 @@ PRs are open, except for a real defect (its own rule, on #273).
    with no change asked (issuecomment-7193798929). The three asks went
    to the manager and on to the builder; draft #291 was green at
    `fe67fbb` by the manager's report, not yet sent as a head to merge.
-   Waiting: the manager's message with the workflow PR's head.
+   **Done since, 2026-11-26:** (a) to (d). PR #291 merged as `6e4cc59`
+   at head `e8b6973` on Ben's word, after the planner's read
+   (pull/291 issuecomment-7194028137), the code review with no
+   blocking finding and the lead's approve. PR #292 took main, head
+   `88c4648`; its run showed the skip case (issues/187
+   issuecomment-7194711918). **Now at (e):** Ben's hand step was given
+   in the planner's chat: add `pytest (windows)` to the ruleset
+   "main: require PR" (id 27266678), which requires the Ubuntu and
+   catalog checks today. After he says done: read the ruleset back
+   with `gh api`, record on #187, tell the manager; PR #292 leaves
+   draft (Ben marks it ready, a builder's `gh pr ready` was refused
+   once) and the manager asks the merge word; the six open code PRs
+   (#242, #214, #211, #197, #196, #182) each take main once to get the
+   check; then (g). Also open: tier ticket #293 (owner-queue option
+   parse, from the manager); the consistency points on #217
+   (issuecomment-7194228313), planner leads C, D, E, F.
 2. **The stop is lifted** (Ben, 2026-11-26, button "Lift, hold
    closeout run (Recommended)" and his typed line in the planner's
    chat; issues/187 issuecomment-7193345327). Code work and code
