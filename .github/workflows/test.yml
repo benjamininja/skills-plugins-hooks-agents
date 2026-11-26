@@ -17,6 +17,7 @@ concurrency:
 env:
   # Windows shards (#187). PART 2 MEASUREMENT: WINDOWS_XDIST is for one
   # comparison run only and is removed before this shape ships.
+  # Measurement run 2.
   WINDOWS_SHARDS: "4"
   WINDOWS_XDIST: "false"
 
