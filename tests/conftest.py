@@ -6,7 +6,12 @@ exactly once: a partition by position cannot leave a test out. With neither
 variable set, every test runs (a local run and Ubuntu are unchanged). One set
 without the other, or a value out of range, is a usage error, never a
 silent run of fewer tests.
+
+Each shard prints the count it kept and a digest of the whole ordered list
+it collected. Equal digests in every shard, with kept counts that add up to
+the total, show that each test ran exactly once.
 """
+import hashlib
 import os
 
 import pytest
@@ -38,7 +43,10 @@ def pytest_collection_modifyitems(config, items):
     n, i = shard
     keep = [item for pos, item in enumerate(items) if pos % n == i]
     drop = [item for pos, item in enumerate(items) if pos % n != i]
-    config._shard_line = f"shard {i} of {n}: kept {len(keep)} of {len(items)} collected"
+    digest = hashlib.sha256("\n".join(item.nodeid for item in items).encode("utf-8")).hexdigest()[:12]
+    config._shard_line = (
+        f"shard {i} of {n}: kept {len(keep)} of {len(items)} collected, order digest {digest}"
+    )
     if drop:
         config.hook.pytest_deselected(items=drop)
     items[:] = keep
