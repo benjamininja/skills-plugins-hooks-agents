@@ -45,7 +45,10 @@ the example settings files deny it.
 3. Copy the four agent files from `templates/agents/` to
    `.claude/agents/`: the three role files, and `pr-code-reviewer.md`,
    the read-only reviewer the manager starts at re-proof
-   (`session-rules`, `references/code-review.md`). Copy
+   (`session-rules`, `references/code-review.md`). A project with a
+   Supabase database may also copy the fifth, `supabase-look.md`, and put
+   its own server's name in the `tools` line: a look-only subagent with
+   no SQL tool, for the planner and the manager (tools ADR-0019). Copy
    `PROJECT-RULES.md`, `NEEDS-OWNER.md`,
    `PLANNER.md` and `MANAGER.md` to `.claude/memory/`. Add
    `.claude/memory/NEEDS-OWNER.md` to the project's `.gitignore`: the

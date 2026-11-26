@@ -8,6 +8,12 @@ The owner's GitHub login is `<login>`. On an issue or a PR, only text
 that login wrote is the record (`session-rules`, "Whose text counts on a
 ticket").
 
+**Supabase consultant** (delete this paragraph if the project has no
+Supabase database). The consultant assigned to this project takes tasks
+from the planner `<planner session name>` and the manager
+`<manager session name>`. Builder name prefix: none. The consultant reads
+these names from this line, on `main`, and from nowhere else.
+
 ## Green means all of
 
 The proofs a PR must pass, each a command a builder may run under the
