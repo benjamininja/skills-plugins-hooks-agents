@@ -14,10 +14,6 @@ concurrency:
   group: test-${{ github.event.pull_request.number || github.sha }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
-env:
-  # The Windows tests run in this many shards, split by position (#187).
-  WINDOWS_SHARDS: "6"
-
 jobs:
   pytest:
     name: pytest (ubuntu-latest)
@@ -30,67 +26,58 @@ jobs:
       - run: python -m pip install pytest pyyaml
       - run: python -m pytest -q tests
 
-  # Whether Windows runs. It starts from run. On a pull request it turns
-  # Windows off only when the diff is a non-empty list in which every path
-  # ends in .md and none is under tests/. An empty diff, a failed diff or a
-  # missing base runs Windows. Renames are off, so a script renamed to .md
-  # still counts as the script. A push to main always runs.
+  # Whether Windows runs. Its first step writes run, before the diff is read.
+  # Only a diff step that finishes and finds a non-empty list in which every
+  # path ends in .md and none is under tests/ turns Windows off. An empty
+  # diff, a failed diff, a missing base or any failed step leaves run.
+  # Renames are off, so a script renamed to .md still counts as the script.
+  # A push to main always runs.
   scope:
     name: windows scope
     runs-on: ubuntu-latest
     outputs:
-      run: ${{ steps.scope.outputs.run }}
-      shards: ${{ steps.scope.outputs.shards }}
-      count: ${{ steps.scope.outputs.count }}
+      run: ${{ steps.diff.outputs.text_only == 'true' && 'false' || steps.default.outputs.run }}
     steps:
+      - id: default
+        run: echo "run=true" >> "$GITHUB_OUTPUT"
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - id: scope
+      - id: diff
+        if: github.event_name == 'pull_request'
         shell: bash
         env:
-          EVENT: ${{ github.event_name }}
           BASE: ${{ github.event.pull_request.base.sha }}
           HEAD: ${{ github.event.pull_request.head.sha }}
         run: |
-          set +e
-          run=true
-          if [ "$EVENT" = "pull_request" ]; then
-            files=$(git diff --no-renames --name-only "$BASE...$HEAD" 2>/dev/null)
-            code=$?
-            if [ "$code" -eq 0 ] && [ -n "$files" ]; then
-              text=true
-              while IFS= read -r f; do
-                case "$f" in
-                  tests/*) text=false ;;
-                  *.md) ;;
-                  *) text=false ;;
-                esac
-              done <<< "$files"
-              [ "$text" = "true" ] && run=false
-            fi
-            echo "diff exit $code, $(printf '%s\n' "$files" | grep -c .) changed paths"
-          fi
-          n="$WINDOWS_SHARDS"
-          shards=$(seq 0 $((n - 1)) | paste -sd, -)
-          echo "run=$run" >> "$GITHUB_OUTPUT"
-          echo "count=$n" >> "$GITHUB_OUTPUT"
-          echo "shards=[$shards]" >> "$GITHUB_OUTPUT"
-          echo "run=$run count=$n shards=[$shards]"
+          files=$(git diff --no-renames --name-only "$BASE...$HEAD")
+          echo "$(printf '%s\n' "$files" | grep -c .) changed paths"
+          [ -n "$files" ] || exit 0
+          while IFS= read -r f; do
+            case "$f" in
+              tests/*) exit 0 ;;
+              *.md) ;;
+              *) exit 0 ;;
+            esac
+          done <<< "$files"
+          echo "every changed path is .md outside tests/: Windows skipped"
+          echo "text_only=true" >> "$GITHUB_OUTPUT"
 
-  # Each shard puts "<digest> <kept> <collected>" in its own output, d<index>.
-  # One output per shard index: a change to WINDOWS_SHARDS changes this list
-  # too, or pytest (windows) fails on the missing line.
+  # Six shards. Each puts "<digest> <kept> <collected>" in its own output,
+  # d<index>. The matrix and the outputs list change together, or
+  # pytest (windows) fails on a missing line or on kept counts that do not
+  # add up. A failed or cancelled scope job is read as run: the shards run
+  # unless scope succeeded and said skip, or the whole run was cancelled.
   windows-shard:
     name: pytest (windows shard ${{ matrix.shard }})
     needs: scope
-    if: needs.scope.outputs.run == 'true'
+    if: ${{ !cancelled() && needs.scope.outputs.run != 'false' }}
     runs-on: windows-latest
     timeout-minutes: 40
     strategy:
       fail-fast: false
       matrix:
-        shard: ${{ fromJSON(needs.scope.outputs.shards) }}
+        shard: [0, 1, 2, 3, 4, 5]
     outputs:
       d0: ${{ steps.digest.outputs.d0 }}
       d1: ${{ steps.digest.outputs.d1 }}
@@ -99,7 +86,7 @@ jobs:
       d4: ${{ steps.digest.outputs.d4 }}
       d5: ${{ steps.digest.outputs.d5 }}
     env:
-      TEST_SHARD_COUNT: ${{ needs.scope.outputs.count }}
+      TEST_SHARD_COUNT: ${{ strategy.job-total }}
       TEST_SHARD_INDEX: ${{ matrix.shard }}
       TEST_SHARD_DIGEST_FILE: shard-digest.txt
     steps:
@@ -113,13 +100,13 @@ jobs:
         shell: bash
         run: echo "d${TEST_SHARD_INDEX}=$(cat "$TEST_SHARD_DIGEST_FILE")" >> "$GITHUB_OUTPUT"
 
-  # The one name a ruleset would hold. It always runs, and passes in exactly
-  # two cases: scope succeeded and said run, and the shards succeeded; or
-  # scope succeeded and said skip, and the shards were skipped. Anything else
-  # (scope failed or cancelled, a shard failed or cancelled, a mix) fails.
-  # In the run case it also fails unless every shard sent its line, all the
-  # order digests and collected counts are equal, and the kept counts add up
-  # to the collected count: each test ran exactly once.
+  # The one name the ruleset holds. It always runs, and passes in exactly two
+  # cases: scope succeeded, said skip, and the shards were skipped; or every
+  # shard passed (scope said run, or failed or was cancelled, which is read
+  # as run). Anything else fails it. When the shards ran, it also fails
+  # unless all six sent their line, the order digests and collected counts
+  # are equal, and the kept counts add up to the collected count: each test
+  # ran exactly once.
   windows:
     name: pytest (windows)
     needs: [scope, windows-shard]
@@ -130,7 +117,6 @@ jobs:
         env:
           SCOPE: ${{ needs.scope.result }}
           RUN: ${{ needs.scope.outputs.run }}
-          COUNT: ${{ needs.scope.outputs.count }}
           SHARDS: ${{ needs.windows-shard.result }}
           D0: ${{ needs.windows-shard.outputs.d0 }}
           D1: ${{ needs.windows-shard.outputs.d1 }}
@@ -139,15 +125,15 @@ jobs:
           D4: ${{ needs.windows-shard.outputs.d4 }}
           D5: ${{ needs.windows-shard.outputs.d5 }}
         run: |
-          echo "scope=$SCOPE run=$RUN count=$COUNT shards=$SHARDS"
+          echo "scope=$SCOPE run=$RUN shards=$SHARDS"
           fail() { echo "::error::pytest (windows) fails: $1"; exit 1; }
-          if [ "$SCOPE" = "success" ] && [ "$RUN" = "false" ] && [ "$SHARDS" = "skipped" ]; then exit 0; fi
-          if [ "$SCOPE" != "success" ] || [ "$RUN" != "true" ] || [ "$SHARDS" != "success" ]; then
-            fail "scope=$SCOPE run=$RUN shards=$SHARDS"
+          if [ "$SCOPE" = "success" ] && [ "$RUN" = "false" ] && [ "$SHARDS" = "skipped" ]; then
+            echo "skip list: every changed path is .md outside tests/"
+            exit 0
           fi
-          [[ "$COUNT" =~ ^[1-9][0-9]*$ ]] || fail "no shard count"
+          [ "$SHARDS" = "success" ] || fail "scope=$SCOPE run=$RUN shards=$SHARDS"
           first="" total="" sum=0
-          for i in $(seq 0 $((COUNT - 1))); do
+          for i in 0 1 2 3 4 5; do
             name="D$i"; line="${!name}"
             echo "shard $i: ${line:-missing}"
             read -r digest kept collected <<< "$line"
