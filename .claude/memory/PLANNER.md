@@ -94,14 +94,16 @@ PRs are open, except for a real defect (its own rule, on #273).
      protects, which PRs run it, its measured time, required or not);
      the CI line of `CLAUDE.md`, which still says both systems on every
      PR; a look at ADR-0004 for the same. To the lead before Ben.
-2. **The stop.** Ben stopped all tools work until the fix was in
-   (issuecomment-7167039858); it covers the tools repository only.
-   Text-only work restarted when PR #284 merged (his button). **Work
-   that touches code stays stopped until Ben lifts it:** ask him by
-   button when #187's change has merged, or earlier if he raises it.
-   Held meanwhile: #285, the first real closeout run (#250), #251's
-   build, every other dispatch. Running: `t187-windows-time` only, as
-   far as the planner knows.
+2. **The stop is lifted** (Ben, 2026-11-26, button "Lift, hold
+   closeout run (Recommended)" and his typed line in the planner's
+   chat; issues/187 issuecomment-7193345327). Code work and code
+   merges resume in tools, each dispatch on Ben's go to the manager
+   and each PR on his merge word. **Still held:** the first real run
+   of the closeout script (#250), until Windows runs on code PRs again
+   or Ben releases it. Owed by the planner now: the rework brief for
+   PR #197 (pull/197 issuecomment-7193289687). Ben's reason, in his
+   words to the assistant: he wants a freeze only where process is
+   poor.
 3. **PR #290 merged, the rest of #273** (`e3a342f`, at head `651bc72`,
    on Ben's button "Merge, keep line" in the manager's chat; re-proof
    pull/290 issuecomment-7192331305, the lead's approval
@@ -178,9 +180,11 @@ PRs are open, except for a real defect (its own rule, on #273).
     after #205 and takes main again, head to the dynasty planner
     (issuecomment-7193291638). Main was merged on 2026-11-26 into
     #238 `f1db641`, #216 `5bf837f`, #222 `5de07a8`, #208 `9297fd0`,
-    #205 `c4358ef`, #184 `a921cf3`; the manager re-proves them and
-    asks Ben's word at the new heads. #227 and #239 share
-    `README.md`: the second takes main after the first merges.
+    #205 `c4358ef`, #184 `a921cf3`. By the manager's report #239,
+    #238, #216 and #208 then merged (main `63b678f`), and main was
+    merged again into #227 `5b7eba2`, #222 `f86692c`, #205 `4046027`
+    and #184 `def65a8`; the manager re-proves them and asks Ben's
+    word at the new heads. #249 takes main after #205.
     Still to weigh: #167. #263 has no go; #258 holds the re-measure
     list.
 14. **Coming to Ben later, by button:** what the owner-queue pane does
