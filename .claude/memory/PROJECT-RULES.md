@@ -170,7 +170,7 @@ same steps before a dispatch when the main checkout is behind
 behaviour comes from these two, so they stay at the same commit:
 
 - **the main checkout**,
-  `C:/Users/benha/OneDrive/Documents/GitHub/skills-plugins-hooks-agents`:
+  `C:/source/Github/skills-plugins-hooks-agents`:
   the `~/.claude` skill, agent and hook links point here;
 - **the live clone**, `C:/Users/benha/claude-live/skills-plugins-hooks-agents`:
   plugins load from here.
@@ -181,7 +181,7 @@ behaviour comes from these two, so they stay at the same commit:
    status lists, park an Action with both lists and pull neither checkout.
 2. Otherwise run `git -C <path> pull --ff-only` on each. If one refuses or
    fails, park an Action with its output and its `status --short`. A
-   OneDrive lock can stop a pull halfway, and the repair is the owner's.
+   file lock can stop a pull halfway, and the repair is the owner's.
 3. Report both new heads (`git -C <path> log -1 --oneline`). If a plugin
    changed, name it and say that running sessions need a new session to
    load it.
