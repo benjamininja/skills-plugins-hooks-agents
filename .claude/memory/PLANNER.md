@@ -109,15 +109,15 @@ PRs are open, except for a real defect (its own rule, on #273).
    (d) Ben adds `pytest (windows)` to the ruleset by hand, steps
    written by the planner with full paths; (e) draft PR #292 (the
    table of checks, head `3665fe6`, with the dynasty planner for its
-   read) leaves draft and merges on Ben's word; (f) the first real
-   closeout run may then be released by Ben.
+   read) leaves draft and merges on Ben's word.
 2. **The stop is lifted** (Ben, 2026-11-26, button "Lift, hold
    closeout run (Recommended)" and his typed line in the planner's
    chat; issues/187 issuecomment-7193345327). Code work and code
    merges resume in tools, each dispatch on Ben's go to the manager
-   and each PR on his merge word. **Still held:** the first real run
-   of the closeout script (#250), until Windows runs on code PRs again
-   or Ben releases it. Owed by the planner now: the rework brief for
+   and each PR on his merge word. The hold on the first real closeout
+   run is over: Ben released it in the manager's chat and the run
+   removed 32 of 32 merged worktrees, none refused (issues/250
+   issuecomment-7193535351); this planner's worktree was left alone. Owed by the planner now: the rework brief for
    PR #197 (pull/197 issuecomment-7193289687). Ben's reason, in his
    words to the assistant: he wants a freeze only where process is
    poor.
