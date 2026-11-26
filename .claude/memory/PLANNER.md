@@ -176,6 +176,14 @@ PRs are open, except for a real defect (its own rule, on #273).
     with terminal output pasted into a Note (the personal-assistant's
     report of 2026-11-25; nothing reached GitHub). Not asked yet.
 
+15. **The assistant's own owner queue** (its report of 2026-11-26,
+    issues/183 issuecomment-7192816903, on Ben's "Go, as planned" in
+    its chat): the role file of PR #266 and `session-rules`
+    ("Parking") do not name it. Owed: one text PR, both gates, on
+    Ben's word, head to the dynasty planner first; behind the Windows
+    button and the table of checks. The pane heading for a queue
+    outside a project is unverified (#185).
+
 **Waiting on Ben:** nothing in this chat. His own later steps:
 revoking the old wide login (#204); putting the Windows check back on
 the ruleset, only after item 1's three conditions. Ben's standing
