@@ -16,14 +16,8 @@ concurrency:
 
 jobs:
   pytest:
-    name: pytest (${{ matrix.os }})
-    runs-on: ${{ matrix.os }}
-    strategy:
-      fail-fast: false
-      matrix:
-        # A pull request runs Ubuntu only: no PR waits on the Windows run. A
-        # push to main runs both systems (#283, Amendment 2).
-        os: ${{ fromJSON(github.event_name == 'pull_request' && '["ubuntu-latest"]' || '["ubuntu-latest","windows-latest"]') }}
+    name: pytest (ubuntu-latest)
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -31,6 +25,127 @@ jobs:
           python-version: "3.12"
       - run: python -m pip install pytest pyyaml
       - run: python -m pytest -q tests
+
+  # Whether Windows runs. Its first step writes run, before the diff is read.
+  # Only a diff step that finishes and finds a non-empty list in which every
+  # path ends in .md and none is under tests/ turns Windows off. An empty
+  # diff, a failed diff, a missing base or any failed step leaves run.
+  # Renames are off, so a script renamed to .md still counts as the script.
+  # A push to main always runs.
+  scope:
+    name: windows scope
+    runs-on: ubuntu-latest
+    outputs:
+      run: ${{ steps.diff.outputs.text_only == 'true' && 'false' || steps.default.outputs.run }}
+    steps:
+      - id: default
+        run: echo "run=true" >> "$GITHUB_OUTPUT"
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - id: diff
+        if: github.event_name == 'pull_request'
+        shell: bash
+        env:
+          BASE: ${{ github.event.pull_request.base.sha }}
+          HEAD: ${{ github.event.pull_request.head.sha }}
+        run: |
+          files=$(git diff --no-renames --name-only "$BASE...$HEAD")
+          echo "$(printf '%s\n' "$files" | grep -c .) changed paths"
+          [ -n "$files" ] || exit 0
+          while IFS= read -r f; do
+            case "$f" in
+              tests/*) exit 0 ;;
+              *.md) ;;
+              *) exit 0 ;;
+            esac
+          done <<< "$files"
+          echo "every changed path is .md outside tests/: Windows skipped"
+          echo "text_only=true" >> "$GITHUB_OUTPUT"
+
+  # Six shards. Each puts "<digest> <kept> <collected>" in its own output,
+  # d<index>. The matrix and the outputs list change together, or
+  # pytest (windows) fails on a missing line or on kept counts that do not
+  # add up. A failed or cancelled scope job is read as run: the shards run
+  # unless scope succeeded and said skip, or the whole run was cancelled.
+  windows-shard:
+    name: pytest (windows shard ${{ matrix.shard }})
+    needs: scope
+    if: ${{ !cancelled() && needs.scope.outputs.run != 'false' }}
+    runs-on: windows-latest
+    timeout-minutes: 40
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [0, 1, 2, 3, 4, 5]
+    outputs:
+      d0: ${{ steps.digest.outputs.d0 }}
+      d1: ${{ steps.digest.outputs.d1 }}
+      d2: ${{ steps.digest.outputs.d2 }}
+      d3: ${{ steps.digest.outputs.d3 }}
+      d4: ${{ steps.digest.outputs.d4 }}
+      d5: ${{ steps.digest.outputs.d5 }}
+    env:
+      TEST_SHARD_COUNT: ${{ strategy.job-total }}
+      TEST_SHARD_INDEX: ${{ matrix.shard }}
+      TEST_SHARD_DIGEST_FILE: shard-digest.txt
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python -m pip install pytest pyyaml
+      - run: python -m pytest -q tests
+      - id: digest
+        shell: bash
+        run: echo "d${TEST_SHARD_INDEX}=$(cat "$TEST_SHARD_DIGEST_FILE")" >> "$GITHUB_OUTPUT"
+
+  # The one name the ruleset holds. It always runs, and passes in exactly two
+  # cases: scope succeeded, said skip, and the shards were skipped; or every
+  # shard passed (scope said run, or failed or was cancelled, which is read
+  # as run). Anything else fails it. When the shards ran, it also fails
+  # unless all six sent their line, the order digests and collected counts
+  # are equal, and the kept counts add up to the collected count: each test
+  # ran exactly once.
+  windows:
+    name: pytest (windows)
+    needs: [scope, windows-shard]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - shell: bash
+        env:
+          SCOPE: ${{ needs.scope.result }}
+          RUN: ${{ needs.scope.outputs.run }}
+          SHARDS: ${{ needs.windows-shard.result }}
+          D0: ${{ needs.windows-shard.outputs.d0 }}
+          D1: ${{ needs.windows-shard.outputs.d1 }}
+          D2: ${{ needs.windows-shard.outputs.d2 }}
+          D3: ${{ needs.windows-shard.outputs.d3 }}
+          D4: ${{ needs.windows-shard.outputs.d4 }}
+          D5: ${{ needs.windows-shard.outputs.d5 }}
+        run: |
+          echo "scope=$SCOPE run=$RUN shards=$SHARDS"
+          fail() { echo "::error::pytest (windows) fails: $1"; exit 1; }
+          if [ "$SCOPE" = "success" ] && [ "$RUN" = "false" ] && [ "$SHARDS" = "skipped" ]; then
+            echo "skip list: every changed path is .md outside tests/"
+            exit 0
+          fi
+          [ "$SHARDS" = "success" ] || fail "scope=$SCOPE run=$RUN shards=$SHARDS"
+          first="" total="" sum=0
+          for i in 0 1 2 3 4 5; do
+            name="D$i"; line="${!name}"
+            echo "shard $i: ${line:-missing}"
+            read -r digest kept collected <<< "$line"
+            [[ "$digest" =~ ^[0-9a-f]{12}$ && "$kept" =~ ^[0-9]+$ && "$collected" =~ ^[0-9]+$ ]] \
+              || fail "shard $i sent no digest line"
+            [ -z "$first" ] && first="$digest" total="$collected"
+            [ "$digest" = "$first" ] || fail "shard $i collected a different ordered list"
+            [ "$collected" = "$total" ] || fail "shard $i collected $collected, not $total"
+            sum=$((sum + kept))
+          done
+          [ "$sum" = "$total" ] || fail "the shards kept $sum of $total collected"
+          echo "every shard collected the same $total tests in order $first; together they ran each once"
 
   catalog:
     name: CATALOG.md is current

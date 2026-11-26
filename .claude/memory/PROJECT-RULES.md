@@ -9,11 +9,20 @@ This repository's planner is the standing session **Tools-central-planner**,
 since 2026-11-07. It writes the tickets, tiers and briefs here, and keeps
 its state in [PLANNER.md](PLANNER.md).
 
+The Tools planner also designs the Supabase consultant, auditor and
+on-call subagent roles (#247, ADR-0019): it grills the design with the
+owner, has the project's planner read the draft, and opens the PR for a
+role file in `.claude/agents/`. `supabase-router` supplies the draft. A
+project's own auditor or `supabase-look` file is that project's planner's
+ticket.
+
 This repository's builder manager is the role
 `tools-central-builder-manager` (#228, the owner's answers of 2026-11-15).
 It dispatches builders here from the `Tier:` and `Profile:` lines, re-proves
 and merges their PRs, runs the closeout pulls and writes this repository's
-owner queue (`.claude/memory/NEEDS-OWNER.md` in the main checkout, #183).
+owner queue (`.claude/memory/NEEDS-OWNER.md` in the main checkout,
+untracked; #183, ADR-0016). An entry whose ticket is in this repository
+goes there.
 It works everything in this repository, the owner-queue mod's tickets
 included; the dynasty planner plans those. A builder here parks by
 messaging the tools manager, never by writing a queue file.

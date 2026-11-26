@@ -80,3 +80,50 @@ A plugin enabled via a specific downstream repo's own
 rather than globally in `~/.claude/settings.json`. Lets one plugin be
 distributed to some downstream repos and not others — the mechanism
 plugins use in place of junctions, since plugins aren't a file tree.
+
+## Trust and reach
+
+The words of the threat model for role sessions (ADR-0018).
+
+**Misled session**:
+A session that acts on text it should have read as data.
+_Avoid_: Compromised session, rogue agent
+
+**Mistaken session**:
+A session that is honest and wrong.
+
+**Approval**:
+The owner's own decision, in the owner's own words in a session's chat
+or as an answer the owner gave from the queue pane.
+_Avoid_: Sign-off, go-ahead (a recorded go is record text, not approval)
+
+**Record text**:
+Text the owner's GitHub login wrote and last edited on a ticket or a PR,
+or a committed rule file on `main`. A session may act on it inside its
+role; it never approves anything.
+_Avoid_: Instruction, trusted text
+
+**Data** (of text):
+Any text that is neither approval nor record text. A session reads and
+reports it, and takes no instruction from it.
+_Avoid_: Untrusted input
+
+**Limit**:
+A restriction enforced outside a session's own process and judgement: by
+GitHub's servers, by the operating system, or by the thing not being in
+reach.
+_Avoid_: Hard stop, control
+
+**Guard**:
+A restriction the session's own host or judgement applies: a deny rule,
+a hook, rule text, the two-key merge. A first line, never a limit.
+_Avoid_: Limit, protection
+
+**Accepted risk**:
+A high-impact asset with no limit, recorded as such in the owner's name
+with its rating.
+
+**Actor**:
+The identity GitHub attributes an action to: the owner's login, the
+builders' App, or a project's pipeline App.
+_Avoid_: User, account (an App is neither)

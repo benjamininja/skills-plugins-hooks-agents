@@ -23,9 +23,12 @@ merged ADR. A row is added in the same PR that adds the ADR
 | [0013](0013-session-dispatch-plugin.md) | A plugin for dispatching builder sessions | accepted, amended, revised | 2026-10-12 | Amendment (2026-11-07); Revision 1 (2026-11-23) |
 | 0014 | unused | none | none | The number was never used. There is no file. |
 | [0015](0015-code-review-at-re-proof.md) | A code review at re-proof | accepted, revised | 2026-11-09 | Revision 1 (2026-11-11); Revision 2 (2026-11-12, current: it reverses the original decision in place, before the reversal rule below) |
+| [0016](0016-one-owner-queue-per-project.md) | One owner queue per project, untracked, routed by the ticket's repo | accepted | 2026-11-14 | none (brought up to date on 2026-11-23, before it merged) |
+| [0018](0018-threat-model-for-role-sessions.md) | A threat model for role sessions | accepted | 2026-11-14 | none |
+| [0019](0019-on-call-subagents-for-niche-roles.md) | On-call subagents for niche roles | accepted | 2026-11-23 | none |
 | [0020](0020-builder-environment-lifetime.md) | A builder's environment: light at dispatch, removed at closeout by one script | accepted | 2026-11-23 | none |
 
-An ADR on an open pull request (0016, 0017, 0019) adds its own row in that
+An ADR on an open pull request (0016, 0017, 0018, 0020) adds its own row in that
 pull request, so `tests/test_adr_readme.py` passes on the merged tree.
 
 ## How a decision changes
@@ -53,7 +56,7 @@ Each agent file in `.claude/agents/`, with the record of its decision.
 | `pr-code-reviewer` | ADR-0015 |
 | `stage-builder` | ADR-0013 (the builder role); no ADR of its own |
 | `tools-central-builder-manager` | ADR-0013 (the manager role), set up by the owner's answers on tools #228 (PR #230); no ADR of its own |
-| `supabase-consultant-dispatch` | ADR-0019, once PR #249 merges; that PR replaces this file with `supabase-router` and updates this row |
-| `supabase-consultant` | ADR-0019, once PR #249 merges |
+| `supabase-router` | ADR-0019 (it replaces `supabase-consultant-dispatch`, which has no agent file now) |
+| `supabase-consultant` | ADR-0019 |
 
 `plan-gate-sync-auditor` (ADR-0008) is retired and has no agent file.
