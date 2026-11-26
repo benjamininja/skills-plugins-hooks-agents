@@ -108,32 +108,30 @@ PRs are open, except for a real defect (its own rule, on #273).
    (a) the builder makes the workflow PR from draft #291; the manager
    runs the full code review and sends the head to the planner;
    (b) the planner checks: six equal digests and kept counts that sum
-   to the total (782 collected on 2026-11-26), and the reporting
-   job's shape against GitHub's documentation (not done yet: needs a
-   read of the docs on required checks and skipped jobs);
+   to the total (782 collected on 2026-11-26), the lead's three asks
+   (renames off in the scope diff, the output written as run before
+   the diff, a failed or cancelled scope job counts as run), and the
+   reporting job against the documentation read recorded on #187
+   (issuecomment-7193814771): `if: always()` on it, a step that fails
+   on every state but the two passing ones, no `paths` filter on the
+   workflow, no second job of that name. Not answered by the docs:
+   what a cancelled required check reports (to be seen on a real run);
    (c) the dynasty planner's read, then Ben's merge word by the
-   manager; (d) draft PR #292 (the table of checks, head `3665fe6`,
-   `.md` files only, with the dynasty planner for its read) takes
+   manager; (d) draft PR #292 (the table of checks, head `97cadb1`,
+   `.md` files only) takes
    main: its run is the proof of the skip case; (e) Ben adds
    `pytest (windows)` to the ruleset by hand, steps written by the
    planner with full paths; (f) PR #292 leaves draft and merges on
    Ben's word; (g) a code PR is seen held by the Windows check, and
    only then is Ben told the hole is closed.
-   **Owed first after the compact, on PR #292:** the dynasty planner
-   read head `3665fe6`: approve, with two changes and one question
-   for Ben (pull/292 issuecomment-7193573535; read the comment whole
-   first, this line is from its message). Change 1: put back the
-   manager's read of main's last finished run before each merge and
-   the red-main stop; the removed passage was the only place holding
-   it. Change 2: the four folders that merge on Green (`tools/`,
-   `tests/`, `docs/`, the catalog files) become a closed list; any
-   path outside them keeps Ben's word. Question for Ben, by button:
-   does `docs/adr/` keep his word (the lead recommends yes). It also
-   asks of the workflow PR: renames off in the scope diff, the output
-   written as run before the diff, a failed or cancelled scope job
-   counts as run; pass those to the manager for the builder and check
-   them at (b). Edit on branch `docs/t187-table-of-checks`, push,
-   send the new head to the lead.
+   **Done 2026-11-26 after the second compact, on PR #292:** the
+   lead's two changes are in at head `97cadb1` and Ben chose by button
+   that `docs/adr/` keeps his word, after a second pass he asked for
+   (pull/292 issuecomment-7193782782); the lead approved that head
+   with no change asked (issuecomment-7193798929). The three asks went
+   to the manager and on to the builder; draft #291 was green at
+   `fe67fbb` by the manager's report, not yet sent as a head to merge.
+   Waiting: the manager's message with the workflow PR's head.
 2. **The stop is lifted** (Ben, 2026-11-26, button "Lift, hold
    closeout run (Recommended)" and his typed line in the planner's
    chat; issues/187 issuecomment-7193345327). Code work and code
