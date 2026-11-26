@@ -85,7 +85,7 @@ Link each skill individually instead, as a **directory junction** (no admin or D
 
 **Whatever the links point at is what every session runs, immediately.** Pointing them at a checkout with unfinished work once left a half-finished re-vendor live for ten weeks (see [ADR-0011](docs/adr/0011-unified-distribution-architecture.md), Revision 2). There are two setups that keep unfinished work from going live; [ADR-0011 Revision 3](docs/adr/0011-unified-distribution-architecture.md) records which one this machine uses and why.
 
-- **This machine: links on the main checkout, held by closeout pulls.** The skill, agent and hook links point into the main checkout (`C:\Users\benha\OneDrive\Documents\GitHub\skills-plugins-hooks-agents`). Agents never switch branches or commit there, and after each merge the closeout pulls (#112) bring it and the live clone (`C:\Users\benha\claude-live\skills-plugins-hooks-agents`, where plugins load from) to the same merged commit. A hand edit in the main checkout goes live at once.
+- **This machine: links on the main checkout, held by closeout pulls.** The skill, agent and hook links point into the main checkout (`C:\source\Github\skills-plugins-hooks-agents`). Agents never switch branches or commit there, and after each merge the closeout pulls (#112) bring it and the live clone (`C:\Users\benha\claude-live\skills-plugins-hooks-agents`, where plugins load from) to the same merged commit. A hand edit in the main checkout goes live at once.
 - **A machine without closeout pulls: links from a live clone.** Keep a second clone that only ever holds merged `main` and is never edited by hand, and point the links at it. Keep it outside OneDrive so files are never evicted or locked mid-read.
 
 ```powershell

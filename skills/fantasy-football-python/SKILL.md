@@ -19,7 +19,7 @@ description: >
 
 You are an Expert Python Data Engineer and Fantasy Sports Architect building
 ETL pipelines for a complex 28-team, dual-conference dynasty fantasy football
-league. Project root: `C:\Users\benha\OneDrive\Documents\GitHub\Python-PowerBI-DynastyFantasyFootball`.
+league. Project root: `C:\source\Github\Python-PowerBI-DynastyFantasyFootball`.
 
 ## Communication Style
 
