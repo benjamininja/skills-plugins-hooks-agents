@@ -12,8 +12,8 @@ in this file's git history:
 The last stacked version, with 26 session blocks, is that branch's commit
 before the #243 rewrite.
 
-Last state-back: 2026-11-26, after the start-up from the clear of
-2026-11-25 and the #187 ruling and plan. Compacts since that clear: 0.
+Last state-back: 2026-11-26, after the lead approved the Windows
+plan, part 2 was released, #289 was filed and PR #290 was opened. Compacts since that clear: 0.
 A clear gives this planner a new queue id: send it to the four peers.
 
 ## Current
@@ -65,11 +65,23 @@ PRs are open, except for a real defect (its own rule, on #273).
      or not on the measured time with about 6 minutes proposed as
      "cheap", the cost each time and for the 9 open PRs with a
      non-`.md` path.
-   - **WAITING on the lead's approve or change, recorded on #187.**
-     Then, in order: one line to Tools-builder-manager that part 2 may
-     start (it is told to hold t187 until then); part 2's figures; the
-     button to Ben with the measured time (required on code PRs, or
-     stay on main). Ben is not asked before both are in.
+   - **The lead approved with five changes** (issuecomment-7191535909)
+     and all five are taken in (issuecomment-7191556477): no line in
+     minutes before the measurement; the question to Ben says a
+     deleting script's fault is not undone by a revert; the reporting
+     job passes in two cases only; part 2 also measures queue time,
+     flakes, per-shard set-up and order dependence.
+   - **Part 2 is released to Tools-builder-manager** (2026-11-26). The
+     dispatch is the manager's. **WAITING on part 2's finding:** rule
+     on it, then ask Ben by button with the measured time beside
+     Ubuntu's 1.1 minutes and dynasty's `storage-pg` at 4.7 (required
+     on code PRs, or stay on main). The lead reads the workflow PR
+     before its merge and the table of checks before Ben.
+   - **#289 is filed** on Ben's "File now, find-out first
+     (Recommended)": the hook's 150 to 250 process starts, tier high,
+     step 1 a find-out that changes nothing. It stands behind PR #211
+     in the hook lane; the manager is not told to dispatch it yet. Its
+     step 2 needs the planner's ruling and Ben's go.
    - **#251's row 3 is ruled** (issues/251 issuecomment-7191499904):
      no whole local rerun; the manager runs the suite without the
      guardrails file in the light venv, about 10 minutes, and posts the
@@ -87,20 +99,21 @@ PRs are open, except for a real defect (its own rule, on #273).
    Held meanwhile: #285, the first real closeout run (#250), #251's
    build, every other dispatch. Running: `t187-windows-time` only, as
    far as the planner knows.
-3. **One planner PR, text only, still owed (the rest of #273):** in
-   `session-rules`, the four merge points once for every project; in
-   `references/code-review.md`, one reviewer per PR, advisories posted
-   once, only a blocking finding gets the answer and the re-check
-   (issues/273 issuecomment-7164630571); merge on Green with gate
-   exceptions (issuecomment-7165533423), chosen but NOT in force until
-   this merges. In `PROJECT-RULES.md`: the planner's read list names
-   the state file's Current block, its state branch and its start line
-   as the rule of PR #265 now asks. Two dynasty practices to offer:
-   builders run targeted tests only; no re-proof of a merged tree. Send
-   the head to the dynasty planner. The lines that #260 and #261 merged
-   (PR #272, `a445087`) went to the personal-assistant and the dynasty
-   planner on 2026-11-26, and the date is on #262
-   (issuecomment-7191511586).
+3. **PR #290 is open, the rest of #273** (head `5c0ca5f`, on Ben's
+   "Write it now (Recommended)", issues/273 issuecomment of
+   2026-11-26): the four merge points, merging on Green with gate
+   exceptions, one reviewer per PR, the planner's read list, the
+   manager's role file, plugin 0.5.2. Its head is with the dynasty
+   planner for approve or change, recorded on the PR. Then Ben's merge
+   word, asked by the manager (it is a gate change). One line is the
+   planner's own and marked in the body for Ben to keep or strike: in
+   this repository the word also stays for `skills/`, `plugins/`,
+   `hooks/` and `.claude/agents/`. Until it merges, #273's text
+   stands. The lines that #260 and #261 merged went out on 2026-11-26
+   (issues/262 issuecomment-7191511586).
+   **The state branch is `state/tools-central-planner` from
+   2026-11-26** (PR #290 names it); `docs/planner-state-1114c` holds
+   the same history up to that day and is left for Ben to delete.
 4. **#204:** the narrowed token is the stored login; the Workflows
    permission is added and the retried workflow push went through
    (issuecomment-7167053023). The ticket stays open until Ben revokes
@@ -185,7 +198,10 @@ dff-central-planner `536a467f-4989-475e-bcc0-c7a14917d52a`;
 personal-assistant `6f53e894-fbd7-4d4b-894d-55ffd90c0f71` (it was
 started from a local pointer, so its role file's start line is still
 untested; owed on #233). The tools queue is empty. PR #198 merged on
-2026-11-25; this branch has main merged in since and no open PR.
+2026-11-25; the state branch has main merged in since and no open PR.
+The assistant's start measurements of 2026-11-26 and two faults in the
+measuring method are on issues/258 issuecomment-7191534990; both go to
+#263's step 1.
 
 **Merge line (Tools-builder-manager, one re-proof at a time, each merge
 word asked of Ben by button):** #236, PR #238 (the planner's), #239
