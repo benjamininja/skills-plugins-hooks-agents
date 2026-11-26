@@ -14,16 +14,16 @@ concurrency:
   group: test-${{ github.event.pull_request.number || github.sha }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
+env:
+  # Windows shards (#187). PART 2 MEASUREMENT: WINDOWS_XDIST is for one
+  # comparison run only and is removed before this shape ships.
+  WINDOWS_SHARDS: "4"
+  WINDOWS_XDIST: "false"
+
 jobs:
   pytest:
-    name: pytest (${{ matrix.os }})
-    runs-on: ${{ matrix.os }}
-    strategy:
-      fail-fast: false
-      matrix:
-        # A pull request runs Ubuntu only: no PR waits on the Windows run. A
-        # push to main runs both systems (#283, Amendment 2).
-        os: ${{ fromJSON(github.event_name == 'pull_request' && '["ubuntu-latest"]' || '["ubuntu-latest","windows-latest"]') }}
+    name: pytest (ubuntu-latest)
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -31,6 +31,108 @@ jobs:
           python-version: "3.12"
       - run: python -m pip install pytest pyyaml
       - run: python -m pytest -q tests
+
+  # Whether Windows runs. It starts from run. On a pull request it turns
+  # Windows off only when the diff is a non-empty list in which every path
+  # ends in .md and none is under tests/. An empty diff, a failed diff or a
+  # missing base runs Windows. Renames are off, so a script renamed to .md
+  # still counts as the script. A push to main always runs.
+  scope:
+    name: windows scope
+    runs-on: ubuntu-latest
+    outputs:
+      run: ${{ steps.scope.outputs.run }}
+      shards: ${{ steps.scope.outputs.shards }}
+      count: ${{ steps.scope.outputs.count }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - id: scope
+        shell: bash
+        env:
+          EVENT: ${{ github.event_name }}
+          BASE: ${{ github.event.pull_request.base.sha }}
+          HEAD: ${{ github.event.pull_request.head.sha }}
+          HEAD_REF: ${{ github.head_ref }}
+        run: |
+          set +e
+          run=true
+          if [ "$EVENT" = "pull_request" ]; then
+            files=$(git diff --no-renames --name-only "$BASE...$HEAD" 2>/dev/null)
+            code=$?
+            if [ "$code" -eq 0 ] && [ -n "$files" ]; then
+              text=true
+              while IFS= read -r f; do
+                case "$f" in
+                  tests/*) text=false ;;
+                  *.md) ;;
+                  *) text=false ;;
+                esac
+              done <<< "$files"
+              [ "$text" = "true" ] && run=false
+            fi
+            echo "diff exit $code, $(printf '%s\n' "$files" | grep -c .) changed paths"
+            # PART 2 MEASUREMENT GATE, removed before this shape ships: until
+            # then no pull request but the measuring one runs Windows.
+            if [ "$HEAD_REF" != "worktree-t187-windows-time" ]; then run=false; fi
+          fi
+          if [ "$WINDOWS_XDIST" = "true" ]; then n=1; else n="$WINDOWS_SHARDS"; fi
+          shards=$(seq 0 $((n - 1)) | paste -sd, -)
+          echo "run=$run" >> "$GITHUB_OUTPUT"
+          echo "count=$n" >> "$GITHUB_OUTPUT"
+          echo "shards=[$shards]" >> "$GITHUB_OUTPUT"
+          echo "run=$run count=$n shards=[$shards]"
+
+  windows-shard:
+    name: pytest (windows shard ${{ matrix.shard }})
+    needs: scope
+    if: needs.scope.outputs.run == 'true'
+    runs-on: windows-latest
+    timeout-minutes: 40
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: ${{ fromJSON(needs.scope.outputs.shards) }}
+    env:
+      TEST_SHARD_COUNT: ${{ needs.scope.outputs.count }}
+      TEST_SHARD_INDEX: ${{ matrix.shard }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python -m pip install pytest pyyaml
+      - if: env.WINDOWS_XDIST == 'true'
+        run: python -m pip install pytest-xdist
+      - name: cores
+        run: echo "NUMBER_OF_PROCESSORS=$env:NUMBER_OF_PROCESSORS"
+      - if: env.WINDOWS_XDIST != 'true'
+        run: python -m pytest -q --durations=5 tests
+      - if: env.WINDOWS_XDIST == 'true'
+        run: python -m pytest -q --durations=5 -n auto tests
+
+  # The one name a ruleset would hold. It always runs, and passes in exactly
+  # two cases: scope succeeded and said run, and the shards succeeded; or
+  # scope succeeded and said skip, and the shards were skipped. Anything else
+  # (scope failed or cancelled, a shard failed or cancelled, a mix) fails.
+  windows:
+    name: pytest (windows)
+    needs: [scope, windows-shard]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - shell: bash
+        env:
+          SCOPE: ${{ needs.scope.result }}
+          RUN: ${{ needs.scope.outputs.run }}
+          SHARDS: ${{ needs.windows-shard.result }}
+        run: |
+          echo "scope=$SCOPE run=$RUN shards=$SHARDS"
+          if [ "$SCOPE" = "success" ] && [ "$RUN" = "true" ] && [ "$SHARDS" = "success" ]; then exit 0; fi
+          if [ "$SCOPE" = "success" ] && [ "$RUN" = "false" ] && [ "$SHARDS" = "skipped" ]; then exit 0; fi
+          echo "::error::pytest (windows) fails: scope=$SCOPE run=$RUN shards=$SHARDS"
+          exit 1
 
   catalog:
     name: CATALOG.md is current
