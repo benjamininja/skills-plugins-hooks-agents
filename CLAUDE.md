@@ -48,8 +48,11 @@ the glossary for the skills catalog itself.
   symlink/junction distinction and why junctions are the practical default
   on this machine.
 - **CI runs on every PR** (`.github/workflows/test.yml`, since 2026-10-12):
-  pytest over the whole `tests/` folder on Ubuntu and Windows, plus a
-  check that `CATALOG.md` is current. `vendor-check.yml`
+  pytest over the whole `tests/` folder on Ubuntu, the same suite on
+  Windows in six shards behind one check, `pytest (windows)` (skipped
+  only for a PR of `.md` files outside `tests/`), plus a check that
+  `CATALOG.md` is current. All three are required; the table of checks
+  is in `PROJECT-RULES.md`. `vendor-check.yml`
   looks at upstream weekly and opens an issue; it never applies an update.
   See [ADR-0004](docs/adr/0004-ci-over-local-pr-hook.md): CI is the correct
   enforcement layer for "tests must pass before merge," a local hook is a
