@@ -21,136 +21,82 @@ A clear gives this planner a new queue id: send it to the four peers.
 
 ## Current
 
-**Rules in force since 2026-11-25 (PR #274, #286, #287, #288).** Green is
-the ruleset's required checks at the PR's head (Ubuntu and the catalog
-check; Windows is no part of it), no conflict, the code review, the
-hygiene hook; the manager reads main's last finished run before each
-merge; no local full test run for a merge, except a PR that touches
-`plugins/owner-queue/`. A Green holds while the head is unchanged. One
-merge word in the manager's chat may name several PRs and is also the
-approval of a planner's PR, so the planner asks no separate approval
-question. The planner opens no new process ticket while more than ten
-PRs are open, except for a real defect (its own rule, on #273).
+**Saved 2026-11-26 about 14:40Z, before a clear Ben asked for.**
+Session a09ca279-6faa-4a61-a313-10328ff9c39d (a clear gives a new id:
+send it to the peers).
+
+**Rules in force since 2026-11-26 (PR #290, #291, #292).** Green is
+the ruleset's three required checks at the PR's head
+(`pytest (ubuntu-latest)`, `CATALOG.md is current`, `pytest (windows)`),
+merge state `CLEAN`, the code review, the hygiene hook. The manager
+reads main's last finished run before each merge; a red run stops
+every merge but the fix or the revert. The manager merges a Green PR
+without asking only when every changed path is under `tools/`,
+`tests/`, `docs/` outside `docs/adr/`, or the catalog files; every
+other PR keeps Ben's merge word (gate texts, `skills/`, `plugins/`,
+`hooks/`, `.claude/agents/`, `docs/adr/`, root files, a planner's or
+manager's own PR). The dynasty planner leads and signs off every
+shared CI-gate text. The planner opens no new process ticket while
+more than ten PRs are open, except for a real defect.
 
 **Next (act on this list, in order).**
 
-1. **The CI gate fix: what is in, and what is left.** Ben's first
-   priority of 2026-11-25; every word and button of his is on
-   issues/187 from issuecomment-7167028313 on.
-   - **In force (all merged 2026-11-25):** a PR runs Ubuntu (the whole
-     suite, about 90 seconds) and the catalog check only; Windows runs
-     on a push to main; a newer head cancels the older run (PR #284,
-     `04b91c1`). Green on a PR has no Windows part (PR #286, `cb7fc13`).
-     The manager reads main's last finished run before each merge and a
-     red one stops merges (PR #287, `8bdf0da`). `session-rules` has "CI
-     as a gate", five lines and a transition sentence, plugin 0.5.1 (PR
-     #288, `acae1e7`, merged by the planner on Ben's "Yes, merge both").
-     Ben took `pytest (windows-latest)` off the ruleset's required
-     checks himself.
-   - **Who signs off:** the dynasty planner leads every shared CI-gate
-     text and signs off (Ben's word, relayed by the personal-assistant).
-     Each head goes to it for approve or change before Ben; a new head
-     needs a new read; its answer is recorded on the PR.
-   - **Windows returns to a PR only after, in order:** #187's research;
-     the dynasty planner consulted and approving the plan; Ben's word.
-     Putting the check back on the ruleset is Ben's own step.
-   - **Done 2026-11-26: the finding is ruled** (finding: issues/187
-     issuecomment-7168273303; ruling: issuecomment-7191498749). About
-     80% of the Windows job is process starts in
-     `tests/test_git_guardrails.py`. Shards split by position are the
-     route for part 2, which measures 4 and 6 shards and one
-     `pytest-xdist` run on a draft PR and merges nothing; the part 2
-     brief is the ruling's point 4. The hook's process starts (option
-     b) are a separate ticket, **not opened**: ask Ben first.
-   - **Done 2026-11-26: the plan is posted and sent to the lead**
-     (issuecomment-7191499374): a skip list (`.md` outside `tests/`
-     skips), shards plus one reporting job `pytest (windows)`, required
-     or not on the measured time with about 6 minutes proposed as
-     "cheap", the cost each time and for the 9 open PRs with a
-     non-`.md` path.
-   - **The lead approved with five changes** (issuecomment-7191535909)
-     and all five are taken in (issuecomment-7191556477): no line in
-     minutes before the measurement; the question to Ben says a
-     deleting script's fault is not undone by a revert; the reporting
-     job passes in two cases only; part 2 also measures queue time,
-     flakes, per-shard set-up and order dependence.
-   - **Part 2 runs:** builder `t187-windows-time` was resumed on
-     2026-11-26 on Ben's button in the manager's chat (issues/187
-     issuecomment-7191766144, the manager's report). **WAITING on part 2's finding:** rule
-     on it, then ask Ben by button with the measured time beside
-     Ubuntu's 1.1 minutes and dynasty's `storage-pg` at 4.7 (required
-     on code PRs, or stay on main). The lead reads the workflow PR
-     before its merge and the table of checks before Ben.
-   - **#289 is filed** on Ben's "File now, find-out first
-     (Recommended)": the hook's 150 to 250 process starts, tier high,
-     step 1 a find-out that changes nothing. It stands behind PR #211
-     in the hook lane; the manager is not told to dispatch it yet. Its
-     step 2 needs the planner's ruling and Ben's go.
-   - **#251's row 3 is ruled** (issues/251 issuecomment-7191499904):
-     no whole local rerun; the manager runs the suite without the
-     guardrails file in the light venv, about 10 minutes, and posts the
-     count. A brief names `python -m pre_commit`.
-   - **Left, c, text-only, may start now:** the tools table of checks in
-     `PROJECT-RULES.md` (line 5 of the rule: each check, what it
-     protects, which PRs run it, its measured time, required or not);
-     the CI line of `CLAUDE.md`, which still says both systems on every
-     PR; a look at ADR-0004 for the same. To the lead before Ben.
-0. **Ben's top priority, 2026-11-26: close the CI hole** (a tools
-   code PR can merge without a Windows run). His button: "Required, 6
-   shards (Recommended)" (issues/187 issuecomment-7193473530, with
-   the figures and the build ruling). His words: he has lost a great
-   deal of faith and needs to know the hole is corrected. Do not call
-   it corrected before the ruleset names `pytest (windows)` and a
-   code PR has been seen blocked by a red Windows run. Order:
-   The finding is posted (issuecomment-7193555986) and ruled on
-   (issuecomment-7193574558): six shards, no xdist, a digest of the
-   ordered test ids on each shard's line is required. Order:
-   (a) the builder makes the workflow PR from draft #291; the manager
-   runs the full code review and sends the head to the planner;
-   (b) the planner checks: six equal digests and kept counts that sum
-   to the total (782 collected on 2026-11-26), the lead's three asks
-   (renames off in the scope diff, the output written as run before
-   the diff, a failed or cancelled scope job counts as run), and the
-   reporting job against the documentation read recorded on #187
-   (issuecomment-7193814771): `if: always()` on it, a step that fails
-   on every state but the two passing ones, no `paths` filter on the
-   workflow, no second job of that name. Not answered by the docs:
-   what a cancelled required check reports (to be seen on a real run);
-   (c) the dynasty planner's read, then Ben's merge word by the
-   manager; (d) draft PR #292 (the table of checks, head `97cadb1`,
-   `.md` files only) takes
-   main: its run is the proof of the skip case; (e) Ben adds
-   `pytest (windows)` to the ruleset by hand, steps written by the
-   planner with full paths; (f) PR #292 leaves draft and merges on
-   Ben's word; (g) a code PR is seen held by the Windows check, and
-   only then is Ben told the hole is closed.
-   **Done 2026-11-26 after the second compact, on PR #292:** the
-   lead's two changes are in at head `97cadb1` and Ben chose by button
-   that `docs/adr/` keeps his word, after a second pass he asked for
-   (pull/292 issuecomment-7193782782); the lead approved that head
-   with no change asked (issuecomment-7193798929). The three asks went
-   to the manager and on to the builder; draft #291 was green at
-   `fe67fbb` by the manager's report, not yet sent as a head to merge.
-   **Done since, 2026-11-26:** (a) to (d). PR #291 merged as `6e4cc59`
-   at head `e8b6973` on Ben's word, after the planner's read
-   (pull/291 issuecomment-7194028137), the code review with no
-   blocking finding and the lead's approve. PR #292 took main, head
-   `88c4648`; its run showed the skip case (issues/187
-   issuecomment-7194711918). **(e) and (g) done 2026-11-26:** Ben saved the ruleset at 14:26Z
-   (a first read-back showed no change; he saved again); it requires
-   `pytest (ubuntu-latest)`, `CATALOG.md is current` and
-   `pytest (windows)`, bypass list empty. PR #242 was seen BLOCKED
-   with every reported check green: a code PR held by the check.
-   Record: issues/187 issuecomment-7194852332. Ben was told the gap
-   is closed, with what is unseen named (a failing shard, a cancelled
-   run, a failed scope job). **(f) done:** PR #292 merged as `3bdba9c` on Ben's word (2026-11-26T14:29Z); merging on Green is now in force for the closed list once the manager records its read of the ruleset on #187. **Next for the planner:** tier ticket #293; the rework brief for PR #197; then the rest of the Next list. Before that merge: PR #292 was out of draft at
-   `88c4648` (planner ran `gh pr ready`), with the manager for
-   re-proof and Ben's merge word; until it merges every tools PR
-   keeps his word. Each open PR older than #291 takes main once:
-   #242, #214, #211, #197, #196, #182, #256. Re-read the Windows time
-   after #211 merges. Also open: tier ticket #293 (owner-queue option
-   parse, from the manager); the consistency points on #217
-   (issuecomment-7194228313), planner leads C, D, E, F.
+0. **The CI hole is closed on GitHub (2026-11-26); what is left is
+   watching.** Ben's top priority of the day; his words: "WE NEED THE
+   POOR CI PRACTICES RESOLVED", and that he had lost a great deal of
+   faith. Every record is on issues/187.
+   - **Done:** Ben's button "Required, 6 shards"
+     (issuecomment-7193473530); the builder's finding and the ruling
+     (7193555986, 7193574558); the documentation read on required
+     checks (7193814771); PR #291 merged `6e4cc59` at head `e8b6973`
+     (planner's read pull/291 issuecomment-7194028137; code review, no
+     blocking finding; lead's approve); the skip case shown by PR #292
+     (7194711918); Ben set the ruleset by hand, read back from the API,
+     and PR #242 was seen blocked with every reported check green
+     (7194852332); PR #292 merged `3bdba9c` with `docs/adr/` keeping
+     Ben's word (his button after a second pass he asked for,
+     pull/292 issuecomment-7193782782). The manager recorded its read
+     of the ruleset on #187, so merging on Green is in force.
+   - **Told Ben:** the hole is closed, with what is unseen named.
+   - **Still to see and record on #187:** a failing shard turning
+     `pytest (windows)` red on a real PR (the state file's earlier
+     wording asked for a red run; what was seen is a PR blocked for a
+     missing check); a cancelled run; a failed scope job. Record the
+     first of each when it happens.
+   - **Left:** each open PR older than #291 takes main once (#242,
+     #214, #211, #196, #182 with a conflict, #197, #256): the manager
+     drives the builders' ones. Re-read the Windows time after PR #211
+     merges (it adds cases to `tests/test_git_guardrails.py`; six
+     shards took 4.5 to 4.9 minutes whole run on 2026-11-26).
+     Advisory F1 of PR #291's review (a scope job failing after it
+     wrote skip fails closed instead of running) rides with the next
+     change to `.github/workflows/test.yml`.
+   - **#289** (the hook's 150 to 250 process starts, tier high) stands
+     behind PR #211; not dispatched; step 2 needs the planner's ruling
+     and Ben's go.
+1. **Owed next, Ben's "Yes, both" of 2026-11-26:**
+   - **#293 is tiered** medium and ruled (issues/293
+     issuecomment-7194918923): fewer than two parsed options is drawn
+     as malformed. The manager picks its order against PR #197 (same
+     plugin, never built at the same time). Done.
+   - **The rework brief for PR #197 is NOT written.** Direction is on
+     pull/197 issuecomment-7193289687: take main in; store the start
+     line (a constant) instead of a reset prompt; follow #262's ruling
+     on a compact by default; one more review at the new head. Before
+     writing: read the PR's diff (`hooks/sessions.ts`,
+     `hooks/register.tsx`, README) against today's `session-rules`
+     text on the clear boundary, and #262's ruling. Note its `ROLES`
+     list names `supabase-consultant-dispatch`, which PR #249 retired.
+     Send the brief to the manager; the PR keeps Ben's word.
+   - **Consistency between the two projects** (the personal-assistant
+     negotiates on Ben's ask): tools positions on issues/217
+     issuecomment-7194228313. The planner leads C (state branch), D
+     (the lock, PR #242 does not wait), E (Supabase roles, PR #249
+     merged `40e5847`), F (#251 first, then #262). The plugin template
+     of the table of checks (point A, dynasty leads) is now unblocked:
+     PR #292 has merged and both cases were seen.
+   - **Small text owed in a later PR:** the ADR index's sentence on
+     ADRs still on open pull requests lists merged numbers.
 2. **The stop is lifted** (Ben, 2026-11-26, button "Lift, hold
    closeout run (Recommended)" and his typed line in the planner's
    chat; issues/187 issuecomment-7193345327). Code work and code
@@ -167,10 +113,8 @@ PRs are open, except for a real defect (its own rule, on #273).
    pull/290 issuecomment-7192331305, the lead's approval
    issuecomment-7192290431). Plugin 0.5.2 is in both checkouts by the
    manager's report. In force from it: the four merge points, merging
-   on Green with its exceptions, one reviewer per PR. **Nothing merges
-   on Green yet:** no path is covered until the tools table of checks
-   is written and Ben has set the ruleset from it, so the manager
-   still asks Ben the word for every PR. Ben kept the planner's line:
+   on Green with its exceptions, one reviewer per PR. Merging on Green is in force
+   since PR #292 (item 0). Ben kept the planner's line:
    the word also stays for `skills/`, `plugins/`, `hooks/` and
    `.claude/agents/`. Owed in a later text PR: the pointer in
    `session-dispatch` leaves out the secret or personal-data harm;
@@ -217,32 +161,24 @@ PRs are open, except for a real defect (its own rule, on #273).
 9. **PR #270 merged** (`7064f34`): the manager posts the after figure
    on #269; no drop from about 55k means a revert PR. #264 closes with
    #269's reading.
-10. **PR #227** (approved at `1b4200b`, pull/227
-    issuecomment-7163729381): after its merge, the pointer-line Action
-    for the private restore guide.
+10. **PR #227 merged** (`0c996a8`, 2026-11-26). Owed: the
+    pointer-line Action for the private restore guide.
 11. **After PR #197 merges:** ask Ben's go for #240 step 2 (brief at
     issues/240 issuecomment-7133603553); then #111's build brief; then
     #262's mod brief (ruling issues/262 issuecomment-7134266469).
-12. After PR #249 merges (it read DIRTY on 2026-11-25): tell the
-    dynasty planner, archive session
-    `local_6b981a48-1f7d-4986-93e6-6af76d316f28`, comment on #235,
-    #217, #161 and PR #197. PRs #205, #184, #216 and #222 wait on the
-    manager's line.
+12. **PR #249 merged** (`40e5847`, 2026-11-26). Owed and not done:
+    archive session `local_6b981a48-1f7d-4986-93e6-6af76d316f28` only
+    on Ben's yes; comment on #235, #217, #161 and PR #197. Also merged
+    2026-11-26: #222 `dd6277d`, #205 `4a4b2c7`, #184 `8f12b86`.
 13. **Older PRs, ruled 2026-11-26** on the personal-assistant's
     questions (each on its PR): #242 kept (pull/242
     issuecomment-7193289146); #182 holds and takes main
     (issuecomment-7193290392); #197 is a rework, its brief owed when
     the code stop lifts (issuecomment-7193289687); #211 goes before
     #289, F11's class is the manager's to read
-    (issuecomment-7193291072); #249 carries main at `e8bf7ff`, merges
-    after #205 and takes main again, head to the dynasty planner
-    (issuecomment-7193291638). Main was merged on 2026-11-26 into
-    #238 `f1db641`, #216 `5bf837f`, #222 `5de07a8`, #208 `9297fd0`,
-    #205 `c4358ef`, #184 `a921cf3`. By the manager's report #239,
-    #238, #216 and #208 then merged (main `63b678f`), and main was
-    merged again into #227 `5b7eba2`, #222 `f86692c`, #205 `4046027`
-    and #184 `def65a8`; the manager re-proves them and asks Ben's
-    word at the new heads. #249 takes main after #205.
+    (issuecomment-7193291072); #249 merged. All the planner's older PRs
+    are merged; the open ones are builders' (#242, #214, #211, #197,
+    #196, #182) and the manager's #256.
     Still to weigh: #167. #263 has no go; #258 holds the re-measure
     list.
 14. **Coming to Ben later, by button:** what the owner-queue pane does
@@ -258,8 +194,8 @@ PRs are open, except for a real defect (its own rule, on #273).
     outside a project is unverified (#185).
 
 **Waiting on Ben:** nothing in this chat. His own later steps:
-revoking the old wide login (#204); putting the Windows check back on
-the ruleset, only after item 1's three conditions. Ben's standing
+revoking the old wide login (#204); deleting the old remote branch
+`docs/planner-state-1114c`. Ben's standing
 word, 2026-11-25: a session that needs him asks by pop-up in its own
 chat.
 
