@@ -8,14 +8,13 @@ the record; this file links to them and does not repeat them.
 **Shape (Ben, 2026-11-22, #243: "One Current block").** One Current block,
 then Reference. Each state-back rewrites Current in place. Older state is
 in this file's git history:
-`git log -p origin/docs/planner-state-1114c -- .claude/memory/PLANNER.md`.
+`git log -p origin/state/tools-central-planner -- .claude/memory/PLANNER.md`.
 The last stacked version, with 26 session blocks, is that branch's commit
 before the #243 rewrite.
 
 Last state-back: 2026-11-26, after the compact Ben asked for; the
 lead approved the Windows plan, part 2 runs (draft PR #291), #289 is
-filed and PR #290 is approved by the lead and waits for Ben's merge
-word, asked by the manager.
+filed and PR #290 is merged (`e3a342f`).
 Compacts since that clear: 1.
 A clear gives this planner a new queue id: send it to the four peers.
 
@@ -103,31 +102,23 @@ PRs are open, except for a real defect (its own rule, on #273).
    Held meanwhile: #285, the first real closeout run (#250), #251's
    build, every other dispatch. Running: `t187-windows-time` only, as
    far as the planner knows.
-3. **PR #290 is open, the rest of #273** (head `651bc72`, on Ben's
-   "Write it now (Recommended)", issues/273 issuecomment of
-   2026-11-26): the four merge points, merging on Green with gate
-   exceptions, one reviewer per PR, the planner's read list, the
-   manager's role file, plugin 0.5.2. The dynasty planner read head
-   `5c0ca5f`: approve, with three changes (pull/290
-   issuecomment-7191805581). All three are taken at `651bc72`
-   (issuecomment-7192280346), and the lead approved that head
-   (issuecomment-7192290431). CI is green there and the merge state is
-   CLEAN (read 2026-11-26). The tools manager was told and asks Ben
-   the merge word (it is a gate change). The lead's two notes ask no
-   new head: the pointer in `session-dispatch` leaves out the secret
-   harm (even it out in a later text PR), and each project names its
-   own paths for that harm (the tools table PR). By change 1 no path is covered until a project's table of
-   checks is written and Ben has set the ruleset from it, so after
-   this merge every tools PR still keeps Ben's word until the table
-   PR (item 1's follow-on). One line is the
-   planner's own and marked in the body for Ben to keep or strike: in
-   this repository the word also stays for `skills/`, `plugins/`,
-   `hooks/` and `.claude/agents/`. Until it merges, #273's text
-   stands. The lines that #260 and #261 merged went out on 2026-11-26
-   (issues/262 issuecomment-7191511586).
-   **The state branch is `state/tools-central-planner` from
-   2026-11-26** (PR #290 names it); `docs/planner-state-1114c` holds
-   the same history up to that day and is left for Ben to delete.
+3. **PR #290 merged, the rest of #273** (`e3a342f`, at head `651bc72`,
+   on Ben's button "Merge, keep line" in the manager's chat; re-proof
+   pull/290 issuecomment-7192331305, the lead's approval
+   issuecomment-7192290431). Plugin 0.5.2 is in both checkouts by the
+   manager's report. In force from it: the four merge points, merging
+   on Green with its exceptions, one reviewer per PR. **Nothing merges
+   on Green yet:** no path is covered until the tools table of checks
+   is written and Ben has set the ruleset from it, so the manager
+   still asks Ben the word for every PR. Ben kept the planner's line:
+   the word also stays for `skills/`, `plugins/`, `hooks/` and
+   `.claude/agents/`. Owed in a later text PR: the pointer in
+   `session-dispatch` leaves out the secret or personal-data harm;
+   the tools table PR names this project's paths for that harm.
+   **The state branch is `state/tools-central-planner`**, the only one
+   pushed from now; it took main in after the squash merge.
+   `docs/planner-state-1114c` on the remote stops at `b8ca970` and is
+   Ben's to delete. The local worktree branch still has the old name.
 4. **#204:** the narrowed token is the stored login; the Workflows
    permission is added and the retried workflow push went through
    (issuecomment-7167053023). The ticket stays open until Ben revokes
