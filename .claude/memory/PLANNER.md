@@ -119,6 +119,21 @@ PRs are open, except for a real defect (its own rule, on #273).
    planner with full paths; (f) PR #292 leaves draft and merges on
    Ben's word; (g) a code PR is seen held by the Windows check, and
    only then is Ben told the hole is closed.
+   **Owed first after the compact, on PR #292:** the dynasty planner
+   read head `3665fe6`: approve, with two changes and one question
+   for Ben (pull/292 issuecomment-7193573535; read the comment whole
+   first, this line is from its message). Change 1: put back the
+   manager's read of main's last finished run before each merge and
+   the red-main stop; the removed passage was the only place holding
+   it. Change 2: the four folders that merge on Green (`tools/`,
+   `tests/`, `docs/`, the catalog files) become a closed list; any
+   path outside them keeps Ben's word. Question for Ben, by button:
+   does `docs/adr/` keep his word (the lead recommends yes). It also
+   asks of the workflow PR: renames off in the scope diff, the output
+   written as run before the diff, a failed or cancelled scope job
+   counts as run; pass those to the manager for the builder and check
+   them at (b). Edit on branch `docs/t187-table-of-checks`, push,
+   send the new head to the lead.
 2. **The stop is lifted** (Ben, 2026-11-26, button "Lift, hold
    closeout run (Recommended)" and his typed line in the planner's
    chat; issues/187 issuecomment-7193345327). Code work and code
