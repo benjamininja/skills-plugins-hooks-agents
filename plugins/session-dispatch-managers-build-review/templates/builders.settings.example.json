@@ -18,6 +18,7 @@
       "Bash(git commit -F *)",
       "Bash(git push -u origin *)",
       "Bash(git push)",
+      "Bash(git restore --source origin/main -- *)",
       "Bash(gh pr create *)",
       "Bash(gh pr view *)",
       "Bash(gh pr checks *)",
