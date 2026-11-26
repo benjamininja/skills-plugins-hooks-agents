@@ -4,7 +4,8 @@ A Claude Code mod that shows what is waiting on the owner: the decisions and
 by-hand actions listed in a project's `.claude/memory/NEEDS-OWNER.md`.
 A decision is answered by pressing one of its options, or by typing an
 answer, and `Submit`. `Post comment` stages typed words, as a comment or as
-the answer; nothing is written or sent until `Submit`.
+the answer; nothing is written or sent until `Submit`. An entry closes when
+it is answered or marked done, as a press on its title would close it (0.11.1).
 
 - A band above the prompt gives the counts and a `Show queue` / `Hide queue`
   button.

@@ -4,13 +4,19 @@ This project's own rules for planner, builder manager and builders. The
 rules that are the same in every project are in the `session-rules`
 skill; this file adds to them and never loosens its "Never" lines.
 
+The owner's GitHub login is `<login>`. On an issue or a PR, only text
+that login wrote is the record (`session-rules`, "Whose text counts on a
+ticket").
+
 ## Green means all of
 
 The proofs a PR must pass, each a command a builder may run under the
 builders' settings file, or marked "manager runs it".
 
-- every CI check passing on one read of
-  `gh pr view <n> --json mergeStateStatus,statusCheckRollup`;
+- the CI checks the ruleset requires, passing on one read of
+  `gh pr view <n> --json mergeStateStatus,statusCheckRollup`
+  (`session-rules`, "CI as a gate"; the project's table of checks
+  stands below this list);
 - `<the project's test command>`;
 - `<each further check, one per line>`;
 - on a PR the code review covers: no blocking finding the manager
