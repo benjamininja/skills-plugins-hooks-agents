@@ -64,6 +64,8 @@ the example settings files deny it.
    starting from `templates/builder-profiles.example.json` and
    `templates/research.settings.example.json`, and name the profiles
    file under `buildersProfiles`. See [Profiles](#profiles).
+8. On GitHub, add the two branch rulesets. See
+   [Server-side rulesets](#server-side-rulesets).
 
 ## The config, `.claude/dispatch.json`
 
@@ -94,6 +96,38 @@ is named in `<user profile>/.claude/dispatch-projects.json`:
 The script takes the profile folder from the system, not from an
 environment variable. A dry run works in any project, since it runs
 nothing, and says whether `-Apply` would be refused there.
+
+## Server-side rulesets
+
+A hook and a deny rule are guards inside a session. A ruleset is held by
+GitHub, for every login, the owner's included. The owner adds two on the
+repository's Rules page (Settings, Rules, Rulesets), each Active and
+with an empty bypass list:
+
+| Ruleset | Target | Branch rules |
+|---|---|---|
+| `main: require PR` | the default branch | Require a pull request before merging (no approval count), Block force pushes, Restrict deletions |
+| `all branches: no force push` | all branches | Block force pushes, and no other |
+
+- **The one trap:** GitHub may pre-tick Restrict deletions on the second
+  ruleset. Untick it, or no merged branch can be deleted.
+- **The check:** `gh api repos/<owner>/<repo>/rulesets` lists both, and
+  `gh api repos/<owner>/<repo>/rulesets/<id>` shows
+  `current_user_can_bypass: never` for each.
+- **The test, by the owner's hand only.** A force push is under "Never"
+  for every agent. It uses a throwaway branch and two commits of the
+  repository, the later one first:
+
+  ```
+  git push origin <later commit>:refs/heads/ruleset-test
+  git push --force origin <earlier commit>:refs/heads/ruleset-test
+  git push origin --delete ruleset-test
+  ```
+
+  GitHub must refuse the second push with `GH013` and "Cannot force-push
+  to this branch". The first and the third must succeed.
+- **Where a push to any branch starts workflows,** skip the test push:
+  the proof is the API read and the next normal run.
 
 ## The permission mode
 
