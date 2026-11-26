@@ -14,7 +14,8 @@ before the #243 rewrite.
 
 Last state-back: 2026-11-26, after the compact Ben asked for; the
 lead approved the Windows plan, part 2 runs (draft PR #291), #289 is
-filed and PR #290 is at a new head with the lead for a second read.
+filed and PR #290 is approved by the lead and waits for Ben's merge
+word, asked by the manager.
 Compacts since that clear: 1.
 A clear gives this planner a new queue id: send it to the four peers.
 
@@ -109,10 +110,13 @@ PRs are open, except for a real defect (its own rule, on #273).
    manager's role file, plugin 0.5.2. The dynasty planner read head
    `5c0ca5f`: approve, with three changes (pull/290
    issuecomment-7191805581). All three are taken at `651bc72`
-   (issuecomment-7192280346) and that head is with it for a new read;
-   CI at the new head was not read at the state-back. On its approval:
-   tell the tools manager, who asks Ben the merge word (it is a gate
-   change). By change 1 no path is covered until a project's table of
+   (issuecomment-7192280346), and the lead approved that head
+   (issuecomment-7192290431). CI is green there and the merge state is
+   CLEAN (read 2026-11-26). The tools manager was told and asks Ben
+   the merge word (it is a gate change). The lead's two notes ask no
+   new head: the pointer in `session-dispatch` leaves out the secret
+   harm (even it out in a later text PR), and each project names its
+   own paths for that harm (the tools table PR). By change 1 no path is covered until a project's table of
    checks is written and Ben has set the ruleset from it, so after
    this merge every tools PR still keeps Ben's word until the table
    PR (item 1's follow-on). One line is the
