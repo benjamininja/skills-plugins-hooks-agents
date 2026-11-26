@@ -26,7 +26,9 @@ Point Claude Code at the plugin folder, as for any plugin under
 development:
 
 - one session: `claude --plugin-dir <this folder>`;
-- every session: name the folder in `CLAUDE_CODE_PLUGIN_DIRS`.
+- every session: name the folder in `CLAUDE_CODE_PLUGIN_DIRS`, in the `env`
+  block of `~/.claude/settings.json` and nowhere else (the `owner-queue`
+  README, Install, says why and how to check).
 
 `claude plugin validate <this folder>` checks the manifest.
 
