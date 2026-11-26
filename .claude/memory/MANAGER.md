@@ -45,9 +45,12 @@ again before any dispatch, merge or closeout.
    `.venv-light/Scripts/python.exe -m pytest -q tests --ignore=tests/test_git_guardrails.py`
    (about 10 minutes). Post the count on #251.
 6. **#293** (owner-queue: an Options field whose second key has no `;`
-   before it parses as one option). `Tier: unset`, sent to the planner
-   to tier. dff-central-builder-manager was asked to post the two exact
-   Options lines.
+   before it parses as one option). Tiered medium and ruled (issues/293
+   issuecomment-7194918923): fewer than two parsed options is drawn as
+   malformed; the builder first confirms the cause from the two
+   entries' Options lines (dff-central-builder-manager was asked to post
+   them). It changes the owner-queue plugin, so it keeps Ben's word and
+   is not built at the same time as #197; the manager picks the order.
 7. **#256**, this state branch's PR: BLOCKED (head predates #291). At a
    check-in: merge `origin/main` into the state branch (the state file
    conflicts add/add; keep the branch's copy), push, ask Ben's word.
@@ -57,7 +60,9 @@ again before any dispatch, merge or closeout.
 - On Ben: the code gos and merge questions in items 3 and 4, the
   dotclaude#12 merge, and the managers settings text as one Action
   (still owed). The queue file holds no open entry.
-- On the planner: #293's tier, #197's rework brief.
+- On the planner: #197's rework brief (its first step after its own
+  clear; its queue id changes, and it sends the new one). Its state is
+  at `80502c5` on `state/tools-central-planner`.
 - On builders: each code PR taking main (item 2).
 - Left for Ben: worktree `s70-guard` (untracked `builder-state/`),
   `t112-closeout-pulls` (commits after merged PR #198), and branch
