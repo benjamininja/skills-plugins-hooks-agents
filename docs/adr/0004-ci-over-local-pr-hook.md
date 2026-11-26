@@ -1,6 +1,6 @@
 # Server-side CI is the enforcement gate; a local pre-PR hook is not a substitute
 
-- Status: accepted
+- Status: accepted; revised 2026-11-25 (Revision 1 below: what CI runs)
 - Date: 2026-07-11
 - Scope: applies to the regression-testing standard's deferred CI item, and
   generally to any future "tests must pass before merge" decision across
@@ -61,3 +61,24 @@ catch).
   procedural habit (or a lightweight local hook doing exactly that) — this
   is a fast-feedback nicety, not a merge gate, and doesn't need a subagent
   to "interrogate" anything.
+
+## Revision 1 (2026-11-25): what CI runs on a pull request and on main
+
+Ticket: tools #283, on the owner's word of 2026-11-25 (the ticket's
+Amendment 2). The decision above is unchanged: CI is the gate. This revision
+records what the gate runs.
+
+- A pull request runs `pytest (ubuntu-latest)`, the whole suite, and
+  `CATALOG.md is current`. No pull request waits for a Windows result.
+- A push to main runs the whole suite on both systems, as before. A red
+  Windows run on main is reported and fixed forward.
+- Windows was about 92% of the job minutes (median 17.7 minutes against 1.2
+  on Ubuntu over 25 pull requests). The cost: the tests that run only on
+  Windows, and any Windows-only fault in code, are seen after a merge and not
+  before it, until #187 makes the Windows run fast enough to return to pull
+  requests.
+- The rule is one expression in `.github/workflows/test.yml`: the matrix's
+  list of systems is Ubuntu alone on a `pull_request` event and both systems
+  otherwise. The check names do not change.
+- A newer head on a pull request cancels the run on the older head. A run on
+  main is never cancelled.

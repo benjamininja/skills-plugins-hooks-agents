@@ -120,6 +120,9 @@ test('presses are staged, and Submit writes them and sends one message', async (
   // A press stages; nothing is written, and Clear drops it.
   await ui.press({ key: `pick:${id}:b` })
   expect(file).toBe(FILE)
+  // The press closed the entry; the owner opens it again by hand.
+  expect(await ui.find({ key: `pick:${id}:b` })).toBe(undefined)
+  await ui.press({ key: `row:${id}` })
   expect((await ui.find({ key: `pick:${id}:b` }))?.text).toContain('[selected]')
   expect((await ui.find({ key: 'submit' }))?.text).toBe('Submit (1)')
   await ui.press({ key: 'clear' })
@@ -143,6 +146,7 @@ test('presses are staged, and Submit writes them and sends one message', async (
 
   // Mark done stages too, and can be taken back by the same button.
   await ui.press({ key: `done:${task}` })
+  await ui.press({ key: `row:${task}` })
   expect((await ui.find({ key: `done:${task}` }))?.text).toBe('Not done after all')
   await ui.press({ key: `done:${task}` })
   expect(await ui.find({ key: 'submit' })).toBe(undefined)
@@ -170,6 +174,7 @@ test('presses are staged, and Submit writes them and sends one message', async (
     await ui.findAll({ type: 'Text', text: /Not written by the pane/ }),
   ).toHaveLength(1)
 
+  await ui.press({ key: `row:${id}` })
   await ui.press({ key: `reopen:${id}` })
   expect(file).toBe(FILE.replace('### [ ] Fire', '### [x] Fire'))
   expect(file).toContain('  "one",\n    "two"')
@@ -179,7 +184,7 @@ test('presses are staged, and Submit writes them and sends one message', async (
   expect(toasts.at(-1)).toBe(
     'Queue read: Owner: 1 decision, 1 action, 1 answered',
   )
-  expect(await ui.find({ text: /owner-queue 0\.11\.0/ })).toBeDefined()
+  expect(await ui.find({ text: /owner-queue 0\.11\.1/ })).toBeDefined()
 
   await ui.unmount()
 })

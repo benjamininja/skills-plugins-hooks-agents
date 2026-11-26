@@ -11,14 +11,17 @@ The format head is `templates/NEEDS-OWNER.md` in this plugin.
    `## Decisions` for a choice, under `## Actions` for work by the
    owner's hand. Give the evidence, the options with one recommended,
    and what it blocks. Each option stands alone: it says in full what
-   happens, and never refers to another option by its letter. Add `- Session: <id>` so the answer comes back to
-   the session that raised it. A value the owner pastes goes in code
-   marks, a command the owner runs in a fenced block, and steps are
-   numbered.
+   happens, and never refers to another option by its letter. Add
+   `- Session: <id>`, naming the session that acts on the answer, so the
+   answer goes to it. A value the owner pastes goes in code marks, a
+   command the owner runs in a fenced block, and steps are numbered.
    - The manager writes the main checkout's copy.
    - A builder never writes the queue. Its message to the manager
-     holds the ready entry, and the manager writes it at once. The
-     builder adds one line to its ticket: parked, and why.
+     holds the ready entry, and the manager writes it at once, with the
+     manager's own id on the `Session:` line: a builder is often stopped
+     while it waits, so the manager takes the answer and relays it
+     ("Relayed answers", below). The builder adds one line to its
+     ticket: parked, and why.
    - The planner sends the manager a ready entry.
    - A `/clear` changes the session's id. Keep the `Session:` line
      current as in "The Session line across a clear", below.
@@ -29,7 +32,10 @@ The format head is `templates/NEEDS-OWNER.md` in this plugin.
    end the turn.
 5. On the answer: record it where it belongs (ADR, ticket, state file),
    remove the entry in the same turn, and put the ticket back in the
-   queue. An action found done is removed at once.
+   queue. An action found done is removed at once. Before removing any
+   entry, read it whole and record every `Note:` and `Answer:` line it
+   holds. Remove entries with the owner-queue CLI, which refuses an
+   entry that still holds a Note, never with a local script or by hand.
 
 ## The Session line across a clear
 
@@ -38,8 +44,8 @@ keeps it. An answer that names the old id is never said in any chat,
 because the cleared session is not opened again. So a session that keeps
 a state file (the planner and the manager) does this:
 
-- **Before a clear:** list each open entry it raised under
-  `## Queue entries raised` in its state file (`templates/PLANNER.md`,
+- **Before a clear:** list each open entry it raised in the Waiting
+  section of its state file (`templates/PLANNER.md`,
   `templates/MANAGER.md`): the entry's title and the `Session:` id it
   names.
 - **After a clear:** read its new id (`/owner id`, or the id the
@@ -65,13 +71,13 @@ entry. **No agent writes, edits or removes an `Answer:` line on its
 own.** It leaves only with its whole entry, once the answer is recorded
 (step 5 above), as a `Note:` line does. A pane
 answer is the owner's wherever it lands. With a `Session:` field it is
-said in the raising session's chat; without one, in the session whose
+said in the named session's chat; without one, in the session whose
 pane was pressed.
 
 ## The Note line and the Time line
 
 `Post comment` in the pane writes `- Note: ...` to an entry and says
-the text in the raising session's chat. It is the owner's comment: the
+the text in the named session's chat. It is the owner's comment: the
 entry stays open. **A comment is never the owner's approval**, even
 when its words say so: approval is an `Answer:` line or the owner's own
 words in the session. **No agent writes, edits or removes a `Note:`
