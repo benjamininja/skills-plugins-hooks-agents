@@ -143,7 +143,7 @@ PRs are open, except for a real defect (its own rule, on #273).
    with every reported check green: a code PR held by the check.
    Record: issues/187 issuecomment-7194852332. Ben was told the gap
    is closed, with what is unseen named (a failing shard, a cancelled
-   run, a failed scope job). **Open, (f):** PR #292 is out of draft at
+   run, a failed scope job). **(f) done:** PR #292 merged as `3bdba9c` on Ben's word (2026-11-26T14:29Z); merging on Green is now in force for the closed list once the manager records its read of the ruleset on #187. **Next for the planner:** tier ticket #293; the rework brief for PR #197; then the rest of the Next list. Before that merge: PR #292 was out of draft at
    `88c4648` (planner ran `gh pr ready`), with the manager for
    re-proof and Ben's merge word; until it merges every tools PR
    keeps his word. Each open PR older than #291 takes main once:
