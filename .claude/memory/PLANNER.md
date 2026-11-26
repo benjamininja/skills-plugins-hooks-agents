@@ -168,10 +168,21 @@ PRs are open, except for a real defect (its own rule, on #273).
     `local_6b981a48-1f7d-4986-93e6-6af76d316f28`, comment on #235,
     #217, #161 and PR #197. PRs #205, #184, #216 and #222 wait on the
     manager's line.
-13. Weigh whether #231, PR #242, PR #182 and #167 still earn their
-    place now that no merge takes a local full run (#273) and CI's
-    cost is being scoped (#187). #263 has no go; #258 holds the
-    re-measure list.
+13. **Older PRs, ruled 2026-11-26** on the personal-assistant's
+    questions (each on its PR): #242 kept (pull/242
+    issuecomment-7193289146); #182 holds and takes main
+    (issuecomment-7193290392); #197 is a rework, its brief owed when
+    the code stop lifts (issuecomment-7193289687); #211 goes before
+    #289, F11's class is the manager's to read
+    (issuecomment-7193291072); #249 carries main at `e8bf7ff`, merges
+    after #205 and takes main again, head to the dynasty planner
+    (issuecomment-7193291638). Main was merged on 2026-11-26 into
+    #238 `f1db641`, #216 `5bf837f`, #222 `5de07a8`, #208 `9297fd0`,
+    #205 `c4358ef`, #184 `a921cf3`; the manager re-proves them and
+    asks Ben's word at the new heads. #227 and #239 share
+    `README.md`: the second takes main after the first merges.
+    Still to weigh: #167. #263 has no go; #258 holds the re-measure
+    list.
 14. **Coming to Ben later, by button:** what the owner-queue pane does
     with terminal output pasted into a Note (the personal-assistant's
     report of 2026-11-25; nothing reached GitHub). Not asked yet.
