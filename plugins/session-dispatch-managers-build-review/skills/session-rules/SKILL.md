@@ -155,6 +155,11 @@ allowed command, so use the plain form first:
   no monitor.
 - **Bring the main branch in with `git fetch origin`, then
   `git merge origin/main`.** Never a rebase.
+- **Take a file back from the main branch with
+  `git restore --source origin/main -- <file>`**, never with
+  `git checkout`. Only a file the brief names, or one the builder
+  changed by mistake. Where the project's builder settings have no
+  allow rule for it, that step parks.
 - **Python runs a committed script or the tests**, through the
   project's interpreter. Never `-c`, never `pip install`: an install the
   brief needs is parked.
