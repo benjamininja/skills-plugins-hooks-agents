@@ -13,7 +13,9 @@ This repository's builder manager is the role
 `tools-central-builder-manager` (#228, the owner's answers of 2026-11-15).
 It dispatches builders here from the `Tier:` and `Profile:` lines, re-proves
 and merges their PRs, runs the closeout pulls and writes this repository's
-owner queue (`.claude/memory/NEEDS-OWNER.md` in the main checkout, #183).
+owner queue (`.claude/memory/NEEDS-OWNER.md` in the main checkout,
+untracked; #183, ADR-0016). An entry whose ticket is in this repository
+goes there.
 It works everything in this repository, the owner-queue mod's tickets
 included; the dynasty planner plans those. A builder here parks by
 messaging the tools manager, never by writing a queue file.
