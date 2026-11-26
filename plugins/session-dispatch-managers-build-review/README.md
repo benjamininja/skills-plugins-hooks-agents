@@ -14,6 +14,7 @@ Windows only in 0.1.0: the script is Windows PowerShell 5.1.
 |---|---|
 | `scripts/dispatch.ps1` | Starts one builder. A dry run unless `-Apply` is given. |
 | `scripts/prepend_state.py` | Puts a block read from a file at the top of a state file, before its first `- **CURRENT STATE` line: `prepend_state.py <state in> <block file> <state out>`. |
+| `scripts/closeout.py` | Closes out one builder: removes its worktree and branch when they hold nothing unmerged or uncommitted, and says why when it refuses. `--list` counts leftover worktrees. A dry run unless `--apply` is given. See [Closeout](#closeout). |
 | `scripts/resume_plain.ps1` | Resumes a stopped builder with a follow-up message and no other flag. The manager uses it for a follow-up when SendMessage cannot reach the builder. |
 | `skills/session-rules` | The rules every role keeps: tiers, briefs, the "Never" list, a denied call, parking, who may merge. Any session may load it. It starts nothing. |
 | `skills/session-dispatch` | The manager's procedures that change things: dispatch, merging a builder's PR, closeout. Manual only (`disable-model-invocation: true`): the owner invokes it in a manager's session. |
@@ -136,17 +137,27 @@ change that.
 
 | Tier | Model | Effort | Turn cap |
 |---|---|---|---|
+| haiku | claude-haiku-5-5 | medium | 15 |
 | low | claude-sonnet-5-5 | medium | 30 |
 | medium | claude-sonnet-5-5 | high | 80 |
 | high | claude-opus-5-5 | medium | 200 |
 
 No tier, no dispatch: the script refuses a run without `-Tier`.
 
+The turn cap is advice, not a limit. The `claude` start command has no
+turn-limit option (`claude --bg` is an interactive session, and the one
+budget option, `--max-budget-usd`, works only with `--print`), so the
+script adds "Or stop after N turns." to the prompt and nothing stops a
+session that runs past it. What the script does enforce is the number:
+`-TurnCap` can only lower the tier's cap. Raising a cap is the owner's, in
+the config's `tiers`.
+
 ## Dispatch
 
 ```
-dispatch.ps1 -Name <name> -Tier <low|medium|high> -PromptFile <file>
-             [-Profile <name>] [-TurnCap <n>] [-NoSetup] [-Project <folder>] [-Apply]
+dispatch.ps1 -Name <name> -Tier <haiku|low|medium|high> -PromptFile <file>
+             [-Profile <name>] [-TurnCap <n>] [-Base origin/<branch>] [-NoSetup]
+             [-Project <folder>] [-Apply]
 ```
 
 Without `-Apply` the script reads the config, the brief, the deny list
@@ -170,15 +181,68 @@ The script refuses, with exit code 2 and one line that begins
   hyphens, the profile has no rule and no base file, a rule is not a
   string, holds a double quote or ends in a backslash, or its base file is missing, not JSON or lacks a shared
   deny rule;
-- `-Apply` is given and the project is not on the owner's list.
+- `-TurnCap` is zero, negative, or above the tier's cap;
+- `-Base` is not `origin/<branch>`, or starts with a hyphen;
+- `-Apply` is given and the project is not on the owner's list;
+- `-Apply` is given, the worktree is not there yet, and `git fetch origin`
+  fails in the main checkout, or the base (`refs/remotes/<base>`, so a
+  local branch or tag of the same name cannot stand in for it) does not
+  exist after it (nothing is started).
 
-With `-Apply` it makes the worktree `.claude/worktrees/<name>` on branch
-`worktree-<name>`, runs the setup lines, starts the session in the
+The dry run prints the base, `origin/main` unless `-Base` names another,
+with its commit as of the last fetch. It does not fetch.
+
+With `-Apply` it fetches `origin` in the main checkout (that moves no
+file and not the checkout's branch), makes the worktree
+`.claude/worktrees/<name>` on branch `worktree-<name>` at the base, with
+no upstream, runs the setup lines, starts the session in the
 background, and checks that the session is alive and runs in its
-worktree. If the check fails it stops the session and says so.
+worktree. If the check fails it stops the session and says so. A worktree
+already there is left as it is, at whatever base it has, and no fetch is
+made for it.
 
-Follow-up and closeout are not in the script in 0.1.0. Their commands
-are in `skills/session-dispatch/references/dispatch.md`.
+`-Base` is for a stacked brief: the brief's `Base:` line names
+`origin/<branch>` of an open PR in the same repository, and the manager
+passes it on. The default is `origin/main`.
+
+Follow-up is not in the script. Its commands are in
+`skills/session-dispatch/references/dispatch.md`.
+
+## Closeout
+
+```
+python closeout.py <main checkout> <builder name> [--branch <name>]... [--apply]
+python closeout.py <main checkout> --list
+```
+
+Python 3.8 or later, standard library only, so any project's
+interpreter runs it. The manager runs it right after it merges a
+builder's PR and pulls: first the dry run, then with `--apply`. It
+removes the builder's worktree, then its local branch, only when the
+branch is merged (the head of a PR merged into the main branch, or an
+ancestor of one, or nothing of its own beyond the remote main branch; a
+PR merged into any other base does not count) and has no open PR,
+`git status --porcelain --untracked-files=normal --ignore-submodules=none`
+prints nothing, whatever the git config says (lines that hold no content, a
+line-ending flag with an empty diff or a deleted tracked file, are
+restored first), the worktree is not locked, its HEAD can be read, no
+folder link in it points out, and, on Windows, nothing in it is open.
+There is no force option.
+Everything it refuses is printed as one list for the owner's queue and
+left where it is.
+
+`--list` changes nothing. It prints every worktree git knows with its
+verdict, and ends with one `count of worktrees:` line, one bucket per
+worktree: merged and still there, no commit of its own, unknown, open
+PR, locked, no readable HEAD, refused for another reason, outside the
+folder. The manager runs it at every state-back.
+
+The script's own git calls are not seen by the git-guardrails hook,
+which judges tool calls only. The script is the guard, which is why it
+is one reviewed file under one exact allow rule in the managers'
+settings file. The full rules are in
+`skills/session-dispatch/references/dispatch.md`, "The closeout
+script", and the decision in ADR-0020 of the tools repository.
 
 ## Profiles
 
@@ -254,6 +318,11 @@ script's dry run against a temporary project (Windows only; skipped
 elsewhere). It covers each refusal, the start command for each tier, that a
 dry run creates nothing, that `-Apply` is refused in a project
 the owner has not listed, and a profile's rules, base file and header.
+
+`tests/test_closeout.py` builds throwaway repositories and runs
+`closeout.py` against them on every platform: each refusal, a removal,
+the dry run and list-only mode changing nothing, and what git itself
+does with ignored files, an open file and a link out of a worktree.
 
 ## Not proven
 
