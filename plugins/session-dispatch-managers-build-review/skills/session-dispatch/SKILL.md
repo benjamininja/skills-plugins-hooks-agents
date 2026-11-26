@@ -63,8 +63,10 @@ Only after the builder has reported the PR green, and only after the
 manager has re-proved every item of the project's Green list itself and
 posted the output on the PR. Then one squash-merge. A PR that is not
 green is not merged. A builder's PR for a dispatched ticket needs no
-further word from the owner; any other PR (the manager's own, the
-planner's) is merged only after the owner has approved that PR.
+further word from the owner, except where `session-rules` keeps the
+owner's word ("Merging on Green": a gate change, a path no required
+check covers, the parking list, live data); any other PR (the manager's
+own, the planner's) is merged only after the owner has approved that PR.
 `references/manager.md` has those merges and the planner's read.
 
 ## Closeout

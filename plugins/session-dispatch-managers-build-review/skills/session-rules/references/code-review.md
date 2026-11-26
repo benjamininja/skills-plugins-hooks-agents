@@ -1,10 +1,13 @@
 # The code review at re-proof
 
 The manager starts a read-only reviewer on a builder's PR before it
-posts the re-proof. The reviewer finds, the builder answers once, a
-fresh reviewer re-checks, and the manager decides. The reviewer is the
-`pr-code-reviewer` agent (`templates/agents/pr-code-reviewer.md` in this
-plugin). Each repo has its own ruleset skill, which the packet names.
+posts the re-proof. The reviewer finds. Where a finding is blocking,
+the builder answers once, a fresh reviewer re-checks, and the manager
+decides. **One reviewer per PR:** the project's specialist auditor
+where the PR is on that auditor's list in the project rules file, and
+otherwise the `pr-code-reviewer` agent
+(`templates/agents/pr-code-reviewer.md` in this plugin); never both.
+Each repo has its own ruleset skill, which the packet names.
 The reviewer reads the diff itself; it runs no other review tool and
 starts no agent. Why it is built this way: tools ADR-0015 (Revision 2
 dropped the code-review fork).
@@ -77,7 +80,8 @@ its class, and one sentence on the defect.
 - **Blocking** names the concrete input or state that triggers it. A
   finding of a blocking class with no concrete trigger is advisory.
 - **Advisory** is everything else the ruleset names. Advisories are
-  posted and never hold a merge.
+  posted once and never hold a merge. They get no answer round, no
+  re-check and no planner ruling; the builder may fix one in passing.
 - **Not a finding:** style, anything CI already gates, and design the
   ticket settled.
 
@@ -87,35 +91,36 @@ The ruleset says which patterns are blocking in its repo.
 
 1. **The review.** The reviewer returns its findings to the manager. The
    manager posts them on the PR as one comment, and tells the builder.
-   No findings: the manager says so on the PR, and the round is over.
+   No blocking finding: the manager says so on the PR, and the round is
+   over. Steps 2 to 4 are for blocking findings only.
 2. **The builder's answer**, once, as one comment on the PR, one line per
-   finding: `F1 fixed at <sha>`, or `F1 disputed: <reason>`. It pushes
-   its fixes, then messages the manager.
+   blocking finding: `F1 fixed at <sha>`, or `F1 disputed: <reason>`.
+   It pushes its fixes, then messages the manager.
 3. **The re-check.** A fresh reviewer, never the first one, gets the
-   packet, the findings, the answers and the new head. For each finding
-   it returns `accepted` (the fix holds, or the dispute does) or `still
-   open`, with one sentence. It re-checks those findings only.
-4. **The manager's ruling** on each finding still open: upheld or
-   closed. On a design question it asks the planner to weigh in first.
-   If they disagree, it goes to the owner as a Decision.
+   packet, the blocking findings, the answers and the new head. For
+   each one it returns `accepted` (the fix holds, or the dispute does)
+   or `still open`, with one sentence. It re-checks those findings only.
+4. **The manager's ruling** on each blocking finding still open: upheld
+   or closed. On a design question it asks the planner to weigh in
+   first. If they disagree, it goes to the owner as a Decision.
 
 There is no second round. A blocking finding upheld after the round
 sends the PR back, as a PR that is not green does.
 
 ## How the manager records it
 
-One comment on the PR, before the re-proof, with one row per finding:
+One comment on the PR, before the re-proof, with one row per blocking
+finding:
 
 | Finding | Class | Builder | Re-check | Ruling | Why |
 |---|---|---|---|---|---|
 
 - The ruling is `upheld` or `closed`. A planner weigh-in or an owner
   Decision is linked in its row.
-- Advisories still open are listed again in the re-proof comment. A
-  merge with advisories open is allowed.
-- The deferred advisories the manager and builder agree on go in one
-  ticket per PR, `Tier: unset`. A disputed advisory is closed or kept by
-  the manager's ruling, with no ticket.
+- Advisories stand in the review comment of step 1 and are not listed
+  again. A merge with advisories open is allowed.
+- An advisory the manager judges worth later work goes in one ticket
+  per PR, `Tier: unset`. The others need no ticket.
 
 **The Green item:** no blocking finding the manager upheld is still
 open.
