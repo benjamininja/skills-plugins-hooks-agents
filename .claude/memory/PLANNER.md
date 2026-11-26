@@ -94,6 +94,23 @@ PRs are open, except for a real defect (its own rule, on #273).
      protects, which PRs run it, its measured time, required or not);
      the CI line of `CLAUDE.md`, which still says both systems on every
      PR; a look at ADR-0004 for the same. To the lead before Ben.
+0. **Ben's top priority, 2026-11-26: close the CI hole** (a tools
+   code PR can merge without a Windows run). His button: "Required, 6
+   shards (Recommended)" (issues/187 issuecomment-7193473530, with
+   the figures and the build ruling). His words: he has lost a great
+   deal of faith and needs to know the hole is corrected. Do not call
+   it corrected before the ruleset names `pytest (windows)` and a
+   code PR has been seen blocked by a red Windows run. Order:
+   (a) the builder posts its finding and makes the workflow PR from
+   draft #291 (ruling sent to the manager); (b) the planner checks
+   four points: count proof, the skip case on an `.md`-only PR, the
+   reporting job against GitHub's documentation, the xdist time;
+   (c) code review, the dynasty planner's read, Ben's merge word;
+   (d) Ben adds `pytest (windows)` to the ruleset by hand, steps
+   written by the planner with full paths; (e) draft PR #292 (the
+   table of checks, head `3665fe6`, with the dynasty planner for its
+   read) leaves draft and merges on Ben's word; (f) the first real
+   closeout run may then be released by Ben.
 2. **The stop is lifted** (Ben, 2026-11-26, button "Lift, hold
    closeout run (Recommended)" and his typed line in the planner's
    chat; issues/187 issuecomment-7193345327). Code work and code
