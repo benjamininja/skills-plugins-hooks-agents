@@ -17,9 +17,9 @@ concurrency:
 env:
   # Windows shards (#187). PART 2 MEASUREMENT: WINDOWS_XDIST is for one
   # comparison run only and is removed before this shape ships.
-  # Measurement run 4.
+  # Measurement run 5.
   WINDOWS_SHARDS: "6"
-  WINDOWS_XDIST: "false"
+  WINDOWS_XDIST: "true"
 
 jobs:
   pytest:
