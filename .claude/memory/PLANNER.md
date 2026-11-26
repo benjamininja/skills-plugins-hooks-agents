@@ -136,15 +136,19 @@ PRs are open, except for a real defect (its own rule, on #273).
    (pull/291 issuecomment-7194028137), the code review with no
    blocking finding and the lead's approve. PR #292 took main, head
    `88c4648`; its run showed the skip case (issues/187
-   issuecomment-7194711918). **Now at (e):** Ben's hand step was given
-   in the planner's chat: add `pytest (windows)` to the ruleset
-   "main: require PR" (id 27266678), which requires the Ubuntu and
-   catalog checks today. After he says done: read the ruleset back
-   with `gh api`, record on #187, tell the manager; PR #292 leaves
-   draft (Ben marks it ready, a builder's `gh pr ready` was refused
-   once) and the manager asks the merge word; the six open code PRs
-   (#242, #214, #211, #197, #196, #182) each take main once to get the
-   check; then (g). Also open: tier ticket #293 (owner-queue option
+   issuecomment-7194711918). **(e) and (g) done 2026-11-26:** Ben saved the ruleset at 14:26Z
+   (a first read-back showed no change; he saved again); it requires
+   `pytest (ubuntu-latest)`, `CATALOG.md is current` and
+   `pytest (windows)`, bypass list empty. PR #242 was seen BLOCKED
+   with every reported check green: a code PR held by the check.
+   Record: issues/187 issuecomment-7194852332. Ben was told the gap
+   is closed, with what is unseen named (a failing shard, a cancelled
+   run, a failed scope job). **Open, (f):** PR #292 is out of draft at
+   `88c4648` (planner ran `gh pr ready`), with the manager for
+   re-proof and Ben's merge word; until it merges every tools PR
+   keeps his word. Each open PR older than #291 takes main once:
+   #242, #214, #211, #197, #196, #182, #256. Re-read the Windows time
+   after #211 merges. Also open: tier ticket #293 (owner-queue option
    parse, from the manager); the consistency points on #217
    (issuecomment-7194228313), planner leads C, D, E, F.
 2. **The stop is lifted** (Ben, 2026-11-26, button "Lift, hold
