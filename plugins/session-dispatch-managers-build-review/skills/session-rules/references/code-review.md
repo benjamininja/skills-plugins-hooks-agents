@@ -6,7 +6,10 @@ the builder answers once, a fresh reviewer re-checks, and the manager
 decides. **One reviewer per PR:** the project's specialist auditor
 where the PR is on that auditor's list in the project rules file, and
 otherwise the `pr-code-reviewer` agent
-(`templates/agents/pr-code-reviewer.md` in this plugin); never both.
+(`templates/agents/pr-code-reviewer.md` in this plugin); never both. Where a PR is on more than one auditor's list, or
+is wider than the list it is on, the project rules file says which
+reviewer reads it, and that reviewer's packet names every ruleset that
+applies.
 Each repo has its own ruleset skill, which the packet names.
 The reviewer reads the diff itself; it runs no other review tool and
 starts no agent. Why it is built this way: tools ADR-0015 (Revision 2

@@ -449,9 +449,14 @@ checks it read, and that no exception below applied.
   `session-rules` or `session-dispatch`, a role file, a project rules
   file, a hook, a review ruleset skill, a settings example;
 - a PR with a changed path that no required check covers: that is no
-  gate in place;
+  gate in place. A path is covered when the project's table of checks
+  (line 5 of "CI as a gate", below) names a required check for it and
+  that check ran, not skipped, at the PR's head. Until a project's
+  table is written and the owner has set its ruleset from it, no path
+  is covered and every PR keeps the owner's word;
 - anything on the parking list ("Parking", above);
-- a merge that acts on live data, such as a migration;
+- a merge that applies a migration, publishes data, or can publish a
+  secret or personal data: the three harms of line 2 of "CI as a gate";
 - a planner's or a manager's own PR, since those are rule or state
   text. The word for it is also the owner's approval of that PR: no
   second question is asked in another chat.

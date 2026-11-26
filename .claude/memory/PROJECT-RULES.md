@@ -135,7 +135,10 @@ without asking the owner, and the owner's word stays where
 is a gate for every session on the machine, so here the word also stays
 for any PR that changes a file under `skills/`, `plugins/`, `hooks/` or
 `.claude/agents/`. What merges on Green alone is the rest: a builder's
-PR to `tools/`, `tests/`, `docs/` or the catalog files.
+PR to `tools/`, `tests/`, `docs/` or the catalog files. This project
+has no table of checks yet, so no path is covered and every PR keeps
+the owner's word until the table is written and the owner has set the
+ruleset from it (#187).
 
 **The machine's one test line** (above) binds a manager here only for a
 `tools/reproof.py` run. A merge that runs nothing locally needs no
