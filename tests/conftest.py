@@ -18,6 +18,9 @@ import pytest
 
 COUNT = "TEST_SHARD_COUNT"
 INDEX = "TEST_SHARD_INDEX"
+# When set, the shard also writes "<digest> <kept> <collected>" to this file,
+# for CI's reporting job to compare across the shards.
+DIGEST_FILE = "TEST_SHARD_DIGEST_FILE"
 
 
 def _shard():
@@ -47,6 +50,10 @@ def pytest_collection_modifyitems(config, items):
     config._shard_line = (
         f"shard {i} of {n}: kept {len(keep)} of {len(items)} collected, order digest {digest}"
     )
+    out = os.environ.get(DIGEST_FILE)
+    if out:
+        with open(out, "w", encoding="utf-8") as fh:
+            fh.write(f"{digest} {len(keep)} {len(items)}")
     if drop:
         config.hook.pytest_deselected(items=drop)
     items[:] = keep

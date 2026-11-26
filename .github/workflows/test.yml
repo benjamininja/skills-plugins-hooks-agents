@@ -78,6 +78,9 @@ jobs:
           echo "shards=[$shards]" >> "$GITHUB_OUTPUT"
           echo "run=$run count=$n shards=[$shards]"
 
+  # Each shard puts "<digest> <kept> <collected>" in its own output, d<index>.
+  # One output per shard index: a change to WINDOWS_SHARDS changes this list
+  # too, or pytest (windows) fails on the missing line.
   windows-shard:
     name: pytest (windows shard ${{ matrix.shard }})
     needs: scope
@@ -88,9 +91,17 @@ jobs:
       fail-fast: false
       matrix:
         shard: ${{ fromJSON(needs.scope.outputs.shards) }}
+    outputs:
+      d0: ${{ steps.digest.outputs.d0 }}
+      d1: ${{ steps.digest.outputs.d1 }}
+      d2: ${{ steps.digest.outputs.d2 }}
+      d3: ${{ steps.digest.outputs.d3 }}
+      d4: ${{ steps.digest.outputs.d4 }}
+      d5: ${{ steps.digest.outputs.d5 }}
     env:
       TEST_SHARD_COUNT: ${{ needs.scope.outputs.count }}
       TEST_SHARD_INDEX: ${{ matrix.shard }}
+      TEST_SHARD_DIGEST_FILE: shard-digest.txt
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -98,11 +109,17 @@ jobs:
           python-version: "3.12"
       - run: python -m pip install pytest pyyaml
       - run: python -m pytest -q tests
+      - id: digest
+        shell: bash
+        run: echo "d${TEST_SHARD_INDEX}=$(cat "$TEST_SHARD_DIGEST_FILE")" >> "$GITHUB_OUTPUT"
 
   # The one name a ruleset would hold. It always runs, and passes in exactly
   # two cases: scope succeeded and said run, and the shards succeeded; or
   # scope succeeded and said skip, and the shards were skipped. Anything else
   # (scope failed or cancelled, a shard failed or cancelled, a mix) fails.
+  # In the run case it also fails unless every shard sent its line, all the
+  # order digests and collected counts are equal, and the kept counts add up
+  # to the collected count: each test ran exactly once.
   windows:
     name: pytest (windows)
     needs: [scope, windows-shard]
@@ -113,13 +130,36 @@ jobs:
         env:
           SCOPE: ${{ needs.scope.result }}
           RUN: ${{ needs.scope.outputs.run }}
+          COUNT: ${{ needs.scope.outputs.count }}
           SHARDS: ${{ needs.windows-shard.result }}
+          D0: ${{ needs.windows-shard.outputs.d0 }}
+          D1: ${{ needs.windows-shard.outputs.d1 }}
+          D2: ${{ needs.windows-shard.outputs.d2 }}
+          D3: ${{ needs.windows-shard.outputs.d3 }}
+          D4: ${{ needs.windows-shard.outputs.d4 }}
+          D5: ${{ needs.windows-shard.outputs.d5 }}
         run: |
-          echo "scope=$SCOPE run=$RUN shards=$SHARDS"
-          if [ "$SCOPE" = "success" ] && [ "$RUN" = "true" ] && [ "$SHARDS" = "success" ]; then exit 0; fi
+          echo "scope=$SCOPE run=$RUN count=$COUNT shards=$SHARDS"
+          fail() { echo "::error::pytest (windows) fails: $1"; exit 1; }
           if [ "$SCOPE" = "success" ] && [ "$RUN" = "false" ] && [ "$SHARDS" = "skipped" ]; then exit 0; fi
-          echo "::error::pytest (windows) fails: scope=$SCOPE run=$RUN shards=$SHARDS"
-          exit 1
+          if [ "$SCOPE" != "success" ] || [ "$RUN" != "true" ] || [ "$SHARDS" != "success" ]; then
+            fail "scope=$SCOPE run=$RUN shards=$SHARDS"
+          fi
+          [[ "$COUNT" =~ ^[1-9][0-9]*$ ]] || fail "no shard count"
+          first="" total="" sum=0
+          for i in $(seq 0 $((COUNT - 1))); do
+            name="D$i"; line="${!name}"
+            echo "shard $i: ${line:-missing}"
+            read -r digest kept collected <<< "$line"
+            [[ "$digest" =~ ^[0-9a-f]{12}$ && "$kept" =~ ^[0-9]+$ && "$collected" =~ ^[0-9]+$ ]] \
+              || fail "shard $i sent no digest line"
+            [ -z "$first" ] && first="$digest" total="$collected"
+            [ "$digest" = "$first" ] || fail "shard $i collected a different ordered list"
+            [ "$collected" = "$total" ] || fail "shard $i collected $collected, not $total"
+            sum=$((sum + kept))
+          done
+          [ "$sum" = "$total" ] || fail "the shards kept $sum of $total collected"
+          echo "every shard collected the same $total tests in order $first; together they ran each once"
 
   catalog:
     name: CATALOG.md is current
