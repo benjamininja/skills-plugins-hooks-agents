@@ -1,6 +1,6 @@
 # Server-side CI is the enforcement gate; a local pre-PR hook is not a substitute
 
-- Status: accepted; revised 2026-11-25 (Revision 1 below: what CI runs)
+- Status: accepted; revised 2026-11-25 and 2026-11-26 (Revisions 1 and 2 below: what CI runs)
 - Date: 2026-07-11
 - Scope: applies to the regression-testing standard's deferred CI item, and
   generally to any future "tests must pass before merge" decision across
@@ -82,3 +82,26 @@ records what the gate runs.
   otherwise. The check names do not change.
 - A newer head on a pull request cancels the run on the older head. A run on
   main is never cancelled.
+
+## Revision 2 (2026-11-26): Windows returns to pull requests, in six shards
+
+Ticket: tools #187, on the owner's button of 2026-11-26, "Required, 6
+shards". The decision above is unchanged: CI is the gate. This revision
+replaces Revision 1's first two points; its cost paragraph is now history.
+
+- A pull request runs `pytest (ubuntu-latest)`, `CATALOG.md is current`
+  and `pytest (windows)`. All three are required by the ruleset on main.
+- `pytest (windows)` is one reporting job over a scope job and six shard
+  jobs that split the suite by position. Measured on 2026-11-26: 4.6 to 4.8
+  minutes for the whole run at six shards, 6.5 to 8.1 at four, against 18
+  to 20 for the single Windows job before, and 1.4 for Ubuntu.
+- Windows is skipped only for a pull request whose changed paths all end in
+  `.md` with none under `tests/`. The reporting job passes when the shards
+  ran and passed, or when the scope job said skip and they were skipped;
+  every other state fails it.
+- A push to main runs everything, as before.
+- Why it came back: about 56 tests and the hooks run only on Windows, and 2
+  of 98 code pull requests failed there alone. A fault of that kind in a
+  script that deletes is not undone by a revert, so it earns a gate before
+  the merge at this cost.
+- The project's table of checks is in `.claude/memory/PROJECT-RULES.md`.

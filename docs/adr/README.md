@@ -11,7 +11,7 @@ merged ADR. A row is added in the same PR that adds the ADR
 | [0001](0001-vendor-cache-fork-pattern.md) | Forked skills get a pristine mirror in `vendor-cache/` | accepted | 2026-07-11 | none |
 | [0002](0002-plugin-manifests-only.md) | Large unused plugin bundles get manifest-only cataloging | accepted | 2026-07-11 | none |
 | [0003](0003-junction-vs-symlink-fallback.md) | Directory junctions as the practical Windows install mechanism | accepted | 2026-07-11 | none |
-| [0004](0004-ci-over-local-pr-hook.md) | Server-side CI is the enforcement gate | accepted | 2026-07-11 | none |
+| [0004](0004-ci-over-local-pr-hook.md) | Server-side CI is the enforcement gate | accepted, revised | 2026-07-11 | Revision 1 (2026-11-25); Revision 2 (2026-11-26) |
 | [0005](0005-skill-routing-and-drift-detection.md) | Skill routing nudges, junction drift detection, bootstrap skill | accepted, partly superseded | 2026-07-12 | 0006 (for five router skills) |
 | [0006](0006-blast-radius-tiered-model-invocation.md) | Blast-radius-tiered model invocation | accepted, revised | 2026-07-17 | Revision 1 (2026-11-14); Revision 2 (2026-11-23) |
 | [0007](0007-first-subagents-vendor-sync-and-safety-audit.md) | First subagents: vendor sync and safety audit | accepted | 2026-07-17 | none |

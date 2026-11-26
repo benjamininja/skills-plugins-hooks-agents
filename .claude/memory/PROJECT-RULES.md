@@ -88,30 +88,17 @@ carries only `PLANNER.md` changes and is kept after each merge
 
 ## Green means all of
 
-- the two required CI checks, `pytest (ubuntu-latest)` and
-  `CATALOG.md is current`, pass at the PR's head, and the PR has no
-  conflict, on one read of
+- the required CI checks in the table below pass at the PR's head, and
+  the PR has no conflict, on one read of
   `gh pr view <n> --json headRefOid,mergeStateStatus,statusCheckRollup`.
-  `mergeStateStatus` is `CLEAN`, or `UNSTABLE` where the Windows job is
-  the only check not passed. Any other merge state is not Green.
-  **Windows is not part of Green on a PR until the owner says so**
-  (the owner's word of 2026-11-25, #187): a `pytest (windows-latest)`
-  job that is running, red or absent holds no merge and nobody waits
-  for it. It comes back to a PR only after all three, in this order:
-  #187's research has scoped it (where the time goes, and what a
-  Windows check on a PR would cost each time); the dynasty planner
-  (`dff-central-planner`) has been consulted on the plan and has
-  approved it; and the owner has said so. The Ubuntu job runs the whole test suite, and that run and
-  the `CATALOG.md` check are the proof (#273). Windows runs on main
-  after a merge, and the manager is the one who reads it: before each
-  merge it reads main's last finished run, without waiting for one
-  that is still going. A red run on main stops every further merge
-  until main is green again, by a fix PR or a revert PR, which is the
-  one PR that may merge meanwhile; the manager tells the owner and the
-  planner the same turn. About 56 tests and this repository's hooks
-  run only on Windows, so that read is what stands in for the check on
-  a PR. A builder still runs the tests it touched and
-  rebuilds `CATALOG.md` before it opens its PR;
+  `mergeStateStatus` is `CLEAN`; any other merge state is not Green.
+  **Windows is part of Green on a PR again** (the owner's button of
+  2026-11-26, "Required, 6 shards", #187): the one check to read is
+  `pytest (windows)`, never a single shard. The Ubuntu job runs the
+  whole test suite, and Windows runs it again in six shards; those
+  runs and the `CATALOG.md` check are the proof (#273). A builder
+  still runs the tests it touched and rebuilds `CATALOG.md` before it
+  opens its PR;
 - the `check-in-hygiene` pre-commit hook passes on the commit;
 - after any change under `plugins/owner-queue/`:
   `claude plugin test plugins/owner-queue` passes on the merged tree.
@@ -121,6 +108,42 @@ carries only `PLANNER.md` changes and is kept after each merge
   is still open (`session-rules`, `references/code-review.md`). Manager
   runs it. The ruleset skill is `tools-code-review`, read from
   `origin/main` (#136).
+
+**The table of checks** (`session-rules`, "CI as a gate", line 5).
+The CI part of Green is the required column, and the ruleset on `main`
+names the same checks: no more, no fewer. Times are whole-check times
+measured on 2026-11-26 (#187); the planner re-reads them at its sweep.
+
+| Check | What it protects | Which PRs run it | Time | Required |
+|---|---|---|---|---|
+| `pytest (ubuntu-latest)` | every test that is not Windows-only: the tools, the hooks' logic, the dispatch scripts, the ADR index, the plugin files | every PR, and each push to `main` | 1.4 min | yes |
+| `CATALOG.md is current` | the catalog matches the skills, plugins, hooks and agents in the tree | every PR, and each push to `main` | 0.1 min | yes |
+| `pytest (windows)` | the same suite on Windows, with the tests that run only there (about 56) and the hooks as this machine runs them; it stops a Windows-only fault before the merge, the kind a revert does not undo when a script has already deleted something | every PR except one whose changed paths all end in `.md` with none under `tests/`; each push to `main` | 4.8 min, six shards side by side | yes |
+| `vendor-check.yml` | news of upstream changes to vendored skills; it opens an issue and applies nothing | weekly, no PR | not measured | no |
+
+- **`pytest (windows)` is one reporting job** over a scope job and six
+  shard jobs. It passes in two states only: the scope job said run and
+  every shard passed, or the scope job said skip and the shards were
+  skipped. Anything else fails it, so a skip fails safe: a path nobody
+  listed as harmless runs Windows. The shard jobs are never named on
+  the ruleset.
+- **The `.md` skip holds for the tests as they are** (read on
+  2026-11-26): no Windows-only test reads a tracked `.md` file outside
+  `tests/`. A Windows-only test that does is a reason to narrow the
+  skip, and whoever adds one says so on the PR.
+- **Two proofs are not CI checks** and stay in the list below: the
+  `check-in-hygiene` hook, and the owner-queue plugin test, which
+  needs the merged tree.
+- **The three harms of line 2, here.** This repository applies no
+  migration and publishes no data. No check scans for a secret or
+  personal data, so a PR that adds or changes a settings file, a
+  credential file or an `.env` file keeps the owner's word. A secret
+  can be pasted into any file, so for the rest the code review is the
+  guard.
+- **Changing the required column** is the owner's button, in either
+  direction, and the ruleset is the owner's to change. A PR that
+  changes `.github/workflows/` is read by the planner, and by the
+  dynasty planner as lead on this text, before its merge.
 
 **The manager's re-proof (#273).** For a merge the manager makes no local
 full test run. It reads CI once, as above, reads the `check-in-hygiene`
@@ -143,15 +166,30 @@ without asking the owner, and the owner's word stays where
 `session-rules` keeps it ("Merging on Green"). Most of this repository
 is a gate for every session on the machine, so here the word also stays
 for any PR that changes a file under `skills/`, `plugins/`, `hooks/` or
-`.claude/agents/`. What merges on Green alone is the rest: a builder's
-PR to `tools/`, `tests/`, `docs/` or the catalog files. This project
-has no table of checks yet, so no path is covered and every PR keeps
-the owner's word until the table is written and the owner has set the
-ruleset from it (#187).
+`.claude/agents/`. It also stays for any PR that changes a file under
+`docs/adr/` (the owner's button of 2026-11-26, #187): no check and no
+reviewer reads whether a recorded decision still says what the owner
+decided, and two ADRs are what the `skill-safety-auditor` judges by.
+This is asked again once builders have their own credential (#191).
+What merges on Green alone is a closed list: a builder's PR whose
+changed paths are all under `tools/`, `tests/`, `docs/` outside
+`docs/adr/`, or the catalog files, once the ruleset on `main` names
+the three required checks of the table above. A PR with any changed
+path outside that list keeps the owner's word; a root file such as
+`vendor-skills.json` or `manifest.json` is one.
+By the table every path in such a PR is covered: both test jobs run
+for it, or, for a PR of `.md` files only, the Ubuntu job and the
+catalog check. The manager reads the ruleset once before its first
+merge on Green and records on #187 that the three names are there.
 
 **The machine's one test line** (above) binds a manager here only for a
 `tools/reproof.py` run. A merge that runs nothing locally needs no
 message to the other project's manager.
+
+**Before each merge** the manager reads `main`'s last finished run. A
+red run stops every merge but the fix or the revert, and the owner and
+the planner are told the same turn. Two PRs that are each green can be
+red together, and a run on `main` is the only place that shows.
 
 **After each merge** the manager reads CI on `main`'s new commit. A red
 check there means a revert PR and an Action for the owner; no other PR
