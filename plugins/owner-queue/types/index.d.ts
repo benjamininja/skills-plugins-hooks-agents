@@ -87,13 +87,13 @@ export type OwnerNotes = Record<string, string[]>
 /** A tracked session's state, as the pane draws it. */
 export type OwnerSeen = 'busy' | 'idle' | 'stopped' | 'closed'
 
-/** One tracked session, as the Reset prompts section draws it. */
+/** One tracked session, as the Start lines section draws it. */
 export type OwnerSession = {
   id: string
   role: string
   name: string
   seen: OwnerSeen
-  /** The reset prompt's file, when it holds text. */
+  /** The start line's file, when it holds text. */
   prompt?: {
     path: string
     /** Its file time, as `YYYY-MM-DD HH:MM`. */

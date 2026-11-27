@@ -18,7 +18,7 @@ import type { Committed } from './parse'
 import type { PrepRequest, SessionRecord } from './sessions'
 import {
   HEARTBEAT_MS,
-  PROMPTS,
+  START_LINES,
   REQUESTS,
   SESSIONS,
   WHY,
@@ -114,7 +114,7 @@ let isQueued = false
 
 let isTending = false
 
-/** A reset prompt the `/clear` re-key moved, waiting for the new id's record. */
+/** A start line the `/clear` re-key moved, waiting for the new id's record. */
 let moved: { to: string; at: number } | undefined
 
 /**
@@ -589,7 +589,7 @@ async function rekey($: EngineInterface): Promise<void> {
     await shift<string[]>($, 'done', from, to, [], (into, was) => [
       ...new Set([...into, ...was]),
     ])
-    await movePrompt($, from, to)
+    await moveStartLine($, from, to)
     let count = 0
     let left = 0
     for (const one of await every($)) {
@@ -1101,9 +1101,9 @@ const recordPath = ($: EngineInterface, id: string) =>
 const requestPath = ($: EngineInterface, id: string) =>
   `${dataDir($)}/${REQUESTS}/${fileName(id)}.json`
 
-/** Where a tracked session writes its reset prompt (the write route, #161). */
-const promptPath = ($: EngineInterface, id: string) =>
-  `${dataDir($)}/${PROMPTS}/${fileName(id)}.md`
+/** Where a tracked session writes its start line (the write route, #161). */
+const startLinePath = ($: EngineInterface, id: string) =>
+  `${dataDir($)}/${START_LINES}/${fileName(id)}.md`
 
 /** A file time as `YYYY-MM-DD HH:MM`. */
 function dated(ms: number): string {
@@ -1145,13 +1145,13 @@ async function readRecord(
   }
 }
 
-/** The reset prompt file's time and size, or undefined when it is missing. */
-async function promptStat(
+/** The start line file's time and size, or undefined when it is missing. */
+async function startLineStat(
   $: EngineInterface,
   id: string,
 ): Promise<{ mtimeMs: number; size: number } | undefined> {
   try {
-    const stat = await $.fs.stat(promptPath($, id))
+    const stat = await $.fs.stat(startLinePath($, id))
 
     return stat.kind === 'file' ? { mtimeMs: stat.mtimeMs, size: stat.size } : undefined
   } catch {
@@ -1223,7 +1223,7 @@ async function prep(
   if (ran !== undefined) one.ran = ran
   isQueued = true
   await save($)
-  $.prompt.submit({ text: instruction(why, promptPath($, one.id)) }).catch(() => {
+  $.prompt.submit({ text: instruction(why, startLinePath($, one.id)) }).catch(() => {
     one.sent = was.sent
     one.ran = was.ran
     isQueued = false
@@ -1234,14 +1234,14 @@ async function prep(
 /**
  * The session's own triggers and the pane's request, checked while it is
  * idle: a request newer than the last one it took, the context limit, then
- * 45 minutes idle. A fresh reset prompt stops all three.
+ * 45 minutes idle. A fresh start line stops all three.
  */
 async function tend($: EngineInterface): Promise<void> {
   if (self === undefined || self.state !== 'idle' || isQueued || isTending) return
   isTending = true
   try {
     const now = await stamp($)
-    const isPromptFresh = isFresh(await promptStat($, self.id), self)
+    const isLineFresh = isFresh(await startLineStat($, self.id), self)
     let asked: PrepRequest | undefined
     try {
       asked = JSON.parse(await $.fs.read(requestPath($, self.id))) as PrepRequest
@@ -1249,18 +1249,18 @@ async function tend($: EngineInterface): Promise<void> {
       asked = undefined
     }
     if (typeof asked?.at === 'number' && asked.at > self.ran) {
-      if (!isPromptFresh) {
+      if (!isLineFresh) {
         await prep($, WHY.request(), now, asked.at)
 
         return
       }
-      // A fresh prompt answers the request already.
+      // A fresh start line answers the request already.
       self.ran = asked.at
       await save($)
     }
-    if (isContextDue(self, isPromptFresh))
+    if (isContextDue(self, isLineFresh))
       await prep($, WHY.context(self.tokens), now)
-    else if (isIdleDue(self, now, isPromptFresh)) await prep($, WHY.idle(), now)
+    else if (isIdleDue(self, now, isLineFresh)) await prep($, WHY.idle(), now)
   } finally {
     isTending = false
   }
@@ -1275,28 +1275,28 @@ async function beat($: EngineInterface): Promise<void> {
 }
 
 /**
- * After a `/clear`: the reset prompt moves to the new id. The new file takes
+ * After a `/clear`: the start line moves to the new id. The new file takes
  * the text and the old one is emptied, since the API removes no file. The
  * new id's record marks it used.
  */
-async function movePrompt($: EngineInterface, from: string, to: string): Promise<void> {
+async function moveStartLine($: EngineInterface, from: string, to: string): Promise<void> {
   try {
-    const text = await slurp($, promptPath($, from))
+    const text = await slurp($, startLinePath($, from))
     if (text === undefined || text === '') return
-    await $.fs.write(promptPath($, to), text)
-    await $.fs.write(promptPath($, from), '')
-    const at = (await promptStat($, to))?.mtimeMs ?? (await stamp($))
+    await $.fs.write(startLinePath($, to), text)
+    await $.fs.write(startLinePath($, from), '')
+    const at = (await startLineStat($, to))?.mtimeMs ?? (await stamp($))
     if (self?.id === to) {
       self.movedAt = at
       await save($)
     } else moved = { to, at }
   } catch {
-    $.ui.toast("The reset prompt was not moved to this session's new id")
+    $.ui.toast("The start line was not moved to this session's new id")
   }
 }
 
 /**
- * Reads every tracked session's record and reset prompt, and what is held
+ * Reads every tracked session's record and start line, and what is held
  * for each one that is not running: pane-written answers and Notes it has
  * not been told, and done marks waiting in the store.
  */
@@ -1322,7 +1322,7 @@ async function roll(
     if (one === undefined) continue
     const seen = seenOf(one, now)
     if (seen === undefined) continue
-    const stat = await promptStat($, one.id)
+    const stat = await startLineStat($, one.id)
     sessions.push({
       id: one.id,
       role: one.role,
@@ -1331,7 +1331,7 @@ async function roll(
       ...(stat !== undefined && stat.size > 0
         ? {
             prompt: {
-              path: promptPath($, one.id),
+              path: startLinePath($, one.id),
               at: dated(stat.mtimeMs),
               isFresh: isFresh(stat, one),
               isUsed: isUsed(stat, one),
@@ -1371,7 +1371,7 @@ async function roll(
 
 /**
  * End of Day: a prep request for every running tracked session with no
- * fresh reset prompt. Each session's own mod takes it at its next read and
+ * fresh start line. Each session's own mod takes it at its next read and
  * runs it once its turn has ended. One not running is drawn in red.
  */
 async function endOfDay($: EngineInterface): Promise<void> {
@@ -1395,7 +1395,7 @@ async function endOfDay($: EngineInterface): Promise<void> {
   $.ui.toast(
     [
       `End of Day: asked ${asked}`,
-      `${fresh} had a fresh prompt`,
+      `${fresh} had a fresh start line`,
       `${down} not running`,
       ...(failed > 0 ? [`${failed} could not be asked`] : []),
     ].join('; '),
@@ -1403,19 +1403,19 @@ async function endOfDay($: EngineInterface): Promise<void> {
   await refresh($)
 }
 
-/** "Copy prompt": the reset prompt file's text, whole, with its line breaks. */
-async function copyPrompt(
+/** "Copy start line": the start line file's text, whole. */
+async function copyStartLine(
   $: EngineInterface,
   one: OwnerSession,
   surface: RenderSurface,
 ): Promise<void> {
-  const text = await slurp($, promptPath($, one.id))
+  const text = await slurp($, startLinePath($, one.id))
   if (text === undefined || text === '') {
-    $.ui.toast(`No reset prompt for ${one.name}`)
+    $.ui.toast(`No start line for ${one.name}`)
 
     return
   }
-  await copy($, text, `the reset prompt of ${one.name}`, surface)
+  await copy($, text, `the start line of ${one.name}`, surface)
 }
 
 export const register: Register = (on, settings) => {
@@ -1524,7 +1524,7 @@ export const register: Register = (on, settings) => {
       return {
         text: [
           `Session: ${(await me($)) ?? 'unknown'}`,
-          ...(self === undefined ? [] : [`Reset prompt: ${promptPath($, self.id)}`]),
+          ...(self === undefined ? [] : [`Start line: ${startLinePath($, self.id)}`]),
         ].join('\n'),
       }
     await show($)
@@ -1548,14 +1548,14 @@ export const register: Register = (on, settings) => {
             },
           ]
         : []),
-      // The write route (#161): the exact file a tracked session's reset
-      // prompt goes to.
+      // The write route (#161): the exact file a tracked session's start
+      // line goes to.
       ...(self === undefined
         ? []
         : [
             {
-              id: 'owner-queue:reset-prompt',
-              text: `owner-queue: this session is tracked as ${self.role}. When it prepares for a clear (the session-rules skill, "A role session's clear boundary"), it writes its reset prompt, whole, to ${promptPath($, self.id)} with its file tool: it replaces the file, never appends. The owner-queue pane reads it from there.`,
+              id: 'owner-queue:start-line',
+              text: `owner-queue: this session is tracked as ${self.role}. In the last step of its prep (the session-rules skill, "A role session's clear boundary"), it writes its start line, whole, to ${startLinePath($, self.id)} with its file tool: it replaces the file, never appends. The owner-queue pane reads it from there.`,
               scope: 'session' as const,
             },
           ]),
@@ -1994,23 +1994,23 @@ export const register: Register = (on, settings) => {
       <Button key="end-of-day" label="End of Day" onPress={() => endOfDay($)} />
     )
 
-    // Each tracked session (#161): its state, its reset prompt, and a copy
+    // Each tracked session (#161): its state, its start line, and a copy
     // button. Stopped and closed are drawn in red, each with its own word.
-    const prompts = tracked.sessions.length > 0 && (
+    const startLines = tracked.sessions.length > 0 && (
       <Box flexDirection="column" marginBottom={1}>
-        <Text bold>Reset prompts ({tracked.sessions.length})</Text>
+        <Text bold>Start lines ({tracked.sessions.length})</Text>
         {tracked.sessions.map(one => {
           const isOff = isDown(one.seen)
-          const prompt = one.prompt
+          const line = one.prompt
           const word =
-            prompt === undefined
+            line === undefined
               ? undefined
-              : prompt.isUsed
+              : line.isUsed
                 ? 'used'
-                : prompt.isFresh
+                : line.isFresh
                   ? 'fresh'
                   : 'stale'
-          const isMissing = isOff && !prompt?.isFresh
+          const isMissing = isOff && !line?.isFresh
 
           return (
             <Box flexDirection="column" paddingLeft={2}>
@@ -2021,19 +2021,19 @@ export const register: Register = (on, settings) => {
               )}
               <Box paddingLeft={2} flexDirection="column">
                 {isMissing && (
-                  <Text color="red">{`no reset prompt, ${one.seen}`}</Text>
+                  <Text color="red">{`no start line, ${one.seen}`}</Text>
                 )}
-                {prompt !== undefined ? (
-                  <Text dimColor>{`Reset prompt ${prompt.at}: ${word}`}</Text>
+                {line !== undefined ? (
+                  <Text dimColor>{`Start line ${line.at}: ${word}`}</Text>
                 ) : (
-                  !isMissing && <Text dimColor>No reset prompt yet</Text>
+                  !isMissing && <Text dimColor>No start line yet</Text>
                 )}
-                {prompt !== undefined && (
+                {line !== undefined && (
                   <Box flexDirection="row">
                     <Button
-                      key={`prompt:${one.id}`}
-                      label="Copy prompt"
-                      onPress={press => copyPrompt($, one, press.surface)}
+                      key={`start-line:${one.id}`}
+                      label="Copy start line"
+                      onPress={press => copyStartLine($, one, press.surface)}
                     />
                   </Box>
                 )}
@@ -2135,7 +2135,7 @@ export const register: Register = (on, settings) => {
           </Box>
         )}
         {heldList}
-        {prompts}
+        {startLines}
         <Text dimColor>
           Source:{' '}
           {groups.length > 0

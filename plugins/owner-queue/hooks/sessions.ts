@@ -4,8 +4,8 @@ import type { OwnerSeen } from '../types'
 export const ROLES = [
   'central-planner',
   'central-builder-manager',
+  'tools-central-builder-manager',
   'supabase-consultant',
-  'supabase-consultant-dispatch',
 ] as const
 
 /** How often a tracked session writes its heartbeat: no more often than this. */
@@ -14,16 +14,16 @@ export const HEARTBEAT_MS = 30000
 /** A record is stale, and its session stopped, after this many missed heartbeats. */
 export const MISSED_BEATS = 3
 
-/** The context size, in tokens, at which a session must prepare for a clear. */
+/** The context size, in tokens, at which a session must prepare. */
 export const CONTEXT_LIMIT = 255000
 
-/** How long a session may sit idle after a turn before it prepares for a clear. */
+/** How long a session may sit idle after a turn before it prepares. */
 export const IDLE_MS = 45 * 60 * 1000
 
 /** The folders in the mod's own data folder, beside `drafts`. */
 export const SESSIONS = 'sessions'
 export const REQUESTS = 'requests'
-export const PROMPTS = 'reset-prompts'
+export const START_LINES = 'start-lines'
 
 export type Trigger = 'context' | 'idle'
 
@@ -54,7 +54,7 @@ export type SessionRecord = {
   ran: number
   /** When each trigger last sent the prep instruction. */
   sent: Partial<Record<Trigger, number>>
-  /** The file time of a reset prompt the `/clear` re-key moved here. */
+  /** The file time of a start line the `/clear` re-key moved here. */
   movedAt?: number
 }
 
@@ -120,8 +120,8 @@ export function isDown(seen: OwnerSeen | undefined): boolean {
 }
 
 /**
- * A reset prompt is fresh when its file time is at or after the session's
- * last `turn.start`. An empty or missing file is no prompt.
+ * A start line is fresh when its file time is at or after the session's
+ * last `turn.start`. An empty or missing file is no start line.
  */
 export function isFresh(
   prompt: { mtimeMs: number; size: number } | undefined,
@@ -130,7 +130,7 @@ export function isFresh(
   return prompt !== undefined && prompt.size > 0 && prompt.mtimeMs >= one.turnStart
 }
 
-/** A moved prompt the session has not written over since the `/clear`. */
+/** A moved start line the session has not written over since the `/clear`. */
 export function isUsed(
   prompt: { mtimeMs: number; size: number } | undefined,
   one: Pick<SessionRecord, 'movedAt'>,
@@ -173,12 +173,15 @@ export function isIdleDue(
   )
 }
 
-/** The prep instruction, naming the session-rules text and the exact file. */
+/**
+ * The prep instruction, naming the session-rules text and the exact file. It
+ * names no kind of boundary: that choice is #262's.
+ */
 export function instruction(why: string, path: string): string {
   return [
-    `owner-queue: prepare for a clear now (${why}).`,
+    `owner-queue: prepare now (${why}).`,
     `Follow the session-rules skill, "A role session's clear boundary", in order.`,
-    `Write the reset prompt last, whole, to ${path}, with your file tool: replace the file, never append.`,
+    `In its last step, write the start line, whole, to ${path}, with your file tool: replace the file, never append.`,
   ].join(' ')
 }
 

@@ -1,5 +1,6 @@
 import { expect, mock, test } from 'claude-code/testing'
 import type { Engine, On } from 'claude-code/testing'
+import { WHY, instruction, roleOf } from './sessions'
 
 const QUEUE_PATH = '.claude/memory/NEEDS-OWNER.md'
 const QUEUE = `# NEEDS-OWNER
@@ -133,9 +134,9 @@ function world(on: On) {
       }),
       mtime: time.now(),
     })
-  const promptOf = (id: string) => `${root()}/reset-prompts/${id}.md`
+  const lineOf = (id: string) => `${root()}/start-lines/${id}.md`
 
-  return { files, sent, toasts, copied, time, ids, faults, find, record, root, other, promptOf }
+  return { files, sent, toasts, copied, time, ids, faults, find, record, root, other, lineOf }
 }
 
 const enroll = (
@@ -168,7 +169,34 @@ const read = async ($: Engine) => {
   await ui.unmount()
 }
 
-test('a tracked role registers, and its id prints its reset prompt path', async ($, on) => {
+test('the instruction names the rule, the path and the reason, and no kind of boundary', () => {
+  const text = instruction(WHY.idle(), '/data/start-lines/planner-1.md')
+
+  expect(text).toBe(
+    "owner-queue: prepare now (idle 45 minutes). Follow the session-rules skill, \"A role session's clear boundary\", in order. In its last step, write the start line, whole, to /data/start-lines/planner-1.md, with your file tool: replace the file, never append.",
+  )
+  for (const why of [WHY.context(260000), WHY.idle(), WHY.request()]) {
+    const one = instruction(why, '/data/start-lines/planner-1.md').toLowerCase()
+    expect(one).not.toContain('reset prompt')
+    expect(one).not.toContain('for a clear')
+    expect(one).not.toContain('/clear')
+    expect(one).not.toContain('compact')
+    // The one "clear" is the quoted heading, character for character.
+    expect(one.split('clear')).toHaveLength(2)
+  }
+})
+
+test('roleOf tracks the Tools manager and no longer the retired dispatch role', () => {
+  expect(roleOf('tools-central-builder-manager')).toBe('tools-central-builder-manager')
+  expect(roleOf('tools:tools-central-builder-manager')).toBe('tools-central-builder-manager')
+  expect(roleOf('supabase-consultant-dispatch')).toBe(undefined)
+  expect(roleOf('tools:supabase-consultant-dispatch')).toBe(undefined)
+  expect(roleOf('central-planner')).toBe('central-planner')
+  expect(roleOf('central-builder-manager')).toBe('central-builder-manager')
+  expect(roleOf('supabase-consultant')).toBe('supabase-consultant')
+})
+
+test('a tracked role registers, and its id prints its start line path', async ($, on) => {
   const w = world(on)
 
   await enroll($)
@@ -176,7 +204,8 @@ test('a tracked role registers, and its id prints its reset prompt path', async 
   expect(one?.role).toBe('central-planner')
   expect(one?.state).toBe('idle')
   const named = await $.command.run({ command: 'owner', args: 'id' })
-  expect(JSON.stringify(named)).toContain('/reset-prompts/planner-1.md')
+  expect(JSON.stringify(named)).toContain('Start line: ')
+  expect(JSON.stringify(named)).toContain('/start-lines/planner-1.md')
 
   // A role a plugin provides is named with its prefix.
   await enroll($, 'consult-1', 'tools:supabase-consultant')
@@ -203,7 +232,7 @@ test('a role that is not tracked, no role, or a subagent writes no record', asyn
   ).toEqual([])
   expect(w.sent).toHaveLength(0)
   const named = await $.command.run({ command: 'owner', args: 'id' })
-  expect(JSON.stringify(named)).not.toContain('reset-prompts')
+  expect(JSON.stringify(named)).not.toContain('start-lines')
 })
 
 test('the context trigger fires once, after the turn, and again only after a new turn', async ($, on) => {
@@ -217,9 +246,9 @@ test('the context trigger fires once, after the turn, and again only after a new
   expect(w.sent).toHaveLength(0)
   await end($, 't1')
   expect(w.sent).toHaveLength(1)
-  expect(w.sent[0]).toContain('prepare for a clear now')
+  expect(w.sent[0]).toContain('prepare now (context at 260000 tokens')
   expect(w.sent[0]).toContain("A role session's clear boundary")
-  expect(w.sent[0]).toContain('/reset-prompts/planner-1.md')
+  expect(w.sent[0]).toContain('/start-lines/planner-1.md')
   expect(w.sent[0]).toContain('replace the file, never append')
 
   // Once: another measurement with no new turn sends nothing.
@@ -227,7 +256,7 @@ test('the context trigger fires once, after the turn, and again only after a new
   await read($)
   expect(w.sent).toHaveLength(1)
 
-  // The prep turn ends with no prompt (Esc on it, a denied write, a question
+  // The prep turn ends with no start line (Esc on it, a denied write, a question
   // back): it re-arms nothing, so the instruction is not sent again (F1).
   await w.time.advance(1000)
   await start($, 't2')
@@ -243,7 +272,7 @@ test('the context trigger fires once, after the turn, and again only after a new
   await read($)
   expect(w.sent).toHaveLength(1)
 
-  // A turn of work after it, still with no prompt: armed again, sent once.
+  // A turn of work after it, still with no start line: armed again, sent once.
   await w.time.advance(1000)
   await start($, 't3')
   await w.time.advance(1000)
@@ -251,18 +280,18 @@ test('the context trigger fires once, after the turn, and again only after a new
   await measure($, 263000)
   expect(w.sent).toHaveLength(2)
 
-  // The prep turn writes the reset prompt and leaves it fresh; a turn of work
+  // The prep turn writes the start line and leaves it fresh; a turn of work
   // after it makes it stale and arms the trigger once more.
   await w.time.advance(1000)
   await start($, 't4')
   await w.time.advance(1000)
-  w.files.set(w.promptOf('planner-1'), { text: 'the prompt', mtime: w.time.now() })
+  w.files.set(w.lineOf('planner-1'), { text: 'the start line', mtime: w.time.now() })
   await end($, 't4')
   await measure($, 264000)
   expect(w.sent).toHaveLength(2)
 })
 
-test('a prep turn with no prompt does not bring the idle trigger back (F1)', async ($, on) => {
+test('a prep turn with no start line does not bring the idle trigger back (F1)', async ($, on) => {
   const w = world(on)
   await enroll($)
   await start($, 't1')
@@ -273,6 +302,9 @@ test('a prep turn with no prompt does not bring the idle trigger back (F1)', asy
   expect(w.sent).toHaveLength(1)
 
   // The prep turn writes nothing; 45 minutes later, nothing is sent again.
+  // A second passes first, so the prep turn starts after the send: without
+  // the fix, that start alone would re-arm the trigger.
+  await w.time.advance(1000)
   await start($, 't2')
   await w.time.advance(1000)
   await end($, 't2')
@@ -330,7 +362,7 @@ test('a record that cannot be written is said once (F7)', async ($, on) => {
   expect(said).toHaveLength(1)
 })
 
-test('the idle trigger fires after 45 minutes, once, and a fresh prompt stops it', async ($, on) => {
+test('the idle trigger fires after 45 minutes, once, and a fresh start line stops it', async ($, on) => {
   const w = world(on)
   await enroll($)
   await start($, 't1')
@@ -348,10 +380,10 @@ test('the idle trigger fires after 45 minutes, once, and a fresh prompt stops it
   await read($)
   expect(w.sent).toHaveLength(1)
 
-  // The prep turn writes the prompt: idle again, nothing is sent a second time.
+  // The prep turn writes the start line: idle again, nothing is sent a second time.
   await start($, 't2')
   await w.time.advance(1000)
-  w.files.set(w.promptOf('planner-1'), { text: 'the prompt', mtime: w.time.now() })
+  w.files.set(w.lineOf('planner-1'), { text: 'the start line', mtime: w.time.now() })
   await end($, 't2')
   await w.time.advance(50 * MINUTE)
   await read($)
@@ -377,20 +409,20 @@ test('a prep request for a busy session runs only after its turn ends', async ($
   expect(w.sent).toHaveLength(1)
 })
 
-test('End of Day skips a fresh prompt, asks a busy one, and flags a closed one', async ($, on) => {
+test('End of Day skips a fresh start line, asks a busy one, and flags a closed one', async ($, on) => {
   const w = world(on)
   await enroll($)
   w.other('manager-1', { state: 'busy', turnStart: w.time.now() })
   w.other('consult-1', { role: 'supabase-consultant', turnStart: w.time.now() - MINUTE })
-  w.files.set(w.promptOf('consult-1'), { text: 'consult prompt', mtime: w.time.now() })
-  w.other('dispatch-1', { role: 'supabase-consultant-dispatch', state: 'closed' })
+  w.files.set(w.lineOf('consult-1'), { text: 'consult start line', mtime: w.time.now() })
+  w.other('dispatch-1', { role: 'tools-central-builder-manager', state: 'closed' })
   await read($)
   const ui = await $.ui.mount({ ...PANE, surface: 'terminal' })
 
   await w.time.advance(1000)
   await ui.press({ key: 'end-of-day' })
 
-  expect(w.toasts).toContain('End of Day: asked 2; 1 had a fresh prompt; 1 not running')
+  expect(w.toasts).toContain('End of Day: asked 2; 1 had a fresh start line; 1 not running')
   expect(w.find('/requests/planner-1.json')).toBeDefined()
   expect(w.find('/requests/manager-1.json')).toBeDefined()
   expect(w.find('/requests/consult-1.json')).toBe(undefined)
@@ -398,7 +430,7 @@ test('End of Day skips a fresh prompt, asks a busy one, and flags a closed one',
   // This session is idle: it takes its own request at once.
   expect(w.sent).toHaveLength(1)
   expect(w.sent[0]).toContain('End of Day')
-  expect(await ui.find({ text: /no reset prompt, closed/ })).toBeDefined()
+  expect(await ui.find({ text: /no start line, closed/ })).toBeDefined()
   expect(await ui.find({ text: /consult-1 \(supabase-consultant\): running, idle/ })).toBeDefined()
   await ui.unmount()
 })
@@ -408,12 +440,12 @@ test('a stale heartbeat with no closed shows as stopped; closed shows as closed'
   await enroll($)
   w.other('manager-1', { beat: w.time.now() - 91000 })
   w.other('consult-1', { role: 'supabase-consultant', beat: w.time.now() - 60000 })
-  w.other('dispatch-1', { role: 'supabase-consultant-dispatch', state: 'closed' })
+  w.other('tools-1', { role: 'tools-central-builder-manager', state: 'closed' })
   await read($)
   const ui = await $.ui.mount({ ...PANE, surface: 'terminal' })
 
   expect(await ui.find({ text: /manager-1 \(central-builder-manager\): stopped/ })).toBeDefined()
-  expect(await ui.find({ text: /dispatch-1 \(supabase-consultant-dispatch\): closed/ })).toBeDefined()
+  expect(await ui.find({ text: /tools-1 \(tools-central-builder-manager\): closed/ })).toBeDefined()
   expect(await ui.find({ text: /consult-1 \(supabase-consultant\): running, idle/ })).toBeDefined()
   await ui.unmount()
 
@@ -426,34 +458,36 @@ test('a stale heartbeat with no closed shows as stopped; closed shows as closed'
   expect(w.record('planner-1')?.state).toBe('closed')
 })
 
-test('a reset prompt is read whole, and Copy prompt copies the newest text', async ($, on) => {
+test('a start line is read whole, and Copy start line copies the newest text', async ($, on) => {
   const w = world(on)
   await enroll($)
-  w.files.set(w.promptOf('planner-1'), { text: 'first\nprompt', mtime: w.time.now() })
+  w.files.set(w.lineOf('planner-1'), { text: 'first start line', mtime: w.time.now() })
   await w.time.advance(1000)
-  w.files.set(w.promptOf('planner-1'), {
-    text: 'second prompt\n\n- line two\n- line three\n',
+  w.files.set(w.lineOf('planner-1'), {
+    text: 'Act as the central-planner. State branch: state/central-planner.',
     mtime: w.time.now(),
   })
   await read($)
   const ui = await $.ui.mount({ ...PANE, surface: 'terminal' })
 
-  expect(await ui.find({ text: /Reset prompt .*: fresh/ })).toBeDefined()
-  await ui.press({ key: 'prompt:planner-1' })
-  expect(w.copied).toEqual(['second prompt\n\n- line two\n- line three\n'])
+  expect(await ui.find({ text: /Start lines \(1\)/ })).toBeDefined()
+  expect(await ui.find({ text: /Start line .*: fresh/ })).toBeDefined()
+  expect(await ui.find({ type: 'Button', label: 'Copy start line' })).toBeDefined()
+  await ui.press({ key: 'start-line:planner-1' })
+  expect(w.copied).toEqual(['Act as the central-planner. State branch: state/central-planner.'])
 
   // A turn after it makes it stale.
   await w.time.advance(1000)
   await start($, 't1')
   await ui.press({ key: 'refresh' })
-  expect(await ui.find({ text: /Reset prompt .*: stale/ })).toBeDefined()
+  expect(await ui.find({ text: /Start line .*: stale/ })).toBeDefined()
   await ui.unmount()
 })
 
-test('a /clear moves the reset prompt to the new id and marks it used', async ($, on) => {
+test('a /clear moves the start line to the new id and marks it used', async ($, on) => {
   const w = world(on)
   await enroll($)
-  w.files.set(w.promptOf('planner-1'), { text: 'the prompt\nwhole', mtime: w.time.now() })
+  w.files.set(w.lineOf('planner-1'), { text: 'the start line', mtime: w.time.now() })
   await read($)
 
   await $.session.end({ reason: 'clear', sessionId: 'planner-1', resume: { id: 'planner-1' } })
@@ -463,12 +497,12 @@ test('a /clear moves the reset prompt to the new id and marks it used', async ($
   w.ids.now = 'planner-2'
   await read($)
 
-  expect(w.files.get(w.promptOf('planner-2'))?.text).toBe('the prompt\nwhole')
-  expect(w.files.get(w.promptOf('planner-1'))?.text).toBe('')
+  expect(w.files.get(w.lineOf('planner-2'))?.text).toBe('the start line')
+  expect(w.files.get(w.lineOf('planner-1'))?.text).toBe('')
   const ui = await $.ui.mount({ ...PANE, surface: 'terminal' })
-  expect(await ui.find({ text: /Reset prompt .*: used/ })).toBeDefined()
-  expect(await ui.find({ key: 'prompt:planner-2' })).toBeDefined()
-  expect(await ui.find({ key: 'prompt:planner-1' })).toBe(undefined)
+  expect(await ui.find({ text: /Start line .*: used/ })).toBeDefined()
+  expect(await ui.find({ key: 'start-line:planner-2' })).toBeDefined()
+  expect(await ui.find({ key: 'start-line:planner-1' })).toBe(undefined)
   expect(await ui.findAll({ type: 'Text', text: /\(central-planner\)/ })).toHaveLength(1)
   await ui.unmount()
 })

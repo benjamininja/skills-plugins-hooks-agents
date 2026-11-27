@@ -37,8 +37,8 @@ it is answered or marked done, as a press on its title would close it (0.11.1).
   Submit says in the pressing session only
   the entries that name it or name no session. The mod tells each session
   its id in the system prompt, and `/owner id` prints it (and, for a
-  tracked session, its reset prompt's path; see "Tracked sessions and reset
-  prompts").
+  tracked session, its start line's path; see "Tracked sessions and start
+  lines").
 - A fenced code block inside an entry is one chunk: the pane draws it
   under the field or step that holds it, with one `Copy block N` button
   that copies it with its line breaks.
@@ -112,18 +112,21 @@ it is answered or marked done, as a press on its title would close it (0.11.1).
 - A session loads the mod once, at launch. A session started before an
   update keeps the old copy; the version line shows which one is drawing.
 
-## Tracked sessions and reset prompts
+## Tracked sessions and start lines
 
-A role session prepares before every clear (session-rules, "A role
-session's clear boundary"). The mod measures and prompts that prep; the
+A role session prepares at its boundary (session-rules, "A role session's
+clear boundary"), and in the last step of that prep it gives its start
+line: the committed constant from its role file, the same at every
+boundary. The mod measures and prompts that prep, and stores the start
+line; the
 session's model never counts for itself. Each tracked session's own copy of
 the mod does the measuring and pulls its instructions. No session pushes to
 another (#161, the planner's ruling).
 
 - **Tracked sessions.** A session is tracked when its main thread was started
   with one of these `--agent` roles: `central-planner`,
-  `central-builder-manager`, `supabase-consultant` or
-  `supabase-consultant-dispatch`. A role a plugin provides counts by its name
+  `central-builder-manager`, `tools-central-builder-manager` or
+  `supabase-consultant`. A role a plugin provides counts by its name
   after the `plugin:` prefix. It registers itself at start
   (`classic.SessionStart`, its `agent_type`). Stage builders and sessions
   with no role are never tracked and write nothing.
@@ -137,8 +140,8 @@ another (#161, the planner's ruling).
     heartbeat written every 30 seconds.
   - `requests/<id>.json`: a prep request. Only the pane writes it, when the
     owner presses End of Day.
-  - `reset-prompts/<id>.md`: the session's reset prompt. Only the session
-    writes it.
+  - `start-lines/<id>.md`: the session's start line, and nothing else.
+    Only the session writes it, whole, in the last step of its prep.
 
   The records are files, not keys in the mod's `$.store`, because `$.store`
   is one JSON file with no compare-and-set: two sessions writing it at the
@@ -148,32 +151,36 @@ another (#161, the planner's ruling).
   beats stale with no `closed` means stopped. Stopped and closed are drawn in
   red, each with its own word.
 - **The write route.** A tracked session's system prompt names the exact
-  file for its reset prompt, `reset-prompts/<id>.md` under the mod's folder,
-  and `/owner id` prints it. The session writes the whole file with its file
-  tool. It replaces the file and never appends. A session that works on
-  after its prep writes it again before its turn ends.
-- **Fresh or stale.** A reset prompt is fresh when its file time is at or
+  file for its start line, `start-lines/<id>.md` under the mod's folder,
+  and `/owner id` prints it. In the last step of its prep the session
+  writes the start line, whole, with its file tool. It replaces the file
+  and never appends. A session that works on after its prep writes it
+  again before its turn ends.
+- **Fresh or stale.** A start line is fresh when its file time is at or
   after the session's last turn start. A turn that starts later makes it
   stale.
-- **The triggers.** Each is sent once, until a new turn starts after it, and
-  never while the prompt is fresh. The session's own mod sends the prep
-  instruction into its own chat, and only while the session is idle, so a
-  busy session gets it right after its current turn:
+- **The triggers.** Each is sent once, and never while the start line is
+  fresh. Only a turn of work that starts after it re-arms a trigger; the
+  prep turn the instruction starts does not, so a prep that ends with no
+  start line (Esc, a denied write, a question back) is not sent again
+  until a turn of work has run. The instruction names no kind of
+  boundary. The session's own mod sends it into its own chat, and only
+  while the session is idle, so a busy session gets it right after its
+  current turn:
   - its context reaches 255,000 tokens. This is a must: the session finishes
     its current step and prepares before new work;
   - it has been idle 45 minutes after a turn;
   - the owner pressed End of Day.
-- **Reset prompts**, a section of the pane: one row per tracked session,
-  with its name, role and state, the prompt's time and `fresh`, `stale` or
-  `used`, and `Copy prompt`, which copies the file whole with its line
-  breaks.
+- **Start lines**, a section of the pane: one row per tracked session,
+  with its name, role and state, the start line's time and `fresh`,
+  `stale` or `used`, and `Copy start line`, which copies the file whole.
 - **End of Day**, in the pane's top row beside `Refresh`: it writes a prep
-  request for every running tracked session with no fresh prompt. Each takes
-  it at its next read, once its turn has ended. A stopped or closed session
-  is drawn in red as "no reset prompt, closed" (or "stopped"); its last
-  prompt stays as it was.
+  request for every running tracked session with no fresh start line. Each
+  takes it at its next read, once its turn has ended. A stopped or closed
+  session is drawn in red as "no start line, closed" (or "stopped"); its
+  last start line stays as it was.
 - **A `/clear`.** A cleared id is not closed. The re-key that already runs
-  moves the reset prompt to the new id: the new file gets the text, the old
+  moves the start line to the new id: the new file gets the text, the old
   one is emptied, and the row says `used` until the session writes a new
   one. The old id's row is no longer drawn.
 - **Held for a session that is not running.** When Submit sends an answer, a
