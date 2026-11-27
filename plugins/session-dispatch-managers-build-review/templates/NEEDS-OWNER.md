@@ -1,7 +1,9 @@
 # NEEDS-OWNER
 
-What waits on the owner, in one place. The `owner-queue` pane reads the
-main checkout's copy of this file and no other.
+What waits on the owner for this project, in one place. The
+`owner-queue` pane reads the main checkout's copy of this file and no
+other. This file is never committed: the project's `.gitignore` names
+it.
 
 Format:
 
@@ -11,6 +13,12 @@ Format:
   - A decision carries Ticket, Context, Options, Recommended, Blocks,
     Raised.
   - An action carries Ticket, Steps, Context, Blocks, Raised.
+  - `Ticket:` holds the ticket's full link. An entry belongs in the
+    queue of the project whose repo holds that ticket.
+  - `- Id: <id>` is the entry's id, written by the queue CLI: `d14` for
+    a decision, `a9` for an action, counted up per project and never
+    reused. **No agent writes or changes an `Id:` line by hand.** An
+    entry without one is named by its title.
 - Options are written `- Options: (a) ...; (b) ...` and
   `- Recommended: (a), because ...`. The pane shows one button per
   option.
@@ -23,11 +31,12 @@ Format:
   command, written exactly as it is run. The pane copies it whole.
 - Steps are numbered `1.`, `2.`, `3.` inside the Steps field. The pane
   draws one step per row, with that step's Copy buttons under it.
-- `- Session: <id>` is optional: the id of the session the answer goes
-  back to. `/owner id` prints a session's id.
+- `- Session: <id>` is optional: the id of the session that acts on
+  the answer, which gets it. For a builder's park that is the manager,
+  who relays it. `/owner id` prints a session's id.
   - A `/clear` gives a session a new id; a compaction keeps it. The
-    raising session sends the manager its new id, and the entries it
-    raised are re-keyed (`references/parking.md`, "The Session line
+    named session sends the manager its new id, and its entries are
+    re-keyed (`references/parking.md`, "The Session line
     across a clear").
 - Secrets are named, never written. No personal details of the owner,
   and no name the project keeps private.
