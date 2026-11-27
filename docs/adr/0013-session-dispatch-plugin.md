@@ -1,6 +1,7 @@
 # A plugin for dispatching builder sessions
 
-- Status: accepted; amended 2026-11-07 (builder profiles)
+- Status: accepted; amended 2026-11-07 (builder profiles); Revision 1,
+  2026-11-23, notes this repository's own manager
 - Date: 2026-10-12
 - Scope: `plugins/session-dispatch-managers-build-review/`, `tests/test_session_dispatch.py`
 - Amendments: builder profiles, 2026-11-07 (below)
@@ -153,3 +154,12 @@ cannot narrow writes, which is why a base file exists.
   manager reads the script against them at closeout. A script that
   changes data is not a probe. (Planner's second amendment on #83,
   issuecomment-6711061289.)
+
+## Revision 1 (2026-11-23): this repository has its own manager
+
+Ticket: tools #248 (ADR hygiene). The Context says one project, the Dynasty
+repository, is worked by these sessions. That is no longer so: this
+repository has had a builder manager of its own,
+`tools-central-builder-manager`, since tools #228 (PR #230), an instance of
+the manager role this ADR decides. `stage-builder` is the builder role it
+decides. Neither needed an ADR of its own. The decision is unchanged.

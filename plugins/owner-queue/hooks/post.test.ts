@@ -146,6 +146,8 @@ test('typed words wait for Submit, as a comment or as the answer', async ($, on)
   expect(toasts.at(-1)).toBe('Answer staged; it is written on Submit')
   expect(await ui.find({ text: /Chosen, not submitted: \(other\) maybe/ })).toBeDefined()
   expect((await ui.find({ key: 'submit' }))?.text).toBe('Submit (4)')
+  // A staged answer closes the entry; the owner opens it again by hand.
+  await ui.press({ key: `row:${theirs}` })
   await ui.press({ key: `post:${theirs}` })
   await ui.input({ key: `text:${theirs}`, text: 'neither, I merge', kind: 'change' })
   await ui.press({ key: `send-answer:${theirs}` })
@@ -154,10 +156,12 @@ test('typed words wait for Submit, as a comment or as the answer', async ($, on)
     await ui.find({ text: /Chosen, not submitted: \(other\) neither, I merge/ }),
   ).toBeDefined()
   expect((await ui.find({ key: 'submit' }))?.text).toBe('Submit (4)')
-  // Staged, the decision is still open: its options can be pressed.
+  // Opened again, the decision's options can be pressed.
+  await ui.press({ key: `row:${theirs}` })
   await ui.press({ key: `pick:${theirs}:b` })
   expect(await ui.find({ text: /\(other\) neither/ })).toBe(undefined)
   expect(await ui.find({ text: /Chosen, not submitted: \(b\) Two-key merge/ })).toBeDefined()
+  await ui.press({ key: `row:${theirs}` })
   await ui.press({ key: `post:${theirs}` })
   await ui.input({ key: `text:${theirs}`, text: 'neither, I merge', kind: 'change' })
   await ui.press({ key: `send-answer:${theirs}` })
@@ -172,6 +176,7 @@ test('typed words wait for Submit, as a comment or as the answer', async ($, on)
   expect(sent).toHaveLength(0)
 
   // A staged comment goes with an entry that has left the file.
+  await ui.press({ key: `row:${open}` })
   await ui.press({ key: `post:${open}` })
   await ui.input({ key: `text:${open}`, text: 'gone soon' })
   expect((await ui.find({ key: 'submit' }))?.text).toBe('Submit (6)')
@@ -214,6 +219,7 @@ test('typed words wait for Submit, as a comment or as the answer', async ($, on)
     await ui.find({ text: /You said, 2026-10-12 \d\d:\d\d: which file/ }),
   ).toBeDefined()
   // The answered decision still takes a comment, but no second answer.
+  await ui.press({ key: `row:${theirs}` })
   expect(await ui.find({ key: `pick:${theirs}:a` })).toBe(undefined)
   expect(await ui.find({ key: `reopen:${theirs}` })).toBeDefined()
   await ui.press({ key: `post:${theirs}` })
