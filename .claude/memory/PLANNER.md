@@ -21,9 +21,10 @@ A clear gives this planner a new queue id: send it to the four peers.
 
 ## Current
 
-**Saved 2026-11-26 about 14:40Z, before a clear Ben asked for.**
-Session a09ca279-6faa-4a61-a313-10328ff9c39d (a clear gives a new id:
-send it to the peers).
+**Saved 2026-11-27, first turn after the clear of 2026-11-26.**
+Session 4e27fb7c-445f-47d9-ad2b-919bca911066, sent to the four peers
+(a clear gives a new id: send it to the peers). Compacts since that
+clear: 0.
 
 **Rules in force since 2026-11-26 (PR #290, #291, #292).** Green is
 the ruleset's three required checks at the PR's head
@@ -79,15 +80,17 @@ more than ten PRs are open, except for a real defect.
      issuecomment-7194918923): fewer than two parsed options is drawn
      as malformed. The manager picks its order against PR #197 (same
      plugin, never built at the same time). Done.
-   - **The rework brief for PR #197 is NOT written.** Direction is on
-     pull/197 issuecomment-7193289687: take main in; store the start
-     line (a constant) instead of a reset prompt; follow #262's ruling
-     on a compact by default; one more review at the new head. Before
-     writing: read the PR's diff (`hooks/sessions.ts`,
-     `hooks/register.tsx`, README) against today's `session-rules`
-     text on the clear boundary, and #262's ruling. Note its `ROLES`
-     list names `supabase-consultant-dispatch`, which PR #249 retired.
-     Send the brief to the manager; the PR keeps Ben's word.
+   - **The rework brief for PR #197 is posted** (2026-11-27,
+     pull/197 issuecomment-7217192501) and sent to the manager: tier
+     high, on the PR's branch at `b7ef918`; main in first; the stored
+     item is the start line in a `start-lines` folder; the instruction
+     names no kind of boundary; `ROLES` drops
+     `supabase-consultant-dispatch` and gains
+     `tools-central-builder-manager`. Next: the manager picks the
+     order against #293 and asks Ben's go; the planner reads the new
+     head against the brief when asked. The PR keeps Ben's word.
+     #262's mod brief (the count, the choice by trigger) is written
+     after this PR merges and is smaller for it.
    - **Consistency between the two projects** (the personal-assistant
      negotiates on Ben's ask): tools positions on issues/217
      issuecomment-7194228313. The planner leads C (state branch), D
@@ -104,8 +107,7 @@ more than ten PRs are open, except for a real defect.
    and each PR on his merge word. The hold on the first real closeout
    run is over: Ben released it in the manager's chat and the run
    removed 32 of 32 merged worktrees, none refused (issues/250
-   issuecomment-7193535351); this planner's worktree was left alone. Owed by the planner now: the rework brief for
-   PR #197 (pull/197 issuecomment-7193289687). Ben's reason, in his
+   issuecomment-7193535351); this planner's worktree was left alone. Ben's reason, in his
    words to the assistant: he wants a freeze only where process is
    poor.
 3. **PR #290 merged, the rest of #273** (`e3a342f`, at head `651bc72`,
@@ -211,13 +213,13 @@ to Ben says what it costs him.
 the ticket is the record. Earlier state is in this file's git history.
 
 **Ids (queue ids change at every clear).** This planner:
-`a09ca279-6faa-4a61-a313-10328ff9c39d` since the start of 2026-11-26,
-until the next clear. Peers, all new on 2026-11-26 after their own
+`4e27fb7c-445f-47d9-ad2b-919bca911066` since 2026-11-27,
+until the next clear. Peers, all new on 2026-11-27 after their own
 clears, each sent by the peer itself:
-Tools-builder-manager `3bac2fdb-b847-4732-b572-e582ae2af312`;
-dff-central-builder-manager `9d28e196-d848-4cf7-a3d6-f97cbe859143`;
-dff-central-planner `536a467f-4989-475e-bcc0-c7a14917d52a`;
-personal-assistant `6f53e894-fbd7-4d4b-894d-55ffd90c0f71` (it was
+Tools-builder-manager `fbd93714-8c8b-49c7-b434-7dee4a8488fd`;
+dff-central-builder-manager `e5579518-3626-469b-b1d5-3095f10a1c6a`;
+dff-central-planner `823b0d8b-9a43-423c-82fe-429cfcd98aae`;
+personal-assistant `5d72e933-3c89-4f59-8d43-6e6ac9884826` (it was
 started from a local pointer, so its role file's start line is still
 untested; owed on #233). The tools queue is empty. PR #198 merged on
 2026-11-25; the state branch has main merged in since and no open PR.
