@@ -36,6 +36,28 @@ Waiting on the manager, each on Ben's word in its chat: the dispatch
 of #263, of #251 part 2, of #262's rule text and of #285; #293 after
 PR #197 merges.
 
+**THE CUT, Ben's buttons of 2026-11-27 (issues/300
+issuecomment-7219626562): "Cut, but keep #300 (Recommended)" and, for
+#54, "Leave it as it is (Recommended)". This replaces the order in the
+paragraph above and in the Next list below wherever they differ.**
+- **Finish:** PR #296 (#251), PR #197, PR #256, PR #301 (#263's
+  follow-up). After #296 merges: the queued Action with the two setup
+  lists.
+- **One repair attempt each, parked if it fails:** PR #211, PR #182.
+- **Kept, the planner's own work, after PR #296 merges:** #300's one
+  text PR (the Never line, decision 10 of #250, the no-go exception),
+  head to the dynasty planner before Ben; then the dated trial line in
+  the tools rules file; then the Action with three deny rules.
+- **Parked, kept open, no brief and no dispatch until Ben says so:**
+  #262, #289, #285, #240 step 2, #111, #293, #294, #295, #298, #299;
+  step 3 of #263 (the opener rule, issuecomment-7219535293) and the
+  ruling on its figures; and the older list (#217 C to F, the
+  assistant's owner-queue text PR, the ADR index sentence, #167).
+- **Backlog, unchanged:** #54.
+- **No new process ticket while the cut stands**, except a real
+  defect in something being finished. A parked item that project work
+  needs goes to Ben by button first.
+
 **Added later on 2026-11-27, after that compact (compact 1 is done).**
 - **Merged:** PR #214 (`fb033c8`, Ben's button) and PR #242
   (`1259c38`), the first merge on Green, checked by the planner: paths
