@@ -86,9 +86,22 @@ more than ten PRs are open, except for a real defect.
      item is the start line in a `start-lines` folder; the instruction
      names no kind of boundary; `ROLES` drops
      `supabase-consultant-dispatch` and gains
-     `tools-central-builder-manager`. Next: the manager picks the
-     order against #293 and asks Ben's go; the planner reads the new
-     head against the brief when asked. The PR keeps Ben's word.
+     `tools-central-builder-manager`. One correction to its proof
+     list (issuecomment-7217265519): the hook runner is the manager's
+     at re-proof, as `python -m pre_commit`. Dispatched 2026-11-27 on
+     Ben's go in the manager's chat, by the manager's report (builder
+     `t161-queuemod`; #197 first, then #293). Next: the planner reads
+     the new head against the brief when asked. The PR keeps Ben's
+     word.
+   - **#293's build brief is posted** (2026-11-27, issues/293
+     issuecomment-7217264766), with the cause confirmed and the
+     writers' text ruled unchanged. Built after PR #197 merges.
+   - **Owed next by the planner: the build brief for #251** (ruling
+     on row 3: issues/251 issuecomment-7191499904), then Ben's go by
+     button. PR #182 is parked until #251 lands, by the manager's
+     report of Ben's button. The planner's per-item answer to the
+     personal-assistant's coordination question of 2026-11-27 was
+     sent by message; the assistant brings Ben one joined list.
      #262's mod brief (the count, the choice by trigger) is written
      after this PR merges and is smaller for it.
    - **Consistency between the two projects** (the personal-assistant
