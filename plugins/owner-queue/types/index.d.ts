@@ -84,9 +84,45 @@ export type OwnerAnswers = Record<string, string>
  */
 export type OwnerNotes = Record<string, string[]>
 
+/** A tracked session's state, as the pane draws it. */
+export type OwnerSeen = 'busy' | 'idle' | 'stopped' | 'closed'
+
+/** One tracked session, as the Start lines section draws it. */
+export type OwnerSession = {
+  id: string
+  role: string
+  name: string
+  seen: OwnerSeen
+  /** The start line's file, when it holds text. */
+  prompt?: {
+    path: string
+    /** Its file time, as `YYYY-MM-DD HH:MM`. */
+    at: string
+    isFresh: boolean
+    /** Moved here by a `/clear` and not written over since. */
+    isUsed: boolean
+  }
+}
+
+/** What waits on a session that is not running: answers, Notes and done marks. */
+export type OwnerHeld = {
+  id: string
+  name: string
+  seen: OwnerSeen
+  lines: string[]
+}
+
+/** The tracked sessions and what is held for those not running. */
+export type OwnerRoster = {
+  sessions: OwnerSession[]
+  held: OwnerHeld[]
+}
+
 declare module 'claude-code' {
   interface PluginState {
     'owner-queue': {
+      /** The tracked sessions, read from the `sessions` folder at each read. */
+      roster: OwnerRoster
       queue: OwnerQueue
       /** The ids (`kind:title`) of the items drawn expanded. */
       open: string[]
