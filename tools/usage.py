@@ -48,10 +48,13 @@ them. A session with no ending reply counts whole and is reported.
 Method point 1, per-read sizes (`reads`): only the turn's context growth is
 measured. Each tool result is sized in characters and turned into tokens at the
 turn's mean ratio, result characters over that growth, so each per-read figure
-is an estimate at that mean ratio, not a measurement. The figures add up to
-the whole growth, which also holds the replies' own output and text the app
-injects, so taken together they are an upper bound on what the reads cost. One
-result alone is not bounded: a result denser than the mean (minified JSON,
+is an estimate at that mean ratio, not a measurement. For a turn that ended
+with positive growth, the figures add up to the whole growth, which also holds
+the replies' own output and text the app injects, so taken together they are
+an upper bound on what the reads cost. No bound is claimed for a turn with no
+ending reply (results may come after its last reply, counted but not grown
+into) or with no growth (an assumed 4 characters per token is used). One
+result alone is never bounded: a result denser than the mean (minified JSON,
 non-ASCII text) is shown below its real size, and a result cut or stored
 outside the context adds characters but no growth, which lowers the rest.
 
@@ -80,7 +83,10 @@ PEER_MARK = "<cross-session-message"
 APP_MARKS = ("<task-notification", "<side-sessions-event")
 REMINDER_MARK = "<system-reminder"
 REMINDER_END = "</system-reminder>"
-LEAD = 120  # the longest lead line allowed before a peer or app tag
+# The one lead line the app writes before a peer message, as it reads in a session's
+# context (November 2026). Any other text before a tag makes the opener "ambiguous".
+APP_LEADS = ("Another Claude session sent a message:\n",)
+ASSUMED_CPT = 4.0  # chars per token when a turn has no growth to divide by
 QUIET_RECORDS = ("assistant", "user", "file-history-snapshot", "attachment", "progress")
 DATE_RE = re.compile(r"\d{4}-\d{2}-\d{2}")
 SID_RE = re.compile(r"[A-Za-z0-9-]{8,64}")
@@ -209,8 +215,10 @@ def opener_kind(text: str) -> str:
 
     Leading system-reminder blocks are set aside first: with nothing after them the
     opener is a system reminder, else the rest decides. A peer message or an app event
-    is one whose tag opens the rest, after at most one short lead line with no markup
-    (the line the app may put before a peer message). Anything else is typed."""
+    is one whose tag opens the rest, or follows exactly one of APP_LEADS. Text holding
+    such a tag anywhere else is "ambiguous" (a typed prompt quoting one, or a lead this
+    script does not know), so a miscount shows as a count, never as a silent guess.
+    Anything else is typed."""
     t = text.lstrip()
     while t.startswith(REMINDER_MARK):
         end = t.find(REMINDER_END)
@@ -219,14 +227,14 @@ def opener_kind(text: str) -> str:
         t = t[end + len(REMINDER_END):].lstrip()
         if not t:
             return "system reminder"
+    rest = next((t[len(lead):] for lead in APP_LEADS if t.startswith(lead)), t)
+    tagged = False
     for kind, marks in (("peer message", (PEER_MARK,)), ("app event", APP_MARKS)):
         for m in marks:
-            pos = t.find(m)
-            lead = t[:pos]
-            one_line = lead == "" or (lead.rstrip(" \t").endswith("\n") and lead.count("\n") == 1)
-            if 0 <= pos <= LEAD and one_line and "<" not in lead:
+            if rest.startswith(m):
                 return kind
-    return "typed"
+            tagged = tagged or m in t
+    return "ambiguous" if tagged else "typed"
 
 
 def size(c) -> int:
@@ -806,10 +814,16 @@ def cmd_reads(a) -> None:
             rows.append((n, "(injected text)", "", ev[1]))
     growth = start[-1].ctx - start[0].ctx
     chars = sum(r[3] for r in rows)
-    cpt = chars / growth if growth > 0 else 4.0
+    bounded = ended and growth > 0
+    cpt = chars / growth if growth > 0 else ASSUMED_CPT
     print("per-read tokens are ESTIMATES at the turn's mean chars/token (method point 1), not "
-          "measurements: together they are an upper bound on the reads (the growth also holds the "
-          "replies' own output and injected text); one dense result alone may be shown below its size")
+          "measurements; one dense result alone may be shown below its size")
+    if bounded:
+        print("the turn ended with positive growth: together the figures are an upper bound on the "
+              "reads (the growth also holds the replies' own output and injected text)")
+    else:
+        why = "the turn has no ending reply" if not ended else f"growth is {growth}, so {ASSUMED_CPT} is assumed"
+        print(f"no bound is claimed: {why}")
     print(f"start-up turn: replies={len(start)} ended={'yes' if ended else 'no'} ctx {start[0].ctx} -> "
           f"{start[-1].ctx} growth={growth} resultChars={chars} chars/token~{cpt:.2f}")
     print("reply  tool                        ext      ~tokens(est at mean)  ~cost(k inEq: 1.25 write + 0.1 x later replies)")

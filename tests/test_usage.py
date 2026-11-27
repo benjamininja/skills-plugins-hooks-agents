@@ -237,7 +237,9 @@ def test_reads_are_upper_bounds_and_print_only_tool_and_extension(tmp_path, caps
     ])
     out = run(capsys, "reads", str(p))
     # F1: each figure is an estimate at the turn's mean ratio; only their sum is a bound
-    assert "ESTIMATES at the turn's mean chars/token" in out and "together they are an upper bound" in out
+    assert "ESTIMATES at the turn's mean chars/token" in out
+    # F5: this turn ended with positive growth, so the bound on the sum is claimed
+    assert "together the figures are an upper bound" in out and "no bound is claimed" not in out
     assert "~tokens(est at mean)" in out
     assert "growth=200 resultChars=500 chars/token~2.50" in out
     rows = [ln.split() for ln in out.splitlines() if ln.strip().startswith(("1 ", "2 "))]
@@ -247,10 +249,39 @@ def test_reads_are_upper_bounds_and_print_only_tool_and_extension(tmp_path, caps
     assert "9999" not in out  # a read after the start-up turn is not in it
 
 
+def test_reads_claims_no_bound_for_a_turn_that_never_ended(tmp_path, capsys):
+    # F5: the result after the last reply is counted, but no growth follows it
+    p = write(tmp_path / "s.jsonl", [
+        user(PROMPT, T(20)),
+        reply("a", T(20), i=0, cr=1000, stop="tool_use", calls=[("u1", "Read", {"file_path": PATH})]),
+        result("u1", "x" * 400, T(20)),
+        reply("b", T(20), i=0, cr=1200, stop="tool_use", calls=[("u2", "Read", {"file_path": PATH})]),
+        result("u2", "x" * 4000, T(20)),
+    ])
+    out = run(capsys, "reads", str(p))
+    assert "no bound is claimed: the turn has no ending reply" in out
+    assert "upper bound" not in out
+
+
+def test_reads_claims_no_bound_when_the_turn_has_no_growth(tmp_path, capsys):
+    # F5: growth 0 falls back to an assumed ratio, which bounds nothing
+    p = write(tmp_path / "s.jsonl", [
+        user(PROMPT, T(20)),
+        reply("a", T(20), i=0, cr=1000, stop="tool_use", calls=[("u1", "Read", {"file_path": PATH})]),
+        result("u1", "x" * 400, T(20)),
+        reply("b", T(20), i=0, cr=1000, stop="end_turn"),
+    ])
+    out = run(capsys, "reads", str(p))
+    assert "no bound is claimed: growth is 0, so 4.0 is assumed" in out
+    assert "chars/token~4.00" in out and "upper bound" not in out
+
+
 def test_the_docstring_carries_both_method_points():
     doc = " ".join(usage.__doc__.split())
     assert "Method point 1" in doc and "an estimate at that mean ratio" in doc
-    assert "taken together they are an upper bound" in doc and "One result alone is not bounded" in doc
+    assert "For a turn that ended with positive growth" in doc and "taken together they are an upper bound" in doc
+    assert "No bound is claimed for a turn with no ending reply" in doc
+    assert "One result alone is never bounded" in doc
     assert "Method point 2" in doc and "first reply whose stop reason ends the turn" in doc
     assert "counted once" in doc
 
@@ -437,20 +468,25 @@ def test_a_compact_copied_into_a_resumed_file_counts_once(tmp_path, capsys):
 @pytest.mark.parametrize("text,kind", [
     (PROMPT, "typed"),
     ("<cross-session-message from=x>hi</cross-session-message>", "peer message"),
-    ("Another session sent a message:\n<cross-session-message from=x>hi</cross-session-message>",
+    # the exact lead line the app writes
+    ("Another Claude session sent a message:\n<cross-session-message from=x>hi</cross-session-message>",
      "peer message"),
-    # F3: a typed prompt that quotes a peer message is still typed
-    ("Ben here. Look at what came in:\n\n<cross-session-message from=x>hi</cross-session-message>",
-     "typed"),
-    ("please read this <cross-session-message from=x>hi</cross-session-message>", "typed"),
+    # F3: any other lead, one line and a single newline included, is not a peer message
+    ("Look at this one:\n<cross-session-message from=x>hi</cross-session-message>", "ambiguous"),
+    ("Another session sent a message:\n<cross-session-message from=x>hi</cross-session-message>",
+     "ambiguous"),
+    ("Look at what came in:\n\n<cross-session-message from=x>hi</cross-session-message>", "ambiguous"),
+    ("please read this <cross-session-message from=x>hi</cross-session-message>", "ambiguous"),
     # F3: a peer message after a long system reminder is a peer message
     ("<system-reminder>" + "r" * 2000 + "</system-reminder>\n<cross-session-message from=x>hi"
      "</cross-session-message>", "peer message"),
+    ("<system-reminder>r</system-reminder>\nAnother Claude session sent a message:\n"
+     "<cross-session-message from=x>hi</cross-session-message>", "peer message"),
     ("<system-reminder>only</system-reminder>  ", "system reminder"),
     ("<system-reminder>unclosed", "system reminder"),
     ("<system-reminder>r</system-reminder>\n" + PROMPT, "typed"),
     ("<task-notification>done</task-notification>", "app event"),
-    ("x" * 200 + "<task-notification>", "typed"),
+    ("x" * 200 + "<task-notification>", "ambiguous"),
 ])
 def test_the_opener_is_judged_at_the_start_of_the_text(text, kind):
     assert usage.opener_kind(text) == kind
