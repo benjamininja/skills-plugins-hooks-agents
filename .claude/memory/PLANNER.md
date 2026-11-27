@@ -61,6 +61,16 @@ PR #197 merges.
   The planner writes the text PR after PR #296 merges, in one PR with
   decision 10 of #250; its head goes to the dynasty planner before
   Ben. Then a queued Action with three deny rules.
+- **#300 also carries, by Ben's buttons "Add the exception
+  (Recommended)" and "Trial on tools too (Recommended)"**
+  (issues/300 issuecomment-7219162508): the same text PR adds to
+  `session-dispatch` that a project rules file may name tiers, never
+  above low, that dispatch without a go. After it merges, a second
+  PR puts a dated line in the tools rules file: low and haiku, two
+  weeks, the manager counts, the planner reports and asks again.
+  Until both merge every dispatch keeps its go.
+- **PR #297 merged** (`6c24a3d`, the manager's report). Its advisory
+  F9 rides with step 2 of #263 (issuecomment-7219163159).
 - **Open PRs at this save:** #296 (#251 part 2, bounded run owed),
   #297 (#263 step 1, back with its builder on F7), #196 (Green, Ben's
   word), #197 (re-proof running), #211, #182, #256.
