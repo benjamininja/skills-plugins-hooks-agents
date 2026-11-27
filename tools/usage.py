@@ -49,11 +49,13 @@ Method point 1, per-read sizes (`reads`): only the turn's context growth is
 measured. Each tool result is sized in characters and turned into tokens at the
 turn's mean ratio, result characters over that growth, so each per-read figure
 is an estimate at that mean ratio, not a measurement. For a turn that ended
-with positive growth, the figures add up to the whole growth, which also holds
-the replies' own output and text the app injects, so taken together they are
-an upper bound on what the reads cost. No bound is claimed for a turn with no
-ending reply (results may come after its last reply, counted but not grown
-into) or with no growth (an assumed 4 characters per token is used). One
+with positive growth and no compact inside it, the figures add up to the whole
+growth, which also holds the replies' own output and text the app injects, so
+taken together they are an upper bound on what the reads cost. No bound is
+claimed for a turn with no ending reply (results may come after its last
+reply, counted but not grown into), with no growth (an assumed 4 characters
+per token is used), or with a compact between its first and last reply (the
+growth covers only what survived the compact). One
 result alone is never bounded: a result denser than the mean (minified JSON,
 non-ASCII text) is shown below its real size, and a result cut or stored
 outside the context adds characters but no growth, which lowers the rest.
@@ -87,6 +89,7 @@ REMINDER_END = "</system-reminder>"
 # context (November 2026). Any other text before a tag makes the opener "ambiguous".
 APP_LEADS = ("Another Claude session sent a message:\n",)
 ASSUMED_CPT = 4.0  # chars per token when a turn has no growth to divide by
+OPENER_KINDS = ("typed", "peer message", "app event", "system reminder", "ambiguous")
 QUIET_RECORDS = ("assistant", "user", "file-history-snapshot", "attachment", "progress")
 DATE_RE = re.compile(r"\d{4}-\d{2}-\d{2}")
 SID_RE = re.compile(r"[A-Za-z0-9-]{8,64}")
@@ -644,6 +647,7 @@ def cmd_tags(a) -> None:
         c = s.counted()
         x = acc[role]
         x["all"]["sessions"] += 1
+        x["openers"].update(s.openers)
         prev_t = None
         for k, (r, tag) in enumerate(zip(c, tag_replies(s, c, a.tags))):
             x[tag]["n"] += 1
@@ -678,6 +682,8 @@ def cmd_tags(a) -> None:
         for n in names:
             print(f"{n:14} {x[n]['n']:7} {x[n]['eq'] / M:8.2f} {pct(x[n]['eq'], e):>6}")
         print(f"untagged share of inEq: {pct(x[UNTAGGED]['eq'], e)}")
+        print("turns opened by: " + " ".join(
+            f"{k.replace(' ', '-')}={x['openers'][k]}" for k in OPENER_KINDS))
         print(f"idle re-reads (reply after a gap > {a.idle_gap:.0f}s): replies={x['idle']['n']} "
               f"inEq={x['idle']['eq'] / M:.2f}M share={pct(x['idle']['eq'], e)} "
               f"of which cacheWrite={x['idle']['cw'] / M:.2f}M")
@@ -814,7 +820,10 @@ def cmd_reads(a) -> None:
             rows.append((n, "(injected text)", "", ev[1]))
     growth = start[-1].ctx - start[0].ctx
     chars = sum(r[3] for r in rows)
-    bounded = ended and growth > 0
+    # a compact between the turn's first and last reply drops context, so the growth
+    # covers only what survived it
+    compacted = any(1 <= cp.at < len(start) for cp in s.compacts)
+    bounded = ended and growth > 0 and not compacted
     cpt = chars / growth if growth > 0 else ASSUMED_CPT
     print("per-read tokens are ESTIMATES at the turn's mean chars/token (method point 1), not "
           "measurements; one dense result alone may be shown below its size")
@@ -822,7 +831,12 @@ def cmd_reads(a) -> None:
         print("the turn ended with positive growth: together the figures are an upper bound on the "
               "reads (the growth also holds the replies' own output and injected text)")
     else:
-        why = "the turn has no ending reply" if not ended else f"growth is {growth}, so {ASSUMED_CPT} is assumed"
+        if not ended:
+            why = "the turn has no ending reply"
+        elif growth <= 0:
+            why = f"growth is {growth}, so {ASSUMED_CPT} is assumed"
+        else:
+            why = "a compact falls inside the turn, so its growth covers only what survived it"
         print(f"no bound is claimed: {why}")
     print(f"start-up turn: replies={len(start)} ended={'yes' if ended else 'no'} ctx {start[0].ctx} -> "
           f"{start[-1].ctx} growth={growth} resultChars={chars} chars/token~{cpt:.2f}")

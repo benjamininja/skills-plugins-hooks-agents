@@ -276,6 +276,38 @@ def test_reads_claims_no_bound_when_the_turn_has_no_growth(tmp_path, capsys):
     assert "chars/token~4.00" in out and "upper bound" not in out
 
 
+def test_reads_claims_no_bound_when_a_compact_falls_inside_the_turn(tmp_path, capsys):
+    # F7: the growth after a compact covers only what survived it
+    p = write(tmp_path / "s.jsonl", [
+        user(PROMPT, T(20)),
+        reply("a", T(20), i=0, cr=150_000, stop="tool_use", calls=[("u1", "Read", {"file_path": PATH})]),
+        result("u1", "x" * 400, T(20)),
+        compact(T(20, "10:00:05")),
+        reply("b", T(20, "10:00:06"), i=0, cr=160_000, stop="end_turn"),
+    ])
+    out = run(capsys, "reads", str(p))
+    assert "no bound is claimed: a compact falls inside the turn" in out
+    assert "upper bound" not in out
+
+
+def test_tags_counts_openers_by_kind_with_ambiguous_apart(tmp_path, capsys):
+    # F8: step 2 reads this line to check the stored lead of a peer message
+    s = tmp_path / "store"
+    write(s / "C--x" / "kkkk0001-0000.jsonl", [
+        title("a manager"),
+        user(PROMPT, T(21, "08:00:00")), reply("a", T(21, "08:00:01")),
+        user("<cross-session-message from=y>hi</cross-session-message>", T(21, "08:01:00")),
+        reply("b", T(21, "08:01:01")),
+        user("Some lead the script does not know:\n<cross-session-message from=y>hi</cross-session-message>",
+             T(21, "08:02:00")),
+        reply("c", T(21, "08:02:01")),
+        user("<task-notification>done</task-notification>", T(21, "08:03:00")), reply("d", T(21, "08:03:01")),
+    ])
+    out = run(capsys, "tags", "--store", str(s), "--from", "2026-11-21", "--to", "2026-11-21")
+    assert ("turns opened by: typed=1 peer-message=1 app-event=1 system-reminder=0 ambiguous=1"
+            in out)
+
+
 def test_the_docstring_carries_both_method_points():
     doc = " ".join(usage.__doc__.split())
     assert "Method point 1" in doc and "an estimate at that mean ratio" in doc
