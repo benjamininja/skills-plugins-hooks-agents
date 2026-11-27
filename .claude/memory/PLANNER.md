@@ -21,10 +21,20 @@ A clear gives this planner a new queue id: send it to the four peers.
 
 ## Current
 
-**Saved 2026-11-27, first turn after the clear of 2026-11-26.**
+**Saved 2026-11-27, before a compact Ben asked for.**
 Session 4e27fb7c-445f-47d9-ad2b-919bca911066, sent to the four peers
-(a clear gives a new id: send it to the peers). Compacts since that
-clear: 0.
+(a clear gives a new id: send it to the peers; a compact keeps it).
+Compacts since the clear of 2026-11-26: 1 once this compact is done.
+No background task is running. Nothing waits on Ben in the planner's
+chat. Item 1 below is current as of this save; the planner's own next
+pieces are, in order: read PR #197's new head against its brief when
+the manager asks; after #251's PR merges, the queued Action with the
+two lists, the rule-text PR for decision 10 and one line to the
+dynasty planner; the consistency points C to F on #217; the text PR
+for the assistant's own owner queue; the ADR index sentence; #167.
+Waiting on the manager, each on Ben's word in its chat: the dispatch
+of #263, of #251 part 2, of #262's rule text and of #285; #293 after
+PR #197 merges.
 
 **Rules in force since 2026-11-26 (PR #290, #291, #292).** Green is
 the ruleset's three required checks at the PR's head
