@@ -107,9 +107,16 @@ more than ten PRs are open, except for a real defect.
      its report: #242 `0e58d68`, #214 `ae9fc32`, #211 `5f95725`,
      #196 `8e602fe`. PR #242 is the first candidate for a merge on
      Green.
-   - **Owed next by the planner: the build brief for #251** (ruling
-     on row 3: issues/251 issuecomment-7191499904), then Ben's go by
-     button. PR #182 is parked until #251 lands, by the manager's
+   - **#251's finding is ruled and its Part 2 brief is posted**
+     (2026-11-27, issues/251 issuecomment-7217395316), with Ben's
+     button "Bounded run (Recommended)" on the proof before the merge
+     (it settles decision 5 of #250, which the ruling of 2026-11-26
+     had narrowed without his word). Sent to the manager; Ben's go of
+     2026-11-23 covers it and the manager asks him at dispatch. After
+     its merge the planner owes: the queued Action with the two lists
+     for the dispatch config, the rule-text PR for decision 10, one
+     line to the dynasty planner for its #655.
+     PR #182 is parked until #251 lands, by the manager's
      report of Ben's button. The planner's per-item answer to the
      personal-assistant's coordination question of 2026-11-27 was
      sent by message; the assistant brings Ben one joined list.
