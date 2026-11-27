@@ -63,7 +63,7 @@ is armed in this session; a compact keeps it.
 - On Ben: the merge words for #197 and #296 once re-proved; the
   dotclaude#12 merge; the managers settings text as one Action. The
   queue file holds no open entry.
-- On builders: `t263-usage-scripts` (#297 F7, F8); `t168-gitgate`
+- On builders: `t263-usage-scripts` (step 2 figures); `t168-gitgate`
   (#211 fix); `t161-queuemod` waits for #197's re-proof;
   `t251b-setup-lists` waits for the manager's bounded run.
 - On the planner: #298 after #296 merges; #294 after #197 merges.
