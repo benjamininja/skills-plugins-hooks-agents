@@ -37,8 +37,11 @@ Read `references/dispatch.md` before the first dispatch of a session.
 1. Dry run, always first:
    `scripts/dispatch.ps1 -Name <name> -Tier <tier> -PromptFile <file>`
    (the script is two folders above this skill's base folder). Read
-   every line it prints: the tier, the worktree, the settings file, the
-   profile, the deny rules, the start command.
+   every line it prints: the tier, the worktree, the base commit, the
+   settings file, the profile, the deny rules, the start command.
+   **When a brief has a `Base:` line other than `origin/main`**, add
+   `-Base <that value>`. A brief with no `Base:` line starts at
+   `origin/main`, fetched at `-Apply`.
    **When a brief names a profile** (a `Profile:` line), add
    `-Profile <name>`, and check that the printed rules are what the
    ticket needs. A brief with no `Profile:` line gets no profile. A
@@ -60,15 +63,21 @@ Only after the builder has reported the PR green, and only after the
 manager has re-proved every item of the project's Green list itself and
 posted the output on the PR. Then one squash-merge. A PR that is not
 green is not merged. A builder's PR for a dispatched ticket needs no
-further word from the owner; any other PR (the manager's own, the
-planner's) is merged only after the owner has approved that PR.
+further word from the owner, except where `session-rules` keeps the
+owner's word ("Merging on Green": a gate change, a path no required
+check covers, the parking list, a migration or published data); any
+other PR (the manager's
+own, the planner's) is merged only after the owner has approved that PR.
 `references/manager.md` has those merges and the planner's read.
 
 ## Closeout
 
 Only for a builder this session dispatched, only when it has stopped,
-and in the order of `references/dispatch.md`. A branch is deleted only after `git cherry`
-shows nothing missing; a worktree is removed only if it holds no
-uncommitted file. Anything else is listed for the owner and left where
-it is. Nothing else is deleted: not another session's branch or
-worktree, and nothing the owner has not named.
+and in the order of `references/dispatch.md`. Right after the merge, as
+one step with no separate word from the owner, the manager runs
+`scripts/closeout.py` for that builder: a dry run, then the same line
+with `--apply`. The script alone removes the worktree and deletes the
+branch, and only when they hold nothing unmerged or uncommitted.
+Anything it refuses is listed for the owner and left where it is.
+Nothing else is deleted: not another session's branch or worktree, and
+nothing the owner has not named.

@@ -4,7 +4,8 @@ A Claude Code mod that shows what is waiting on the owner: the decisions and
 by-hand actions listed in a project's `.claude/memory/NEEDS-OWNER.md`.
 A decision is answered by pressing one of its options, or by typing an
 answer, and `Submit`. `Post comment` stages typed words, as a comment or as
-the answer; nothing is written or sent until `Submit`.
+the answer; nothing is written or sent until `Submit`. An entry closes when
+it is answered or marked done, as a press on its title would close it (0.11.1).
 
 - A band above the prompt gives the counts and a `Show queue` / `Hide queue`
   button.
@@ -258,6 +259,23 @@ new session.
   "CLAUDE_CODE_PLUGIN_DIRS": "<live clone>\\plugins\\owner-queue"
 }
 ```
+
+That `env` block is the one place that names plugin folders (#195):
+
+- **More than one folder** goes in the same value, joined by a semicolon on
+  Windows.
+- **No operating-system variable of the same name may exist.** A user-level
+  one wins over the settings file in a desktop session. This must print an
+  empty line in PowerShell:
+  `[Environment]::GetEnvironmentVariable('CLAUDE_CODE_PLUGIN_DIRS', 'User')`
+- **The value is read when the app starts a session.** After an edit, quit
+  the desktop app fully, tray icon included, and start it again;
+  `/reload-plugins` does not bring in a new folder. This prints what the
+  file holds:
+  `(Get-Content -Raw "$HOME\.claude\settings.json" | ConvertFrom-Json).env.CLAUDE_CODE_PLUGIN_DIRS`
+- **`pluginConfigs` in the same file is not the environment.** It holds the
+  mod's own options, such as `queues` below, and a folder named there loads
+  nothing.
 
 ### One queue per project, many in one pane
 

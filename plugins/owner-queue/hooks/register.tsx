@@ -734,11 +734,19 @@ function stage(
       ? was === what
       : was.key !== OTHER && was.key === what.key)
 
+  let isTaken = false
+
   return update($, staged, held => {
     const { [id]: was, ...rest } = held
+    isTaken = isSame(was)
 
-    return isSame(was) ? rest : { ...rest, [id]: what }
-  })
+    return isTaken ? rest : { ...rest, [id]: what }
+  }).then(() =>
+    // A press that stages closes the entry, as a press on its title would.
+    isTaken
+      ? undefined
+      : update($, open, list => list.filter(one => one !== id)),
+  )
 }
 
 /**
