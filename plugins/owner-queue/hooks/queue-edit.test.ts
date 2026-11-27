@@ -166,13 +166,33 @@ test('remove takes one entry and nothing around it', () => {
   expect(paneLines(done.text)).toEqual(paneLines(FILE))
 })
 
-test('remove takes an answered entry, whole, without the flag', () => {
-  const done = remove(FILE, 'Answered decision')
+test('remove refuses an answered entry, names the flag, and takes it with --with-answers', () => {
+  const why = failure(() => remove(FILE, 'Answered decision'))
+
+  expect(why).toContain('"Answered decision" holds an Answer line')
+  expect(why).toContain('--with-answers')
+  expect(why).not.toContain('--with-notes')
+  expect(failure(() => remove(FILE, 'Answered decision', true))).toContain('--with-answers')
+  const done = remove(FILE, 'Answered decision', false, undefined, true)
 
   expect(done.text).not.toContain('Answered decision')
   expect(paneLines(done.text)).toEqual(
     paneLines(FILE).filter(line => !line.startsWith('- Answer: (b) two')),
   )
+})
+
+test('remove of an entry holding a Note and an Answer needs both flags', () => {
+  const both =
+    '## Decisions\n\n### [ ] Both\n- Options: (a) one\n- Answer: (a) one | pane\n- Note: more | pane\n'
+  const why = failure(() => remove(both, 'Both'))
+
+  expect(why).toContain('a Note line and an Answer line')
+  expect(why).toContain('--with-notes and --with-answers')
+  expect(failure(() => remove(both, 'Both', true))).toContain('holds an Answer line')
+  expect(failure(() => remove(both, 'Both', false, undefined, true))).toContain(
+    'holds a Note line',
+  )
+  expect(remove(both, 'Both', true, undefined, true).text).toBe('## Decisions\n')
 })
 
 test('remove refuses an entry that holds a Note, and keeps it unless flagged', () => {
@@ -215,7 +235,7 @@ test('prune takes ticked Actions, keeps the named, and holds the ones with a Not
 
   expect(done.removed).toEqual(['Done action', 'Last action'])
   expect(done.kept).toEqual(['Keep me action'])
-  expect(done.held).toEqual(['Done action with a note'])
+  expect(done.held).toEqual([{ title: 'Done action with a note', line: 'Note' }])
   expect(done.text).toContain('### [x] Done action with a note')
   expect(done.text).toContain('### [x] Keep me action')
   expect(done.text).toContain('### [x] Ticked decision')
@@ -236,6 +256,33 @@ test('prune with the flag takes the Notes of a ticked Action with it', () => {
   expect(done.held).toEqual([])
   expect(done.text).not.toContain('still wanted')
   expect(done.text).toContain('first words')
+})
+
+test('prune holds a ticked Action with an Answer unless --with-answers, and names the line', () => {
+  const file =
+    '## Actions\n\n### [x] Answered\n- Steps: a\n- Answer: (a) go | pane\n\n### [x] Both\n- Steps: b\n- Answer: (a) go | pane\n- Note: n | pane\n\n### [x] Plain\n- Steps: c\n'
+  const held = prune(file)
+
+  expect(held.removed).toEqual(['Plain'])
+  expect(held.held).toEqual([
+    { title: 'Answered', line: 'Answer' },
+    { title: 'Both', line: 'Note and Answer' },
+  ])
+  expect(held.text).toContain('- Answer: (a) go | pane')
+  const notes = prune(file, [], true)
+
+  expect(notes.held).toEqual([
+    { title: 'Answered', line: 'Answer' },
+    { title: 'Both', line: 'Answer' },
+  ])
+  const answers = prune(file, [], false, true)
+
+  expect(answers.removed).toEqual(['Answered', 'Plain'])
+  expect(answers.held).toEqual([{ title: 'Both', line: 'Note' }])
+  const all = prune(file, [], true, true)
+
+  expect(all.removed).toEqual(['Answered', 'Both', 'Plain'])
+  expect(all.text).toBe('## Actions\n')
 })
 
 test('prune lays the file out as it was, and a file with nothing ticked is unchanged', () => {
@@ -268,7 +315,7 @@ test('F1: a label with a space or marks around it is still an Answer or Note lin
   const spaced = SMALL.replace('- Context: x', '- Context: x\n- Note : by hand')
   expect(failure(() => remove(spaced, 'Old'))).toContain('holds a Note')
   const action = '## Actions\n\n### [x] A\n- Steps: a\n- **Note** : by hand\n'
-  expect(prune(action).held).toEqual(['A'])
+  expect(prune(action).held).toEqual([{ title: 'A', line: 'Note' }])
   expect(prune(action).text).toBe(action)
 })
 
@@ -338,7 +385,7 @@ test('F7: a title used in both sections is removed by naming its kind', () => {
 test('F11: every entry the parser lists is found by title and kind, in LF and CRLF', () => {
   for (const text of [FILE, FILE.replaceAll('\n', '\r\n')])
     for (const item of parse(text))
-      expect(remove(text, item.title, true, item.kind).count > 0).toBe(true)
+      expect(remove(text, item.title, true, item.kind, true).count > 0).toBe(true)
 })
 
 const memory = (files: Record<string, string>) => {
@@ -373,16 +420,39 @@ test('the command line adds, removes and prunes, and prints what it did', () => 
   const n = memory({ 'q.md': FILE })
   expect(run(['q.md', 'prune', '--keep', 'Keep me', '--keep', 'x'], n.io)).toBe(0)
   expect(n.out[0]).toBe(
-    'removed 2 kept ["Keep me action"] held for a Note ["Done action with a note"]',
+    'removed 2 kept ["Keep me action"] held [{"title":"Done action with a note","line":"Note"}]',
   )
   expect(n.writes).toEqual(['q.md'])
+})
+
+test('the command line takes --with-answers for remove and prune', () => {
+  const m = memory({ 'q.md': FILE })
+
+  expect(run(['q.md', 'remove', '--title', 'Answered decision'], m.io)).toBe(1)
+  expect(m.out[0]).toContain('--with-answers')
+  expect(m.writes).toEqual([])
+  expect(
+    run(['q.md', 'remove', '--title', 'Answered decision', '--with-answers'], m.io),
+  ).toBe(0)
+  expect(m.files['q.md']).not.toContain('Answered decision')
+
+  const p = memory({
+    'q.md': '## Actions\n\n### [x] A\n- Steps: a\n- Answer: (a) go | pane\n',
+  })
+
+  expect(run(['q.md', 'prune'], p.io)).toBe(0)
+  expect(p.out[0]).toBe('removed 0 kept [] held [{"title":"A","line":"Answer"}]')
+  expect(p.writes).toEqual([])
+  expect(run(['q.md', 'prune', '--with-answers'], p.io)).toBe(0)
+  expect(p.out[1]).toBe('removed 1 kept [] held []')
+  expect(p.files['q.md']).not.toContain('Answer:')
 })
 
 test('the command line refuses without writing, and says why', () => {
   const m = memory({ 'q.md': FILE, 'b.md': '### [ ] X\n- Note: hi', 'ok.md': BLOCK })
 
   expect(run(['q.md', 'remove', '--title', 'Open decision'], m.io)).toBe(1)
-  expect(m.out[0]).toContain('refused: the entry holds a Note')
+  expect(m.out[0]).toContain('holds a Note line')
   expect(run(['q.md', 'add', 'action', '--block-file', 'b.md'], m.io)).toBe(1)
   expect(run(['q.md', 'add', 'action', '--block-file', 'ok.md', '--force'], m.io)).toBe(1)
   expect(run(['q.md', 'add', 'notes', '--block-file', 'ok.md'], m.io)).toBe(1)
