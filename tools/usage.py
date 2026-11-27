@@ -957,14 +957,16 @@ def shape_of(o: dict) -> str:
     return " ".join(parts)
 
 
-def needle_places(o, needle: str, path: str = ""):
-    """(key path, position) of each string under o that holds the needle."""
+def needle_places(o, needle: str, path: str = "", depth: int = 0):
+    """(key path, position) of each string under o that holds the needle. Keys deeper
+    than three levels print as "?": below that a map may be data, such as a tool's input."""
     if isinstance(o, dict):
         for k, v in o.items():
-            yield from needle_places(v, needle, f"{path}.{safe(k)}")
+            name = safe(k) if depth < 3 else "?"
+            yield from needle_places(v, needle, f"{path}.{name}", depth + 1)
     elif isinstance(o, list):
         for v in o:
-            yield from needle_places(v, needle, path + "[]")
+            yield from needle_places(v, needle, path + "[]", depth)
     elif isinstance(o, str) and needle in o:
         pos = o.find(needle)
         before = o[:pos]

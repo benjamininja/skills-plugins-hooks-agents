@@ -319,12 +319,16 @@ def test_shapes_finds_where_a_peer_message_is_stored_and_prints_no_text(tmp_path
             {"type": "text", "text": "see:\n\n\n<cross-session-message>" + PROMPT}]}},
         reply("b", T(21, "08:02:01")),
         {"type": "user", "isSidechain": True, "message": {"content": "<cross-session-message>"}},
+        {"type": "progress", "message": {"content": [
+            {"type": "tool_use", "input": {"privatefield": "<cross-session-message>"}}]}},
     ])
     out = run(capsys, "shapes", "--store", str(s), "--from", "2026-11-21", "--to", "2026-11-21",
               "--only", "manager")
-    assert "sessions=1 records=7" in out
+    assert "sessions=1 records=8" in out
     assert "type=user meta=False content=str:text" in out
-    assert "records holding 'cross-session-message': 3 ==" in out
+    assert "records holding 'cross-session-message': 4 ==" in out
+    # keys below the third level may be data: they print as ?
+    assert "| at .message.content[].input.? | at start" in out and "privatefield" not in out
     lines = [ln for ln in out.splitlines() if " | at " in ln]
     assert any("meta=True content=str:text | at .message.content | line 2" in ln for ln in lines)
     assert any("attachment=queued_command" in ln and "| at .attachment.content | at start" in ln for ln in lines)
