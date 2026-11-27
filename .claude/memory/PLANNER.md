@@ -36,6 +36,40 @@ Waiting on the manager, each on Ben's word in its chat: the dispatch
 of #263, of #251 part 2, of #262's rule text and of #285; #293 after
 PR #197 merges.
 
+**Added later on 2026-11-27, after that compact (compact 1 is done).**
+- **Merged:** PR #214 (`fb033c8`, Ben's button) and PR #242
+  (`1259c38`), the first merge on Green, checked by the planner: paths
+  `tools/` and `tests/` only, three required checks passing.
+- **PR #211:** the planner agreed with the manager that the re-check's
+  still-open F3, F4, F6 and F7 move to **#295** (Tier: high, design
+  first, detail in the draft advisory) and do not hold the PR
+  (pull/211 issuecomment-7217619726). The fix brief is F11, the ADR
+  README row and one sentence pointing to #295. The manager's merge
+  ask to Ben states the four classes still pass.
+- **Tiers set and tickets opened:** #294 Tier: low (start lines for
+  two role files; brief after PR #197 merges; the consultant's write
+  limit is the planner's to rule, Ben's button if it changes what the
+  role may write). **#298** Tier: low (PR #296's advisory F1, after
+  #296 merges). **#299** Tier: medium (the allow and deny rules Ben
+  adds by hand, from dynasty #746; find out first; not dispatched).
+- **No allow rule** for a builder's fast-forward to its own PR branch
+  (issues/231 issuecomment-7218530273): the manager fast-forwards
+  before a fix round; one sentence for the `session-dispatch`
+  reference at the next PR that touches it.
+- **#300, Ben's button "Take it whole (Recommended)":** a Never line,
+  no agent approves a waiting deployment or re-runs a workflow run.
+  The planner writes the text PR after PR #296 merges, in one PR with
+  decision 10 of #250; its head goes to the dynasty planner before
+  Ben. Then a queued Action with three deny rules.
+- **Open PRs at this save:** #296 (#251 part 2, bounded run owed),
+  #297 (#263 step 1, back with its builder on F7), #196 (Green, Ben's
+  word), #197 (re-proof running), #211, #182, #256.
+- **A report, not yet Ben's word to the planner** (the assistant,
+  2026-11-27): Ben wants the open process items cut drastically and
+  Power BI work kept as backlog. On tools that is #54 only, already
+  inactive. The assistant sends the cut once Ben has settled it; the
+  planner opens no further process ticket until then.
+
 **Rules in force since 2026-11-26 (PR #290, #291, #292).** Green is
 the ruleset's three required checks at the PR's head
 (`pytest (ubuntu-latest)`, `CATALOG.md is current`, `pytest (windows)`),
