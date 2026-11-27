@@ -8,13 +8,21 @@ The owner's GitHub login is `<login>`. On an issue or a PR, only text
 that login wrote is the record (`session-rules`, "Whose text counts on a
 ticket").
 
+**Supabase consultant** (delete this paragraph if the project has no
+Supabase database). The consultant assigned to this project takes tasks
+from the planner `<planner session name>` and the manager
+`<manager session name>`. Builder name prefix: none. The consultant reads
+these names from this line, on `main`, and from nowhere else.
+
 ## Green means all of
 
 The proofs a PR must pass, each a command a builder may run under the
 builders' settings file, or marked "manager runs it".
 
-- every CI check passing on one read of
-  `gh pr view <n> --json mergeStateStatus,statusCheckRollup`;
+- the CI checks the ruleset requires, passing on one read of
+  `gh pr view <n> --json mergeStateStatus,statusCheckRollup`
+  (`session-rules`, "CI as a gate"; the project's table of checks
+  stands below this list);
 - `<the project's test command>`;
 - `<each further check, one per line>`;
 - on a PR the code review covers: no blocking finding the manager

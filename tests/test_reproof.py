@@ -203,6 +203,73 @@ def test_the_timeout_is_an_hour():
     assert reproof.TIMEOUT == 3600
 
 
+def test_the_pytest_timeout_is_ninety_minutes():
+    assert reproof.PYTEST_TIMEOUT == 5400
+
+
+def spy_on_run(monkeypatch):
+    calls = []
+    real = reproof.run
+
+    def spy(cmd, cwd=None, timeout=reproof.TIMEOUT):
+        calls.append((cmd, timeout))
+        return real(cmd, cwd, timeout)
+
+    monkeypatch.setattr(reproof, "run", spy)
+    return calls
+
+
+def is_pytest(cmd):
+    return cmd[1:3] == ["-m", "pytest"]
+
+
+def test_the_pytest_step_gets_its_own_cap_and_every_other_step_keeps_the_hour(
+    tmp_path, export_area, monkeypatch, capsys
+):
+    calls = spy_on_run(monkeypatch)
+    clone, head, _ = scenario(tmp_path)
+    code, out = reproof_run(clone, head, capsys)
+    assert code == 0, out
+    pytest_calls = [t for cmd, t in calls if is_pytest(cmd)]
+    other_calls = [t for cmd, t in calls if not is_pytest(cmd)]
+    assert pytest_calls == [reproof.PYTEST_TIMEOUT]
+    assert other_calls
+    assert set(other_calls) == {reproof.TIMEOUT}
+
+
+def test_the_pytest_command_prints_the_durations_table(tmp_path, export_area, monkeypatch, capsys):
+    calls = spy_on_run(monkeypatch)
+    clone, head, _ = scenario(tmp_path)
+    code, out = reproof_run(clone, head, capsys)
+    assert code == 0, out
+    pytest_cmds = [cmd for cmd, _ in calls if is_pytest(cmd)]
+    assert len(pytest_cmds) == 1
+    assert "--durations=25" in pytest_cmds[0]
+    assert "-q" in pytest_cmds[0]
+    assert "slowest 25 durations" in out
+
+
+def test_a_timeout_names_the_cap_that_applied(monkeypatch):
+    def expire(cmd, **kwargs):
+        raise subprocess.TimeoutExpired(cmd, kwargs["timeout"])
+
+    monkeypatch.setattr(reproof.subprocess, "run", expire)
+    assert reproof.run(["x"]) == (124, "", "timed out after 3600s")
+    assert reproof.run(["x"], timeout=reproof.PYTEST_TIMEOUT) == (124, "", "timed out after 5400s")
+
+
+@pytest.mark.parametrize("partial", [b"tests/a.py ..\ntests/b.py .\n", "tests/a.py ..\ntests/b.py .\n"])
+def test_a_timeout_keeps_the_output_printed_so_far(partial, monkeypatch):
+    def expire(cmd, **kwargs):
+        raise subprocess.TimeoutExpired(cmd, kwargs["timeout"], output=partial)
+
+    monkeypatch.setattr(reproof.subprocess, "run", expire)
+    code, out, err = reproof.run(["x"], timeout=5)
+    assert code == 124
+    assert out == "tests/a.py ..\ntests/b.py .\n"
+    assert err == "timed out after 5s"
+
+
 def test_every_result_line_carries_its_elapsed_seconds(tmp_path, export_area, monkeypatch, capsys):
     ticks = iter(x * 2.5 for x in range(1000))
     monkeypatch.setattr(reproof, "time", types.SimpleNamespace(monotonic=lambda: next(ticks)))
@@ -325,11 +392,11 @@ def stub_claude(monkeypatch, result):
     calls = []
     real = reproof.run
 
-    def fake(cmd, cwd=None):
+    def fake(cmd, cwd=None, timeout=reproof.TIMEOUT):
         if cmd[0] == "claude":
             calls.append((cmd, cwd))
             return result
-        return real(cmd, cwd)
+        return real(cmd, cwd, timeout)
 
     monkeypatch.setattr(reproof, "run", fake)
     return calls

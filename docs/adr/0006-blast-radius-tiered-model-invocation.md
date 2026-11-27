@@ -1,7 +1,8 @@
 # Blast-radius-tiered model-invocation for a subset of router skills
 
 - Status: accepted; revised 2026-11-14 (Revision 1 below corrects the
-  rule: it rates impact and trigger breadth)
+  rule: it rates impact and trigger breadth); Revision 2, 2026-11-23,
+  corrects the state of #50
 - Date: 2026-07-17
 - Scope: `skills/grill-me/SKILL.md`, `skills/grill-with-docs/SKILL.md`,
   `skills/teach/SKILL.md`, `skills/writing-great-skills/SKILL.md`,
@@ -162,3 +163,11 @@ The Decision above stands for `grill-me`, `writing-great-skills` and
 updates their `known_local_edits` entries. The other model-invocable
 skills, `domain-modeling` first (it makes the same unconfirmed glossary
 edits), are audited under this rule in #176.
+
+## Revision 2 (2026-11-23): #50 is still open
+
+Ticket: tools #248 (ADR hygiene). The text of Revision 1 above, "#50
+restores the flag on `teach` and `grill-with-docs`", reads as done. It is
+not: #50 is still open, so as of this date the flag is not yet restored on
+those two skills. The rule in Revision 1 is unchanged; only the state of
+its application is corrected here.

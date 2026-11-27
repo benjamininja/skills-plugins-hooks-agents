@@ -18,7 +18,8 @@ interpreter (sys.executable), and it must have pytest.
      head must equal the sha given
   2. git merge-tree the head onto main (a conflict fails)
   3. export the merged tree to a temp folder outside OneDrive
-  4. in the export: pytest -q tests, tools/build_catalog.py, and a check that
+  4. in the export: pytest -q --durations=25 tests (its own 5400 s cap),
+     tools/build_catalog.py, and a check that
      the build left CATALOG.md as committed
      then, only if the merge changes a path under plugins/owner-queue/:
      claude plugin test plugins/owner-queue
@@ -64,6 +65,10 @@ PR_RE = re.compile(r"[1-9][0-9]{0,8}")
 SHA_RE = re.compile(r"[0-9a-f]{40}")
 GIT_OPTS = ["-c", "gc.auto=0", "-c", "maintenance.auto=false", "-c", "core.autocrlf=false"]
 TIMEOUT = 3600
+# The suite runs about 34 to 58 minutes on the owner's machine (#244); the speed-up is #187.
+PYTEST_TIMEOUT = 5400
+PYTEST_PASS_TAIL = 32  # the durations table, the summary line and a few lines before them
+PYTEST_FAIL_TAIL = 40
 PLUGIN_DIR = "plugins/owner-queue"
 PASS, FAIL, SKIP = "PASS", "FAIL", "SKIP"
 
@@ -77,7 +82,7 @@ def parse_args(argv: list[str]) -> tuple[str, str] | None:
     return None
 
 
-def run(cmd: list[str], cwd: str | None = None) -> tuple[int, str, str]:
+def run(cmd: list[str], cwd: str | None = None, timeout: int = TIMEOUT) -> tuple[int, str, str]:
     try:
         p = subprocess.run(
             cmd,
@@ -86,10 +91,14 @@ def run(cmd: list[str], cwd: str | None = None) -> tuple[int, str, str]:
             text=True,
             encoding="utf-8",
             errors="replace",
-            timeout=TIMEOUT,
+            timeout=timeout,
         )
-    except subprocess.TimeoutExpired:
-        return 124, "", f"timed out after {TIMEOUT}s"
+    except subprocess.TimeoutExpired as exc:
+        # The killed process's output so far shows how far a step got; it is bytes on some platforms.
+        partial = exc.stdout
+        if isinstance(partial, bytes):
+            partial = partial.decode("utf-8", "replace")
+        return 124, partial or "", f"timed out after {timeout}s"
     except OSError as exc:
         return 127, "", str(exc)
     return p.returncode, p.stdout, p.stderr
@@ -372,9 +381,17 @@ def run_steps(pr: str, head: str, repo: Path) -> int:
         catalog = dest / "CATALOG.md"
         before = catalog.read_bytes() if catalog.exists() else None
 
-        code, out, err = run([sys.executable, "-m", "pytest", "-q", "tests"], str(dest))
+        code, out, err = run(
+            [sys.executable, "-m", "pytest", "-q", "--durations=25", "tests"],
+            str(dest),
+            PYTEST_TIMEOUT,
+        )
         text = out + err
-        record("pytest", PASS if code == 0 else FAIL, tail(text, 3 if code == 0 else 40))
+        record(
+            "pytest",
+            PASS if code == 0 else FAIL,
+            tail(text, PYTEST_PASS_TAIL if code == 0 else PYTEST_FAIL_TAIL),
+        )
 
         code, out, err = run([sys.executable, "tools/build_catalog.py"], str(dest))
         text = out + err
