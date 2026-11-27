@@ -11,10 +11,10 @@ state.
 
 2026-11-27, about 13:15Z, by Tools-builder-manager, queue id
 `fbd93714-8c8b-49c7-b434-7dee4a8488fd`, at a compact prep on Ben's word.
-`origin/main` is at `4355d3f` (#196). The main checkout is at `4355d3f`;
+`origin/main` is at `6c24a3d` (#297). The main checkout is at `6c24a3d`;
 the live clone is at `1259c38` and is running #197's
 `tools/reproof.py` (the first run under #242's machine-wide lock). Main's
-CI at `1259c38` is green; at `4355d3f` not yet read. `session-dispatch`
+CI at `4355d3f` is green; at `6c24a3d` not yet read. `session-dispatch`
 is armed in this session; a compact keeps it.
 
 ### Next
@@ -27,19 +27,13 @@ is armed in this session; a compact keeps it.
    summary), send the end notice to dff-central-builder-manager, ask
    Ben's merge word (plugins path). Then pull the live clone to main
    and send both heads to the dff manager and both planners.
-2. **Read main's CI at `4355d3f`** (the #196 merge).
-3. **#297** (#263 step 1, `t263-usage-scripts`, session `6bf2091b`,
-   `tools/` and `tests/` only, so it merges on Green). Review history:
-   pull/297 issuecomment-7218562150 (first, F1 to F4),
-   issuecomment-7218743755 (re-check: F3, F5 upheld),
-   issuecomment-7218934691 (second re-check: F7 upheld, the bound claim
-   with a compact inside the start-up turn; F8 advisory, a count of
-   openers by kind). The builder is fixing F7 and F8. When it reports:
-   a fresh re-check of F7 and F8 alone, then the re-proof (CI, hygiene,
-   no `reproof.py`), then merge on Green and close out. After the merge,
-   tell the personal-assistant its step-2 run is unblocked; the four
-   commands are on issues/263 issuecomment-7218496564. Its figures go to
-   the #263 builder, who posts them.
+2. **Read main's CI at `6c24a3d`** (the #297 merge).
+3. **#263 step 2.** #297 merged on Green as `6c24a3d` (pull/297
+   issuecomment-7219119780); F9 advisory sent to the planner for a
+   ticket. The personal-assistant is told its run is unblocked (the four
+   commands are on issues/263 issuecomment-7218496564). Relay its figures
+   to `t263-usage-scripts` (session `6bf2091b`), which posts them on
+   #263; close it out after that.
 4. **#296** (#251 Part 2, `t251b-setup-lists`, session `9411fe1b`, head
    `624b511`, CLEAN). Review closed with no blocking finding
    (pull/296 issuecomment-7218514749); F1 advisory filed as #298
@@ -82,13 +76,13 @@ is armed in this session; a compact keeps it.
 | Builder | Ticket | Tier | Session | PR | Stage |
 |---|---|---|---|---|---|
 | `t161-queuemod` | #161 | high | `5c12c706` | #197 at `cd6259b` | `reproof.py` running |
-| `t263-usage-scripts` | #263 | medium | `6bf2091b` | #297 at `11684b6` | fixing F7, F8 |
+| `t263-usage-scripts` | #263 | medium | `6bf2091b` | #297 merged `6c24a3d` | waits for step 2 figures |
 | `t168-gitgate` | #168 | high | `2b73b5ff` | #211 at `5f95725` | fix round running |
 | `t251b-setup-lists` | #251 | medium | `9411fe1b` | #296 at `624b511` | CLEAN; manager's bounded run owed |
 | `t175-reproofrule` | #175 | low | `9144aeda` | #182 at `5632555` | parked until #251 |
 | `t251-venv-setup` | #251 | medium | `4c191e7f` | none | keeps `.venv-light` for the bounded run |
 
-Open PRs: 297, 296, 256, 211, 197, 182.
+Open PRs: 296, 256, 211, 197, 182.
 
 ### Peers
 
@@ -141,8 +135,8 @@ name with ListAgents.
   The GLOBAL_OPT gap pointer is on #200; detail in the draft advisory.
 - 2026-11-27, #197 review F1 filed as #294; #296 review F1 filed as
   #298.
-- 2026-11-27, #297 rulings: F1, F2, F4, F3, F5, F6 closed; F7 upheld
-  (pull/297 issuecomment-7218934691).
+- 2026-11-27, #297 rulings: F1 to F8 closed, F9 advisory; merged on
+  Green as `6c24a3d` (pull/297 issuecomment-7219119780).
 - 2026-11-26 decisions: see this file at `397e44e`.
 - Lesson: Ben reads "hold closeout run" as being about CI. Explain first
   that closeout is a local script run with no CI.
