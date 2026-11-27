@@ -7,6 +7,8 @@ Usage:
   python tools/usage.py tags     --store DIR --from ... --to ... [--role ...] [--tag ...]
                                  [--only ROLE] [--idle-gap SECONDS]
   python tools/usage.py compacts --store DIR --from ... --to ... [--role ...]
+  python tools/usage.py shapes   --store DIR --from ... --to ... [--role ...] [--only ROLE]
+                                 [--needle NAME] [--top N]
   python tools/usage.py trial    --store DIR SESSION_ID [--role ...]
   python tools/usage.py context  TRANSCRIPT.jsonl
   python tools/usage.py reads    TRANSCRIPT.jsonl
@@ -831,13 +833,16 @@ def cmd_reads(a) -> None:
         print("the turn ended with positive growth: together the figures are an upper bound on the "
               "reads (the growth also holds the replies' own output and injected text)")
     else:
+        # every reason that holds is named, the compact first (F9 of #297): after a compact
+        # the growth is usually negative, which would otherwise hide it
+        why = []
+        if compacted:
+            why.append("a compact falls inside the turn, so its growth covers only what survived it")
         if not ended:
-            why = "the turn has no ending reply"
-        elif growth <= 0:
-            why = f"growth is {growth}, so {ASSUMED_CPT} is assumed"
-        else:
-            why = "a compact falls inside the turn, so its growth covers only what survived it"
-        print(f"no bound is claimed: {why}")
+            why.append("the turn has no ending reply")
+        if growth <= 0:
+            why.append(f"growth is {growth}, so {ASSUMED_CPT} is assumed")
+        print(f"no bound is claimed: {'; '.join(why)}")
     print(f"start-up turn: replies={len(start)} ended={'yes' if ended else 'no'} ctx {start[0].ctx} -> "
           f"{start[-1].ctx} growth={growth} resultChars={chars} chars/token~{cpt:.2f}")
     print("reply  tool                        ext      ~tokens(est at mean)  ~cost(k inEq: 1.25 write + 0.1 x later replies)")
@@ -899,6 +904,126 @@ def cmd_turns(a) -> None:
           f"ended={'yes' if ended else 'no'}")
 
 
+# ---- shapes: where a kind of record lives in the store (#263 step 2) -------------
+
+NAME_RE = re.compile(r"[A-Za-z_][A-Za-z0-9_-]{0,40}")
+TAG_RE = re.compile(r"<([a-z][a-z0-9-]{0,40})[\s>/]")
+# Keys below a record's top level that are the transcript format's own, never data.
+STRUCT_KEYS = frozenset({
+    "message", "content", "text", "attachment", "type", "input", "toolUseResult", "data",
+    "stdout", "stderr", "output", "result", "prompt", "summary", "command", "value",
+    "addedBlocks", "addedLines", "systemPrompt", "files",
+})
+
+
+def safe(v) -> str:
+    if v is None:
+        return "-"
+    return v if isinstance(v, str) and NAME_RE.fullmatch(v) else "?"
+
+
+def lead_of(text: str) -> str:
+    """How a text starts: its leading tag's name, or only that it is text. Never the text."""
+    t = text.lstrip()
+    if not t:
+        return "empty"
+    if t.startswith("<"):
+        m = TAG_RE.match(t)
+        return f"<{m.group(1)}>" if m else "<?>"
+    return "text"
+
+
+def content_kind(c) -> str:
+    if isinstance(c, str):
+        return "str:" + lead_of(c)
+    if isinstance(c, list):
+        kinds = set()
+        for x in c:
+            k = safe(x.get("type")) if isinstance(x, dict) else "?"
+            if k == "text" and isinstance(x, dict):
+                k += ":" + lead_of(str(x.get("text") or ""))
+            kinds.add(k)
+        return "list[" + ",".join(sorted(kinds)) + "]"
+    return "none" if c is None else "?"
+
+
+def shape_of(o: dict) -> str:
+    msg = o.get("message") if isinstance(o.get("message"), dict) else {}
+    att = o.get("attachment") if isinstance(o.get("attachment"), dict) else {}
+    parts = [f"type={safe(o.get('type'))}"]
+    if "subtype" in o:
+        parts.append(f"subtype={safe(o.get('subtype'))}")
+    if att:
+        parts.append(f"attachment={safe(att.get('type'))}")
+    parts.append(f"meta={bool(o.get('isMeta'))}")
+    if "content" in msg:
+        parts.append("content=" + content_kind(msg.get("content")))
+    elif "content" in att:
+        parts.append("attachment.content=" + content_kind(att.get("content")))
+    return " ".join(parts)
+
+
+def needle_places(o, needle: str, path: str = "", depth: int = 0):
+    """(key path, position) of each string under o that holds the needle. A key prints
+    only at a record's top level or when it is one of STRUCT_KEYS: anywhere below, a
+    map may be data keyed by names (session ids, branches, servers), so it prints "?"."""
+    if isinstance(o, dict):
+        for k, v in o.items():
+            name = safe(k) if depth == 0 or k in STRUCT_KEYS else "?"
+            yield from needle_places(v, needle, f"{path}.{name}", depth + 1)
+    elif isinstance(o, list):
+        for v in o:
+            yield from needle_places(v, needle, path + "[]", depth)
+    elif isinstance(o, str) and needle in o:
+        pos = o.find(needle)
+        before = o[:pos]
+        if before.strip() in ("", "<"):
+            where = "at start"
+        else:
+            n = before.count("\n")
+            where = "line 1, after text" if n == 0 else ("line 2" if n == 1 else "line 3 or later")
+        yield path or ".", where
+
+
+def cmd_shapes(a) -> None:
+    shapes: collections.Counter = collections.Counter()
+    needles: collections.Counter = collections.Counter()
+    keys: collections.Counter = collections.Counter()
+    n_sessions = n_records = n_needle = 0
+    for _, s, role in in_window(a.store, a.lo, a.hi, a.roles):
+        if a.only and role not in a.only:
+            continue
+        n_sessions += 1
+        with open(s.path, "r", encoding="utf-8", errors="replace") as fh:
+            for line in fh:
+                try:
+                    o = json.loads(line)
+                except ValueError:
+                    continue
+                if not isinstance(o, dict) or o.get("isSidechain"):
+                    continue
+                n_records += 1
+                shape = shape_of(o)
+                shapes[shape] += 1
+                if o.get("type") == "user":
+                    keys.update(safe(k) for k in o)
+                if a.needle in line:
+                    n_needle += 1
+                    places = sorted(set(needle_places(o, a.needle))) or [("(not in a string value)", "-")]
+                    for path, where in places:
+                        needles[(shape, path, where)] += 1
+    print(f"window: sessions whose first reply is {a.lo}..{a.hi}; sessions={n_sessions} records={n_records}; "
+          "counts and structure only")
+    print(f"\n== records by shape (top {a.top}) ==")
+    for shape, n in shapes.most_common(a.top):
+        print(f"{n:8}  {shape}")
+    print(f"\n== records holding {a.needle!r}: {n_needle} ==")
+    for (shape, path, where), n in needles.most_common(a.top):
+        print(f"{n:8}  {shape} | at {path} | {where}")
+    print("\n== top-level keys of user records ==")
+    print(" ".join(f"{k}={n}" for k, n in sorted(keys.items())))
+
+
 # ---- arguments ----------------------------------------------------------------
 
 
@@ -917,6 +1042,12 @@ def sid_arg(text: str) -> str:
 def dir_arg(text: str) -> str:
     if not os.path.isdir(text):
         raise argparse.ArgumentTypeError("not a folder")
+    return text
+
+
+def needle_arg(text: str) -> str:
+    if not NAME_RE.fullmatch(text) or len(text) < 3:
+        raise argparse.ArgumentTypeError("expected a tag-like name: letters, digits, _ and -")
     return text
 
 
@@ -952,6 +1083,11 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
     sp.add_argument("--only", action="append", default=None)
     sp.add_argument("--idle-gap", type=float, default=3600.0)
     store(sub.add_parser("compacts"))
+    sp = sub.add_parser("shapes")
+    store(sp)
+    sp.add_argument("--only", action="append", default=None)
+    sp.add_argument("--needle", type=needle_arg, default="cross-session-message")
+    sp.add_argument("--top", type=int, default=40)
     sp = sub.add_parser("trial")
     store(sp, window=False)
     sp.add_argument("sid", type=sid_arg)
@@ -973,7 +1109,7 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
 COMMANDS = {
     "baseline": cmd_baseline, "ledger": cmd_ledger, "startup": cmd_startup, "tags": cmd_tags,
     "compacts": cmd_compacts, "trial": cmd_trial, "context": cmd_context, "reads": cmd_reads,
-    "replies": cmd_replies, "turns": cmd_turns,
+    "replies": cmd_replies, "turns": cmd_turns, "shapes": cmd_shapes,
 }
 
 
