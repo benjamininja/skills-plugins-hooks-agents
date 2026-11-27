@@ -11,8 +11,8 @@ state.
 
 2026-11-27, about 14:15Z, by Tools-builder-manager, queue id
 `fbd93714-8c8b-49c7-b434-7dee4a8488fd`, at a clear prep on Ben's word.
-`origin/main` is at `6c24a3d` (#297); main's CI there is green (run
-46004622869). The main checkout is at `6c24a3d`; the live clone is at
+`origin/main` is at `8b54ee1` (#301); main's CI at `6c24a3d` is green (run
+46004622869). The main checkout is at `8b54ee1`; the live clone is at
 `1259c38` and is running #197's `tools/reproof.py`. A clear drops
 `session-dispatch`: Ben types
 `/session-dispatch-managers-build-review:session-dispatch` again, and the
@@ -35,19 +35,14 @@ as the rules keep it, asked by button at once, never carried as waiting.
    by button (plugins path). Then pull the live clone (`git fetch origin`,
    `git merge --ff-only origin/main`) and send both heads to the dff
    manager and both planners. Close out `t161-queuemod`.
-2. **#301** (#263 step 2 follow-up, `t263-usage-scripts`, `tools/` and
-   `tests/` only, so it merges on Green). First review
-   pull/301 issuecomment-7219587427: F1 and F2 upheld, F3 advisory. The
-   builder's answers are at issuecomment-7219608456, head `3ae98d4`
-   (3ae98d462fbe63d75d5b8b64349cb0f002226efe), green and CLEAN. A fresh
-   re-check was running at the clear; if its result is lost, run it again
-   (F1 to F3 only, at high). Then post the re-check, merge on Green, and
-   read main's CI. Tell the personal-assistant to run
-   `python tools/usage.py shapes --store <store> --from 2026-11-17 --to 2026-11-24 --only manager`
-   and send the output for #263. Step 3 of #263 (the opener rule learns
-   the peer-message shape) follows: the planner sets its tier from that
-   output, and `t263-usage-scripts` can take it. The step 2 figures are on
-   #263 (issuecomment-7219328363).
+2. **#263 step 3.** #301 merged on Green as `8b54ee1` (re-proof at
+   pull/301 issuecomment-7219790820); main's CI at `8b54ee1` not yet read.
+   The personal-assistant was asked to run `python tools/usage.py shapes
+   --store <store> --from 2026-11-17 --to 2026-11-24 --only manager` and
+   send the output. Relay it to `t263-usage-scripts` (kept open, waiting)
+   to post on #263; the planner sets step 3's tier from it; Ben's go is
+   given; dispatch or resume the builder on step 3. The step 2 figures
+   are on #263 (issuecomment-7219328363).
 3. **#296** (#251 Part 2, `t251b-setup-lists`, head `624b511`, CLEAN,
    review closed at pull/296 issuecomment-7218514749, hygiene Passed). The
    bounded run was started at the clear in a temporary worktree
@@ -89,13 +84,13 @@ as the rules keep it, asked by button at once, never carried as waiting.
 | Builder | Ticket | Tier | Session | PR | Stage |
 |---|---|---|---|---|---|
 | `t161-queuemod` | #161 | high | `5c12c706` | #197 at `cd6259b` | `reproof.py` running |
-| `t263-usage-scripts` | #263 | medium | `6bf2091b` | #301 at `3ae98d4` | re-check of F1 to F3 |
+| `t263-usage-scripts` | #263 | medium | `6bf2091b` | #301 merged `8b54ee1` | waits for shapes output, step 3 |
 | `t168-gitgate` | #168 | high | `2b73b5ff` | #211 at `5f95725` | F11 fix round running |
 | `t251b-setup-lists` | #251 | medium | `9411fe1b` | #296 at `624b511` | manager's bounded run running |
 | `t175-reproofrule` | #175 | low | `9144aeda` | #182 at `5632555` | DIRTY; repair after #296 |
 | `t251-venv-setup` | #251 | medium | `4c191e7f` | none | keeps `.venv-light` for the bounded run |
 
-Open PRs: 301, 296, 256, 211, 197, 182.
+Open PRs: 296, 256, 211, 197, 182.
 
 ### Peers
 
@@ -159,7 +154,8 @@ name with ListAgents.
   #263 step 2 (issues/263 issuecomment-7219163159), fixed in #301.
 - 2026-11-27, #301 first review: F1 and F2 upheld by the manager though
   advisory from the reviewer, because `shapes` output is posted publicly
-  (pull/301 issuecomment-7219587427).
+  (pull/301 issuecomment-7219587427). Re-check closed; merged on Green as
+  `8b54ee1` (issuecomment-7219790820).
 - 2026-11-26 decisions: see this file at `397e44e`.
 - Lesson: Ben reads "hold closeout run" as being about CI. Explain first
   that closeout is a local script run with no CI.
