@@ -36,6 +36,46 @@ Waiting on the manager, each on Ben's word in its chat: the dispatch
 of #263, of #251 part 2, of #262's rule text and of #285; #293 after
 PR #197 merges.
 
+**SAVED 2026-11-27 at about 14:15Z, BEFORE A CLEAR Ben asked for.
+Read this block first; it is newer than everything below it.**
+Session 4e27fb7c-445f-47d9-ad2b-919bca911066 ends at the clear; the
+new session sends its id to the four peers. No background task runs.
+
+1. **Ask Ben once, by button, before any brief** (record:
+   issues/300 issuecomment-7219830262). His buttons in the planner's
+   chat are the cut below and, later, "Park the second half
+   (Recommended)" for #300's no-go half
+   (issuecomment-7219672818). Two later relays, not confirmed here:
+   the assistant's "Keep #300 whole" (about 13:50Z), and the
+   manager's report of his words at about 14:05Z, "all those that are
+   held up i have NOT been asked about. insane how many there are,
+   PLEASE complete them", read by the manager as the cut reversed.
+   The question: does the reversal stand for every parked item, and
+   does it take #300's second half with it. Put the cost above it:
+   eleven items, each a brief, a builder, a review and mostly his
+   merge word.
+2. **The Never line PR, agreed in every chat.** Branch
+   `docs/never-line-300` at `fa45154`, pushed, in the worktree
+   `t300-never-line`: the line in `session-rules` and plugin version
+   0.5.3. Catalog unchanged; 173 related tests pass. Owed: run
+   /security-review on the diff, open the PR (Closes nothing; cites
+   #300), send the head to the dynasty planner, then Ben's merge
+   word. PR #296 also moves the plugin's version: whichever merges
+   second takes main in and moves the version again.
+3. **If the reversal stands,** the manager waits for each parked
+   item's tier, brief, order and dependencies, the ones needing no
+   other merge first. Known order: #293 and #294 after PR #197; #298
+   after PR #296; step 3 of #263 after the `shapes` output (PR #301);
+   #295, #289 and #200 after PR #211 (same files); #262's mod brief
+   and #111 after #240 step 2. Briefs already on record: #293
+   (issuecomment-7217264766), #263's dispatch lines, #285's approval
+   (issues/204 issuecomment-7167497989).
+4. **After PR #296 merges:** the queued Action with the two setup
+   lists; the rule text for decision 10 of #250; one line to the
+   dynasty planner for #655.
+5. **After the Never line merges:** the queued Action with three
+   deny rules for the tools settings files.
+
 **THE CUT, Ben's buttons of 2026-11-27 (issues/300
 issuecomment-7219626562): "Cut, but keep #300 (Recommended)" and, for
 #54, "Leave it as it is (Recommended)". This replaces the order in the
