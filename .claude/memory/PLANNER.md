@@ -69,11 +69,17 @@ more than ten PRs are open, except for a real defect.
      pull/292 issuecomment-7193782782). The manager recorded its read
      of the ruleset on #187, so merging on Green is in force.
    - **Told Ben:** the hole is closed, with what is unseen named.
-   - **Still to see and record on #187:** a failing shard turning
-     `pytest (windows)` red on a real PR (the state file's earlier
-     wording asked for a red run; what was seen is a PR blocked for a
-     missing check); a cancelled run; a failed scope job. Record the
-     first of each when it happens.
+   - **Seen 2026-11-27 and recorded** (issues/187
+     issuecomment-7217531342): one failing shard turned
+     `pytest (windows)` red on PR #242 (`0e58d68`, shard 5) and PR
+     #211 (`5f95725`, shard 0); both BLOCKED. The causes are real
+     test failures from the merge of main (pull/242
+     issuecomment-7217511580, pull/211 issuecomment-7217512019); both
+     go back to builders on Ben's go in the manager's chat. #214 and
+     #196 are green; PR #197's rework is at `cd6259b`, under review.
+   - **Still to see and record on #187:** a cancelled run; a failed
+     scope job; a PR held by `pytest (windows)` alone with Ubuntu
+     green. Record the first of each when it happens.
    - **Left:** each open PR older than #291 takes main once (#242,
      #214, #211, #196, #182 with a conflict, #197, #256): the manager
      drives the builders' ones. Re-read the Windows time after PR #211
