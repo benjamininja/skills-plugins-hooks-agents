@@ -50,7 +50,7 @@ motivating incident.
 echo '{"tool_input":{"file_path":"C:\\Users\\benha\\.claude\\memory\\token-gating-loop.md"}}' | ./nudge.sh
 # prints the reminder
 
-echo '{"tool_input":{"file_path":"C:\\Users\\benha\\OneDrive\\Documents\\GitHub\\some-repo\\.claude\\memory\\MEMORY.md"}}' | ./nudge.sh
+echo '{"tool_input":{"file_path":"C:\\source\\Github\\some-repo\\.claude\\memory\\MEMORY.md"}}' | ./nudge.sh
 # silent — project-local memory, not root
 ```
 

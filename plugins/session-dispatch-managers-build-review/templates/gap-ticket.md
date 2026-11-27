@@ -1,4 +1,4 @@
-Tier: <low | medium | high | none (owner-led)>
+Tier: <haiku | low | medium | high | none (owner-led)>
 
 ## Evidence
 
