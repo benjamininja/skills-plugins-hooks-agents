@@ -96,6 +96,17 @@ more than ten PRs are open, except for a real defect.
    - **#293's build brief is posted** (2026-11-27, issues/293
      issuecomment-7217264766), with the cause confirmed and the
      writers' text ruled unchanged. Built after PR #197 merges.
+   - **#263 has Ben's go** (2026-11-27, button "Go, manager fits it
+     in (Recommended)", issues/263 issuecomment-7217315745, with the
+     dispatch lines; the deferral the planner offered was refused by
+     his "Keep #263 in line" in the assistant's chat,
+     issuecomment-7217298324). Sent to the manager, who asks him
+     again at dispatch. #285's approval record is issues/204
+     issuecomment-7167497989, not the design comment.
+   - **Branches updated 2026-11-27** by the manager on Ben's word, by
+     its report: #242 `0e58d68`, #214 `ae9fc32`, #211 `5f95725`,
+     #196 `8e602fe`. PR #242 is the first candidate for a merge on
+     Green.
    - **Owed next by the planner: the build brief for #251** (ruling
      on row 3: issues/251 issuecomment-7191499904), then Ben's go by
      button. PR #182 is parked until #251 lands, by the manager's
@@ -194,7 +205,7 @@ more than ten PRs are open, except for a real defect.
     (issuecomment-7193291072); #249 merged. All the planner's older PRs
     are merged; the open ones are builders' (#242, #214, #211, #197,
     #196, #182) and the manager's #256.
-    Still to weigh: #167. #263 has no go; #258 holds the re-measure
+    Still to weigh: #167. #263 has its go (item 1); #258 holds the re-measure
     list.
 14. **Coming to Ben later, by button:** what the owner-queue pane does
     with terminal output pasted into a Note (the personal-assistant's
