@@ -236,7 +236,9 @@ def test_reads_are_upper_bounds_and_print_only_tool_and_extension(tmp_path, caps
         result("u9", "z" * 9999, T(20)),
     ])
     out = run(capsys, "reads", str(p))
-    assert "UPPER BOUNDS" in out
+    # F1: each figure is an estimate at the turn's mean ratio; only their sum is a bound
+    assert "ESTIMATES at the turn's mean chars/token" in out and "together they are an upper bound" in out
+    assert "~tokens(est at mean)" in out
     assert "growth=200 resultChars=500 chars/token~2.50" in out
     rows = [ln.split() for ln in out.splitlines() if ln.strip().startswith(("1 ", "2 "))]
     assert rows[0][:4] == ["1", "Read", ".md", "160"]
@@ -246,8 +248,9 @@ def test_reads_are_upper_bounds_and_print_only_tool_and_extension(tmp_path, caps
 
 
 def test_the_docstring_carries_both_method_points():
-    doc = usage.__doc__
-    assert "upper bound" in doc and "Method point 1" in doc
+    doc = " ".join(usage.__doc__.split())
+    assert "Method point 1" in doc and "an estimate at that mean ratio" in doc
+    assert "taken together they are an upper bound" in doc and "One result alone is not bounded" in doc
     assert "Method point 2" in doc and "first reply whose stop reason ends the turn" in doc
     assert "counted once" in doc
 
@@ -412,6 +415,65 @@ def test_every_subcommand_prints_no_transcript_text(store, compact_store, capsys
     for cmd in ("context", "reads", "replies", "turns"):
         run(capsys, cmd, f)
     run(capsys, "trial", "--store", str(store), "aaaa1111-0000")
+
+
+def test_a_compact_copied_into_a_resumed_file_counts_once(tmp_path, capsys):
+    # F2: the fork copies the history, compact record included; with a uuid and without one
+    s = tmp_path / "store"
+    for name, extra in (("uuid", {"uuid": "cmp-1"}), ("bare", {})):
+        cp = {**compact(T(22, "11:00:00")), **extra}
+        write(s / f"C--{name}" / "iiii0001-0000.jsonl",
+              [title("the planner"), reply(f"{name}1", T(22)), cp, reply(f"{name}2", T(22, "11:00:02"))])
+        write(s / f"C--{name}" / "iiii0002-0000.jsonl",
+              [title("the planner"), reply(f"{name}1", T(22)), cp, reply(f"{name}2", T(22, "11:00:02")),
+               reply(f"{name}3", T(23))])
+    out = run(capsys, "compacts", "--store", str(s), "--from", "2026-11-22", "--to", "2026-11-22")
+    assert "compacts dated 2026-11-22..2026-11-22: 2" in out
+    out = run(capsys, "baseline", "--store", str(s), "--from", "2026-11-17", "--to", "2026-11-24")
+    planner = next(ln for ln in out.splitlines() if ln.startswith("planner"))
+    assert planner.split()[2:4] == ["4", "2"]  # four session files, two compacts
+
+
+@pytest.mark.parametrize("text,kind", [
+    (PROMPT, "typed"),
+    ("<cross-session-message from=x>hi</cross-session-message>", "peer message"),
+    ("Another session sent a message:\n<cross-session-message from=x>hi</cross-session-message>",
+     "peer message"),
+    # F3: a typed prompt that quotes a peer message is still typed
+    ("Ben here. Look at what came in:\n\n<cross-session-message from=x>hi</cross-session-message>",
+     "typed"),
+    ("please read this <cross-session-message from=x>hi</cross-session-message>", "typed"),
+    # F3: a peer message after a long system reminder is a peer message
+    ("<system-reminder>" + "r" * 2000 + "</system-reminder>\n<cross-session-message from=x>hi"
+     "</cross-session-message>", "peer message"),
+    ("<system-reminder>only</system-reminder>  ", "system reminder"),
+    ("<system-reminder>unclosed", "system reminder"),
+    ("<system-reminder>r</system-reminder>\n" + PROMPT, "typed"),
+    ("<task-notification>done</task-notification>", "app event"),
+    ("x" * 200 + "<task-notification>", "typed"),
+])
+def test_the_opener_is_judged_at_the_start_of_the_text(text, kind):
+    assert usage.opener_kind(text) == kind
+
+
+def test_an_unreadable_timestamp_is_no_gap(tmp_path, capsys):
+    # F4: seconds() returns None on a bad time, and no idle re-read is counted from it
+    assert usage.seconds("not a time") is None and usage.seconds("") is None
+    s = tmp_path / "store"
+    write(s / "C--x" / "jjjj0001-0000.jsonl", [
+        title("a manager"), reply("a", T(21, "08:00:00")), reply("b", "2026-11-21Tbroken"),
+        reply("c", T(21, "12:00:00"))])
+    out = run(capsys, "tags", "--store", str(s), "--from", "2026-11-21", "--to", "2026-11-21")
+    # c is 4 h after a, the last readable time: one idle re-read, none from the broken one
+    assert "replies=1 " in next(ln for ln in out.splitlines() if ln.startswith("idle re-reads"))
+
+
+def test_context_reads_a_shape_stored_as_a_string_and_fails_soft_on_bad_json(tmp_path, capsys):
+    # F4: the string-JSON branch, both ways
+    good = write(tmp_path / "g.jsonl", [{"type": "api-request-shape", "shape": json.dumps({"tools": []})}])
+    assert "tools in request: 0; mcp servers: 0" in run(capsys, "context", str(good))
+    bad = write(tmp_path / "b.jsonl", [{"type": "api-request-shape", "shape": "{not json"}])
+    assert "api-request-shape record: none found" in run(capsys, "context", str(bad))
 
 
 def test_the_code_holds_no_machine_path_and_reads_no_environment():

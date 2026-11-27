@@ -26,7 +26,8 @@ The rules of the count, the same in every subcommand:
   + 5 x output. Model prices are not applied.
 - A reply is counted once, by its message id, across the whole store: a resumed
   or forked session copies its history into a new file. Folders and files are
-  read in sorted order, so a shared reply always counts in the same file.
+  read in sorted order, so a shared reply always counts in the same file. A
+  compact record is counted once the same way, by its uuid.
 - One reply may be stored as several records with the same id, one per content
   block. Its usage comes from the first record; its stop reason from the last
   record that holds one; its tool calls from all of them.
@@ -44,12 +45,15 @@ A peer message, an app event or a system reminder arrives as a user record and
 is not a typed prompt, so cutting at the second typed prompt runs on through
 them. A session with no ending reply counts whole and is reported.
 
-Method point 1, per-read sizes (`reads`): each tool result is sized in
-characters and turned into tokens with one ratio for the whole start-up turn,
-result characters over the turn's context growth. That growth also holds the
-replies' own output and text the app injects, and a result may be cut or stored
-outside the context. So every per-read figure is an upper bound, not a
-measurement; only the turn's context growth is measured.
+Method point 1, per-read sizes (`reads`): only the turn's context growth is
+measured. Each tool result is sized in characters and turned into tokens at the
+turn's mean ratio, result characters over that growth, so each per-read figure
+is an estimate at that mean ratio, not a measurement. The figures add up to
+the whole growth, which also holds the replies' own output and text the app
+injects, so taken together they are an upper bound on what the reads cost. One
+result alone is not bounded: a result denser than the mean (minified JSON,
+non-ASCII text) is shown below its real size, and a result cut or stored
+outside the context adds characters but no growth, which lowers the rest.
 
 Nothing printed is transcript text: no title, no path, no project folder name,
 no prompt or result. A session is shown by an index and an 8-character id
@@ -75,7 +79,8 @@ TOOL_USE = "tool_use"
 PEER_MARK = "<cross-session-message"
 APP_MARKS = ("<task-notification", "<side-sessions-event")
 REMINDER_MARK = "<system-reminder"
-HEAD = 600  # how far into a user record the marks are looked for
+REMINDER_END = "</system-reminder>"
+LEAD = 120  # the longest lead line allowed before a peer or app tag
 QUIET_RECORDS = ("assistant", "user", "file-history-snapshot", "attachment", "progress")
 DATE_RE = re.compile(r"\d{4}-\d{2}-\d{2}")
 SID_RE = re.compile(r"[A-Za-z0-9-]{8,64}")
@@ -149,7 +154,9 @@ class Compact:
     ms: int | None
     at: int  # replies before it
     keys: list[str]
+    key: str = ""  # the record's uuid, else its time, trigger and size: a copied compact keeps it
     summary_chars: int = 0
+    counted: bool = True
 
 
 @dataclass
@@ -198,13 +205,27 @@ def text_of(o: dict) -> str | None:
 
 
 def opener_kind(text: str) -> str:
-    head = text[:HEAD]
-    if PEER_MARK in head:
-        return "peer message"
-    if any(m in head for m in APP_MARKS):
-        return "app event"
-    if text.lstrip().startswith(REMINDER_MARK):
-        return "system reminder"
+    """What opened a turn, judged at the start of the text, never by a mark quoted later.
+
+    Leading system-reminder blocks are set aside first: with nothing after them the
+    opener is a system reminder, else the rest decides. A peer message or an app event
+    is one whose tag opens the rest, after at most one short lead line with no markup
+    (the line the app may put before a peer message). Anything else is typed."""
+    t = text.lstrip()
+    while t.startswith(REMINDER_MARK):
+        end = t.find(REMINDER_END)
+        if end < 0:
+            return "system reminder"
+        t = t[end + len(REMINDER_END):].lstrip()
+        if not t:
+            return "system reminder"
+    for kind, marks in (("peer message", (PEER_MARK,)), ("app event", APP_MARKS)):
+        for m in marks:
+            pos = t.find(m)
+            lead = t[:pos]
+            one_line = lead == "" or (lead.rstrip(" \t").endswith("\n") and lead.count("\n") == 1)
+            if 0 <= pos <= LEAD and one_line and "<" not in lead:
+                return kind
     return "typed"
 
 
@@ -277,9 +298,10 @@ def read_session(path: str, sidechain: bool = False) -> Session:
                 read_user(s, o, msg, ts)
             elif t == "system" and o.get("subtype") == "compact_boundary":
                 md = o.get("compactMetadata") if isinstance(o.get("compactMetadata"), dict) else {}
-                s.compacts.append(Compact(ts, md.get("trigger"), md.get("preTokens") or md.get("pre_tokens"),
-                                          md.get("postTokens"), md.get("durationMs"), len(s.replies),
-                                          sorted(md)))
+                pre = md.get("preTokens") or md.get("pre_tokens")
+                key = o.get("uuid") or f"{ts}|{md.get('trigger')}|{pre}"
+                s.compacts.append(Compact(ts, md.get("trigger"), pre, md.get("postTokens"),
+                                          md.get("durationMs"), len(s.replies), sorted(md), str(key)))
                 s.events.append(("record", "compact_boundary", ts))
             elif t == "attachment":
                 if isinstance(o.get("attachment"), dict):
@@ -347,8 +369,10 @@ def read_user(s: Session, o: dict, msg: dict, ts: str) -> None:
 
 
 def scan(store: str) -> list[Session]:
-    """Every session file of the store, with one seen-set of message ids for all of them."""
+    """Every session file of the store, with one seen-set of message ids for all of
+    them, and one of compact records: a copied history copies its compacts too."""
     seen: set[str] = set()
+    seen_compacts: set[str] = set()
     out = []
     for slug in sorted(os.listdir(store)):
         folder = os.path.join(store, slug)
@@ -361,6 +385,9 @@ def scan(store: str) -> list[Session]:
             s = read_session(path)
             s.slug, s.sid = slug, f[: -len(".jsonl")]
             mark(s.replies, seen)
+            for cp in s.compacts:
+                cp.counted = cp.key not in seen_compacts
+                seen_compacts.add(cp.key)
             sub_dir = os.path.join(folder, s.sid)
             for p in sorted(glob.glob(os.path.join(glob.escape(sub_dir), "**", "*.jsonl"), recursive=True)):
                 sub = read_session(p, sidechain=True)
@@ -493,7 +520,7 @@ def cmd_baseline(a) -> None:
             agg[k]["n"] += 1
         k = (role, short_model(s.main_model()))
         agg[k]["sessions"] += 1
-        agg[k]["compacts"] += len(s.compacts)
+        agg[k]["compacts"] += sum(cp.counted for cp in s.compacts)
         days[k] |= {r.ts[:10] for r in s.counted()}
     print(f"window: sessions whose first reply is {a.lo}..{a.hi}; session files counted: {len(rows)}; "
           "subagent usage not included")
@@ -660,7 +687,7 @@ def cmd_compacts(a) -> None:
         role = role_of(s, a.roles)
         reps = s.replies
         for cp in s.compacts:
-            if not (a.lo <= cp.ts[:10] <= a.hi):
+            if not cp.counted or not (a.lo <= cp.ts[:10] <= a.hi):
                 continue
             keys |= set(cp.keys)
             before = [r for r in reps[: cp.at]]
@@ -780,15 +807,16 @@ def cmd_reads(a) -> None:
     growth = start[-1].ctx - start[0].ctx
     chars = sum(r[3] for r in rows)
     cpt = chars / growth if growth > 0 else 4.0
-    print("per-read tokens are UPPER BOUNDS (method point 1): the turn's context growth also holds "
-          "the replies' own output and injected text")
+    print("per-read tokens are ESTIMATES at the turn's mean chars/token (method point 1), not "
+          "measurements: together they are an upper bound on the reads (the growth also holds the "
+          "replies' own output and injected text); one dense result alone may be shown below its size")
     print(f"start-up turn: replies={len(start)} ended={'yes' if ended else 'no'} ctx {start[0].ctx} -> "
           f"{start[-1].ctx} growth={growth} resultChars={chars} chars/token~{cpt:.2f}")
-    print("reply  tool                        ext      ~tokens(max)  ~cost(k inEq: 1.25 write + 0.1 x later replies)")
+    print("reply  tool                        ext      ~tokens(est at mean)  ~cost(k inEq: 1.25 write + 0.1 x later replies)")
     for k, name, ext, sz in rows:
         tok = sz / cpt if cpt else 0
         cost = tok * (W_CW + W_CR * max(len(start) - k, 0))
-        print(f"{k:5}  {name[:26]:26}  {ext:8} {tok:12.0f}  {cost / 1000:8.1f}k")
+        print(f"{k:5}  {name[:26]:26}  {ext:8} {tok:20.0f}  {cost / 1000:8.1f}k")
 
 
 def cmd_replies(a) -> None:
