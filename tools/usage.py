@@ -908,6 +908,12 @@ def cmd_turns(a) -> None:
 
 NAME_RE = re.compile(r"[A-Za-z_][A-Za-z0-9_-]{0,40}")
 TAG_RE = re.compile(r"<([a-z][a-z0-9-]{0,40})[\s>/]")
+# Keys below a record's top level that are the transcript format's own, never data.
+STRUCT_KEYS = frozenset({
+    "message", "content", "text", "attachment", "type", "input", "toolUseResult", "data",
+    "stdout", "stderr", "output", "result", "prompt", "summary", "command", "value",
+    "addedBlocks", "addedLines", "systemPrompt", "files",
+})
 
 
 def safe(v) -> str:
@@ -958,11 +964,12 @@ def shape_of(o: dict) -> str:
 
 
 def needle_places(o, needle: str, path: str = "", depth: int = 0):
-    """(key path, position) of each string under o that holds the needle. Keys deeper
-    than three levels print as "?": below that a map may be data, such as a tool's input."""
+    """(key path, position) of each string under o that holds the needle. A key prints
+    only at a record's top level or when it is one of STRUCT_KEYS: anywhere below, a
+    map may be data keyed by names (session ids, branches, servers), so it prints "?"."""
     if isinstance(o, dict):
         for k, v in o.items():
-            name = safe(k) if depth < 3 else "?"
+            name = safe(k) if depth == 0 or k in STRUCT_KEYS else "?"
             yield from needle_places(v, needle, f"{path}.{name}", depth + 1)
     elif isinstance(o, list):
         for v in o:
@@ -970,7 +977,7 @@ def needle_places(o, needle: str, path: str = "", depth: int = 0):
     elif isinstance(o, str) and needle in o:
         pos = o.find(needle)
         before = o[:pos]
-        if not before.strip(" \t\n<"):
+        if before.strip() in ("", "<"):
             where = "at start"
         else:
             n = before.count("\n")

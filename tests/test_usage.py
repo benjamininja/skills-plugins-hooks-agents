@@ -338,6 +338,48 @@ def test_shapes_finds_where_a_peer_message_is_stored_and_prints_no_text(tmp_path
     assert "Another Claude" not in out and "from=x" not in out
 
 
+def test_shapes_hides_a_name_keyed_map_at_depth_one(tmp_path, capsys):
+    # F1 of #301: a data map keyed by names right under the record prints "?"
+    s = tmp_path / "store"
+    write(s / "C--x" / "mmmm0001-0000.jsonl", [
+        title("a manager"), user(PROMPT, T(21)), reply("a", T(21)),
+        {"type": "user", "toolUseResult": {"secret-branch-name": "<cross-session-message>"}},
+        {"type": "user", "toolUseResult": {"stdout": "<cross-session-message>"}},
+    ])
+    out = run(capsys, "shapes", "--store", str(s), "--from", "2026-11-21", "--to", "2026-11-21")
+    assert "| at .toolUseResult.? | at start" in out and "secret-branch-name" not in out
+    assert "| at .toolUseResult.stdout | at start" in out
+
+
+def test_needle_places_positions_and_shape_helpers():
+    # F2 of #301: a CRLF lead is still at the start
+    assert list(usage.needle_places({"c": "\r\n<cross-session-message>"}, "cross-session-message")) == [
+        (".c", "at start")]
+    # F3 of #301: the branches no other test runs
+    assert list(usage.needle_places({"c": "hi <cross-session-message>"}, "cross-session-message")) == [
+        (".c", "line 1, after text")]
+    assert list(usage.needle_places({"c": "a\nb\nc<cross-session-message>"}, "cross-session-message")) == [
+        (".c", "line 3 or later")]
+    assert list(usage.needle_places({"cross-session-message": 1}, "cross-session-message")) == []
+    assert usage.lead_of("  ") == "empty" and usage.lead_of("<1x>") == "<?>" and usage.lead_of("hi") == "text"
+    assert usage.lead_of("<task-notification>x") == "<task-notification>"
+    assert usage.content_kind(None) == "none" and usage.content_kind(5) == "?"
+    assert usage.content_kind(["x", {"type": "a b"}]) == "list[?]"
+    assert usage.safe(None) == "-" and usage.safe("a/b") == "?" and usage.safe(3) == "?"
+    att = {"type": "attachment", "attachment": {"type": "queued_command", "content": "<x-y>z"}}
+    assert usage.shape_of(att) == "type=attachment attachment=queued_command meta=False attachment.content=str:<x-y>"
+
+
+def test_shapes_counts_a_needle_only_in_a_key_as_not_in_a_value(tmp_path, capsys):
+    s = tmp_path / "store"
+    write(s / "C--x" / "nnnn0001-0000.jsonl", [
+        title("a manager"), user(PROMPT, T(21)), reply("a", T(21)),
+        {"type": "progress", "cross-session-message": 1},
+    ])
+    out = run(capsys, "shapes", "--store", str(s), "--from", "2026-11-21", "--to", "2026-11-21")
+    assert "| at (not in a string value) | -" in out
+
+
 def test_shapes_refuses_a_needle_that_is_not_a_name(store):
     for bad in ("a b", "<x>", "x"):
         with pytest.raises(SystemExit):
