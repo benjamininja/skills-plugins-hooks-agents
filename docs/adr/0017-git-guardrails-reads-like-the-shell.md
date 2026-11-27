@@ -72,3 +72,5 @@ same next spellings waiting: `g\it`, `$'\x67it'`, `/usr/bin/g?t`,
   ruleset covers these only when they push to `main`. For the local
   destructive commands (`reset --hard`, `clean -f`, `checkout .`,
   `restore .`, a force branch delete) nothing behind the hook covers them.
+- The reader is not a full shell parser: shell syntax it does not parse is
+  tracked on #295.

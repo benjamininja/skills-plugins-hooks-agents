@@ -102,6 +102,8 @@ this is a behavior adaptation.
   blocks with "cannot tell whether '$g' is git — name git literally".
   The literal reading above still runs; a block from any reading stands,
   and an exemption holds only when it holds in every reading.
+  The reader is not a full shell parser: shell syntax it does not parse is
+  tracked on #295.
 - **Redirections are dropped before matching.** `2>&1`, `&>file`, `>file`
   and `<file` are removed with their target, so `git push 2>&1 origin main`
   and `git clean -fd>/dev/null` are judged like the plain command, and a

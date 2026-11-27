@@ -535,6 +535,16 @@ function render(cnt, r, quote, x,    k, w, o, out, sawgit, ag, skip) {
   }
   return out
 }
+# The subcommand of the git named at word k: the first word after it that is
+# not an option, an option in VALOPT also taking the word after it.
+function subcmd(cnt, k,    j, w) {
+  for (j = k + 1; j <= cnt; j++) {
+    w = W[j]
+    if (substr(w, 1, 1) != "-") return tolower(w)
+    if (index(VALOPT, " " w " ")) j++
+  }
+  return ""
+}
 function collapse(t) { gsub(/[ \t]+/, " ", t); sub(/^ /, "", t); sub(/ $/, "", t); return t }
 function emit(note, text,    key) {
   key = collapse(text)
@@ -557,7 +567,7 @@ function readings(seg, v0,    m, mode, s, pass, cnt, k, nx, r) {
       for (k = 1; k < cnt; k++) {
         nx = tolower(W[k + 1])
         if (F[k] && (index(VERBS, " " nx " ") || substr(nx, 1, 1) == "-")) emit(W[k], render(cnt, k, 1, 0))
-        if (norm(W[k]) != W[k] && index(VERBS, " " nx " ")) emit("", render(cnt, 0, 1, k))
+        if (norm(W[k]) != W[k] && index(VERBS, " " subcmd(cnt, k) " ")) emit("", render(cnt, 0, 1, k))
       }
       r = render(cnt, 0, 0, 0)
       if (r == s) break

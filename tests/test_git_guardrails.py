@@ -1053,6 +1053,19 @@ def test_a_folder_named_git_is_an_argument(tool, on_feature, tmp_path):
     assert b"current checked-out branch is 'main'" in result.stderr
 
 
+# F11 (review re-check at 5f95725): a later git path whose subcommand
+# follows a global option is still tried as git
+@pytest.mark.parametrize("tool", TOOLS)
+@pytest.mark.parametrize("command", [
+    'x=/git "/c/Program Files/Git/cmd/git.exe" -c "user.name=a b" reset --hard',
+    'env -u git "/c/Program Files/Git/cmd/git.exe" -c "user.name=a b" reset --hard',
+])
+def test_f11_a_later_git_path_after_a_global_option_blocks(command, tool, on_feature):
+    result = run_hook(command, project_dir=on_feature, tool=tool)
+    assert result.returncode == 2, result.stderr.decode()
+    assert b"could not read the command" not in result.stderr
+
+
 @pytest.mark.parametrize("tool", TOOLS)
 @pytest.mark.parametrize("command", [
     'git branch -D done-branch "#" other-branch',
