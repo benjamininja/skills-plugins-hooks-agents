@@ -641,10 +641,10 @@ def test_the_lock_is_released_when_a_step_raises(tmp_path, lock_area, monkeypatc
 def test_the_lock_is_released_when_a_step_times_out(tmp_path, export_area, lock_area, monkeypatch, capsys):
     real = reproof.run
 
-    def fake(cmd, cwd=None):
+    def fake(cmd, cwd=None, timeout=reproof.TIMEOUT):
         if cmd[1:3] == ["-m", "pytest"]:
             return 124, "", "timed out after 3600s"
-        return real(cmd, cwd)
+        return real(cmd, cwd, timeout)
 
     monkeypatch.setattr(reproof, "run", fake)
     clone, head, _ = scenario(tmp_path)
