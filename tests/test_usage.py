@@ -226,8 +226,10 @@ def test_startup_subcommand(store, capsys):
 def test_reads_are_upper_bounds_and_print_only_tool_and_extension(tmp_path, capsys):
     p = write(tmp_path / "s.jsonl", [
         user(PROMPT, T(20)),
-        reply("a", T(20), i=0, cr=1000, stop="tool_use", calls=[("u1", "Read", {"file_path": PATH})]),
+        reply("a", T(20), i=0, cr=1000, stop="tool_use", calls=[("u1", "Read", {"file_path": PATH}),
+                                                               ("u2", "mcp__someserver__query", {})]),
         result("u1", "x" * 400, T(20)),
+        result("u2", "", T(20)),
         user("y" * 100, T(20), meta=True),
         reply("b", T(20), i=0, cr=1200, stop="end_turn"),
         reply("c", T(20), i=0, cr=9000, stop="tool_use", calls=[("u9", "Read", {"file_path": PATH})]),
@@ -238,7 +240,8 @@ def test_reads_are_upper_bounds_and_print_only_tool_and_extension(tmp_path, caps
     assert "growth=200 resultChars=500 chars/token~2.50" in out
     rows = [ln.split() for ln in out.splitlines() if ln.strip().startswith(("1 ", "2 "))]
     assert rows[0][:4] == ["1", "Read", ".md", "160"]
-    assert rows[1][1:3] == ["(injected", "text)"]
+    assert rows[1][:2] == ["1", "mcp"] and "someserver" not in out
+    assert rows[2][1:3] == ["(injected", "text)"]
     assert "9999" not in out  # a read after the start-up turn is not in it
 
 

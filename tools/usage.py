@@ -773,7 +773,8 @@ def cmd_reads(a) -> None:
             n += 1
         elif ev[0] == "result" and ev[1] in uses:
             k, c = uses[ev[1]]
-            rows.append((k, c.name, c.ext, ev[2]))
+            # an MCP tool's name carries its server's name, which is the owner's: shown as "mcp"
+            rows.append((k, "mcp" if c.name.startswith("mcp__") else c.name, c.ext, ev[2]))
         elif ev[0] == "injected" and n:
             rows.append((n, "(injected text)", "", ev[1]))
     growth = start[-1].ctx - start[0].ctx
