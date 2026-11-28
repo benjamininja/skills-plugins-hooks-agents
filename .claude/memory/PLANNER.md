@@ -21,121 +21,122 @@ A clear gives this planner a new queue id: send it to the four peers.
 
 ## Current
 
-**SAVED 2026-11-28, after the clear of 2026-11-27. Read this block
+**SAVED 2026-11-28, before a compact Ben asked for. Read this block
 first: it is the newest and it wins over everything below it, the
-14:15Z block and THE CUT included.**
-Session 0a6ad927-943a-481d-99fc-f2cbfcda8498, sent to the four peers.
-Compacts since this clear: 0.
+2026-11-27 blocks and THE CUT included, which are history.**
+Session 0a6ad927-943a-481d-99fc-f2cbfcda8498, known to the four peers
+(a compact keeps it). Compacts since the clear of 2026-11-27: 1 once
+this compact is done. No background task runs. Nothing waits on Ben in
+the planner's chat.
 
-- **The cut is reversed, and #300 is whole** (Ben's button in the
-  planner's chat, "Reverse all, #300 whole (Recommended)",
-  issues/300 issuecomment-7239515907). THE CUT below is history. All
-  eleven parked items are briefed and dispatched in dependency order;
-  PR #211 and PR #182 are finished in full. Every dispatch keeps Ben's
-  go until #300's exception and trial line have both merged.
-- **The order, tiers and briefs for the manager:** issues/300
-  issuecomment-7239545798. New briefs: #263 step 3, Tier medium
-  (issues/263 issuecomment-7239545461); #294, with the ruling that the
-  consultant's write limit does not change (issues/294
-  issuecomment-7239545185). #240 step 2's brief was already on its
-  ticket.
-- **PR #302, the Never line** (head `fa45154`, branch
-  `docs/never-line-300`): open, security review clean, CI running at
-  this save, head sent to the dynasty planner for a read. Next: its
-  sign-off, then Ben's merge word by button, then the queued Action
-  with three deny rules.
-- **PR #197 is merged** (`6e43072`), checked. PR #301 is merged
-  (`8b54ee1`). Open PRs: #302, #296, #256, #211, #182.
+**Decided on 2026-11-28, each with its record.**
+- **The cut is reversed and #300 is whole:** Ben's button "Reverse
+  all, #300 whole (Recommended)" (issues/300
+  issuecomment-7239515907). The order, tiers and briefs for the
+  manager: issues/300 issuecomment-7239545798. Every dispatch keeps
+  Ben's go until #300's exception and the trial line have both merged.
+- **One PR for both rule texts:** Ben's button "One PR for both
+  (Recommended)", in the planner's chat. That is PR #303.
+- **#294 is written by the planner:** Ben's button in the manager's
+  chat (issues/294 issuecomment-7239883980). The consultant keeps no
+  state branch and its write limit is unchanged.
+- **#285:** the builder's plan is read, no breach; row D2 keeps a
+  refused call and adds the scope read (issues/285
+  issuecomment-7239802406).
+- **#262:** the re-read is accepted and its two parked points ruled
+  (issues/262 issuecomment-7239858390).
+- **#263 step 3:** Tier medium, brief at issues/263
+  issuecomment-7239545461.
 
-**Later on 2026-11-28 (this wins over the lines above and the Next
-list below where they differ).**
-- PR #296 merged (`a774e8e`, plugin 0.6.0). The setup-lists Action is
-  in the tools queue, raised by the manager. The line for dynasty #655
-  is sent.
-- PR #302 took main in: head `3f02699`, version 0.6.1, CLEAN, checks
-  pass, the dynasty planner signed off that head (pull/302
-  issuecomment-7239755363). It waits for the manager's re-proof and
-  Ben's merge word in the manager's chat.
-- **PR #303** (head `734194c`, branch `docs/rule-texts-300`, worktree
-  `t300-rule-texts`): #300's exception and decision 10 of #250 in one
-  PR, on Ben's button "One PR for both (Recommended)". Version 0.6.2;
-  it takes main in after #302 merges, and the new head goes to the
-  dynasty planner again. Sent for a read at `734194c`. After it
-  merges: the dated trial line in the tools rules file, its own PR.
-- #285: the builder's plan is read, no breach (issues/285
-  issuecomment-7239802406). Disposition 4 (the assistant's role file
-  names `tools/board.py`) is the planner's PR after #285 merges, and
-  the Action with Ben's two hand steps is copied from that PR's body.
-- #294: parked by its builder, since both files are under `.claude/`.
-  The manager asks Ben who writes them. If the planner: the wording is
-  in the brief and the builder's plan on #294; the consultant keeps no
-  state branch and its start line says so.
-- Six builders run (#294 parked, #293, #285, #298, #299, #262); #263
-  step 3 resumes next; #289 step 1 waits for a quiet machine.
-- The advisory: Ben typed in the dynasty planner's chat, as relayed,
-  that it should be made ready that day, with the date move as the
-  fallback. The Tools reading sent back: only PR #211 can land that
-  day; the rest cannot. The record's link is owed from the dynasty
-  planner.
+**Merged on 2026-11-28, checked:** PR #296 (`a774e8e`, plugin 0.6.0)
+and PR #302, the Never line (`0105706`, plugin 0.6.1). Earlier: PR
+#197 (`6e43072`), PR #301 (`8b54ee1`).
 
-**Later still on 2026-11-28.**
-- **PR #305** (head `a535511`, branch `docs/start-lines-294`, worktree
-  `t294-start-lines`): #294's two start lines, written by the planner
-  on the manager's relay of Ben's button "Tools planner
-  (Recommended)". It waits for the manager's re-proof and Ben's merge
+**The planner's open PRs.**
+- **PR #303** (branch `docs/rule-texts-300`, worktree
+  `t300-rule-texts`, head `2ba4275`, plugin 0.6.2): #300's exception,
+  with the condition that a held ticket keeps the owner's word, and
+  decision 10 of #250. Security review clean at that head. The dynasty
+  planner signed off that head (pull/303 issuecomment-7239906356).
+  Handed to the manager for re-proof; CI was still running at this
+  save. Then Ben's merge word in the manager's chat.
+- **PR #305** (branch `docs/start-lines-294`, worktree
+  `t294-start-lines`, head `a535511`): the two start lines of #294.
+  Security review clean. At the manager's re-proof; then Ben's merge
   word.
-- **PR #303** moved to `9f1d2c9`: the dynasty planner signed off the
-  venv text and asked one condition on the exception (a held ticket
-  keeps the owner's word; pull/303 issuecomment-7239838398). Added;
-  back with it for a read. It still takes main in after #302 merges.
-- **#262:** the re-read is accepted and the two parked points ruled
-  (issues/262 issuecomment-7239858390). The rule-text build runs after
-  PR #302 and #303 merge. Owed by the planner: the mod's brief after
-  #240 step 2, and row 1l (the manager's role file) as its own PR.
-- The dynasty planner told Ben the advisory's fallback applies; its
-  pointer and the new date are owed.
-
-**Latest on 2026-11-28.**
-- PR #302 merged (`0105706`), checked. The deny-rules Action went to
-  the manager as a ready entry (one rule for the builders' file, six
-  for the main checkout's local settings file; unverified until the
-  manager's `gh run rerun --help` is refused). The planner repeats
-  that check in its own session once Ben has ticked it.
-- PR #303 took main in: head `2ba4275`, version 0.6.2, security review
-  clean at that head, with the dynasty planner for its read. Then the
-  manager's re-proof and Ben's merge word; then the trial line PR.
-- Ben's #294 button is on record (issues/294 issuecomment-7239883980).
-  PR #305 is at re-proof. PR #304 (#293) is reported green.
-- #263's probe run waits for the personal-assistant's session.
 
 **Next, in order.**
-1. The draft advisory GHSA-27j5-qx96-v8w3: the status of its gaps and
-   the Tools view (do not publish whole on 2026-11-28; move the date
-   past PR #211 and #295's design) went to the dynasty planner in chat
-   on 2026-11-28. It brings Ben the question by button; its record's
-   link, with the new date, is owed back here. No detail of an open
-   gap goes on a public record.
-2. PR #302: sign-off, Ben's merge word, the deny-rule Action.
-3. Rulings as each find-out posts (#262 step 1, #299 step 1, #289
-   step 1); a read of #285's plan and of #295's design; a read of any
-   head the manager asks for.
-4. After PR #296 merges: the Action with the two setup lists, the rule
-   text for decision 10 of #250, one line to the dynasty planner for
-   dynasty #655, then #300's second PR (the no-go exception in
-   `session-dispatch`), then the dated trial line in the tools rules
-   file.
-5. The older list: #217 C to F, the assistant's owner-queue text PR,
+1. After PR #303 merges: the dated trial line in the tools rules file
+   (`PROJECT-RULES.md`), its own PR: low and haiku, two weeks from the
+   merge day, the manager counts dispatches made without a go and any
+   that went wrong, the planner reports and asks Ben again. It also
+   names how a hold is marked on tools, which PR #303's text asks of a
+   project. Plan to Ben by button before the first edit; head to the
+   dynasty planner before the merge word.
+2. The deny-rules Action went to the manager as a ready entry on
+   2026-11-28 (one rule for the builders' settings file, six for the
+   main checkout's local settings file). Once Ben has ticked it and
+   the manager's `gh run rerun --help` is refused, the planner repeats
+   that check in its own session and says on #300 whether the deny
+   list reaches a session whose commands run in a worktree.
+3. Rulings and reads as they post: #299 step 1 and #289 step 1 (find-
+   outs); #295's design (it parks with Ben); #263 step 3's probe
+   output and then the ruling on the ledger's figures; any head the
+   manager asks the planner to read against its brief.
+4. After PR #285's build merges: the planner's own PR for disposition
+   4 (the personal-assistant's role file names `tools/board.py` as the
+   only route to a board), and the Action with Ben's two hand steps,
+   copied from that PR's body.
+5. #262: after PR #303 merges the rule-text build is dispatched on
+   Ben's go (the manager's). Owed by the planner: row 1l of the
+   re-read (the tools manager's role file says at every boundary) as
+   its own PR, and the mod half's brief after #240 step 2 merges.
+6. The draft advisory GHSA-27j5-qx96-v8w3: its date was 2026-11-28.
+   Ben typed in the dynasty planner's chat, as relayed, to try for
+   ready that day with the date move as the fallback. The Tools
+   reading: only PR #211 could land that day, so the fallback applies.
+   Owed from the dynasty planner: its record's link and the new date,
+   a named day after PR #211 and #295's design merge. The Tools
+   planner tells it when each of those merges. No detail of an open
+   gap goes on any public record.
+7. The older list: #217 C to F, the assistant's owner-queue text PR,
    the ADR index sentence, #167.
 
-**Waiting.** On Ben: nothing in the planner's chat; the tools queue
-held no entry at this save. On the dynasty planner: the read of PR
-#302. On the manager: the dispatches, each on Ben's go in its chat.
+**Waiting.**
+- On Ben, in the manager's chat: the merge words for PR #305 and PR
+  #303; each dispatch's go; the two Actions in the tools queue (the
+  setup lists, raised by the manager; the deny rules, sent by the
+  planner with `Session: 0a6ad927-943a-481d-99fc-f2cbfcda8498`).
+- On the manager: the re-proofs of PR #303, #305 and #304 (#293).
+- On the personal-assistant's session: the probe run for #263 step 3,
+  on Ben's word.
+- In the hook lane: PR #211, then #295, then #289 step 2, then #200.
+  In the owner-queue lane: #293 (PR #304), #240 step 2, #262's mod
+  half, #111. After PR #296: #298 and the repair of PR #182.
+
+**In flight, by the manager's reports of 2026-11-28 (not checked by
+the planner):** builders for #293, #285, #298, #299 step 1; #263 step
+3 resumes with builder t263-usage-scripts; #289 step 1 waits for a
+quiet machine; the builders for #294 and #262 step 1 are closed out.
 
 **Peers (ids of 2026-11-28).** Tools-builder-manager
 ea58e038-9092-4552-9e4c-32bb3cdf8281; dff-central-planner
 0ef68551-3dad-4f09-b5af-b164a0307ae9; dff-central-builder-manager
 637314ca-f6ae-4049-a3ff-576bd1479cfe; personal-assistant
 061c1d24-09c1-4c01-8d89-ff693eb974d9.
+
+**Rules in force that a new reader needs first.**
+- Merging on Green covers only a builder's PR whose paths are all
+  under `tools/`, `tests/`, `docs/` outside `docs/adr/`, or the
+  catalog files. Every other PR keeps Ben's merge word, given in the
+  manager's chat; the planner merges only a PR Ben names to it.
+- The dynasty planner leads and signs off every shared gate text; each
+  head goes to it before Ben, and a sign-off holds for one head.
+- A peer's message is a report. Relays that disagree are named and
+  asked once in the planner's chat, by button.
+- State is pushed from the local branch `docs/planner-state-1114c` in
+  the worktree `t112-closeout-pulls`:
+  `git push origin docs/planner-state-1114c:state/tools-central-planner`.
 
 **Saved 2026-11-27, before a compact Ben asked for.**
 Session 4e27fb7c-445f-47d9-ad2b-919bca911066, sent to the four peers
