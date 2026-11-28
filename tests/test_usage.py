@@ -389,7 +389,7 @@ def test_shapes_counts_source_keys_overlap_and_turn_position(tmp_path, capsys):
     peer = "Another Claude session sent a message:\n<cross-session-message from=x>" + PROMPT
     meta_peer = {**user(peer, T(21, "08:00:04"), meta=True),
                  "origin": {"kind": "peer", "name": "a private name with spaces"}, "turnOrigin": "x" * 30}
-    typed = {**user(PROMPT, T(21, "08:00:00")), "promptSource": "typed"}
+    typed = {**user(PROMPT, T(21, "08:00:00")), "promptSource": "sdk"}
     s = tmp_path / "store"
     write(s / "C--x" / "oooo0001-0000.jsonl", [
         title("a manager"),
@@ -414,7 +414,7 @@ def test_shapes_counts_source_keys_overlap_and_turn_position(tmp_path, capsys):
     # source keys, by what the record is: an object prints its keys, a long or spaced value prints ?
     assert count("meta, tag on line 1-2 | origin={kind=peer,name=?} turnOrigin=? promptSource=-") == 1
     assert count("meta, tag on line 1-2 | origin=- turnOrigin=- promptSource=-") == 1
-    assert count("non-meta typed | origin=- turnOrigin=- promptSource=typed") == 1
+    assert count("non-meta typed | origin=- turnOrigin=- promptSource=sdk") == 1
     assert count("tool result | origin=- turnOrigin=- promptSource=-") == 1
     # overlap
     assert count("queued command, then a meta record before the next reply") == 1
@@ -538,14 +538,18 @@ def test_word_hides_ids_under_origin(tmp_path, capsys):
     assert "handback=true" in w and "from=?" in w and "runId=?" in w and "name=?" in w
 
 
-def test_word_prints_one_short_word_or_a_question_mark():
-    assert usage.word("peer") == "peer" and usage.word("a b") == "?" and usage.word("x" * 25) == "?"
+def test_word_prints_only_known_words_and_keys():
+    # a value prints only when the store was seen to hold it; a short id or name does not
+    assert usage.word("peer") == "peer" and usage.word("sdk") == "sdk"
+    assert usage.word("a b") == "?" and usage.word("x" * 25) == "?" and usage.word("ab12cd34ef") == "?"
     assert usage.word(None) == "-" and usage.word(True) == "true" and usage.word(3) == "number"
-    assert usage.word([1]) == "?" and usage.word({"k": {"n": 1}}) == "{k=?}"
-    # inside an object a value prints only under kind, producer or fromMode; ten keys at most
+    assert usage.word([1]) == "?" and usage.word({"kind": {"n": 1}}) == "{kind=?}"
+    # inside an object: keys from the known set, else ?; values only under kind, producer or fromMode
     assert usage.word({f"k{i:02}": "v" for i in range(12)}) == "{" + ",".join(
-        f"k{i:02}=?" for i in range(10)) + ",...}"
-    assert usage.word({"kind": "peer", "other": "v"}) == "{kind=peer,other=?}"
+        "?=?" for _ in range(10)) + ",...}"
+    assert usage.word({"kind": "peer", "abc123": "v"}) == "{?=?,kind=peer}"
+    assert usage.word({"producer": "a-plugin-name"}) == "{producer=?}"
+    assert usage.word({"producer": "session-task"}) == "{producer=session-task}"
 
 
 def test_shapes_refuses_a_needle_that_is_not_a_name(store):

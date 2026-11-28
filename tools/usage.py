@@ -1037,17 +1037,25 @@ def needle_places(o, needle: str, path: str = "", depth: int = 0):
 
 
 SOURCE_KEYS = ("origin", "turnOrigin", "promptSource")
-WORD_RE = re.compile(r"[A-Za-z0-9_-]{1,24}")
 
 
 # Inside an object, only these keys' word values print; any other key's value is an id or
 # text (from=, runId=, name=, msg_id= held ids on the real store, #263), so it prints "?".
 WORD_VALUE_KEYS = frozenset({"kind", "producer", "fromMode"})
+# Every value and key that prints is one the store was seen to hold (November 2026, #263):
+# an enum, never an id or a name. Anything else prints "?".
+KNOWN_VALUES = frozenset(SOURCE_KINDS) | frozenset({"sdk", "prompting", "session-task"})
+KNOWN_KEYS = frozenset({
+    "kind", "producer", "fromMode", "from", "fromSession", "msg_id", "name", "runId", "body",
+    "hopChain", "fullHopChain", "handback", "handbackReportText", "handbackToolUseId",
+    "hostInjected", "asUser",
+})
 
 
 def word(v, show: bool = True) -> str:
-    """A value as one short word, else "?". An object shows at most ten of its keys; a
-    value prints only under WORD_VALUE_KEYS, or as true/false, else "?"; nested is "?"."""
+    """A value as a known word (KNOWN_VALUES), else "?". An object shows at most ten
+    keys, each from KNOWN_KEYS else "?"; a value inside prints only under
+    WORD_VALUE_KEYS, or as true/false; a nested object or list is "?"."""
     if v is None:
         return "-"
     if isinstance(v, bool):
@@ -1055,10 +1063,10 @@ def word(v, show: bool = True) -> str:
     if isinstance(v, (int, float)):
         return "number"
     if isinstance(v, str):
-        return v if show and WORD_RE.fullmatch(v) else "?"
+        return v if show and v in KNOWN_VALUES else "?"
     if isinstance(v, dict):
         items = sorted(v.items(), key=lambda kv: str(kv[0]))
-        parts = [f"{word(k) if isinstance(k, str) else '?'}="
+        parts = [f"{k if k in KNOWN_KEYS else '?'}="
                  f"{'?' if isinstance(x, (dict, list)) else word(x, show=k in WORD_VALUE_KEYS)}"
                  for k, x in items[:10]]
         return "{" + ",".join(parts) + (",..." if len(items) > 10 else "") + "}"
