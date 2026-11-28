@@ -96,7 +96,8 @@ In this repository and no other:
   never the merge word.
 - **Closeout**, only when a builder has stopped, and the closeout pulls
   of the main checkout and the live clone.
-- **Your state file**, on your state branch, at every clear boundary.
+- **Your state file**, on your state branch, at every boundary: before
+  a compact and before a clear.
   Until the rule text of #217 is live, the state-back is that branch
   with a PR, as `session-rules` says.
 
