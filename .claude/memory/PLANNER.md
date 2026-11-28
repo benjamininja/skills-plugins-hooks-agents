@@ -33,15 +33,15 @@ older blocks are in this file's git history.
 
 1. **The boards token, after the merge.** PR #330 is on `main` as
    `1abdfe1` (checked), after Ben's D rows run passed six of six
-   (issues/328 issuecomment-7243277622). #328 and #285 are closed;
-   #329's hold is lifted (issues/329 issuecomment-7243313395), so
-   the manager may dispatch it at low (`venv: light` since the
-   manager's finding, issues/329 issuecomment-7243353101). Open:
-   **#331** (F1, low, `venv: light`, held behind #329's PR, same
-   file): lift it when that PR merges. #332 is closed: three of seven
-   texts proved by the assistant's first use, four left to their
-   first use by Ben's button. **A `tools/` ticket whose proof is
-   pytest says `venv: light`, never `no`.**
+   (issues/328 issuecomment-7243277622). #328, #285, #329 and #332
+   are closed; #329 by PR #333, merged `14891d6`. Open: **#331**
+   (low, `venv: light`), hold lifted, free for the manager under the
+   trial; it carries PR #330's F1 and PR #333's F2. Owed by the
+   personal-assistant, with no date: a read-back at its first real
+   set of a number field (issues/329 issuecomment-7243651599); the
+   four set texts stay unproven until first use, by Ben's button on
+   #332. **A `tools/` ticket whose proof is pytest says
+   `venv: light`, never `no`.**
 2. **#324** (PR #304's F1, low) is held behind PR #326 (#240 step 2,
    branch `worktree-t240-rekey`); lift the label and the `Held:` line
    when that PR merges. PR #326 at `d3f4d10`: its review has no
@@ -77,7 +77,7 @@ older blocks are in this file's git history.
 
 - On Ben, in the manager's chat: the merge word for PR #326; the go
   for #262's rule-text build and for every medium or high dispatch.
-- On the manager: PR #326's re-proof; #329's dispatch.
+- On the manager: PR #326's re-proof and merge; #331's dispatch.
 - In the hook lane: PR #211, then #295, then #289 step 2, then #200.
   In the owner-queue lane: PR #326, #262's mod half, #111, #324. The
   repair of PR #182 is still owed.
@@ -97,7 +97,7 @@ b5f4cf26-115a-4e01-b766-e8504c065057; Tools-builder-manager
 
 ### Reads and checks due
 
-- When #329's PR merges: lift #331.
+- When #324's PR merges: lift #334.
 - When PR #326 merges: lift #324; the two briefs of Next 3.
 - 2026-12-12: the two buttons of Next 4.
 - 2026-12-31 or Dugout Standard's tenth merged builder PR: #323.
@@ -115,6 +115,9 @@ All on 2026-11-28, by Ben's button unless said.
   advisories F1 and F2, both held (planner).
 - Merged: PR #330 `1abdfe1` (#328), on Green after that run (pull/330
   issuecomment-7243279315). #285 closed; #329's hold lifted.
+- Merged on Green, a trial dispatch: PR #333 `14891d6` (#329). #331's
+  hold lifted; PR #333's F1 gets no ticket (issues/329
+  issuecomment-7243651599).
 - PR #326's open points ruled, #334 filed (planner; issues/240
   issuecomment-7243576768).
 - #332: "At first use (Recommended)", in the planner's chat; closed
