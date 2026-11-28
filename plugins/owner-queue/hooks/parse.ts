@@ -242,21 +242,29 @@ export function message(
 const KEY = /(?:^|;)\s*\(([A-Za-z0-9])\)\s*/g
 
 /**
- * The choices of a decision and whether its Options line is malformed (a key
- * twice at option boundaries, which draws no options rather than a guess).
+ * Why an Options line is malformed: a key twice at option boundaries
+ * (`twice`), or text that reads to fewer than two options (`few`).
  */
-function choices(item: OwnerItem): { all: OwnerOption[]; isMalformed: boolean } {
+export type Fault = 'twice' | 'few'
+
+/**
+ * The choices of a decision and the fault of its Options line, if it has one.
+ * A malformed line draws no options rather than a guess.
+ */
+function choices(item: OwnerItem): { all: OwnerOption[]; fault?: Fault } {
   const value = pick(item, 'options')
-  if (!value) return { all: [], isMalformed: false }
+  if (!value) return { all: [] }
   const clean = (text: string) => text.trim().replace(/[;,.]+$/, '').trim()
+  const atLeastTwo = (all: OwnerOption[]) =>
+    all.length < 2 ? { all: [], fault: 'few' as const } : { all }
 
   const keyed = [...value.matchAll(KEY)]
   if (keyed.length > 0 && keyed[0].index === 0) {
     const keys = keyed.map(match => match[1].toLowerCase())
-    if (new Set(keys).size !== keys.length) return { all: [], isMalformed: true }
+    if (new Set(keys).size !== keys.length) return { all: [], fault: 'twice' }
 
-    return {
-      all: keyed
+    return atLeastTwo(
+      keyed
         .map((match, at) => ({
           key: match[1].toLowerCase(),
           text: clean(
@@ -267,18 +275,16 @@ function choices(item: OwnerItem): { all: OwnerOption[]; isMalformed: boolean } 
           ),
         }))
         .filter(option => option.text !== ''),
-      isMalformed: false,
-    }
+    )
   }
 
-  return {
-    all: value
+  return atLeastTwo(
+    value
       .split(';')
       .map(clean)
       .filter(text => text !== '')
       .map((text, at) => ({ key: String.fromCharCode(97 + at), text })),
-    isMalformed: false,
-  }
+  )
 }
 
 /**
@@ -290,9 +296,17 @@ export function options(item: OwnerItem): OwnerOption[] {
   return choices(item).all
 }
 
-/** True when the Options line names one key twice at option boundaries. */
+/**
+ * True when the Options line is malformed: it names one key twice at option
+ * boundaries, or holds text that reads to fewer than two options.
+ */
 export function isMalformed(item: OwnerItem): boolean {
-  return choices(item).isMalformed
+  return choices(item).fault !== undefined
+}
+
+/** Which fault makes the Options line malformed, if any. */
+export function fault(item: OwnerItem): Fault | undefined {
+  return choices(item).fault
 }
 
 /** The key of the option the Recommended field names, if it names one. */
