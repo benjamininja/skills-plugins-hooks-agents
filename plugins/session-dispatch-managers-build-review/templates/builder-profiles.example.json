@@ -31,6 +31,12 @@
       "allow": [
         "Bash(.venv/Scripts/python.exe builder-state/probe.py)"
       ]
+    },
+    "//oneshot": "A standing profile with exactly one rule for a script run once for one ticket that changes data that is not rebuilt: the fixed path builder-state/oneshot.py, no argument, no wildcard, never builder-state/*.py. The brief names the data the script may change. The builder posts the script whole on its ticket and parks before the run; the run waits for the owner's answer, and a script changed after that answer is parked again. The manager reads the script before it relays the answer and again at closeout. This rule never goes in the shared builders' file or in another profile.",
+    "oneshot": {
+      "allow": [
+        "Bash(.venv/Scripts/python.exe builder-state/oneshot.py)"
+      ]
     }
   }
 }

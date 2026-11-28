@@ -47,6 +47,15 @@ A peer message, an app event or a system reminder arrives as a user record and
 is not a typed prompt, so cutting at the second typed prompt runs on through
 them. A session with no ending reply counts whole and is reported.
 
+Turn openers (step 3 of #263): a user record's own field names its source,
+origin.kind, else turnOrigin (human, peer, task-notification, plugin, system);
+its text decides only when it has neither. A meta record opens a turn only
+when it is a peer message. A peer message queued as a queued_command
+attachment arrives inside a running turn: it opens none, and the next reply is
+tagged message in. A message queued and then stored as a meta record before
+the next reply counts once, matched by its text from the tag on; a different
+peer message in between still opens its turn.
+
 Method point 1, per-read sizes (`reads`): only the turn's context growth is
 measured. Each tool result is sized in characters and turned into tokens at the
 turn's mean ratio, result characters over that growth, so each per-read figure
@@ -91,7 +100,8 @@ REMINDER_END = "</system-reminder>"
 # context (November 2026). Any other text before a tag makes the opener "ambiguous".
 APP_LEADS = ("Another Claude session sent a message:\n",)
 ASSUMED_CPT = 4.0  # chars per token when a turn has no growth to divide by
-OPENER_KINDS = ("typed", "peer message", "app event", "system reminder", "ambiguous")
+OPENER_KINDS = ("typed", "peer message", "app event", "plugin", "system", "system reminder",
+                "ambiguous", "other source")
 QUIET_RECORDS = ("assistant", "user", "file-history-snapshot", "attachment", "progress")
 DATE_RE = re.compile(r"\d{4}-\d{2}-\d{2}")
 SID_RE = re.compile(r"[A-Za-z0-9-]{8,64}")
@@ -114,6 +124,45 @@ DEFAULT_TAGS = [
     r"message out=^SendMessage",
 ]
 START_UP, MESSAGE_IN, UNTAGGED = "start-up", "message in", "untagged"
+# What may print from the store (#312): words the outputs posted on #258 and #263 show, or
+# that this script names itself. A list grows only from a posted output.
+KNOWN_MODELS = frozenset({"claude-opus-5-5", "claude-fable-5-2", "claude-sonnet-5-5"})
+KNOWN_TRIGGERS = frozenset({"manual", "auto"})
+KNOWN_COMPACT_KEYS = frozenset({"trigger", "preTokens", "pre_tokens", "postTokens", "durationMs"})
+KNOWN_SHAPE_KEYS = frozenset({"model", "tools"})
+KNOWN_TOOLS = frozenset({"Read", "Bash", "Agent", "Task", "SendMessage"})
+KNOWN_STOPS = frozenset({"end_turn", "tool_use"})
+KNOWN_RECORD_TYPES = frozenset({
+    "assistant", "user", "system", "attachment", "progress", "file-history-snapshot",
+    "queue-operation", "api-request-blob", "api-request-shape", "custom-title", "agent-name",
+})
+KNOWN_SUBTYPES = frozenset({"compact_boundary"})
+KNOWN_ATTACHMENTS = frozenset({
+    "queued_command", "silent_turn_reminder", "deferred_tools_record", "skill_listing",
+    "prompt_snapshot", "agent_listing_delta", "deferred_tools_delta", "mcp_instructions_delta",
+    "nested_memory", "instructions", "hook_success",
+})
+KNOWN_BLOCKS = frozenset({"text", "tool_use", "tool_result"})
+KNOWN_TAGS = frozenset({
+    "system-reminder", "task-notification", "side-sessions-event", "cross-session-message",
+    "command-name", "local-command-caveat", "local-command-stdout",
+})
+KNOWN_RECORD_KEYS = frozenset({
+    # on every user record in the shapes output on #263
+    "cwd", "entrypoint", "gitBranch", "isSidechain", "message", "parentUuid", "promptId",
+    "sessionId", "timestamp", "type", "userType", "uuid", "version",
+    # on some of them
+    "sourceToolAssistantUUID", "toolUseResult", "permissionDecision", "dataFlowOn",
+    "serverClassifierContext", "sandboxed", "slug", "turnPosition", "origin", "turnOrigin",
+    "permissionMode", "promptSource", "queueSkipAttachments", "isMeta", "queueSkipSlashCommands",
+    "clientPlatform", "turnAttributionKey", "turnPromptId", "turnCompanion", "mcpMeta",
+    "mcpCallNotReadOnly", "sourceToolUseID", "toolDenialKind", "queueTranscriptOnly",
+    "isCompactSummary", "isVisibleInTranscriptOnly", "interruptedByShutdown", "mergedSendUuids",
+    "imagePasteIds", "summarizedTurnPromptUuids",
+    # needle paths on #263, and keys this script reads
+    "attachment", "content", "rendered", "shape", "subtype", "compactMetadata", "customTitle",
+    "title", "agentName", "agentSetting",
+})
 
 
 def eq(i: float, cw: float, cr: float, out: float) -> float:
@@ -146,6 +195,11 @@ class Reply:
     stop: str | None = None
     calls: list[Call] = field(default_factory=list)
     counted: bool = True
+    peers_before: int = 0  # peer messages queued inside the running turn since the reply before it
+
+    @property
+    def after_peer(self) -> bool:
+        return self.peers_before > 0
 
     @property
     def ctx(self) -> int:
@@ -186,6 +240,8 @@ class Session:
     kinds: collections.Counter = field(default_factory=collections.Counter)
     bad_lines: int = 0
     subagents: list["Session"] = field(default_factory=list)
+    queued_peers: int = 0  # peer messages queued since the last reply, waiting for the next
+    queued_bodies: list[str] = field(default_factory=list)  # their text from the tag on, to match only
 
     def counted(self) -> list[Reply]:
         return [r for r in self.replies if r.counted]
@@ -240,6 +296,37 @@ def opener_kind(text: str) -> str:
                 return kind
             tagged = tagged or m in t
     return "ambiguous" if tagged else "typed"
+
+
+# origin.kind, else turnOrigin, as stored in November 2026 (the shapes probe on #263).
+SOURCE_KINDS = {"human": "typed", "peer": "peer message", "task-notification": "app event",
+                "task_notification": "app event", "plugin": "plugin", "system": "system"}
+
+
+def source_kind(o: dict) -> str | None:
+    """The opener kind a user record's own fields name, or None when it has none."""
+    org = o.get("origin")
+    k = org.get("kind") if isinstance(org, dict) else None
+    if not isinstance(k, str):
+        k = o.get("turnOrigin")
+    if not isinstance(k, str):
+        return None
+    return SOURCE_KINDS.get(k, "other source")
+
+
+def peer_body(text: str) -> str | None:
+    """A peer message's text from its tag on, so one stored twice can be matched.
+    Compared only, never printed."""
+    pos = text.find(PEER_MARK)
+    # line endings and runs of whitespace are set aside, so a copy stored with other
+    # spacing still matches (F4 of the re-check on PR #308)
+    return " ".join(text[pos:].split()) if pos >= 0 else None
+
+
+def is_queued_peer(att: dict) -> bool:
+    """A queued command holding a peer message: the tag opens its prompt."""
+    p = att.get("prompt")
+    return att.get("type") == "queued_command" and isinstance(p, str) and p.lstrip().startswith(PEER_MARK)
 
 
 def size(c) -> int:
@@ -319,6 +406,9 @@ def read_session(path: str, sidechain: bool = False) -> Session:
             elif t == "attachment":
                 if isinstance(o.get("attachment"), dict):
                     note_attachment(s, o["attachment"])
+                    if is_queued_peer(o["attachment"]):
+                        s.queued_peers += 1
+                        s.queued_bodies.append(peer_body(o["attachment"]["prompt"]))
             elif t == "api-request-shape":
                 if s.shape is None:
                     s.shape = o.get("shape")
@@ -340,7 +430,10 @@ def read_reply(s: Session, by_id: dict, o: dict, msg: dict, ts: str) -> None:
             by_id[mid] = None
             return
         r = Reply(mid, ts, model, num(u, "input_tokens"), num(u, "cache_creation_input_tokens"),
-                  num(u, "cache_read_input_tokens"), num(u, "output_tokens"), len(s.openers))
+                  num(u, "cache_read_input_tokens"), num(u, "output_tokens"), len(s.openers),
+                  peers_before=s.queued_peers)
+        s.queued_peers = 0
+        s.queued_bodies = []
         by_id[mid] = r
         s.replies.append(r)
         s.events.append(("reply", r))
@@ -375,10 +468,16 @@ def read_user(s: Session, o: dict, msg: dict, ts: str) -> None:
     text = text_of(o)
     if text is None:
         return
-    kind = opener_kind(text)
+    # the record's own source field first (step 3 of #263); its text only when it has none
+    kind = source_kind(o) or opener_kind(text)
     s.events.append(("user", kind, meta, len(text), ts))
-    if not meta:
-        s.openers.append(kind)
+    if meta and kind != "peer message":
+        return  # a meta record is injected text, unless it is a peer message
+    body = peer_body(text) if kind == "peer message" else None
+    if body is not None and body in s.queued_bodies:
+        s.queued_bodies.remove(body)  # the same message, queued and stored again before the next reply
+        return
+    s.openers.append(kind)
 
 
 def scan(store: str) -> list[Session]:
@@ -466,8 +565,9 @@ def tag_of(r: Reply, rules) -> str | None:
 
 
 def tag_replies(s: Session, replies: list[Reply], rules) -> list[str]:
-    """One tag per reply: start-up, a rule's tag, the tag carried from the reply
-    before it in the same turn, message in (a turn a peer message opened), or untagged."""
+    """One tag per reply: start-up, a rule's tag, message in (the first reply after a
+    peer message queued inside a running turn), the tag carried from the reply before
+    it in the same turn, message in (a turn a peer message opened), or untagged."""
     start, _ = startup_cut(replies)
     tags: list[str] = []
     for k, r in enumerate(replies):
@@ -475,6 +575,8 @@ def tag_replies(s: Session, replies: list[Reply], rules) -> list[str]:
             tags.append(START_UP)
             continue
         tag = tag_of(r, rules)
+        if tag is None and r.after_peer:
+            tag = MESSAGE_IN
         if tag is None and k > len(start) and replies[k - 1].turn == r.turn and tags[-1] != UNTAGGED:
             tag = tags[-1]
         if tag is None and s.opener_of(r) == "peer message":
@@ -493,7 +595,23 @@ def seconds(ts: str) -> float | None:
 # ---- helpers ----------------------------------------------------------------
 
 
+def known(v, words: frozenset, label: str = "other") -> str:
+    """A value read from the store prints only when it is a word the store was seen to
+    hold (#312), else as one fixed label. Counts keyed by what this returns still count it."""
+    return v if isinstance(v, str) and v in words else label
+
+
+def trigger_word(t) -> str:
+    return "None" if t is None else known(t, KNOWN_TRIGGERS)
+
+
+def count_of(v) -> str:
+    """A number prints as it is; anything else stored in its place is not printed."""
+    return str(v) if isinstance(v, int) else ("None" if v is None else "?")
+
+
 def short_model(m: str) -> str:
+    m = known(m, KNOWN_MODELS)
     return m[len("claude-"):] if m.startswith("claude-") else m
 
 
@@ -649,7 +767,9 @@ def cmd_tags(a) -> None:
         c = s.counted()
         x = acc[role]
         x["all"]["sessions"] += 1
-        x["openers"].update(s.openers)
+        # counted once: a turn counts by its counted replies, so a copied history adds none
+        x["openers"].update(s.openers[t - 1] for t in {r.turn for r in c if r.turn > 0})
+        x["all"]["peer_mid"] += sum(r.peers_before for r in c)
         prev_t = None
         for k, (r, tag) in enumerate(zip(c, tag_replies(s, c, a.tags))):
             x[tag]["n"] += 1
@@ -685,7 +805,8 @@ def cmd_tags(a) -> None:
             print(f"{n:14} {x[n]['n']:7} {x[n]['eq'] / M:8.2f} {pct(x[n]['eq'], e):>6}")
         print(f"untagged share of inEq: {pct(x[UNTAGGED]['eq'], e)}")
         print("turns opened by: " + " ".join(
-            f"{k.replace(' ', '-')}={x['openers'][k]}" for k in OPENER_KINDS))
+            f"{k.replace(' ', '-')}={x['openers'][k]}" for k in OPENER_KINDS)
+            + f"; peer messages inside a running turn={x['all']['peer_mid']}")
         print(f"idle re-reads (reply after a gap > {a.idle_gap:.0f}s): replies={x['idle']['n']} "
               f"inEq={x['idle']['eq'] / M:.2f}M share={pct(x['idle']['eq'], e)} "
               f"of which cacheWrite={x['idle']['cw'] / M:.2f}M")
@@ -719,8 +840,8 @@ def cmd_compacts(a) -> None:
     if not rows:
         print("compact records: none found")
         return
-    print("compactMetadata keys seen:", ", ".join(sorted(keys)) or "none")
-    print("triggers:", dict(collections.Counter(str(r["trigger"]) for r in rows)))
+    print("compactMetadata keys seen:", ", ".join(sorted({known(k, KNOWN_COMPACT_KEYS) for k in keys})) or "none")
+    print("triggers:", dict(collections.Counter(trigger_word(r["trigger"]) for r in rows)))
     print("role         n  preCtx(median) postCtx(median) summaryTok(median) repliesAfter(median) preRange")
     for role in sorted({r["role"] for r in rows}):
         x = [r for r in rows if r["role"] == role and r["post"] is not None]
@@ -748,8 +869,8 @@ def cmd_trial(a) -> None:
         cp = s.compacts[-1]
         before = s.replies[: cp.at]
         after = s.replies[cp.at:]
-        print(f"last compact: day={cp.ts[:10]} trigger={cp.trigger} pre={cp.pre} post={cp.post} "
-              f"durationMs={cp.ms} lastCtxBefore={before[-1].ctx if before else 0} "
+        print(f"last compact: day={cp.ts[:10]} trigger={trigger_word(cp.trigger)} pre={count_of(cp.pre)} "
+              f"post={count_of(cp.post)} durationMs={count_of(cp.ms)} lastCtxBefore={before[-1].ctx if before else 0} "
               f"summaryChars={cp.summary_chars}")
         print(f"replies after: {len(after)}  cost after (inEq): {round(sum(r.eq for r in after))}")
         for r in after[:12]:
@@ -773,7 +894,8 @@ def cmd_context(a) -> None:
     if not isinstance(shape, dict):
         print("api-request-shape record: none found")
         return
-    print("top keys:", ", ".join(sorted(str(k) for k in shape)[:20]))
+    top = collections.Counter(known(k, KNOWN_SHAPE_KEYS) for k in shape)
+    print("top keys:", ", ".join(k if k in KNOWN_SHAPE_KEYS else f"{k}={n}" for k, n in sorted(top.items())))
     tools = shape.get("tools")
     if not isinstance(tools, list):
         print("tools: none found")
@@ -817,7 +939,7 @@ def cmd_reads(a) -> None:
         elif ev[0] == "result" and ev[1] in uses:
             k, c = uses[ev[1]]
             # an MCP tool's name carries its server's name, which is the owner's: shown as "mcp"
-            rows.append((k, "mcp" if c.name.startswith("mcp__") else c.name, c.ext, ev[2]))
+            rows.append((k, "mcp" if c.name.startswith("mcp__") else known(c.name, KNOWN_TOOLS), c.ext, ev[2]))
         elif ev[0] == "injected" and n:
             rows.append((n, "(injected text)", "", ev[1]))
     growth = start[-1].ctx - start[0].ctx
@@ -864,12 +986,13 @@ def cmd_replies(a) -> None:
                 break
             cum += r.eq
             print(f"reply {n:3} {r.ts[11:19]} ctxIn={r.ctx:7} out={r.out:5} ctxEnd={r.ctx + r.out:7} "
-                  f"inEq={r.eq / 1000:6.1f}k cum={cum / 1000:7.1f}k calls={len(r.calls)} stop={r.stop}")
+                  f"inEq={r.eq / 1000:6.1f}k cum={cum / 1000:7.1f}k calls={len(r.calls)} "
+                  f"stop={'None' if r.stop is None else known(r.stop, KNOWN_STOPS)}")
         elif ev[0] == "user":
             _, kind, meta, length, ts = ev
             print(f"   -- user ({kind}) meta={meta} len={length} {ts[11:19]}")
         elif ev[0] == "record":
-            print(f"   -- record {ev[1]} {ev[2][11:19]}")
+            print(f"   -- record {known(ev[1], KNOWN_RECORD_TYPES | KNOWN_SUBTYPES)} {ev[2][11:19]}")
     start, ended = startup_cut(s.replies)
     print(f"start-up turn: replies 1..{len(start)} ({'ends at a reply that ends the turn' if ended else 'no ending reply'})")
 
@@ -916,10 +1039,12 @@ STRUCT_KEYS = frozenset({
 })
 
 
-def safe(v) -> str:
+def safe(v, words: frozenset = frozenset()) -> str:
+    """A type or key name from the store: itself when it is one of words, "-" when
+    missing, else "?"."""
     if v is None:
         return "-"
-    return v if isinstance(v, str) and NAME_RE.fullmatch(v) else "?"
+    return known(v, words, "?")
 
 
 def lead_of(text: str) -> str:
@@ -929,7 +1054,7 @@ def lead_of(text: str) -> str:
         return "empty"
     if t.startswith("<"):
         m = TAG_RE.match(t)
-        return f"<{m.group(1)}>" if m else "<?>"
+        return f"<{known(m.group(1), KNOWN_TAGS, '?')}>" if m else "<?>"
     return "text"
 
 
@@ -939,7 +1064,7 @@ def content_kind(c) -> str:
     if isinstance(c, list):
         kinds = set()
         for x in c:
-            k = safe(x.get("type")) if isinstance(x, dict) else "?"
+            k = safe(x.get("type"), KNOWN_BLOCKS) if isinstance(x, dict) else "?"
             if k == "text" and isinstance(x, dict):
                 k += ":" + lead_of(str(x.get("text") or ""))
             kinds.add(k)
@@ -950,11 +1075,11 @@ def content_kind(c) -> str:
 def shape_of(o: dict) -> str:
     msg = o.get("message") if isinstance(o.get("message"), dict) else {}
     att = o.get("attachment") if isinstance(o.get("attachment"), dict) else {}
-    parts = [f"type={safe(o.get('type'))}"]
+    parts = [f"type={safe(o.get('type'), KNOWN_RECORD_TYPES)}"]
     if "subtype" in o:
-        parts.append(f"subtype={safe(o.get('subtype'))}")
+        parts.append(f"subtype={safe(o.get('subtype'), KNOWN_SUBTYPES)}")
     if att:
-        parts.append(f"attachment={safe(att.get('type'))}")
+        parts.append(f"attachment={safe(att.get('type'), KNOWN_ATTACHMENTS)}")
     parts.append(f"meta={bool(o.get('isMeta'))}")
     if "content" in msg:
         parts.append("content=" + content_kind(msg.get("content")))
@@ -969,7 +1094,7 @@ def needle_places(o, needle: str, path: str = "", depth: int = 0):
     map may be data keyed by names (session ids, branches, servers), so it prints "?"."""
     if isinstance(o, dict):
         for k, v in o.items():
-            name = safe(k) if depth == 0 or k in STRUCT_KEYS else "?"
+            name = k if k in STRUCT_KEYS else (safe(k, KNOWN_RECORD_KEYS) if depth == 0 else "?")
             yield from needle_places(v, needle, f"{path}.{name}", depth + 1)
     elif isinstance(o, list):
         for v in o:
@@ -985,15 +1110,122 @@ def needle_places(o, needle: str, path: str = "", depth: int = 0):
         yield path or ".", where
 
 
+SOURCE_KEYS = ("origin", "turnOrigin", "promptSource")
+
+
+# Inside an object, only these keys' word values print; any other key's value is an id or
+# text (from=, runId=, name=, msg_id= held ids on the real store, #263), so it prints "?".
+WORD_VALUE_KEYS = frozenset({"kind", "producer", "fromMode"})
+# Every value and key that prints is one the store was seen to hold (November 2026, #263):
+# an enum, never an id or a name. Anything else prints "?".
+KNOWN_VALUES = frozenset(SOURCE_KINDS) | frozenset({"sdk", "prompting", "session-task"})
+KNOWN_KEYS = frozenset({
+    "kind", "producer", "fromMode", "from", "fromSession", "msg_id", "name", "runId", "body",
+    "hopChain", "fullHopChain", "handback", "handbackReportText", "handbackToolUseId",
+    "hostInjected", "asUser",
+})
+
+
+def word(v, show: bool = True) -> str:
+    """A value as a known word (KNOWN_VALUES), else "?". An object shows at most ten
+    keys, each from KNOWN_KEYS else "?"; a value inside prints only under
+    WORD_VALUE_KEYS, or as true/false; a nested object or list is "?"."""
+    if v is None:
+        return "-"
+    if isinstance(v, bool):
+        return "true" if v else "false"
+    if isinstance(v, (int, float)):
+        return "number"
+    if isinstance(v, str):
+        return v if show and v in KNOWN_VALUES else "?"
+    if isinstance(v, dict):
+        items = sorted(v.items(), key=lambda kv: str(kv[0]))
+        parts = [f"{k if k in KNOWN_KEYS else '?'}="
+                 f"{'?' if isinstance(x, (dict, list)) else word(x, show=k in WORD_VALUE_KEYS)}"
+                 for k, x in items[:10]]
+        return "{" + ",".join(parts) + (",..." if len(items) > 10 else "") + "}"
+    return "?"
+
+
+def record_kind(o: dict, needle: str) -> str:
+    """What a user record is, for the source-key count. Never its text."""
+    c = (o.get("message") or {}).get("content") if isinstance(o.get("message"), dict) else None
+    if o.get("isCompactSummary"):
+        return "compact summary"
+    if isinstance(c, list) and any(isinstance(x, dict) and x.get("type") == "tool_result" for x in c):
+        return "tool result"
+    text = text_of(o) if isinstance(o.get("message"), dict) else None
+    if o.get("isMeta"):
+        t = text or ""
+        pos = t.find("<" + needle)
+        return "meta, tag on line 1-2" if pos >= 0 and t[:pos].count("\n") <= 1 else "meta, other"
+    return "other" if text is None else "non-meta " + opener_kind(text)
+
+
+class Arrivals:
+    """Per file: tagged queued commands and tagged meta user records, their overlap
+    and where in a turn they land. Counts only."""
+
+    def __init__(self, needle: str):
+        self.needle = needle
+        self.overlap: collections.Counter = collections.Counter()
+        self.where: collections.Counter = collections.Counter()
+
+    def start_file(self) -> None:
+        self.last_stop: str | None = None  # None: no reply yet
+        self.reply_id = None
+        self.pending = 0  # tagged queued commands since the last reply, not yet met by a meta record
+
+    def position(self) -> str:
+        if self.last_stop is None:
+            return "before any reply"
+        if self.last_stop in (TOOL_USE, "pending"):
+            return "inside a running turn"
+        return "after a reply that ended its turn"
+
+    def flush(self, why: str) -> None:
+        if self.pending:
+            self.overlap[f"queued command, no meta record before {why}"] += self.pending
+        self.pending = 0
+
+    def feed(self, o: dict) -> None:
+        t = o.get("type")
+        if t == "assistant":
+            msg = o.get("message") if isinstance(o.get("message"), dict) else {}
+            if msg.get("model") == SYNTHETIC:
+                return
+            if msg.get("id") != self.reply_id:
+                self.reply_id = msg.get("id")
+                self.flush("the next reply")
+                self.last_stop = "pending"
+            if msg.get("stop_reason"):
+                self.last_stop = msg["stop_reason"]
+        elif t == "attachment":
+            att = o.get("attachment") if isinstance(o.get("attachment"), dict) else {}
+            if att.get("type") == "queued_command" and self.needle in json.dumps(att.get("prompt")):
+                self.where[("tagged queued command", self.position())] += 1
+                self.pending += 1
+        elif t == "user" and o.get("isMeta") and self.needle in (text_of(o) or ""):
+            self.where[("tagged meta record", self.position())] += 1
+            if self.pending:
+                self.pending -= 1
+                self.overlap["queued command, then a meta record before the next reply"] += 1
+            else:
+                self.overlap["meta record, no queued command since the last reply"] += 1
+
+
 def cmd_shapes(a) -> None:
     shapes: collections.Counter = collections.Counter()
     needles: collections.Counter = collections.Counter()
     keys: collections.Counter = collections.Counter()
+    sources: collections.Counter = collections.Counter()
+    arrivals = Arrivals(a.needle)
     n_sessions = n_records = n_needle = 0
     for _, s, role in in_window(a.store, a.lo, a.hi, a.roles):
         if a.only and role not in a.only:
             continue
         n_sessions += 1
+        arrivals.start_file()
         with open(s.path, "r", encoding="utf-8", errors="replace") as fh:
             for line in fh:
                 try:
@@ -1005,13 +1237,16 @@ def cmd_shapes(a) -> None:
                 n_records += 1
                 shape = shape_of(o)
                 shapes[shape] += 1
+                arrivals.feed(o)
                 if o.get("type") == "user":
-                    keys.update(safe(k) for k in o)
+                    keys.update(safe(k, KNOWN_RECORD_KEYS) for k in o)
+                    sources[(record_kind(o, a.needle),) + tuple(word(o.get(k)) for k in SOURCE_KEYS)] += 1
                 if a.needle in line:
                     n_needle += 1
                     places = sorted(set(needle_places(o, a.needle))) or [("(not in a string value)", "-")]
                     for path, where in places:
                         needles[(shape, path, where)] += 1
+        arrivals.flush("the end of the file")
     print(f"window: sessions whose first reply is {a.lo}..{a.hi}; sessions={n_sessions} records={n_records}; "
           "counts and structure only")
     print(f"\n== records by shape (top {a.top}) ==")
@@ -1022,6 +1257,16 @@ def cmd_shapes(a) -> None:
         print(f"{n:8}  {shape} | at {path} | {where}")
     print("\n== top-level keys of user records ==")
     print(" ".join(f"{k}={n}" for k, n in sorted(keys.items())))
+    print(f"\n== user records by what they are, against {', '.join(SOURCE_KEYS)} (one short word, else ?; "
+          "- when missing) ==")
+    for (kind, *vals), n in sorted(sources.items(), key=lambda x: (-x[1], x[0])):
+        print(f"{n:8}  {kind} | " + " ".join(f"{k}={v}" for k, v in zip(SOURCE_KEYS, vals)))
+    print(f"\n== tagged queued commands and tagged meta records: overlap ==")
+    for what, n in sorted(arrivals.overlap.items()):
+        print(f"{n:8}  {what}")
+    print("\n== where they land in a turn ==")
+    for (what, where), n in sorted(arrivals.where.items()):
+        print(f"{n:8}  {what} | {where}")
 
 
 # ---- arguments ----------------------------------------------------------------
