@@ -141,6 +141,13 @@ never lifts a "Never" line and never covers a question that was not
 parked first. A relay that is unclear or goes past the entry is not
 acted on, and the builder says so.
 
+**A one-shot script's entry.** For a builder dispatched with
+`Profile: oneshot`, the manager reads `builder-state/oneshot.py`
+against the data its brief names before the entry that parks the run
+goes into the queue, and again before it relays the owner's answer. If
+the script at the relay is not the one posted on the ticket when the
+owner answered, the manager relays nothing and the run is parked again.
+
 ## What an entry never holds
 
 A secret's value, the owner's personal details, or a name the project
