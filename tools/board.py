@@ -277,7 +277,16 @@ def act(args: argparse.Namespace, token: str, runner) -> tuple[int, str, str]:
     return runner(calls(args), token)
 
 
+def utf8_streams() -> None:
+    """A piped stream on Windows encodes as cp1252, and board text may hold any character (#307)."""
+    for stream in (sys.stdout, sys.stderr):
+        reconfigure = getattr(stream, "reconfigure", None)
+        if reconfigure is not None:
+            reconfigure(encoding="utf-8", errors="replace")
+
+
 def main(argv: list[str], runner=run, read=read_token) -> int:
+    utf8_streams()
     args = parse_args(argv)
     token = None
     try:

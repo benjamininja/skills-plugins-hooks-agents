@@ -5,6 +5,7 @@ and every child process go to fakes. The one real call is a Windows read of an
 entry that does not exist, which proves the CredReadW path without a secret.
 """
 import importlib.util
+import io
 import os
 import subprocess
 import sys
@@ -235,6 +236,22 @@ def test_token_shaped_text_is_scrubbed_even_when_it_is_not_the_value(capsys):
     fake = Fake(out=f"other login {SHAPED}\n")
     board.main(["items", OWNER, NUMBER], runner=fake, read=reader())
     assert SHAPED not in capsys.readouterr().out
+
+
+@pytest.mark.parametrize("action", ["items", "fields"])
+def test_board_text_outside_cp1252_prints_through_a_cp1252_pipe(action, monkeypatch):
+    # #307: a piped stdout on Windows encodes as cp1252 unless the script says otherwise
+    title = "Board \U0001F680 todo → done"
+    out = io.TextIOWrapper(io.BytesIO(), encoding="cp1252")
+    err = io.TextIOWrapper(io.BytesIO(), encoding="cp1252")
+    monkeypatch.setattr(sys, "stdout", out)
+    monkeypatch.setattr(sys, "stderr", err)
+    fake = Fake(out=f'{{"title": "{title}"}}\n', err=f"note {title}\n")
+    assert board.main([action, OWNER, NUMBER], runner=fake, read=reader()) == 0
+    out.flush()
+    err.flush()
+    assert title in out.buffer.getvalue().decode("utf-8")
+    assert title in err.buffer.getvalue().decode("utf-8")
 
 
 def test_every_print_in_the_script_goes_through_scrub():
