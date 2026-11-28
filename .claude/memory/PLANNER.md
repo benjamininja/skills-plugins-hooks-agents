@@ -67,12 +67,14 @@ and PR #302, the Never line (`0105706`, plugin 0.6.1). Earlier: PR
   own compact.
 
 **Next, in order.**
-0. **First after the compact: the ruling on #299 step 1.** The finding
-   is at issues/299 issuecomment-7239905558 (the manager's report:
-   about 35 hand rule edits in about 25 sittings since 2026-11-01,
-   with sorts proposed). Not read by the planner yet. Rule which moves
-   go to Ben by button, with what each would newly let every builder
-   run; then the brief for part 2.
+0. **#299, done after the compact:** step 1 is ruled and part 2's
+   brief is posted (issues/299 issuecomment-7240005690). Ben's button
+   in the planner's chat: "Add oneshot profile (Recommended)". Part 2
+   (medium) is held behind PR #303 and keeps Ben's go; its PR is gate
+   text, so its head goes to the dynasty planner, then Ben's merge
+   word. After that merge the planner raises the Action for the
+   profile's entry in a project's dispatch file (Ben's hand step).
+   Row 1(a) was handed to the dynasty planner as its own.
 1. After PR #303 merges: the dated trial line in the tools rules file
    (`PROJECT-RULES.md`), its own PR: low and haiku, two weeks from the
    merge day, the manager counts dispatches made without a go and any
@@ -80,17 +82,19 @@ and PR #302, the Never line (`0105706`, plugin 0.6.1). Earlier: PR
    names how a hold is marked on tools, which PR #303's text asks of a
    project. Plan to Ben by button before the first edit; head to the
    dynasty planner before the merge word.
-2. The deny-rules Action went to the manager as a ready entry on
-   2026-11-28 (one rule for the builders' settings file, six for the
-   main checkout's local settings file). Once Ben has ticked it and
-   the manager's `gh run rerun --help` is refused, the planner repeats
-   that check in its own session and says on #300 whether the deny
-   list reaches a session whose commands run in a worktree.
+2. The deny rules: done. Ben ticked the Action; the call is refused
+   in the manager's session and in the planner's, from the main
+   checkout and from its worktree (issues/300
+   issuecomment-7239984512).
 3. Rulings and reads as they post: #299 step 1 and #289 step 1 (find-
    outs); #295's design (it parks with Ben); #263 step 3's probe
    output and then the ruling on the ledger's figures; any head the
    manager asks the planner to read against its brief.
-4. After PR #285's build merges: the planner's own PR for disposition
+4. PR #306 is #285's build (head `ba9c09e`, CI green, at the
+   manager's re-proof; paths under `tools/` and `tests/` only). Its
+   `cmdkey` hand step is confirmed from Microsoft's page: with no
+   value after `/pass` the value is requested.
+   After PR #285's build merges: the planner's own PR for disposition
    4 (the personal-assistant's role file names `tools/board.py` as the
    only route to a board), and the Action with Ben's two hand steps,
    copied from that PR's body.
