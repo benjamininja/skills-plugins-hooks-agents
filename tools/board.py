@@ -8,9 +8,12 @@ Usage:
   python tools/board.py set    <owner> <number> --item <id> --field <id>
                                (--text T | --number N | --date YYYY-MM-DD | --option <id> | --iteration <id>)
 
-<owner> is a GitHub login, or @me. Every gh project call goes as --owner @me: a
-login given must be the token's own, read once with gh api user, or the script
-stops with exit 2 (#307). views keeps its own query. The token is a classic token holding the
+<owner> is a GitHub login, or @me. The board is always the viewer's own: a login
+given must be the token's own, read once with gh api user, or the script stops
+with exit 2 (#307). Every call is the script's own GraphQL query or mutation
+through gh api graphql, a fixed text held as a constant, with each value as a
+separate -f or -F argument (#328): no gh project command, which asks GitHub for
+more than the project scope. The token is a classic token holding the
 `project` scope alone (#285). It is read from the operating system's credential
 store under ENTRY, never from an environment variable or a file, and is handed
 to each gh child process alone, in that child's GH_TOKEN. Everything the child
@@ -21,6 +24,7 @@ header. A missing entry stops the script with exit 2, naming the entry only.
 from __future__ import annotations
 
 import argparse
+import json
 import os
 import re
 import subprocess
@@ -36,7 +40,9 @@ ITEM_RE = re.compile(r"PVTI_[A-Za-z0-9_-]{1,64}")
 FIELD_RE = re.compile(r"PVT[A-Z]*F_[A-Za-z0-9_-]{1,64}")
 OPTION_RE = re.compile(r"[A-Za-z0-9_-]{1,64}")
 DATE_RE = re.compile(r"[0-9]{4}-[0-9]{2}-[0-9]{2}")
-VALUE_NUMBER_RE = re.compile(r"-?[0-9]+(?:\.[0-9]+)?")
+# Whole numbers only: gh api -F makes a JSON number of a whole number alone, and
+# GitHub's Float refuses a string (#328).
+VALUE_NUMBER_RE = re.compile(r"-?[0-9]{1,15}")
 REPO_RE = re.compile(r"[A-Za-z0-9._-]+/[A-Za-z0-9._-]+")
 # Variables a child must not see: another login, a GitHub Enterprise host, or
 # gh's debug output, which prints request headers.
@@ -47,14 +53,68 @@ DROP = ("GH_TOKEN", "GITHUB_TOKEN", "GH_ENTERPRISE_TOKEN", "GITHUB_ENTERPRISE_TO
 ALLOWED_SCOPES = ("project", "read:project")
 ERROR_NOT_FOUND = 1168  # ERROR_NOT_FOUND from CredReadW
 CRED_TYPE_GENERIC = 1
+# ---- the fixed query texts (#328) --------------------------------------------
+# Each reads or writes ProjectV2 alone, so the project scope covers it. No value
+# is ever placed in a text: values go as GraphQL variables, one argument each.
+FIELD_NAME = "field { ... on ProjectV2FieldCommon { id name } }"
+BOARD_QUERY = "query($number: Int!) { viewer { projectV2(number: $number) { id number } } }"
+ITEMS_QUERY = (
+    "query($number: Int!, $first: Int!, $after: String) { viewer { projectV2(number: $number) "
+    "{ items(first: $first, after: $after) { totalCount pageInfo { hasNextPage endCursor } "
+    "nodes { id type isArchived content { __typename "
+    "... on DraftIssue { title } "
+    "... on Issue { number title url state repository { nameWithOwner } } "
+    "... on PullRequest { number title url state repository { nameWithOwner } } } "
+    "fieldValues(first: 50) { nodes { __typename "
+    f"... on ProjectV2ItemFieldTextValue {{ text {FIELD_NAME} }} "
+    f"... on ProjectV2ItemFieldNumberValue {{ number {FIELD_NAME} }} "
+    f"... on ProjectV2ItemFieldDateValue {{ date {FIELD_NAME} }} "
+    f"... on ProjectV2ItemFieldSingleSelectValue {{ name optionId {FIELD_NAME} }} "
+    f"... on ProjectV2ItemFieldIterationValue {{ title iterationId startDate {FIELD_NAME} }} "
+    "} } } } } } }"
+)
+FIELDS_QUERY = (
+    "query($number: Int!) { viewer { projectV2(number: $number) { fields(first: 100) "
+    "{ totalCount nodes { __typename ... on ProjectV2FieldCommon { id name dataType } "
+    "... on ProjectV2SingleSelectField { options { id name } } "
+    "... on ProjectV2IterationField { configuration { "
+    "iterations { id title startDate duration } "
+    "completedIterations { id title startDate duration } } } } } } } }"
+)
 VIEWS_QUERY = (
-    "query($login: String!, $number: Int!) { user(login: $login) { projectV2(number: $number) "
-    "{ views(first: 50) { nodes { id number name layout } } } } }"
-)
-VIEWS_QUERY_ME = (
     "query($number: Int!) { viewer { projectV2(number: $number) "
-    "{ views(first: 50) { nodes { id number name layout } } } } }"
+    "{ views(first: 50) { totalCount nodes { id number name layout } } } } }"
 )
+RESOURCE_QUERY = (
+    "query($url: URI!) { resource(url: $url) { __typename "
+    "... on Issue { id } ... on PullRequest { id } } }"
+)
+ADD_MUTATION = (
+    "mutation($project: ID!, $content: ID!) { addProjectV2ItemById("
+    "input: {projectId: $project, contentId: $content}) { item { id } } }"
+)
+
+
+def _set_mutation(gql_type: str, key: str) -> str:
+    return ("mutation($project: ID!, $item: ID!, $field: ID!, $value: " + gql_type + ") "
+            "{ updateProjectV2ItemFieldValue(input: {projectId: $project, itemId: $item, "
+            "fieldId: $field, value: {" + key + ": $value}}) { projectV2Item { id } } }")
+
+
+# the set flag's name in the arguments -> (its fixed mutation, the gh api flag for its value)
+SET_MUTATIONS = {
+    "text": (_set_mutation("String!", "text"), "-f"),
+    "value_number": (_set_mutation("Float!", "number"), "-F"),
+    "date": (_set_mutation("Date!", "date"), "-f"),
+    "option": (_set_mutation("String!", "singleSelectOptionId"), "-f"),
+    "iteration": (_set_mutation("String!", "iterationId"), "-f"),
+}
+QUERIES = (BOARD_QUERY, ITEMS_QUERY, FIELDS_QUERY, VIEWS_QUERY, RESOURCE_QUERY, ADD_MUTATION,
+           *(m for m, _ in SET_MUTATIONS.values()))
+PAGE = 100  # GitHub's largest page
+# what a lookup of an issue the token cannot read answers
+REFUSED_RE = re.compile(r"INSUFFICIENT_SCOPES|FORBIDDEN|NOT_FOUND|Could not resolve|"
+                        r"requires one of the following scopes|HTTP 40[34]")
 
 
 class StoreError(Exception):
@@ -230,17 +290,50 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
     return parser.parse_args(argv)
 
 
-def value_flag(args: argparse.Namespace) -> str:
-    # one --flag=value argument, so a value that starts with a dash stays a value
-    if args.text is not None:
-        return f"--text={args.text}"
-    if args.value_number is not None:
-        return f"--number={args.value_number}"
-    if args.date is not None:
-        return f"--date={args.date}"
-    if args.option is not None:
-        return f"--single-select-option-id={args.option}"
-    return f"--iteration-id={args.iteration}"
+# ---- the calls -------------------------------------------------------------
+
+
+def graphql(query: str, *values: str) -> list[str]:
+    """One gh api graphql call: the fixed text, then each value as its own argument
+    (-f for a string, -F for a number the script has checked)."""
+    return ["gh", "api", "graphql", "-f", f"query={query}", *values]
+
+
+def board_call(number: str, jq: str) -> list[str]:
+    return graphql(BOARD_QUERY, "-F", f"number={number}") + ["--jq", jq]
+
+
+def items_call(number: str, first: int, after: str | None = None) -> list[str]:
+    argv = graphql(ITEMS_QUERY, "-F", f"number={number}", "-F", f"first={first}")
+    if after:
+        argv += ["-f", f"after={after}"]
+    return argv
+
+
+def fields_call(number: str) -> list[str]:
+    return graphql(FIELDS_QUERY, "-F", f"number={number}")
+
+
+def views_call(number: str) -> list[str]:
+    return graphql(VIEWS_QUERY, "-F", f"number={number}")
+
+
+def resource_call(url: str) -> list[str]:
+    return graphql(RESOURCE_QUERY, "-f", f"url={url}") + ["--jq", ".data.resource.id // empty"]
+
+
+def add_call(project_id: str, content_id: str) -> list[str]:
+    return graphql(ADD_MUTATION, "-f", f"project={project_id}", "-f", f"content={content_id}")
+
+
+def set_call(args: argparse.Namespace, project_id: str) -> list[str]:
+    for name, (mutation, flag) in SET_MUTATIONS.items():
+        value = getattr(args, name)
+        if value is not None:
+            # one value=... argument, so a value that starts with a dash stays a value
+            return graphql(mutation, "-f", f"project={project_id}", "-f", f"item={args.item}",
+                           "-f", f"field={args.field}", flag, f"value={value}")
+    raise ValueError("no value to set")
 
 
 # ---- the actions -----------------------------------------------------------
@@ -250,13 +343,16 @@ class OwnerError(Exception):
     """The token's login is not the board's owner. The message names neither."""
 
 
+class ContentError(Exception):
+    """The token cannot read the issue or pull request to add. The message names neither."""
+
+
 LOGIN_CALL = ["gh", "api", "user", "--jq", ".login"]
 
 
 def check_owner(owner: str, token: str, runner) -> tuple[int, str]:
-    """gh resolves a login given to --owner with a query that hides a scope error as
-    unknown owner type, so every gh project call goes as @me, and a login given must
-    be the token's own (#307). Returns (0, "") when it is, or the failed lookup."""
+    """The board is always the viewer's own, so a login given must be the token's
+    own (#307). Returns (0, "") when it is, or the failed lookup."""
     if owner == "@me":
         return 0, ""
     code, out, err = runner(LOGIN_CALL, token)
@@ -268,42 +364,65 @@ def check_owner(owner: str, token: str, runner) -> tuple[int, str]:
     return 0, ""
 
 
-def calls(args: argparse.Namespace, project_id: str | None = None) -> list[str]:
-    o, n = "@me", args.number
-    if args.action == "items":
-        return ["gh", "project", "item-list", n, "--owner", o, "--format", "json",
-                "--limit", args.limit]
-    if args.action == "fields":
-        return ["gh", "project", "field-list", n, "--owner", o, "--format", "json"]
-    if args.action == "add":
-        return ["gh", "project", "item-add", n, "--owner", o, "--url", args.url,
-                "--format", "json"]
-    if args.action == "views":
-        if args.owner == "@me":
-            return ["gh", "api", "graphql", "-f", f"query={VIEWS_QUERY_ME}", "-F", f"number={n}"]
-        return ["gh", "api", "graphql", "-f", f"query={VIEWS_QUERY}", "-f", f"login={args.owner}",
-                "-F", f"number={n}"]
-    if args.action == "set":
-        return ["gh", "project", "item-edit", "--id", args.item, "--project-id", project_id,
-                "--field-id", args.field, value_flag(args)]
-    raise ValueError(args.action)
+def items(args: argparse.Namespace, token: str, runner) -> tuple[int, str, str]:
+    """Pages of up to 100 until --limit, printed as one {"totalCount", "items"} object.
+    An answer that cannot be read as a page is passed on as it came."""
+    limit, nodes, after, total = int(args.limit), [], None, 0
+    while len(nodes) < limit:
+        code, out, err = runner(items_call(args.number, min(PAGE, limit - len(nodes)), after), token)
+        if code != 0:
+            return code, out, err
+        try:
+            page = json.loads(out)["data"]["viewer"]["projectV2"]["items"]
+            total, info = page["totalCount"], page["pageInfo"]
+            nodes += page["nodes"]
+        except (ValueError, KeyError, TypeError):
+            return code, out, err
+        if not page["nodes"] or not info.get("hasNextPage") or not info.get("endCursor"):
+            break
+        after = info["endCursor"]
+    text = json.dumps({"totalCount": total, "items": nodes[:limit]}, ensure_ascii=False)
+    return 0, text + "\n", ""
+
+
+def board_id(number: str, token: str, runner) -> tuple[int, str, str]:
+    code, out, err = runner(board_call(number, ".data.viewer.projectV2.id"), token)
+    project_id = out.strip()
+    if code != 0 or not project_id:
+        return code or 1, "", err or "the board's id was not found"
+    return 0, project_id, ""
+
+
+def add(args: argparse.Namespace, project_id: str, token: str, runner) -> tuple[int, str, str]:
+    code, out, err = runner(resource_call(args.url), token)
+    if code != 0 and not REFUSED_RE.search(f"{err}\n{out}"):
+        return code, out, err
+    content_id = out.strip() if code == 0 else ""
+    if not content_id:
+        # no fallback to another token (#328)
+        raise ContentError("the boards token cannot read that repository's issue or pull request")
+    return runner(add_call(project_id, content_id), token)
 
 
 def act(args: argparse.Namespace, token: str, runner) -> tuple[int, str, str]:
-    if args.action == "views":
-        return runner(calls(args), token)
     code, err = check_owner(args.owner, token, runner)
     if code != 0:
         return code, "", err
+    if args.action == "items":
+        return items(args, token, runner)
+    if args.action == "fields":
+        return runner(fields_call(args.number), token)
+    if args.action == "views":
+        return runner(views_call(args.number), token)
+    # add and set take the board's node id, not its number
+    code, project_id, err = board_id(args.number, token, runner)
+    if code != 0:
+        return code, "", err
+    if args.action == "add":
+        return add(args, project_id, token, runner)
     if args.action == "set":
-        # item-edit takes the board's node id, not its number
-        code, out, err = runner(["gh", "project", "view", args.number, "--owner", "@me",
-                                 "--format", "json", "--jq", ".id"], token)
-        project_id = out.strip()
-        if code != 0 or not project_id:
-            return code or 1, "", err or "the board's id was not found"
-        return runner(calls(args, project_id), token)
-    return runner(calls(args), token)
+        return runner(set_call(args, project_id), token)
+    raise ValueError(args.action)
 
 
 def utf8_streams() -> None:
@@ -326,7 +445,7 @@ def main(argv: list[str], runner=run, read=read_token) -> int:
         print(f"board.py: the boards token is read from the credential store entry {ENTRY}; "
               "the owner makes it by hand (#285).", file=sys.stderr)
         return 2
-    except OwnerError as exc:
+    except (OwnerError, ContentError) as exc:
         print(f"board.py: {scrub(str(exc), token)}", file=sys.stderr)
         return 2
     except Exception as exc:  # any other error is shown scrubbed, never raw
@@ -355,9 +474,10 @@ def scopes_from_headers(text: str) -> list[str] | None:
 
 def boards_rows(owner: str, number: str, repo: str, runner=run,
                 read=read_token) -> list[tuple[str, str, str, str]]:
-    """D1: the token reaches the board. D2: it holds the project scope and no
-    other, and a read only a repository scope may make is refused. Rows carry PASS or FAIL,
-    scope names and a scrubbed first error line, never a value or a header."""
+    """D1: the token reaches the board, and each read action's own query answers
+    (#328). D2: it holds the project scope and no other, and a read only a repository
+    scope may make is refused. Rows carry PASS, FAIL or not run, a count, scope names
+    and a scrubbed first error line, never a title, a value or a header."""
     if not OWNER_RE.fullmatch(owner) or not NUMBER_RE.fullmatch(number) or not REPO_RE.fullmatch(repo):
         raise ValueError("expected a login, a board number and <owner>/<repo>")
     try:
@@ -375,17 +495,39 @@ def boards_rows(owner: str, number: str, repo: str, runner=run,
         return scrub(first_line(err) or first_line(out) or f"exit {code}", token)
 
     rows = []
-    argv = ["gh", "project", "view", number, "--owner", "@me", "--format", "json", "--jq", ".number"]
+    # each read row: its name, the command as shown, the action's own call, the count's path
+    reads = [
+        ("D1 items", f"gh api graphql ITEMS_QUERY number={number} first={PAGE}",
+         items_call(number, PAGE), ".data.viewer.projectV2.items.totalCount"),
+        ("D1 fields", f"gh api graphql FIELDS_QUERY number={number}",
+         fields_call(number), ".data.viewer.projectV2.fields.totalCount"),
+        ("D1 views", f"gh api graphql VIEWS_QUERY number={number}",
+         views_call(number), ".data.viewer.projectV2.views.totalCount"),
+    ]
     try:
         code, err = check_owner(owner, token, lambda argv, _token: call(argv))
     except OwnerError as exc:
         code, err = 2, str(exc)
     if code != 0:
         rows.append(("D1 board", " ".join(LOGIN_CALL), "FAIL", error(code, "", err)))
+        rows += [(rid, shown, "not run", "the login check failed") for rid, shown, _, _ in reads]
     else:
-        code, out, err = call(argv)
-        rows.append(("D1 board", " ".join(argv), "PASS" if code == 0 else "FAIL",
-                     "" if code == 0 else error(code, out, err)))
+        code, out, err = call(board_call(number, ".data.viewer.projectV2.number"))
+        ok = code == 0 and out.strip() == str(int(number))
+        rows.append(("D1 board", f"gh api graphql BOARD_QUERY number={number}",
+                     "PASS" if ok else "FAIL",
+                     "" if ok else error(code, "", err) if code != 0
+                     else "the board's number did not come back"))
+        for rid, shown, argv, path in reads:
+            # the count alone leaves the child: no title or value reaches a row
+            code, out, err = call(argv + ["--jq", path])
+            count = out.strip()
+            if code != 0:
+                rows.append((rid, shown, "FAIL", error(code, "", err)))
+            elif not count.isdigit():
+                rows.append((rid, shown, "FAIL", "no count in the answer"))
+            else:
+                rows.append((rid, shown, "PASS", f"count: {count}"))
 
     argv = ["gh", "api", "-i", "rate_limit"]
     code, out, err = call(argv)
