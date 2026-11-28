@@ -370,10 +370,16 @@ def test_a_boards_only_token_passes_d1_and_both_d2_rows():
 
 
 @pytest.mark.parametrize("scopes", ["project, repo", "public_repo, project", "project, workflow",
+                                    "project, delete_repo", "admin:repo_hook, project",
+                                    "project, repo:status", "project, gist", "project, read:org",
                                     "read:project", ""])
-def test_a_wide_or_missing_scope_fails_d2(scopes):
+def test_any_scope_besides_project_or_a_missing_one_fails_d2(scopes):
     rows = rows_of(CheckFake(scopes=scopes))
     assert rows[1][2] == "FAIL"
+
+
+def test_project_with_its_read_half_passes_d2():
+    assert rows_of(CheckFake(scopes="project, read:project"))[1][2] == "PASS"
 
 
 def test_no_scope_header_fails_d2():

@@ -40,7 +40,9 @@ REPO_RE = re.compile(r"[A-Za-z0-9._-]+/[A-Za-z0-9._-]+")
 # gh's debug output, which prints request headers.
 DROP = ("GH_TOKEN", "GITHUB_TOKEN", "GH_ENTERPRISE_TOKEN", "GITHUB_ENTERPRISE_TOKEN",
         "GH_HOST", "GH_DEBUG", "DEBUG")
-WIDE_SCOPES = ("repo", "public_repo", "workflow")
+# The token holds the project scope alone (#285); read:project is its read half.
+# Any other scope fails D2, not only the repository ones by name.
+ALLOWED_SCOPES = ("project", "read:project")
 ERROR_NOT_FOUND = 1168  # ERROR_NOT_FOUND from CredReadW
 CRED_TYPE_GENERIC = 1
 VIEWS_QUERY = (
@@ -312,8 +314,8 @@ def scopes_from_headers(text: str) -> list[str] | None:
 
 def boards_rows(owner: str, number: str, repo: str, runner=run,
                 read=read_token) -> list[tuple[str, str, str, str]]:
-    """D1: the token reaches the board. D2: it holds no repository scope, and a
-    read only a repository scope may make is refused. Rows carry PASS or FAIL,
+    """D1: the token reaches the board. D2: it holds the project scope and no
+    other, and a read only a repository scope may make is refused. Rows carry PASS or FAIL,
     scope names and a scrubbed first error line, never a value or a header."""
     if not OWNER_RE.fullmatch(owner) or not NUMBER_RE.fullmatch(number) or not REPO_RE.fullmatch(repo):
         raise ValueError("expected a login, a board number and <owner>/<repo>")
@@ -346,8 +348,7 @@ def boards_rows(owner: str, number: str, repo: str, runner=run,
         if scopes is None:
             rows.append(("D2 scopes", " ".join(argv), "FAIL", "no scope list in the answer"))
         else:
-            wide = [s for s in scopes if s in WIDE_SCOPES]
-            ok = "project" in scopes and not wide
+            ok = "project" in scopes and all(s in ALLOWED_SCOPES for s in scopes)
             rows.append(("D2 scopes", " ".join(argv), "PASS" if ok else "FAIL",
                          "scopes: " + (", ".join(scopes) or "none")))
 
