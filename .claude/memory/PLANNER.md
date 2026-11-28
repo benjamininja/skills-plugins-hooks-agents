@@ -23,23 +23,27 @@ gives this planner a new queue id: send it to the peers.
 0a6ad927-943a-481d-99fc-f2cbfcda8498; **the clear gives a new id, so
 the new session sends it to the four peers and to the Dugout Standard
 session, and asks each for its own.** No background task runs. Nothing
-waits on Ben in the planner's chat. No queue entry of this session is
-open (its two Actions of the day are ticked). This block is whole:
+waits on Ben in the planner's chat. One queue entry of this session is
+open and needs a re-key: the D rows run for PR #330 (Next 1). This block is whole:
 older blocks are in this file's git history.
 
 ### Next
 
 1. **#328 and #285** (the boards token). PR #330 (#328, branch
-   `worktree-t328-ownqueries`) makes `board.py` send its own queries.
-   By Ben's button "Run before merge (Recommended)" it is NOT merged
-   on Green (issues/328 issuecomment-7241637480). When the manager
-   names a Green head: send the manager a ready Action for Ben to run
-   the D rows from the PR's branch on board `benjamininja/2` with
-   `--boards-only`, with the new session's id; the manager adds the
-   branch's folder. Post each result on #328. A failed row is fixed by
-   a commit on the same PR and the run is asked again. #285 closes on
-   the passing run and the merge. Then lift **#329** (low, decimals
-   for `set --number`; `held` label and `Held:` line).
+   `worktree-t328-ownqueries`) is re-proved Green at `ff2cc80` (the
+   manager's report; head and clean merge state checked) and is NOT
+   merged: Ben's button "Run before merge (Recommended)" (issues/328
+   issuecomment-7241637480). The Action for Ben's run of the D rows
+   from that branch went to the manager on 2026-11-28 with the OLD
+   session id 0a6ad927-943a-481d-99fc-f2cbfcda8498: **ask the manager
+   to re-key it to the new id.** When Ben's result comes: post it on
+   #328. All six rows pass: tell the manager, the PR goes to merge on
+   Ben's word, #285 closes, then lift **#329** (`held` label and
+   `Held:` line). A row fails: it is fixed on the same PR and the run
+   is asked again at the new head. Owed after the run: tickets for PR
+   #330's advisories F1 (one refusal line hides different failures)
+   and F2 (the `add` and `set` texts are proved by nothing before a
+   real use); read them in the PR's review comment first.
 2. **#324** (PR #304's F1, low) is held behind PR #326 (#240 step 2,
    branch `worktree-t240-rekey`); lift the label and the `Held:` line
    when that PR merges.
@@ -72,7 +76,9 @@ older blocks are in this file's git history.
 - On Ben, in the manager's chat: the merge word for PR #326 and, after
   his D rows run, for PR #330; the go for #262's rule-text build and
   for every medium or high dispatch.
-- On Ben, in the queue: nothing raised by this session is open.
+- On Ben, in the queue: the Action "Run the boards rows from PR
+  #330's branch, before its merge (#328)", Session
+  0a6ad927-943a-481d-99fc-f2cbfcda8498 until re-keyed.
 - On the manager: PR #330's and PR #326's re-proofs; the Green head
   of PR #330 named to the planner.
 - In the hook lane: PR #211, then #295, then #289 step 2, then #200.
@@ -95,7 +101,7 @@ named dugout-standard-planner (no id held).
 
 ### Reads and checks due
 
-- When the manager names PR #330's Green head: the D rows Action.
+- When Ben's D rows result comes: Next 1.
 - When PR #326 merges: lift #324; the two briefs of Next 3.
 - 2026-12-12: the two buttons of Next 4.
 - 2026-12-31 or Dugout Standard's tenth merged builder PR: #323.
