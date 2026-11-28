@@ -80,7 +80,13 @@ lifted. **PR #311** (branch `docs/assistant-board-285`, worktree
 review clean; at the manager with PR #310 for re-proof and Ben's merge
 word. The Action for #285 (token, store entry, D rows) went to the
 manager as a ready entry with this session's id; #285 closes after
-Ben ticks it. Worktrees `t300-rule-texts`, `t294-start-lines`,
+Ben ticks it (placed in the queue, by the manager's report). PR #310
+merged as `3eba79a`, checked; PR #311 has Ben's merge word, by the
+manager's report. #312 (low, usage.py's older print paths, from PR
+#308's F2 and F3) is filed and held behind PR #308; the planner lifts
+the hold at that merge. In flight by the manager's report: builders
+for #299 part 2 (on Ben's go) and #307 (no go, under the trial).
+Worktrees `t262-row1l`, `t300-rule-texts`, `t294-start-lines`,
 `t300-never-line` and `t300-trial-line` hold merged branches.
 
 **The planner's open PRs (as saved before the compact).**
