@@ -12,7 +12,9 @@ Usage:
 given must be the token's own, read once with gh api user, or the script stops
 with exit 2 (#307). Every call is the script's own GraphQL query or mutation
 through gh api graphql, a fixed text held as a constant, with each value as a
-separate -f or -F argument (#328): no gh project command, which asks GitHub for
+separate -f or -F argument (#328), except set --number, whose request goes to the
+child as a JSON body on standard input so a decimal stays a JSON number (#329).
+No gh project command is used, since it asks GitHub for
 more than the project scope. The token is a classic token holding the
 `project` scope alone (#285). It is read from the operating system's credential
 store under ENTRY, never from an environment variable or a file, and is handed
@@ -25,6 +27,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import math
 import os
 import re
 import subprocess
@@ -40,9 +43,8 @@ ITEM_RE = re.compile(r"PVTI_[A-Za-z0-9_-]{1,64}")
 FIELD_RE = re.compile(r"PVT[A-Z]*F_[A-Za-z0-9_-]{1,64}")
 OPTION_RE = re.compile(r"[A-Za-z0-9_-]{1,64}")
 DATE_RE = re.compile(r"[0-9]{4}-[0-9]{2}-[0-9]{2}")
-# Whole numbers only: gh api -F makes a JSON number of a whole number alone, and
-# GitHub's Float refuses a string (#328).
-VALUE_NUMBER_RE = re.compile(r"-?[0-9]{1,15}")
+# A plain decimal, with an optional exponent; a finite value alone passes (#329).
+VALUE_NUMBER_RE = re.compile(r"-?(?:[0-9]{1,15}(?:\.[0-9]{0,15})?|\.[0-9]{1,15})(?:[eE][-+]?[0-9]{1,3})?")
 REPO_RE = re.compile(r"[A-Za-z0-9._-]+/[A-Za-z0-9._-]+")
 # Variables a child must not see: another login, a GitHub Enterprise host, or
 # gh's debug output, which prints request headers.
@@ -101,10 +103,11 @@ def _set_mutation(gql_type: str, key: str) -> str:
             "fieldId: $field, value: {" + key + ": $value}}) { projectV2Item { id } } }")
 
 
-# the set flag's name in the arguments -> (its fixed mutation, the gh api flag for its value)
+# the set flag's name in the arguments -> (its fixed mutation, the gh api flag for its value;
+# None: the request goes as a JSON body on standard input, #329)
 SET_MUTATIONS = {
     "text": (_set_mutation("String!", "text"), "-f"),
-    "value_number": (_set_mutation("Float!", "number"), "-F"),
+    "value_number": (_set_mutation("Float!", "number"), None),
     "date": (_set_mutation("Date!", "date"), "-f"),
     "option": (_set_mutation("String!", "singleSelectOptionId"), "-f"),
     "iteration": (_set_mutation("String!", "iterationId"), "-f"),
@@ -222,10 +225,10 @@ def child_env(token: str, base: dict[str, str] | None = None) -> dict[str, str]:
     return env
 
 
-def run(argv: list[str], token: str) -> tuple[int, str, str]:
+def run(argv: list[str], token: str, stdin: str | None = None) -> tuple[int, str, str]:
     try:
         p = subprocess.run(argv, capture_output=True, text=True, encoding="utf-8",
-                           errors="replace", timeout=TIMEOUT, env=child_env(token))
+                           errors="replace", timeout=TIMEOUT, env=child_env(token), input=stdin)
     except subprocess.TimeoutExpired:
         return 124, "", f"timed out after {TIMEOUT}s"
     except OSError as exc:
@@ -257,6 +260,13 @@ def pattern(regex: re.Pattern, what: str):
     return check
 
 
+def number_arg(text: str) -> float:
+    """A decimal that is a finite number: nan, inf and an overflow stop here (#329)."""
+    if not VALUE_NUMBER_RE.fullmatch(text) or not math.isfinite(float(text)):
+        raise argparse.ArgumentTypeError("expected a finite number")
+    return float(text)
+
+
 def limit_arg(text: str) -> str:
     if not NUMBER_RE.fullmatch(text) or not 1 <= int(text) <= 1000:
         raise argparse.ArgumentTypeError("expected a number from 1 to 1000")
@@ -283,7 +293,7 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
     edit.add_argument("--field", required=True, type=pattern(FIELD_RE, "a field id (PVT..F_...)"))
     value = edit.add_mutually_exclusive_group(required=True)
     value.add_argument("--text")
-    value.add_argument("--number", dest="value_number", type=pattern(VALUE_NUMBER_RE, "a number"))
+    value.add_argument("--number", dest="value_number", type=number_arg)
     value.add_argument("--date", type=pattern(DATE_RE, "a date YYYY-MM-DD"))
     value.add_argument("--option", type=pattern(OPTION_RE, "a single-select option id"))
     value.add_argument("--iteration", type=pattern(OPTION_RE, "an iteration id"))
@@ -326,13 +336,25 @@ def add_call(project_id: str, content_id: str) -> list[str]:
     return graphql(ADD_MUTATION, "-f", f"project={project_id}", "-f", f"content={content_id}")
 
 
-def set_call(args: argparse.Namespace, project_id: str) -> list[str]:
+BODY_CALL = ["gh", "api", "graphql", "--input", "-"]
+
+
+def set_call(args: argparse.Namespace, project_id: str) -> tuple[list[str], str | None]:
+    """The child's argv, and the JSON body for its standard input or None."""
     for name, (mutation, flag) in SET_MUTATIONS.items():
         value = getattr(args, name)
-        if value is not None:
-            # one value=... argument, so a value that starts with a dash stays a value
-            return graphql(mutation, "-f", f"project={project_id}", "-f", f"item={args.item}",
-                           "-f", f"field={args.field}", flag, f"value={value}")
+        if value is None:
+            continue
+        if flag is None:
+            # the fixed text and a variables object, built by the json module: the
+            # value is a JSON number, and nothing is joined into the text (#329)
+            body = json.dumps({"query": mutation, "variables": {
+                "project": project_id, "item": args.item, "field": args.field, "value": value}},
+                allow_nan=False)
+            return list(BODY_CALL), body
+        # one value=... argument, so a value that starts with a dash stays a value
+        return graphql(mutation, "-f", f"project={project_id}", "-f", f"item={args.item}",
+                       "-f", f"field={args.field}", flag, f"value={value}"), None
     raise ValueError("no value to set")
 
 
@@ -421,7 +443,10 @@ def act(args: argparse.Namespace, token: str, runner) -> tuple[int, str, str]:
     if args.action == "add":
         return add(args, project_id, token, runner)
     if args.action == "set":
-        return runner(set_call(args, project_id), token)
+        argv, body = set_call(args, project_id)
+        if body is None:
+            return runner(argv, token)
+        return runner(argv, token, stdin=body)
     raise ValueError(args.action)
 
 
