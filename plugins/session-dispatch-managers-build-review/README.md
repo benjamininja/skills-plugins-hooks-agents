@@ -351,6 +351,16 @@ manager reads `builder-state/probe.py` against them at closeout. A
 script that changes data is not a probe. The rule never goes in the
 shared builders' file or in another profile.
 
+A script run once for one ticket that changes data that is not rebuilt
+has one profile, `oneshot`, with exactly one rule:
+`Bash(.venv/Scripts/python.exe builder-state/oneshot.py)`. No argument,
+no wildcard. The brief names the data the script may change. The
+builder posts the script whole on its ticket and parks before the run,
+which waits for the owner's answer; the manager reads the script before
+it relays that answer and again at closeout. A project without the
+profile keeps a rule the owner adds by hand. The rule never goes in the
+shared builders' file or in another profile.
+
 These points were tested in throwaway sessions (Claude Code 2.1.318),
 recorded on tools issue #83: `--allowedTools` adds to the `--settings`
 allow list under `dontAsk`; a settings-file deny beats an exact

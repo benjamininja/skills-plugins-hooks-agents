@@ -2,8 +2,9 @@ Tier: <haiku | low | medium | high>
 Ticket: #<n>
 Base: origin/main <or origin/<branch> of an open PR in this repository, for a stacked brief; the manager passes it to dispatch.ps1 as -Base>
 venv: <light | full | no>
-Profile: <optional: a profile from the owner's profiles file, for example research or probe; leave the line out for none>
+Profile: <optional: a profile from the owner's profiles file, for example research, probe or oneshot; leave the line out for none>
 Hosts: <with Profile: probe only, the hosts the probe may reach; the script's ALLOWED_HOSTS is checked against them at closeout>
+Data: <with Profile: oneshot only, the data the script may change; the builder parks the script before its run, and the manager reads it against this line>
 
 <What to do, in plain words. No double quote anywhere in this file.>
 
