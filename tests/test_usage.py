@@ -429,11 +429,123 @@ def test_shapes_counts_source_keys_overlap_and_turn_position(tmp_path, capsys):
     assert "private name" not in out and "xxxxxxxxxx" not in out
 
 
+LEAD_PEER = "Another Claude session sent a message:\n<cross-session-message from=x>" + PROMPT
+
+
+def peer_meta(ts, origin=True):
+    rec = user(LEAD_PEER, ts, meta=True)
+    if origin:
+        rec.update(origin={"kind": "peer", "from": "some-session", "name": "a-nameplate"},
+                   turnOrigin="peer", promptSource="system")
+    return rec
+
+
+def test_a_meta_peer_record_with_origin_opens_a_peer_turn(tmp_path):
+    # step 3: the stored shape, read from origin.kind
+    s = stop_session(tmp_path, [
+        {**user(PROMPT, T(21)), "origin": {"kind": "human"}, "turnOrigin": "human"},
+        reply("a", T(21)),
+        peer_meta(T(21, "10:01:00")),
+        reply("b", T(21, "10:01:01")),
+    ])
+    assert s.openers == ["typed", "peer message"]
+    assert s.opener_of(s.replies[1]) == "peer message"
+
+
+def test_a_meta_peer_record_without_origin_falls_back_to_its_text(tmp_path):
+    s = stop_session(tmp_path, [user(PROMPT, T(21)), reply("a", T(21)),
+                                peer_meta(T(21, "10:01:00"), origin=False), reply("b", T(21, "10:01:01"))])
+    assert s.openers == ["typed", "peer message"]
+
+
+def test_other_meta_records_still_open_no_turn(tmp_path):
+    s = stop_session(tmp_path, [
+        user(PROMPT, T(21)), reply("a", T(21)),
+        user("<system-reminder>r</system-reminder>", T(21), meta=True),
+        {**user("x", T(21), meta=True), "turnOrigin": "system", "promptSource": "system"},
+        reply("b", T(21)),
+    ])
+    assert s.openers == ["typed"]
+
+
+def test_sources_by_field_name_each_turn(tmp_path):
+    s = stop_session(tmp_path, [
+        {**user("<task-notification>x", T(21)), "origin": {"kind": "task-notification"}}, reply("a", T(21)),
+        {**user(PROMPT, T(21)), "origin": {"kind": "plugin", "name": "q"}, "turnOrigin": "system"},
+        reply("b", T(21)),
+        {**user(PROMPT, T(21)), "turnOrigin": "human"}, reply("c", T(21)),
+        {**user(PROMPT, T(21)), "origin": {"kind": "brand-new"}}, reply("d", T(21)),
+    ])
+    assert s.openers == ["app event", "plugin", "typed", "other source"]
+
+
+def test_a_queued_peer_message_inside_a_turn_tags_the_next_reply_message_in(tmp_path):
+    # step 3: a queued_command attachment arrives inside a running turn and opens none
+    st = tmp_path / "store"
+    write(st / "C--x" / "pppp0001-0000.jsonl", [
+        title("a manager"),
+        user(PROMPT, T(21, "08:00:00")), reply("s1", T(21, "08:00:01")),
+        user(PROMPT, T(21, "08:01:00")),
+        reply("r1", T(21, "08:01:01"), stop="tool_use",
+              calls=[("x1", "Bash", {"command": "python tools/reproof.py 1 a"})]),
+        queued(T(21, "08:01:02"), "<cross-session-message from=x>" + PROMPT),
+        reply("r2", T(21, "08:01:03"), stop="tool_use", calls=[("x2", "Bash", {"command": "ls"})]),
+        reply("r3", T(21, "08:01:04"), stop="end_turn"),
+        api_blob := {"type": "api-request-blob", "message": {"content": [
+            {"type": "text", "text": "<system-reminder>\n\n<cross-session-message>"}]}},
+    ])
+    sess = usage.scan(str(st))[0]
+    assert len(sess.openers) == 2  # the queued message opens no turn; the context copy is ignored
+    tags = usage.tag_replies(sess, sess.counted(), [usage.tag_rule(x) for x in usage.DEFAULT_TAGS])
+    assert tags == ["start-up", "reproof", "message in", "message in"]
+    assert api_blob["type"] == "api-request-blob"
+
+
+def test_a_message_queued_and_then_stored_as_meta_counts_once(tmp_path):
+    s = stop_session(tmp_path, [
+        user(PROMPT, T(21)), reply("a", T(21), stop="tool_use"),
+        queued(T(21), "<cross-session-message from=x>" + PROMPT),
+        peer_meta(T(21)),  # the same message, before the next reply
+        reply("b", T(21)),
+    ])
+    assert s.openers == ["typed"]
+    assert s.replies[1].after_peer
+
+
+def test_tags_counts_messages_in_by_how_they_arrive(tmp_path, capsys):
+    st = tmp_path / "store"
+    write(st / "C--x" / "qqqq0001-0000.jsonl", [
+        title("a manager"),
+        user(PROMPT, T(21, "08:00:00")), reply("a", T(21, "08:00:01"), stop="tool_use"),
+        queued(T(21, "08:00:02"), "<cross-session-message from=x>" + PROMPT),
+        reply("b", T(21, "08:00:03")),
+        peer_meta(T(21, "08:01:00")), reply("c", T(21, "08:01:01")),
+    ])
+    out = run(capsys, "tags", "--store", str(st), "--from", "2026-11-21", "--to", "2026-11-21")
+    assert "turns opened by: typed=1 peer-message=1" in out
+    assert "peer messages inside a running turn=1" in out
+
+
+def test_word_hides_ids_under_origin(tmp_path, capsys):
+    # the assistant's finding on the probe at 8b7084b: from=, runId= and name= held ids
+    o = {"kind": "peer", "from": "agent-abc", "runId": "run-123", "name": "a-nameplate",
+         "fromSession": "s", "msg_id": "m", "fromMode": "prompting", "producer": "session-task",
+         "handback": True}
+    w = usage.word(o)
+    for secret in ("agent-abc", "run-123", "a-nameplate"):
+        assert secret not in w
+    assert "kind=peer" in w and "fromMode=prompting" in w and "producer=session-task" in w
+    assert "handback=true" in w and "from=?" in w and "runId=?" in w and "name=?" in w
+
+
 def test_word_prints_one_short_word_or_a_question_mark():
     assert usage.word("peer") == "peer" and usage.word("a b") == "?" and usage.word("x" * 25) == "?"
     assert usage.word(None) == "-" and usage.word(True) == "true" and usage.word(3) == "number"
     assert usage.word([1]) == "?" and usage.word({"k": {"n": 1}}) == "{k=?}"
-    assert usage.word({str(i): "v" for i in range(8)}) == "{0=v,1=v,2=v,3=v,4=v,5=v,...}"
+    # inside an object a value prints only under kind, producer or fromMode; ten keys at most
+    assert usage.word({f"k{i:02}": "v" for i in range(12)}) == "{" + ",".join(
+        f"k{i:02}=?" for i in range(10)) + ",...}"
+    assert usage.word({"kind": "peer", "other": "v"}) == "{kind=peer,other=?}"
 
 
 def test_shapes_refuses_a_needle_that_is_not_a_name(store):
@@ -457,8 +569,8 @@ def test_tags_counts_openers_by_kind_with_ambiguous_apart(tmp_path, capsys):
         user("<task-notification>done</task-notification>", T(21, "08:03:00")), reply("d", T(21, "08:03:01")),
     ])
     out = run(capsys, "tags", "--store", str(s), "--from", "2026-11-21", "--to", "2026-11-21")
-    assert ("turns opened by: typed=1 peer-message=1 app-event=1 system-reminder=0 ambiguous=1"
-            in out)
+    assert ("turns opened by: typed=1 peer-message=1 app-event=1 plugin=0 system=0 system-reminder=0 "
+            "ambiguous=1 other-source=0; peer messages inside a running turn=0" in out)
 
 
 def test_the_docstring_carries_both_method_points():

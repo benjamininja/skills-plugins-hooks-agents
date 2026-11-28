@@ -47,6 +47,14 @@ A peer message, an app event or a system reminder arrives as a user record and
 is not a typed prompt, so cutting at the second typed prompt runs on through
 them. A session with no ending reply counts whole and is reported.
 
+Turn openers (step 3 of #263): a user record's own field names its source,
+origin.kind, else turnOrigin (human, peer, task-notification, plugin, system);
+its text decides only when it has neither. A meta record opens a turn only
+when it is a peer message. A peer message queued as a queued_command
+attachment arrives inside a running turn: it opens none, and the next reply is
+tagged message in. A message queued and then stored as a meta record before
+the next reply counts once.
+
 Method point 1, per-read sizes (`reads`): only the turn's context growth is
 measured. Each tool result is sized in characters and turned into tokens at the
 turn's mean ratio, result characters over that growth, so each per-read figure
@@ -91,7 +99,8 @@ REMINDER_END = "</system-reminder>"
 # context (November 2026). Any other text before a tag makes the opener "ambiguous".
 APP_LEADS = ("Another Claude session sent a message:\n",)
 ASSUMED_CPT = 4.0  # chars per token when a turn has no growth to divide by
-OPENER_KINDS = ("typed", "peer message", "app event", "system reminder", "ambiguous")
+OPENER_KINDS = ("typed", "peer message", "app event", "plugin", "system", "system reminder",
+                "ambiguous", "other source")
 QUIET_RECORDS = ("assistant", "user", "file-history-snapshot", "attachment", "progress")
 DATE_RE = re.compile(r"\d{4}-\d{2}-\d{2}")
 SID_RE = re.compile(r"[A-Za-z0-9-]{8,64}")
@@ -146,6 +155,11 @@ class Reply:
     stop: str | None = None
     calls: list[Call] = field(default_factory=list)
     counted: bool = True
+    peers_before: int = 0  # peer messages queued inside the running turn since the reply before it
+
+    @property
+    def after_peer(self) -> bool:
+        return self.peers_before > 0
 
     @property
     def ctx(self) -> int:
@@ -186,6 +200,7 @@ class Session:
     kinds: collections.Counter = field(default_factory=collections.Counter)
     bad_lines: int = 0
     subagents: list["Session"] = field(default_factory=list)
+    queued_peers: int = 0  # peer messages queued since the last reply, waiting for the next
 
     def counted(self) -> list[Reply]:
         return [r for r in self.replies if r.counted]
@@ -240,6 +255,28 @@ def opener_kind(text: str) -> str:
                 return kind
             tagged = tagged or m in t
     return "ambiguous" if tagged else "typed"
+
+
+# origin.kind, else turnOrigin, as stored in November 2026 (the shapes probe on #263).
+SOURCE_KINDS = {"human": "typed", "peer": "peer message", "task-notification": "app event",
+                "task_notification": "app event", "plugin": "plugin", "system": "system"}
+
+
+def source_kind(o: dict) -> str | None:
+    """The opener kind a user record's own fields name, or None when it has none."""
+    org = o.get("origin")
+    k = org.get("kind") if isinstance(org, dict) else None
+    if not isinstance(k, str):
+        k = o.get("turnOrigin")
+    if not isinstance(k, str):
+        return None
+    return SOURCE_KINDS.get(k, "other source")
+
+
+def is_queued_peer(att: dict) -> bool:
+    """A queued command holding a peer message: the tag opens its prompt."""
+    p = att.get("prompt")
+    return att.get("type") == "queued_command" and isinstance(p, str) and p.lstrip().startswith(PEER_MARK)
 
 
 def size(c) -> int:
@@ -319,6 +356,8 @@ def read_session(path: str, sidechain: bool = False) -> Session:
             elif t == "attachment":
                 if isinstance(o.get("attachment"), dict):
                     note_attachment(s, o["attachment"])
+                    if is_queued_peer(o["attachment"]):
+                        s.queued_peers += 1
             elif t == "api-request-shape":
                 if s.shape is None:
                     s.shape = o.get("shape")
@@ -340,7 +379,9 @@ def read_reply(s: Session, by_id: dict, o: dict, msg: dict, ts: str) -> None:
             by_id[mid] = None
             return
         r = Reply(mid, ts, model, num(u, "input_tokens"), num(u, "cache_creation_input_tokens"),
-                  num(u, "cache_read_input_tokens"), num(u, "output_tokens"), len(s.openers))
+                  num(u, "cache_read_input_tokens"), num(u, "output_tokens"), len(s.openers),
+                  peers_before=s.queued_peers)
+        s.queued_peers = 0
         by_id[mid] = r
         s.replies.append(r)
         s.events.append(("reply", r))
@@ -375,10 +416,14 @@ def read_user(s: Session, o: dict, msg: dict, ts: str) -> None:
     text = text_of(o)
     if text is None:
         return
-    kind = opener_kind(text)
+    # the record's own source field first (step 3 of #263); its text only when it has none
+    kind = source_kind(o) or opener_kind(text)
     s.events.append(("user", kind, meta, len(text), ts))
-    if not meta:
-        s.openers.append(kind)
+    if meta and kind != "peer message":
+        return  # a meta record is injected text, unless it is a peer message
+    if kind == "peer message" and s.queued_peers:
+        return  # the same message, queued and then stored again before the next reply: once
+    s.openers.append(kind)
 
 
 def scan(store: str) -> list[Session]:
@@ -466,8 +511,9 @@ def tag_of(r: Reply, rules) -> str | None:
 
 
 def tag_replies(s: Session, replies: list[Reply], rules) -> list[str]:
-    """One tag per reply: start-up, a rule's tag, the tag carried from the reply
-    before it in the same turn, message in (a turn a peer message opened), or untagged."""
+    """One tag per reply: start-up, a rule's tag, message in (the first reply after a
+    peer message queued inside a running turn), the tag carried from the reply before
+    it in the same turn, message in (a turn a peer message opened), or untagged."""
     start, _ = startup_cut(replies)
     tags: list[str] = []
     for k, r in enumerate(replies):
@@ -475,6 +521,8 @@ def tag_replies(s: Session, replies: list[Reply], rules) -> list[str]:
             tags.append(START_UP)
             continue
         tag = tag_of(r, rules)
+        if tag is None and r.after_peer:
+            tag = MESSAGE_IN
         if tag is None and k > len(start) and replies[k - 1].turn == r.turn and tags[-1] != UNTAGGED:
             tag = tags[-1]
         if tag is None and s.opener_of(r) == "peer message":
@@ -649,7 +697,9 @@ def cmd_tags(a) -> None:
         c = s.counted()
         x = acc[role]
         x["all"]["sessions"] += 1
-        x["openers"].update(s.openers)
+        # counted once: a turn counts by its counted replies, so a copied history adds none
+        x["openers"].update(s.openers[t - 1] for t in {r.turn for r in c if r.turn > 0})
+        x["all"]["peer_mid"] += sum(r.peers_before for r in c)
         prev_t = None
         for k, (r, tag) in enumerate(zip(c, tag_replies(s, c, a.tags))):
             x[tag]["n"] += 1
@@ -685,7 +735,8 @@ def cmd_tags(a) -> None:
             print(f"{n:14} {x[n]['n']:7} {x[n]['eq'] / M:8.2f} {pct(x[n]['eq'], e):>6}")
         print(f"untagged share of inEq: {pct(x[UNTAGGED]['eq'], e)}")
         print("turns opened by: " + " ".join(
-            f"{k.replace(' ', '-')}={x['openers'][k]}" for k in OPENER_KINDS))
+            f"{k.replace(' ', '-')}={x['openers'][k]}" for k in OPENER_KINDS)
+            + f"; peer messages inside a running turn={x['all']['peer_mid']}")
         print(f"idle re-reads (reply after a gap > {a.idle_gap:.0f}s): replies={x['idle']['n']} "
               f"inEq={x['idle']['eq'] / M:.2f}M share={pct(x['idle']['eq'], e)} "
               f"of which cacheWrite={x['idle']['cw'] / M:.2f}M")
@@ -989,9 +1040,14 @@ SOURCE_KEYS = ("origin", "turnOrigin", "promptSource")
 WORD_RE = re.compile(r"[A-Za-z0-9_-]{1,24}")
 
 
-def word(v) -> str:
-    """A value as one short word, else "?". An object shows at most six of its keys,
-    each key and value under the same rule; a nested object or list is "?"."""
+# Inside an object, only these keys' word values print; any other key's value is an id or
+# text (from=, runId=, name=, msg_id= held ids on the real store, #263), so it prints "?".
+WORD_VALUE_KEYS = frozenset({"kind", "producer", "fromMode"})
+
+
+def word(v, show: bool = True) -> str:
+    """A value as one short word, else "?". An object shows at most ten of its keys; a
+    value prints only under WORD_VALUE_KEYS, or as true/false, else "?"; nested is "?"."""
     if v is None:
         return "-"
     if isinstance(v, bool):
@@ -999,12 +1055,13 @@ def word(v) -> str:
     if isinstance(v, (int, float)):
         return "number"
     if isinstance(v, str):
-        return v if WORD_RE.fullmatch(v) else "?"
+        return v if show and WORD_RE.fullmatch(v) else "?"
     if isinstance(v, dict):
         items = sorted(v.items(), key=lambda kv: str(kv[0]))
         parts = [f"{word(k) if isinstance(k, str) else '?'}="
-                 f"{'?' if isinstance(x, (dict, list)) else word(x)}" for k, x in items[:6]]
-        return "{" + ",".join(parts) + (",..." if len(items) > 6 else "") + "}"
+                 f"{'?' if isinstance(x, (dict, list)) else word(x, show=k in WORD_VALUE_KEYS)}"
+                 for k, x in items[:10]]
+        return "{" + ",".join(parts) + (",..." if len(items) > 10 else "") + "}"
     return "?"
 
 
