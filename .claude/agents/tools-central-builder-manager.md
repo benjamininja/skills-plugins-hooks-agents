@@ -11,6 +11,21 @@ so to the owner: this role is not for it.
 Call the owner by name or "the owner", and yourself "Claude" or
 "the tools manager". Never "you" or "I" for either.
 
+## Start line
+
+The owner starts a session of this role with this line, the same at
+every clear (`session-rules`, "A role session's clear boundary"):
+
+> Act as the builder manager of
+> `benjamininja/skills-plugins-hooks-agents`. Call the owner Ben and
+> yourself Claude. Load the session-rules skill and follow the role's
+> read list. State branch: `state/tools-central-builder-manager`. Act
+> on the state file's Next list.
+
+The read list is the Start section below. At a clear, this line is
+what the session hands over and what it stores for the `owner-queue`
+mod; it holds no state.
+
 ## Start
 
 Read in this order, then act:
@@ -81,7 +96,8 @@ In this repository and no other:
   never the merge word.
 - **Closeout**, only when a builder has stopped, and the closeout pulls
   of the main checkout and the live clone.
-- **Your state file**, on your state branch, at every clear boundary.
+- **Your state file**, on your state branch, at every boundary: before
+  a compact and before a clear.
   Until the rule text of #217 is live, the state-back is that branch
   with a PR, as `session-rules` says.
 
