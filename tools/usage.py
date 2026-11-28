@@ -252,9 +252,10 @@ class Session:
         c = self.counted()
         return c[0].ts[:10] if c else None
 
-    def main_model(self) -> str:
+    def main_model(self) -> str | None:
+        """None when the session has no counted reply; short_model prints that as the mark."""
         n = collections.Counter(r.model for r in self.counted())
-        return n.most_common(1)[0][0] if n else NO_REPLIES
+        return n.most_common(1)[0][0] if n else None
 
     def opener_of(self, r: Reply) -> str | None:
         return self.openers[r.turn - 1] if r.turn > 0 else None
@@ -619,8 +620,12 @@ def count_of(v) -> str:
     return "None" if v is None else "?"
 
 
-def short_model(m: str) -> str:
-    m = known(m, KNOWN_MODELS | {NO_REPLIES})
+def short_model(m: str | None) -> str:
+    """None (a session with no counted reply) prints as the mark; a model read from the store
+    prints only when known (#325), so the mark's own text stored as a model prints other."""
+    if m is None:
+        return NO_REPLIES
+    m = known(m, KNOWN_MODELS)
     return m[len("claude-"):] if m.startswith("claude-") else m
 
 

@@ -938,6 +938,16 @@ def test_a_session_with_no_counted_replies_prints_the_no_replies_mark(tmp_path, 
     assert "model no-replies" in out and "model other" not in out
 
 
+def test_a_stored_model_with_the_no_replies_text_prints_other(tmp_path, capsys):
+    # #325: only a session with no counted reply prints the mark; the mark's text read
+    # from the store is not a known model
+    p = write(tmp_path / "s.jsonl", [user(PROMPT, T(21)), reply("a", T(21), model=usage.NO_REPLIES)])
+    out = run(capsys, "turns", str(p))
+    assert "model other" in out and "model no-replies" not in out
+    assert usage.short_model(usage.NO_REPLIES) == "other"
+    assert usage.short_model(None) == usage.NO_REPLIES
+
+
 def test_reads_prints_only_a_known_extension(tmp_path, capsys):
     # F1 of #319: an extension not on the list prints as other, never as itself
     p = write(tmp_path / "s.jsonl", [
