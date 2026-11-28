@@ -64,11 +64,13 @@ git history.
    pointer is dynasty #564 issuecomment-7239843007; no date yet. Tell
    it when PR #211 merges and when #295's design is approved. No
    detail of an open gap goes on any public record.
-9. **#323** (owner-led): the wave manager. Ben on 2026-11-28: trial it
-   in Dugout Standard first, no rule for all projects before that.
-   The Dugout Standard session answers the ticket's eight points for
-   the trial; the planner reads them on #323 and carries any rule
-   text afterwards, on Ben's button.
+9. **#323** (owner-led): the wave manager, trialed in Dugout Standard
+   first (Ben's button there and his word here). Length by Ben's
+   button "10 merged PRs (Recommended)": the first 10 merged builder
+   PRs in Dugout Standard, or 2026-12-31 if sooner. Then one
+   `usage.py` run on Ben's word, the figures on #323 and a button:
+   rule for all, again, or end. The Dugout session answers the
+   ticket's eight points for the trial.
 10. The older list: #217 C to F, the assistant's owner-queue text PR,
    the ADR index sentence, #167.
 
@@ -99,6 +101,8 @@ ea58e038-9092-4552-9e4c-32bb3cdf8281; dff-central-planner
 
 ### Reads and checks due
 
+- 2026-12-31 or Dugout Standard's tenth merged builder PR: the wave
+  manager's figures on #323 and the button to Ben.
 - 2026-12-12: the trial's count on #300 and the button to Ben.
 - Two weeks after #317 merges: the `usage.py tags` re-run.
 - The planner's worktrees `t300-rule-texts`, `t294-start-lines`,
