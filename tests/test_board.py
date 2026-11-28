@@ -52,12 +52,14 @@ class Fake:
 
     def __init__(self, code=0, out="", err="", leak=None, raises=None):
         self.calls: list[tuple[list[str], str]] = []
+        self.inputs: list[str | None] = []  # each call's standard input, in step with calls
         self.code, self.out, self.err = code, out, err
         self.leak = leak
         self.raises = raises
 
-    def __call__(self, argv, token):
+    def __call__(self, argv, token, stdin=None):
         self.calls.append((list(argv), token))
+        self.inputs.append(stdin)
         if self.raises:
             raise self.raises
         if argv == board.LOGIN_CALL:
@@ -102,8 +104,17 @@ def never_read(entry):
     ["set", OWNER, NUMBER, "--item", ITEM, "--field", FIELD],
     ["set", OWNER, NUMBER, "--item", ITEM, "--field", FIELD, "--text", "x", "--date", "2026-01-01"],
     ["set", OWNER, NUMBER, "--item", ITEM, "--field", FIELD, "--date", "tomorrow"],
-    ["set", OWNER, NUMBER, "--item", ITEM, "--field", FIELD, "--number", "2.5"],
     ["set", OWNER, NUMBER, "--item", ITEM, "--field", FIELD, "--number", "@file"],
+    ["set", OWNER, NUMBER, "--item", ITEM, "--field", FIELD, "--number", "nan"],
+    ["set", OWNER, NUMBER, "--item", ITEM, "--field", FIELD, "--number", "NaN"],
+    ["set", OWNER, NUMBER, "--item", ITEM, "--field", FIELD, "--number", "inf"],
+    ["set", OWNER, NUMBER, "--item", ITEM, "--field", FIELD, "--number=-inf"],
+    ["set", OWNER, NUMBER, "--item", ITEM, "--field", FIELD, "--number", "infinity"],
+    ["set", OWNER, NUMBER, "--item", ITEM, "--field", FIELD, "--number", "1e999"],
+    ["set", OWNER, NUMBER, "--item", ITEM, "--field", FIELD, "--number", "1_000"],
+    ["set", OWNER, NUMBER, "--item", ITEM, "--field", FIELD, "--number", "0x10"],
+    ["set", OWNER, NUMBER, "--item", ITEM, "--field", FIELD, "--number", "2,5"],
+    ["set", OWNER, NUMBER, "--item", ITEM, "--field", FIELD, "--number", " 2.5"],
     ["delete", OWNER, NUMBER],
     ["items", OWNER, NUMBER, "--token", "x"],
 ])
@@ -161,10 +172,15 @@ def test_no_action_builds_a_gh_project_call(argv):
     # #328: gh project asks GitHub for more than the project scope
     fake = Fake(out="{}\n")
     board.main(argv, runner=fake, read=reader())
-    graphql_calls = [call for call, _ in fake.calls if call != board.LOGIN_CALL]
+    graphql_calls = [(call, body) for (call, _), body in zip(fake.calls, fake.inputs)
+                     if call != board.LOGIN_CALL]
     assert graphql_calls
-    for call in graphql_calls:
+    for call, body in graphql_calls:
         assert "project" not in call[:2]
+        if body is not None:  # set --number: the fixed text goes in the JSON body (#329)
+            assert call == board.BODY_CALL
+            assert json.loads(body)["query"] in board.QUERIES
+            continue
         assert call[:4] == ["gh", "api", "graphql", "-f"]
         assert call[4].removeprefix("query=") in board.QUERIES
         assert not any(a.startswith("query=") for a in call[5:])
@@ -190,7 +206,6 @@ def test_the_queries_are_fixed_texts_and_only_add_and_set_write():
 
 @pytest.mark.parametrize("flag,value,kind,gh_flag", [
     ("--text", "-starts-with-a-dash", "text", "-f"),
-    ("--number", "-3", "value_number", "-F"),
     ("--date", "2026-12-01", "date", "-f"),
     ("--option", "f75ad846", "option", "-f"),
     ("--iteration", "abc123", "iteration", "-f"),
@@ -214,7 +229,54 @@ def test_set_sends_the_number_as_a_float_and_everything_else_as_a_string():
     assert "$value: Date!" in kinds["date"]
     assert "value: {singleSelectOptionId: $value}" in kinds["option"]
     assert "value: {iterationId: $value}" in kinds["iteration"]
-    assert [flag for _, flag in board.SET_MUTATIONS.values()].count("-F") == 1
+    flags = {k: flag for k, (_, flag) in board.SET_MUTATIONS.items()}
+    assert flags.pop("value_number") is None  # the JSON body on standard input (#329)
+    assert set(flags.values()) == {"-f"}
+
+
+@pytest.mark.parametrize("value,number", [
+    ("2.5", 2.5), ("0.5", 0.5), ("-3", -3), ("25", 25), (".75", 0.75), ("-1.25e2", -125),
+    ("3.", 3),
+])
+def test_set_number_sends_a_json_body_with_the_value_as_a_json_number(value, number):
+    fake = Fake()
+    code = board.main(["set", OWNER, NUMBER, "--item", ITEM, "--field", FIELD, f"--number={value}"],
+                      runner=fake, read=reader())
+    assert code == 0
+    (login, _), (lookup, _), (edit, token) = fake.calls
+    assert login == board.LOGIN_CALL and lookup == BOARD_ID_CALL
+    assert fake.inputs[:2] == [None, None]
+    assert edit == ["gh", "api", "graphql", "--input", "-"] and token == SECRET
+    body = fake.inputs[2]
+    sent = json.loads(body)
+    assert sent == {"query": board.SET_MUTATIONS["value_number"][0], "variables": {
+        "project": PROJECT_ID, "item": ITEM, "field": FIELD, "value": number}}
+    assert isinstance(sent["variables"]["value"], float)  # a JSON number, never a string
+    assert re.search(r'"value": -?[0-9.]+(?:e[-+]?[0-9]+)?\}', body)
+    assert value not in sent["query"] and "$value" in sent["query"]
+    assert SECRET not in body
+
+
+def test_the_number_body_holds_no_token_even_a_token_shaped_one():
+    fake = Fake()
+    board.main(["set", OWNER, NUMBER, "--item", ITEM, "--field", FIELD, "--number", "0.5"],
+               runner=fake, read=reader(SHAPED))
+    body = fake.inputs[-1]
+    assert SHAPED not in body and "ghp_" not in body and "GH_TOKEN" not in body
+
+
+def test_run_passes_the_body_to_the_child_on_standard_input(monkeypatch):
+    seen = {}
+
+    def fake_run(argv, **kw):
+        seen.update(kw)
+        return subprocess.CompletedProcess(argv, 0, "ok", "")
+
+    monkeypatch.setattr(board.subprocess, "run", fake_run)
+    assert board.run(list(board.BODY_CALL), SECRET, stdin='{"a": 1}') == (0, "ok", "")
+    assert seen["input"] == '{"a": 1}'
+    assert board.run(["gh", "api", "user"], SECRET) == (0, "ok", "")
+    assert seen["input"] is None
 
 
 @pytest.mark.parametrize("text", ['say "hi" {x}', '{"a": 1}', "a } { b", "$value", "x=y"])
@@ -285,11 +347,12 @@ class OtherLogin(Fake):
         super().__init__()
         self.login, self.login_code, self.login_err = login, code, err
 
-    def __call__(self, argv, token):
+    def __call__(self, argv, token, stdin=None):
         if argv == board.LOGIN_CALL:
             self.calls.append((list(argv), token))
+            self.inputs.append(stdin)
             return self.login_code, self.login + "\n", self.login_err
-        return super().__call__(argv, token)
+        return super().__call__(argv, token, stdin)
 
 
 @pytest.mark.parametrize("argv", PROJECT_ACTIONS)
@@ -415,9 +478,10 @@ def test_calls_are_argument_lists_never_shell_strings():
     for argv in ACTIONS:
         fake = Fake()
         board.main(argv, runner=fake, read=reader())
-        for call, _ in fake.calls:
+        for (call, _), body in zip(fake.calls, fake.inputs):
             assert isinstance(call, list) and all(isinstance(a, str) for a in call)
             assert SECRET not in " ".join(call)
+            assert body is None or SECRET not in body
 
 
 def test_the_child_exit_code_is_the_script_exit_code():
