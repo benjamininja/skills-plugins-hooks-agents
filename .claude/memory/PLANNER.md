@@ -30,21 +30,21 @@ git history.
 
 ### Next
 
-1. **#307** (low; board.py's cp1252 crash, plus part A `--owner @me`
-   and part B `--boards-only`, issues/307 issuecomment-7240559476). No
-   PR is open yet; the manager tells the planner when its PR merges.
-   Then: send the manager a ready Action for Ben to re-run the D rows
-   with `--boards-only` on board 2, with this session's id. **#285**
-   closes when D1 passes. If D1 still fails it comes back to the
-   planner; the next option is the script's own query, not `read:org`.
+1. **#285**: PR #321 (#307) merged `f50dac1`. The Action for Ben to
+   re-run the D rows with `--boards-only` on board 2 went to the
+   manager on 2026-11-28, with this session's id (issues/285
+   issuecomment-7241138525). #285 closes when D1 passes. If D1 still
+   fails it comes back to the planner; the next option is the
+   script's own query, not `read:org`.
 2. **#317** (low, gate text): dispatched on Ben's go as `t317-msgrules`
    (the manager's report). Its head goes to the dynasty planner; it
    keeps Ben's merge word. Two weeks after it merges: one
    `usage.py tags` run on Ben's word, compared on #317.
-3. **#319** (PR #320) and **#307** (PR #321) are under review (the
-   manager's report). The ticket from PR #304's finding F1 is filed,
-   low, held behind #240 step 2 (`t240-rekey`); lift the label and the
-   `Held:` line when that PR merges.
+3. **PR #322** (#317) is in re-proof (the manager's report); its head
+   goes to the dynasty planner, then Ben's merge word. **#324** (PR
+   #304's F1, low) is held behind #240 step 2 (`t240-rekey`); lift
+   the label and the `Held:` line when that PR merges. **#325** (PR
+   #320's F1, low) may go under the trial.
 4. **The trial line** (PR #309, merged): low and haiku dispatch
    without a go from 2026-11-28 to 2026-12-12. By 2026-12-12 the
    planner posts the manager's count on #300 and asks Ben by button
@@ -132,6 +132,7 @@ All on 2026-11-28, by Ben's button unless said.
   first (recorded on #323).
 - Merged on Ben's word: PR #318 `ed3a569` (#298), PR #304 `148b48e`
   (#293). #240 step 2 is dispatched.
+- Merged on Green: PR #320 `6fd5dae` (#319), PR #321 `f50dac1` (#307).
 - Merged, builders': PR #313 `f88d633` (the `oneshot` profile, on Ben's
   button), PR #316 `13481f0` (#312). Holds lifted on #317 and #319.
 - Merged, the planner's own: PR #302 `0105706`, PR #310 `3eba79a`
