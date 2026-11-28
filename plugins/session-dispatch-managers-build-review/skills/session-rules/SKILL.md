@@ -550,6 +550,31 @@ blocking are posted once, get no answer round and never hold a merge. Read
 `references/code-review.md` for which PRs, the packet, the effort per
 tier, the finding classes and the record.
 
+## Messages between sessions
+
+A message makes the session that gets it read its whole context again,
+and so does every reply. A message is sent only when the receiver must
+act or decide, or where a rule of this skill or of the project rules
+file names that message.
+
+- **A builder messages its manager** when its PR is green by its own
+  check, after its answer in a review round, at a park, at a denied
+  call and at its end. Progress goes on
+  its ticket, not in a message.
+- **What is on GitHub is sent as a link.** One line says what happened
+  and what the receiver is to do, then the link. The record's text is
+  not repeated in the message.
+- **Several items for one session go in one message.**
+- **No reply to a report that asks nothing.** A session answers a
+  message only when the message asks something, when the report is
+  wrong against the record, or when its own next step changes what the
+  sender does.
+- **Independent tool calls go out together,** in one reply, where none
+  needs another's result. This means several calls in one reply, never
+  a chain inside one call: a builder's one command per call stands. A
+  batch that is refused as a whole is sent again one call at a time; a
+  call that is then refused on its own is a denied call (above).
+
 ## The planner
 
 - Keeps the maps, tickets, tiers and stages; the stage table in the
