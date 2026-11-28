@@ -12,102 +12,93 @@ in this file's git history:
 The last stacked version, with 26 session blocks, is that branch's commit
 before the #243 rewrite.
 
-Last state-back: 2026-11-28, before the second compact of the day that
-Ben asked for. Compacts since the clear of 2026-11-27: 2 once it is
-done. A clear gives this planner a new queue id: send it to the four
-peers.
+Last state-back: 2026-11-28, before a clear Ben asked for. A clear
+gives this planner a new queue id: send it to the peers.
 
 ## Current
 
 ### Saved
 
-2026-11-28, before the second compact Ben asked for that day. Session
-0a6ad927-943a-481d-99fc-f2cbfcda8498, known to the four peers (a
-compact keeps it). Compacts since the clear of 2026-11-27: 2 once this
-compact is done. No background task runs. Nothing waits on Ben in the
-planner's chat. This block is whole: older blocks are in this file's
-git history.
+2026-11-28, before a clear Ben asked for. The saving session was
+0a6ad927-943a-481d-99fc-f2cbfcda8498; **the clear gives a new id, so
+the new session sends it to the four peers and to the Dugout Standard
+session, and asks each for its own.** No background task runs. Nothing
+waits on Ben in the planner's chat. No queue entry of this session is
+open (its two Actions of the day are ticked). This block is whole:
+older blocks are in this file's git history.
 
 ### Next
 
-1. **#285**: Ben's second D rows run failed at D1 (gh project wants
-   two more read scopes; issues/285 issuecomment-7241535234). Ben's
-   button "Own queries (Recommended)": **#328** (medium) makes
-   `board.py` send its own queries; it needs Ben's go in the manager's
-   chat. Its builder posts its list of queries on #328 first; read it
-   if the manager asks. After its PR merges: a new Action for Ben to
-   run the widened D rows on board 2. #285 closes when all pass.
-   The builder's plan is read, no breach. By Ben's button "Run before
-   merge (Recommended)" the PR is NOT merged on Green: it holds until
-   Ben runs the D rows from its branch and all pass (issues/328
-   issuecomment-7241637480). When the manager names a Green head,
-   send the Action. Ben's queue answer (b): one allow rule for
-   docs.github.com, drafted and sent to the manager as an Action. **#329** (low, decimals for
-   `set --number`) is held behind #328's PR; lift it at that merge.
-2. **#317**: PR #322 merged `598a325` on Ben's word, with the planner's
-   four edits (pull/322 issuecomment-7241172319). On 2026-12-12 ask
-   Ben by button for one `usage.py tags` run, compared on #317.
-3. **#324** (PR #304's F1, low) is held behind #240 step 2
-   (`t240-rekey`); lift the label and the `Held:` line when that PR
-   merges.
-4. **The trial line** (PR #309, merged): low and haiku dispatch
-   without a go from 2026-11-28 to 2026-12-12. By 2026-12-12 the
-   planner posts the manager's count on #300 and asks Ben by button
-   whether it becomes standing, runs again or ends.
-5. Reads and rulings as they post: #289 step 1; #295's design (parks
-   with Ben); any head the manager asks for.
-6. **#262:** the rule-text build is the manager's on Ben's go; the mod
-   half's brief is owed after #240 step 2 merges.
-7. **#111** (the Ask planner button): all five questions ruled; the
-   build brief is owed after #240 step 2 merges and after #262's mod
-   half. Ben on 2026-11-28: keep the order, it was a check that it is
-   not lost.
-8. The draft advisory GHSA-27j5-qx96-v8w3: the dynasty planner's
+1. **#328 and #285** (the boards token). PR #330 (#328, branch
+   `worktree-t328-ownqueries`) makes `board.py` send its own queries.
+   By Ben's button "Run before merge (Recommended)" it is NOT merged
+   on Green (issues/328 issuecomment-7241637480). When the manager
+   names a Green head: send the manager a ready Action for Ben to run
+   the D rows from the PR's branch on board `benjamininja/2` with
+   `--boards-only`, with the new session's id; the manager adds the
+   branch's folder. Post each result on #328. A failed row is fixed by
+   a commit on the same PR and the run is asked again. #285 closes on
+   the passing run and the merge. Then lift **#329** (low, decimals
+   for `set --number`; `held` label and `Held:` line).
+2. **#324** (PR #304's F1, low) is held behind PR #326 (#240 step 2,
+   branch `worktree-t240-rekey`); lift the label and the `Held:` line
+   when that PR merges.
+3. **After PR #326 merges:** write the brief for #262's mod half, then
+   the brief for **#111** (the Ask planner button; all five questions
+   are ruled). Ben on 2026-11-28: keep that order.
+4. **2026-12-12, two buttons to Ben:** (a) the trial line of #300 (low
+   and haiku dispatch without a go since 2026-11-28): post the
+   manager's count on #300 and ask whether it becomes standing, runs
+   again or ends; (b) one `usage.py tags` run for #317 (PR #322,
+   merged `598a325`), compared on #317 with #263's figures.
+5. **#323** (owner-led): the wave manager, trialed in Dugout Standard
+   first. Length by Ben's button "10 merged PRs (Recommended)": the
+   first 10 merged builder PRs there, or 2026-12-31 if sooner
+   (issues/323 issuecomment-7241078964). Then one `usage.py` run on
+   Ben's word, the figures on #323 and a button: rule for all, again,
+   or end. The Dugout session posts its answers to the ticket's eight
+   points on #323 and says when the tenth PR merges.
+6. Reads and rulings as they post: #289 step 1; #295's design (parks
+   with Ben); any head or plan the manager asks for.
+7. The draft advisory GHSA-27j5-qx96-v8w3: the dynasty planner's
    pointer is dynasty #564 issuecomment-7239843007; no date yet. Tell
    it when PR #211 merges and when #295's design is approved. No
    detail of an open gap goes on any public record.
-9. **#323** (owner-led): the wave manager, trialed in Dugout Standard
-   first (Ben's button there and his word here). Length by Ben's
-   button "10 merged PRs (Recommended)": the first 10 merged builder
-   PRs in Dugout Standard, or 2026-12-31 if sooner. Then one
-   `usage.py` run on Ben's word, the figures on #323 and a button:
-   rule for all, again, or end. The Dugout session answers the
-   ticket's eight points for the trial.
-10. The older list: #217 C to F, the assistant's owner-queue text PR,
+8. The older list: #217 C to F, the assistant's owner-queue text PR,
    the ADR index sentence, #167.
 
 ### Waiting
 
-- On Ben, in the manager's chat: the go for #317, for #262's rule-text
-  build and for every medium or high dispatch.
+- On Ben, in the manager's chat: the merge word for PR #326 and, after
+  his D rows run, for PR #330; the go for #262's rule-text build and
+  for every medium or high dispatch.
 - On Ben, in the queue: nothing raised by this session is open.
-- On the manager: the builders for #307 and #319, PR #318 (#298, to
-  merge main and take plugin version 0.6.4), PR #304 (#293), then
-  #240 step 2.
+- On the manager: PR #330's and PR #326's re-proofs; the Green head
+  of PR #330 named to the planner.
 - In the hook lane: PR #211, then #295, then #289 step 2, then #200.
-  In the owner-queue lane: PR #304, #240 step 2, #262's mod half,
-  #111. The repair of PR #182 follows PR #318.
-- The dynasty planner was told of the `oneshot` hand step on
-  2026-11-28; the send noted a new session under that name, so its id
-  below may be stale until it sends its own.
-- A report went to the Dugout Standard session on how context is
-  saved here (Dugout-Standard-App issue 49); nothing is owed.
+  In the owner-queue lane: PR #326, #262's mod half, #111, #324. The
+  repair of PR #182 is still owed.
+- Builders dispatched after 2026-11-28 09:41 may read docs.github.com
+  (one WebFetch allow rule Ben added by hand; issues/328
+  issuecomment-7241659807).
 
 ### Peers
 
-Ids of 2026-11-28. Tools-builder-manager
-ea58e038-9092-4552-9e4c-32bb3cdf8281; dff-central-planner
-0ef68551-3dad-4f09-b5af-b164a0307ae9; dff-central-builder-manager
+Ids of 2026-11-28; ask each for its own after the clear.
+Tools-builder-manager ea58e038-9092-4552-9e4c-32bb3cdf8281;
+dff-central-planner 0ef68551-3dad-4f09-b5af-b164a0307ae9 (a send on
+2026-11-28 noted a new session under that name, so this id may be
+stale); dff-central-builder-manager
 637314ca-f6ae-4049-a3ff-576bd1479cfe; personal-assistant
-061c1d24-09c1-4c01-8d89-ff693eb974d9.
+061c1d24-09c1-4c01-8d89-ff693eb974d9. The Dugout Standard session is
+named dugout-standard-planner (no id held).
 
 ### Reads and checks due
 
-- 2026-12-31 or Dugout Standard's tenth merged builder PR: the wave
-  manager's figures on #323 and the button to Ben.
-- 2026-12-12: the `usage.py tags` re-run for #317, asked by button.
-- 2026-12-12: the trial's count on #300 and the button to Ben.
-- Two weeks after #317 merges: the `usage.py tags` re-run.
+- When the manager names PR #330's Green head: the D rows Action.
+- When PR #326 merges: lift #324; the two briefs of Next 3.
+- 2026-12-12: the two buttons of Next 4.
+- 2026-12-31 or Dugout Standard's tenth merged builder PR: #323.
 - The planner's worktrees `t300-rule-texts`, `t294-start-lines`,
   `t300-never-line`, `t300-trial-line`, `t262-row1l` and
   `t285-role-line` hold merged branches. Removing them is the
@@ -138,6 +129,11 @@ All on 2026-11-28, by Ben's button unless said.
   first (recorded on #323).
 - Merged on Ben's word: PR #318 `ed3a569` (#298), PR #304 `148b48e`
   (#293). #240 step 2 is dispatched.
+- The docs.github.com allow rule for builders: Ben's pane answer (b)
+  (issues/328 issuecomment-7241629184), added by Ben's hand.
+- #328's plan read, no breach; decimals are #329 (issues/328
+  issuecomment-7241599804). PR #322's four edits (pull/322
+  issuecomment-7241172319). #324 and #325 filed from review findings.
 - #328: "Run before merge (Recommended)" (issues/328
   issuecomment-7241637480), after the planner wrongly closed two
   refused calls with nothing queued.
