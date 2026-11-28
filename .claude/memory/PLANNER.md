@@ -37,17 +37,14 @@ git history.
    with `--boards-only` on board 2, with this session's id. **#285**
    closes when D1 passes. If D1 still fails it comes back to the
    planner; the next option is the script's own query, not `read:org`.
-2. **#317** (low, gate text; a Messages between sessions section in
-   `session-rules`, Ben's button "Both rules (Recommended)", plus the
-   example file's `//oneshot` note and the dispatch-list sentence).
-   Unheld on 2026-11-28 after PR #313 merged `f88d633` (issues/317
-   issuecomment-7240798267). It keeps Ben's go and merge word, goes
-   after PR #318 (both move the plugin's version line), and its head
-   goes to the dynasty planner. Two weeks after it merges: one
+2. **#317** (low, gate text): dispatched on Ben's go as `t317-msgrules`
+   (the manager's report). Its head goes to the dynasty planner; it
+   keeps Ben's merge word. Two weeks after it merges: one
    `usage.py tags` run on Ben's word, compared on #317.
-3. **#319** (low; usage.py's extension list and three print fixes).
-   Unheld on 2026-11-28 after PR #316 merged `13481f0` (issues/319
-   issuecomment-7240798623). It may dispatch under the trial line.
+3. **#319** (PR #320) and **#307** (PR #321) are under review (the
+   manager's report). The ticket from PR #304's finding F1 is filed,
+   low, held behind #240 step 2 (`t240-rekey`); lift the label and the
+   `Held:` line when that PR merges.
 4. **The trial line** (PR #309, merged): low and haiku dispatch
    without a go from 2026-11-28 to 2026-12-12. By 2026-12-12 the
    planner posts the manager's count on #300 and asks Ben by button
@@ -133,6 +130,8 @@ All on 2026-11-28, by Ben's button unless said.
   issuecomment-7239984512).
 - #323 filed; Ben typed: great call on trialing dugout standard,
   first (recorded on #323).
+- Merged on Ben's word: PR #318 `ed3a569` (#298), PR #304 `148b48e`
+  (#293). #240 step 2 is dispatched.
 - Merged, builders': PR #313 `f88d633` (the `oneshot` profile, on Ben's
   button), PR #316 `13481f0` (#312). Holds lifted on #317 and #319.
 - Merged, the planner's own: PR #302 `0105706`, PR #310 `3eba79a`
