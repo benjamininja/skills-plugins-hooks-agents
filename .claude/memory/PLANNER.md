@@ -94,6 +94,17 @@ not dispatch file; pull/313 issuecomment-7240447362); the fixed head
 goes to the dynasty planner, then Ben's merge word. After it merges,
 the `oneshot` entry in a project's profiles file is Ben's hand step,
 raised by that project's planner (dynasty's).
+PR #313 then got six exact edits from the planner (the dynasty
+planner's change: a oneshot ticket always keeps Ben's go; the reads
+before the queue entry and the relay; pull/313 issuecomment-7240460466
+and 7240483125); its new head goes to the dynasty planner, then Ben.
+**#263 is ruled and closed:** messages are 39% of a manager's tokens;
+Ben's button "Both rules (Recommended)"; #317 (low, a Messages
+between sessions section in `session-rules`) is filed, held behind PR
+#313, keeps Ben's go as gate text. Due two weeks after #317 merges:
+a `usage.py tags` run on Ben's word, compared on #317. Ben answered
+the catalog Decision (a): no allow rule for builders (issues/299
+issuecomment-7240505050).
 Worktrees `t262-row1l`, `t285-role-line`, `t300-rule-texts`, `t294-start-lines`,
 `t300-never-line` and `t300-trial-line` hold merged branches.
 
