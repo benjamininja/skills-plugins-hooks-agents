@@ -35,12 +35,13 @@ older blocks are in this file's git history.
    `1abdfe1` (checked), after Ben's D rows run passed six of six
    (issues/328 issuecomment-7243277622). #328 and #285 are closed;
    #329's hold is lifted (issues/329 issuecomment-7243313395), so
-   the manager may dispatch it at low. Open: **#331** (F1, low, held
-   behind #329's PR, same file): lift it when that PR merges.
-   **#332** (F2, medium, held): the personal-assistant is asked for
-   the first-use table of its step 1; when it comes, check it against
-   the board, post it on #332, then a button to Ben on a standing
-   proof, or a brief for any refused text.
+   the manager may dispatch it at low (`venv: light` since the
+   manager's finding, issues/329 issuecomment-7243353101). Open:
+   **#331** (F1, low, `venv: light`, held behind #329's PR, same
+   file): lift it when that PR merges. #332 is closed: three of seven
+   texts proved by the assistant's first use, four left to their
+   first use by Ben's button. **A `tools/` ticket whose proof is
+   pytest says `venv: light`, never `no`.**
 2. **#324** (PR #304's F1, low) is held behind PR #326 (#240 step 2,
    branch `worktree-t240-rekey`); lift the label and the `Held:` line
    when that PR merges.
@@ -73,7 +74,6 @@ older blocks are in this file's git history.
 - On Ben, in the manager's chat: the merge word for PR #326; the go
   for #262's rule-text build and for every medium or high dispatch.
 - On the manager: PR #326's re-proof; #329's dispatch.
-- On the personal-assistant: #332's first-use table.
 - In the hook lane: PR #211, then #295, then #289 step 2, then #200.
   In the owner-queue lane: PR #326, #262's mod half, #111, #324. The
   repair of PR #182 is still owed.
@@ -94,7 +94,6 @@ b5f4cf26-115a-4e01-b766-e8504c065057; Tools-builder-manager
 ### Reads and checks due
 
 - When #329's PR merges: lift #331.
-- When the personal-assistant's table comes: #332 (Next 1).
 - When PR #326 merges: lift #324; the two briefs of Next 3.
 - 2026-12-12: the two buttons of Next 4.
 - 2026-12-31 or Dugout Standard's tenth merged builder PR: #323.
@@ -112,6 +111,8 @@ All on 2026-11-28, by Ben's button unless said.
   advisories F1 and F2, both held (planner).
 - Merged: PR #330 `1abdfe1` (#328), on Green after that run (pull/330
   issuecomment-7243279315). #285 closed; #329's hold lifted.
+- #332: "At first use (Recommended)", in the planner's chat; closed
+  (first-use table: issues/332 issuecomment-7243495141).
 
 - The cut is reversed and #300 is whole: "Reverse all, #300 whole
   (Recommended)" (issues/300 issuecomment-7239515907).
