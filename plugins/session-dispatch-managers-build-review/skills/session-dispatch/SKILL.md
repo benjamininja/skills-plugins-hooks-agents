@@ -23,8 +23,22 @@ All of these hold, or there is no dispatch:
   "Tiers"). No tier, no dispatch: ask the planner;
 - the owner has said, in this session, that this work is to be
   dispatched now. A stage in the project rules file says what may be
-  dispatched and in what order; it is not, alone, the word to start;
+  dispatched and in what order; it is not, alone, the word to start.
+  **One exception.** A project rules file may name tiers, never above
+  low, whose tickets are dispatched without that word. It holds only
+  for a ticket whose `Tier:` line the planner set, whose brief names
+  its files and its proof, and which is not held: neither by the
+  owner, nor by the planner's order behind another ticket. The project
+  rules file names how a hold is marked, and a held ticket keeps the
+  owner's word. The owner having invoked this skill in
+  the session stays required, and nothing under "Never" in
+  `session-rules` loosens. The manager says in its next report which
+  tickets it dispatched this way. A project whose rules file names no
+  such tier keeps the owner's word for every dispatch;
 - the brief is written to a file and holds no double quote;
+- a brief whose work changes the project's list of packages says
+  `venv: full` (`session-rules`, "A brief"). One that says anything
+  else goes back to the planner;
 - the project's `.claude/dispatch.json` exists, and the project is on
   the owner's list (`<user profile>/.claude/dispatch-projects.json`).
   The owner writes both; a session never does, and never runs the
@@ -56,6 +70,14 @@ Read `references/dispatch.md` before the first dispatch of a session.
 
 A refusal by the script is not worked around. It is fixed at its cause
 or parked.
+
+**The main checkout's packages change only while no builder is
+running.** A light environment reads the main checkout's packages, so
+an install, an upgrade or a removal there changes what every running
+builder tests against. Before any such change the manager reads its
+list of running builders; if one is running, the change waits for its
+closeout or is parked. The install itself is the owner's, or the
+manager's on the owner's word.
 
 ## Merging a builder's PR
 

@@ -288,6 +288,72 @@ def test_a_checkout_without_the_default_head_stops_before_any_push():
     assert code == 1
 
 
+class FakeBoard:
+    """Stands in for tools/board.py; records what boards_rows was asked."""
+
+    def __init__(self, rows=None, raises=None):
+        self.asked = []
+        self.rows = rows if rows is not None else [
+            ("D1 board", "gh project view 3 --owner someone", "PASS", ""),
+            ("D2 scopes", "gh api -i rate_limit", "PASS", "scopes: project"),
+            ("D2 refused", f"gh api repos/{REPO}/actions/secrets", "PASS", "refused (HTTP 403)"),
+        ]
+        self.raises = raises
+
+    def boards_rows(self, owner, number, repo):
+        self.asked.append((owner, number, repo))
+        if self.raises:
+            raise self.raises
+        return self.rows
+
+
+def test_without_boards_the_board_script_is_not_loaded(monkeypatch):
+    def refuse():
+        raise AssertionError("board.py was loaded")
+
+    monkeypatch.setattr(token_check, "load_board", refuse)
+    code, out = run_main(Fake())
+    assert code == 0 and "| D" not in out
+
+
+def test_boards_adds_the_d_rows_for_that_board_and_repository(monkeypatch):
+    fake_board = FakeBoard()
+    monkeypatch.setattr(token_check, "load_board", lambda: fake_board)
+    code, out = run_main(Fake(), "--boards", "someone/3")
+    assert fake_board.asked == [("someone", "3", REPO)]
+    for rid in ("D1 board", "D2 scopes", "D2 refused"):
+        assert f"| {rid} |" in out
+    assert code == 0
+
+
+def test_a_failed_d_row_fails_the_run(monkeypatch):
+    rows = [("D2 refused", "gh api x", "FAIL", "the token was let through")]
+    monkeypatch.setattr(token_check, "load_board", lambda: FakeBoard(rows=rows))
+    code, out = run_main(Fake(), "--boards", "someone/3")
+    assert code == 1 and "the token was let through" in out
+
+
+def test_a_board_script_that_raises_is_a_fail_row(monkeypatch):
+    monkeypatch.setattr(token_check, "load_board",
+                        lambda: FakeBoard(raises=RuntimeError("store gone")))
+    code, out = run_main(Fake(), "--boards", "someone/3")
+    assert code == 1 and "RuntimeError: store gone" in out
+
+
+@pytest.mark.parametrize("arg", ["someone", "someone/x", "some one/3", "@me/3", "a/b/3", "someone/3;x"])
+def test_a_bad_boards_argument_is_refused_before_any_call(arg):
+    fake = Fake()
+    with pytest.raises(SystemExit):
+        token_check.main([REPO, "--boards", arg], runner=fake, now=fixed_now)
+    assert fake.calls == []
+
+
+def test_the_real_board_script_loads_and_names_the_rows():
+    module = token_check.load_board()
+    assert callable(module.boards_rows)
+    assert module.ENTRY == "skills-plugins-hooks-agents/boards-token"
+
+
 def test_a_non_https_origin_is_noted():
     fake = Fake()
     fake.origin = "git@github.com:someone/some-repo.git\n"

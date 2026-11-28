@@ -53,8 +53,33 @@ built (#231).
 
 Every ticket carries a `Tier:` line at the top of its body and the matching
 `tier:` label (`tier:low`, `tier:medium`, `tier:high`, `tier:none`, or
-`tier:unset` until the planner sets one). This repository has no
-`tier:haiku` label yet: no ticket here has been haiku-tier.
+`tier:unset` until the planner sets one). The `tier:haiku` label exists
+since 2026-11-28; no ticket here has been haiku-tier yet.
+
+**A held ticket** carries the `held` label and a `Held:` line in its
+body, next to the `Tier:` line, that gives the reason (for example
+`Held: behind PR #303, by the planner's order`). Only the planner or the
+owner sets or removes either. A held ticket is dispatched only on the
+owner's word.
+
+**Dispatch without the owner's word: a trial, 2026-11-28 to 2026-12-12**
+(#300, the owner's buttons of 2026-11-28). The tiers this repository
+names for the exception in `session-dispatch`, "Before a dispatch", are
+**low and haiku**. Every condition there applies as written.
+
+- Before each such dispatch the manager reads the ticket's labels and
+  body. A `held` label or a `Held:` line means no dispatch without the
+  owner's word. If the two disagree, the ticket counts as held and the
+  manager tells the planner.
+- The manager lists each such dispatch in its state file by ticket, and
+  marks any that went wrong: the work outgrew its tier, the planner read
+  a plan breach, a blocking finding was upheld, or the merge was
+  reverted.
+- **After 2026-12-12 this paragraph names no tier**, and every dispatch
+  keeps the owner's word again. The planner reports the count on #300 by
+  that day and asks the owner by button whether the trial becomes
+  standing, runs again or ends. Only a PR on the owner's answer changes
+  the dates.
 
 The owner's GitHub login is `benjamininja`. On an issue or a PR, only
 text that login wrote is the record (`session-rules`, "Whose text counts

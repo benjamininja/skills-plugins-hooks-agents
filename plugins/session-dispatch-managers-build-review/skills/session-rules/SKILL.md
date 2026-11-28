@@ -59,7 +59,12 @@ brief also names the files. A medium brief names the question, where to
 start and the shape of the answer. Each proof command is one a builder
 may run under the builders' settings file, or the brief says the manager
 runs it at re-proof. A brief names its `Profile:`, or `none`, and for
-`probe` it also names its hosts, as the template does. A brief holds no
+`probe` it also names its hosts, as the template does. A brief names
+its `venv:` line (`light`, `full` or `no`). A brief whose work changes
+the project's list of packages (`requirements.txt` or the file the
+project rules file names for it) always says `venv: full`: a light
+environment reads the main checkout's packages, so it can't prove a
+change to them. A brief holds no
 double quote. Template:
 `templates/brief.md` in this plugin.
 
@@ -71,6 +76,13 @@ double quote. Template:
   a workflow's `dispatches` endpoint, or the GitHub web page. A dispatch
   is the owner's. An agent acts through the owner's token, so a check
   on who started the run can't tell them apart; this rule is the guard.
+- Approving, rejecting or bypassing a deployment that waits for review,
+  or re-running a run of a workflow, by any route: `gh api` on a run's
+  `pending_deployments` or rerun endpoints, `gh run rerun`, or the
+  GitHub web page or app. An approval or a re-run is the owner's, as a
+  dispatch is: an agent acts through the owner's token, so a check on
+  who approved can't tell them apart. A run that failed for no fault of
+  the branch is re-run by the owner, or cleared by a new commit.
 - Writing or editing a settings file, a permission file,
   `.claude/dispatch.json` or the owner's list of projects for the
   dispatch script. They are the owner's; an agent proposes text

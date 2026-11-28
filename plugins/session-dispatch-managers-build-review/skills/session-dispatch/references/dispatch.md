@@ -6,8 +6,8 @@
 
 ```
 dispatch.ps1 -Name <name> -Tier <haiku|low|medium|high> -PromptFile <file>
-             [-Profile <name>] [-TurnCap <n>] [-Base origin/<branch>] [-NoSetup]
-             [-Project <folder>] [-Apply]
+             [-Profile <name>] [-TurnCap <n>] [-Base origin/<branch>]
+             [-FullSetup] [-NoSetup] [-Project <folder>] [-Apply]
 ```
 
 It is a dry run unless `-Apply` is given. The dry run does not fetch: it
@@ -42,8 +42,15 @@ prints the base (`origin/main`, or the brief's `Base:` line passed as
    repository. The base is read as `refs/remotes/<base>`. A failed fetch
    or a missing base refuses, and nothing is started. A worktree already
    there is left as it is, and no fetch is made for it.
-6. Runs the config's setup commands in the worktree. `-NoSetup` skips
-   them, for a read-only job whose brief says so.
+6. Runs one of the config's two setup lists in the worktree, by the
+   brief's `venv:` line. `setup`, the light list, runs by default, for
+   `venv: light`. The manager passes `-FullSetup` for `venv: full`: it
+   runs `setupFull` in place of `setup`, and an empty or missing
+   `setupFull` is refused before step 5, so nothing is made. The manager
+   passes `-NoSetup` for `venv: no`: no list runs, and it wins over
+   `-FullSetup`. The dry run prints the list's name and its lines. A
+   missed `-FullSetup` is not caught here: the builder's work fails at
+   the first missing package. See the plugin README, Setup.
 7. Starts the session in the background from the main checkout, in
    `dontAsk` mode, with the config's agent. The prompt is the config's
    read line, the brief, then "Or stop after N turns." That sentence is
