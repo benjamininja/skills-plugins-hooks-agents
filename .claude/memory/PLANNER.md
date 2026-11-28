@@ -64,7 +64,12 @@ git history.
    pointer is dynasty #564 issuecomment-7239843007; no date yet. Tell
    it when PR #211 merges and when #295's design is approved. No
    detail of an open gap goes on any public record.
-9. The older list: #217 C to F, the assistant's owner-queue text PR,
+9. **#323** (owner-led): the wave manager. Ben on 2026-11-28: trial it
+   in Dugout Standard first, no rule for all projects before that.
+   The Dugout Standard session answers the ticket's eight points for
+   the trial; the planner reads them on #323 and carries any rule
+   text afterwards, on Ben's button.
+10. The older list: #217 C to F, the assistant's owner-queue text PR,
    the ADR index sentence, #167.
 
 ### Waiting
@@ -122,6 +127,8 @@ All on 2026-11-28, by Ben's button unless said.
   issuecomment-7240534221); #317 filed.
 - The deny rules reach the planner's session (issues/300
   issuecomment-7239984512).
+- #323 filed; Ben typed: great call on trialing dugout standard,
+  first (recorded on #323).
 - Merged, builders': PR #313 `f88d633` (the `oneshot` profile, on Ben's
   button), PR #316 `13481f0` (#312). Holds lifted on #317 and #319.
 - Merged, the planner's own: PR #302 `0105706`, PR #310 `3eba79a`
