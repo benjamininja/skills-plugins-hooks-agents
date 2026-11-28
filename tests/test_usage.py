@@ -512,6 +512,24 @@ def test_a_message_queued_and_then_stored_as_meta_counts_once(tmp_path):
     assert s.replies[1].after_peer
 
 
+def test_a_different_peer_message_after_a_queued_one_still_opens_a_turn(tmp_path):
+    # F1 of #308: message A is queued, the owner interrupts, then a different message B
+    # arrives as a meta record before the next reply. B is not A: it opens a turn.
+    b = {**user("Another Claude session sent a message:\n<cross-session-message from=y>B-TEXT", T(21),
+                meta=True), "origin": {"kind": "peer"}, "turnOrigin": "peer"}
+    s = stop_session(tmp_path, [
+        user(PROMPT, T(21)),
+        reply("a", T(21), stop="tool_use", calls=[("u1", "Bash", {"command": "ls"})]),
+        queued(T(21), "<cross-session-message from=x>A-TEXT"),
+        result("u1", RESULT, T(21)),
+        user("[Request interrupted by user]", T(21)),
+        b,
+        reply("b", T(21)),
+    ])
+    assert s.openers == ["typed", "typed", "peer message"]
+    assert s.opener_of(s.replies[1]) == "peer message" and s.replies[1].after_peer
+
+
 def test_tags_counts_messages_in_by_how_they_arrive(tmp_path, capsys):
     st = tmp_path / "store"
     write(st / "C--x" / "qqqq0001-0000.jsonl", [

@@ -53,7 +53,8 @@ its text decides only when it has neither. A meta record opens a turn only
 when it is a peer message. A peer message queued as a queued_command
 attachment arrives inside a running turn: it opens none, and the next reply is
 tagged message in. A message queued and then stored as a meta record before
-the next reply counts once.
+the next reply counts once, matched by its text from the tag on; a different
+peer message in between still opens its turn.
 
 Method point 1, per-read sizes (`reads`): only the turn's context growth is
 measured. Each tool result is sized in characters and turned into tokens at the
@@ -201,6 +202,7 @@ class Session:
     bad_lines: int = 0
     subagents: list["Session"] = field(default_factory=list)
     queued_peers: int = 0  # peer messages queued since the last reply, waiting for the next
+    queued_bodies: list[str] = field(default_factory=list)  # their text from the tag on, to match only
 
     def counted(self) -> list[Reply]:
         return [r for r in self.replies if r.counted]
@@ -271,6 +273,13 @@ def source_kind(o: dict) -> str | None:
     if not isinstance(k, str):
         return None
     return SOURCE_KINDS.get(k, "other source")
+
+
+def peer_body(text: str) -> str | None:
+    """A peer message's text from its tag on, so one stored twice can be matched.
+    Compared only, never printed."""
+    pos = text.find(PEER_MARK)
+    return text[pos:].strip() if pos >= 0 else None
 
 
 def is_queued_peer(att: dict) -> bool:
@@ -358,6 +367,7 @@ def read_session(path: str, sidechain: bool = False) -> Session:
                     note_attachment(s, o["attachment"])
                     if is_queued_peer(o["attachment"]):
                         s.queued_peers += 1
+                        s.queued_bodies.append(peer_body(o["attachment"]["prompt"]))
             elif t == "api-request-shape":
                 if s.shape is None:
                     s.shape = o.get("shape")
@@ -382,6 +392,7 @@ def read_reply(s: Session, by_id: dict, o: dict, msg: dict, ts: str) -> None:
                   num(u, "cache_read_input_tokens"), num(u, "output_tokens"), len(s.openers),
                   peers_before=s.queued_peers)
         s.queued_peers = 0
+        s.queued_bodies = []
         by_id[mid] = r
         s.replies.append(r)
         s.events.append(("reply", r))
@@ -421,8 +432,10 @@ def read_user(s: Session, o: dict, msg: dict, ts: str) -> None:
     s.events.append(("user", kind, meta, len(text), ts))
     if meta and kind != "peer message":
         return  # a meta record is injected text, unless it is a peer message
-    if kind == "peer message" and s.queued_peers:
-        return  # the same message, queued and then stored again before the next reply: once
+    body = peer_body(text) if kind == "peer message" else None
+    if body is not None and body in s.queued_bodies:
+        s.queued_bodies.remove(body)  # the same message, queued and stored again before the next reply
+        return
     s.openers.append(kind)
 
 
