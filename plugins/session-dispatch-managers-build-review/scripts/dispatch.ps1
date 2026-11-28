@@ -123,20 +123,25 @@ if (-not $settingsRel) { Refuse 'the config file names no buildersSettings file'
 if ($readLine.Contains('"')) { Refuse 'the readLine of the config file holds a double quote' }
 
 # The setup list: setup by default, setupFull with -FullSetup, none with
-# -NoSetup, which wins. An empty setupFull is refused here, before anything
-# is made.
+# -NoSetup, which wins. In both lists a line that is empty after a trim is
+# not a line: it is dropped before the list is printed or run. An empty
+# setupFull is refused here, before anything is made.
+function SetupList([string]$Key) {
+    return @(Setting $Key @() | Where-Object { "$_".Trim() -ne '' })
+}
+
 if ($NoSetup) {
     $setupName = ''
     $setup = @()
 } elseif ($FullSetup) {
     $setupName = 'setupFull'
-    $setup = @(Setting 'setupFull' @() | Where-Object { $_ })
+    $setup = @(SetupList 'setupFull')
     if ($setup.Count -eq 0) {
         Refuse '-FullSetup was passed, but the config file has no setupFull list or it is empty. The owner fills setupFull in the config, or the dispatch runs without -FullSetup'
     }
 } else {
     $setupName = 'setup'
-    $setup = @(Setting 'setup' @())
+    $setup = @(SetupList 'setup')
 }
 
 # 2. The tier.

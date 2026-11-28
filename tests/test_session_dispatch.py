@@ -182,6 +182,48 @@ def test_the_dry_run_names_the_list_it_would_run(project):
     assert "[in the worktree] python -m pip --version" in full
 
 
+def with_setup(project, value):
+    """Set the config's setup list to value."""
+    path = project / ".claude" / "dispatch.json"
+    config = json.loads(path.read_text(encoding="utf-8"))
+    config["setup"] = value
+    path.write_text(json.dumps(config), encoding="utf-8")
+
+
+def test_a_setup_full_of_one_blank_space_line_is_refused_and_makes_no_worktree(project):
+    with_setup_full(project, ["   "])
+    for args in (("-FullSetup",), ("-FullSetup", "-Apply")):
+        done = dispatch(project, "-Tier", "medium", *args)
+
+        assert done.returncode == 2
+        assert "dispatch refused: -FullSetup was passed" in done.stderr
+        assert "DRY RUN" not in done.stdout
+        assert not (project / ".claude" / "worktrees").exists()
+
+
+def test_a_setup_with_an_empty_line_and_a_real_line_runs_the_real_line_only(project):
+    with_setup(project, ["", "python -m venv .venv"])
+    done = dispatch(project, "-Tier", "medium")
+
+    assert done.returncode == 0, done.stderr
+    assert "setup:     setup (1 line)" in done.stdout
+    listed = [line for line in done.stdout.splitlines() if "[in the worktree]" in line]
+    assert listed == ["  [in the worktree] python -m venv .venv"]
+
+
+def test_the_dry_run_prints_no_empty_line_for_either_list(project):
+    with_setup(project, ["  ", "python -m venv .venv", "\t"])
+    with_setup_full(project, ["", FULL, " "])
+
+    for args in ((), ("-FullSetup",)):
+        done = dispatch(project, "-Tier", "medium", *args)
+
+        assert done.returncode == 0, done.stderr
+        listed = [line for line in done.stdout.splitlines() if "[in the worktree]" in line]
+        assert len(listed) == 1, done.stdout
+        assert all(line.split("[in the worktree]", 1)[1].strip() for line in listed)
+
+
 @pytest.mark.parametrize("cap", ["0", "-3", "81"])
 def test_a_turn_cap_that_is_not_a_lowering_is_refused(project, cap):
     done = dispatch(project, "-Tier", "medium", "-TurnCap", cap)
