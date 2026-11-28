@@ -78,6 +78,23 @@ list below where they differ).**
   day; the rest cannot. The record's link is owed from the dynasty
   planner.
 
+**Later still on 2026-11-28.**
+- **PR #305** (head `a535511`, branch `docs/start-lines-294`, worktree
+  `t294-start-lines`): #294's two start lines, written by the planner
+  on the manager's relay of Ben's button "Tools planner
+  (Recommended)". It waits for the manager's re-proof and Ben's merge
+  word.
+- **PR #303** moved to `9f1d2c9`: the dynasty planner signed off the
+  venv text and asked one condition on the exception (a held ticket
+  keeps the owner's word; pull/303 issuecomment-7239838398). Added;
+  back with it for a read. It still takes main in after #302 merges.
+- **#262:** the re-read is accepted and the two parked points ruled
+  (issues/262 issuecomment-7239858390). The rule-text build runs after
+  PR #302 and #303 merge. Owed by the planner: the mod's brief after
+  #240 step 2, and row 1l (the manager's role file) as its own PR.
+- The dynasty planner told Ben the advisory's fallback applies; its
+  pointer and the new date are owed.
+
 **Next, in order.**
 1. The draft advisory GHSA-27j5-qx96-v8w3: the status of its gaps and
    the Tools view (do not publish whole on 2026-11-28; move the date
