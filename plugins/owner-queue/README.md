@@ -332,6 +332,24 @@ only when none of the files exists.
   write into the file the entry was read from. The pane's record of the lines
   it wrote is kept under the file's path plus the entry, so a line in one
   queue is never taken for a line in another.
+- **A folder move (0.12.2).** The mod's store (`$.store`, one file the
+  engine keeps for the mod) holds five records keyed by a queue file's
+  path: `answers` and `notes` (the lines the pane wrote), `delivered:<id>`
+  and `noted:<id>` (what each session was already told), and `logged`.
+  When a checkout moves, a record's path names a file that is gone, and
+  without a move every pane-written line would read as not the pane's and
+  would never be carried. So at each read the mod moves them: a path is
+  old when no queue the pane reads names it, it is absolute, and the file
+  is not there. Its new path is the one queue read now with the same repo
+  folder name that holds an entry found under the old path. The records of
+  every session move first, then `answers` and `notes`, then `logged`, so
+  a stop part way never says an Answer twice, and the next read finishes
+  the move. A key already at the new path keeps its line, and Note lines
+  are joined. A record whose entry has left the file moves with the rest;
+  nothing is deleted, and no queue file is touched. With no match, or more
+  than one, nothing moves and a toast names the old path, once per
+  session. A session whose own queue file does not exist is told so once,
+  by a toast that names the path.
 
 ### The problems log
 
