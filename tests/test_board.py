@@ -126,6 +126,20 @@ def test_bad_arguments_stop_before_the_store_and_any_call(argv):
     assert fake.calls == []
 
 
+@pytest.mark.parametrize("flag,value", [
+    ("--number", "-1.25e2"), ("--number", "-3."), ("--num", "-1E-2"),
+])
+def test_a_negative_number_after_a_space_is_told_to_use_the_equals_sign(flag, value, capsys):
+    fake = Fake()
+    argv = ["set", OWNER, NUMBER, "--item", ITEM, "--field", FIELD, flag, value]
+    with pytest.raises(SystemExit) as exc:
+        board.main(argv, runner=fake, read=never_read)
+    assert exc.value.code == 2 and fake.calls == []
+    err = capsys.readouterr().err
+    assert f"a negative number is written with the equals sign, as --number={value}" in err
+    assert "expected one argument" not in err
+
+
 def test_only_the_five_actions_exist():
     parser_actions = {"items", "fields", "views", "add", "set"}
     for action in parser_actions:
@@ -437,39 +451,65 @@ def test_a_failed_page_is_passed_on_with_its_exit_code(capsys):
     assert captured.out == "" and "HTTP 502" in captured.err
 
 
-def test_add_stops_with_exit_2_when_the_token_cannot_read_the_issue(capsys):
-    class Private(Fake):
-        def __call__(self, argv, token):
-            if f"query={board.RESOURCE_QUERY}" in argv:
-                self.calls.append((list(argv), token))
-                return 0, "", ""  # resource is null: the --jq answer is empty
-            return super().__call__(argv, token)
+class Lookup(Fake):
+    """The resource lookup answers (code, out, err); every other call as Fake."""
 
-    fake = Private()
-    assert board.main(["add", OWNER, NUMBER, URL], runner=fake, read=reader()) == 2
+    def __init__(self, code, out, err):
+        super().__init__()
+        self.answer = (code, out, err)
+
+    def __call__(self, argv, token, stdin=None):
+        if f"query={board.RESOURCE_QUERY}" in argv:
+            self.calls.append((list(argv), token))
+            self.inputs.append(stdin)
+            return self.answer
+        return super().__call__(argv, token, stdin)
+
+
+def add_with_lookup(code, out, err):
+    fake = Lookup(code, out, err)
+    exit_code = board.main(["add", OWNER, NUMBER, URL], runner=fake, read=reader())
     assert not [c for c, _ in fake.calls if f"query={board.ADD_MUTATION}" in c]
-    err = capsys.readouterr().err
-    assert err.strip() == ("board.py: the boards token cannot read that repository's "
-                           "issue or pull request")
+    return exit_code
 
 
-@pytest.mark.parametrize("err,code", [
-    ("gh: Your token has not been granted the required scopes (INSUFFICIENT_SCOPES)", 2),
-    ("gh: Could not resolve to a Repository with the name 'x'.", 2),
-    ("gh: Resource not accessible (HTTP 403)", 2),
-    ("error connecting to api.github.com", 1),
+MISSING = "board.py: no issue or pull request is at that link"
+REFUSED = "board.py: the boards token cannot read that repository's issue or pull request"
+
+
+@pytest.mark.parametrize("code,err", [
+    (0, ""),  # resource is null: the --jq answer is empty
+    (1, "gh: Could not resolve to a Repository with the name 'x'. (NOT_FOUND)"),
+    (1, "gh: Not Found (HTTP 404)"),
 ])
-def test_a_refused_lookup_is_exit_2_and_another_failure_is_passed_on(err, code):
-    class Lookup(Fake):
-        def __call__(self, argv, token):
-            if f"query={board.RESOURCE_QUERY}" in argv:
-                self.calls.append((list(argv), token))
-                return 1, "", err
-            return super().__call__(argv, token)
+def test_add_on_a_link_that_resolves_to_nothing_says_so_with_exit_2(code, err, capsys):
+    assert add_with_lookup(code, "", err) == 2
+    captured = capsys.readouterr()
+    assert captured.out == "" and captured.err.strip() == MISSING
 
-    fake = Lookup()
-    assert board.main(["add", OWNER, NUMBER, URL], runner=fake, read=reader()) == code
-    assert not [c for c, _ in fake.calls if f"query={board.ADD_MUTATION}" in c]
+
+@pytest.mark.parametrize("err", [
+    "gh: Your token has not been granted the required scopes (INSUFFICIENT_SCOPES)",
+    "gh: Resource not accessible by personal access token (FORBIDDEN)",
+    "gh: Resource not accessible (HTTP 403)",
+])
+def test_add_on_a_scope_or_access_refusal_keeps_its_line_with_exit_2(err, capsys):
+    assert add_with_lookup(1, "", err) == 2
+    captured = capsys.readouterr()
+    assert captured.out == "" and captured.err.strip() == REFUSED
+
+
+@pytest.mark.parametrize("err", [
+    "gh: API rate limit exceeded for user ID 1. (HTTP 403)",
+    "gh: Resource protected by organization SAML enforcement. (HTTP 403)",
+    "error connecting to api.github.com",
+])
+def test_add_on_any_other_failure_prints_its_own_error_scrubbed_with_its_exit_code(err, capsys):
+    assert add_with_lookup(4, "", f"{err} near {SECRET} and {SHAPED}\n") == 4
+    captured = capsys.readouterr()
+    assert captured.out == ""
+    assert captured.err == f"{err} near *** and ***\n"
+    assert MISSING not in captured.err and REFUSED not in captured.err
 
 
 def test_calls_are_argument_lists_never_shell_strings():
