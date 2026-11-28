@@ -105,7 +105,6 @@ OPENER_KINDS = ("typed", "peer message", "app event", "plugin", "system", "syste
 QUIET_RECORDS = ("assistant", "user", "file-history-snapshot", "attachment", "progress")
 DATE_RE = re.compile(r"\d{4}-\d{2}-\d{2}")
 SID_RE = re.compile(r"[A-Za-z0-9-]{8,64}")
-EXT_RE = re.compile(r"\.[A-Za-z0-9]{1,8}")
 DEFAULT_ROLES = [
     "planner=title:planner",
     "manager=title:manager",
@@ -131,6 +130,9 @@ KNOWN_TRIGGERS = frozenset({"manual", "auto"})
 KNOWN_COMPACT_KEYS = frozenset({"trigger", "preTokens", "pre_tokens", "postTokens", "durationMs"})
 KNOWN_SHAPE_KEYS = frozenset({"model", "tools"})
 KNOWN_TOOLS = frozenset({"Read", "Bash", "Agent", "Task", "SendMessage"})
+# no posted `reads` output names an extension yet (#319); this is the one its tests show
+KNOWN_EXTS = frozenset({".md"})
+NO_REPLIES = "no-replies"  # a session's model when it has no counted reply
 KNOWN_STOPS = frozenset({"end_turn", "tool_use"})
 KNOWN_RECORD_TYPES = frozenset({
     "assistant", "user", "system", "attachment", "progress", "file-history-snapshot",
@@ -252,7 +254,7 @@ class Session:
 
     def main_model(self) -> str:
         n = collections.Counter(r.model for r in self.counted())
-        return n.most_common(1)[0][0] if n else "?"
+        return n.most_common(1)[0][0] if n else NO_REPLIES
 
     def opener_of(self, r: Reply) -> str | None:
         return self.openers[r.turn - 1] if r.turn > 0 else None
@@ -342,8 +344,8 @@ def file_ext(inp: dict) -> str:
     p = inp.get("file_path") or inp.get("notebook_path")
     if not isinstance(p, str):
         return ""
-    ext = os.path.splitext(p)[1]
-    return ext.lower() if EXT_RE.fullmatch(ext) else ""
+    ext = os.path.splitext(p)[1].lower()
+    return known(ext, KNOWN_EXTS) if ext else ""
 
 
 def note_attachment(s: Session, a: dict) -> None:
@@ -606,12 +608,19 @@ def trigger_word(t) -> str:
 
 
 def count_of(v) -> str:
-    """A number prints as it is; anything else stored in its place is not printed."""
-    return str(v) if isinstance(v, int) else ("None" if v is None else "?")
+    """A number prints as it is, a float rounded to a whole number; anything else stored in
+    its place is not printed."""
+    if isinstance(v, bool):
+        return "?"
+    if isinstance(v, int):
+        return str(v)
+    if isinstance(v, float) and v == v and abs(v) != float("inf"):
+        return str(round(v))
+    return "None" if v is None else "?"
 
 
 def short_model(m: str) -> str:
-    m = known(m, KNOWN_MODELS)
+    m = known(m, KNOWN_MODELS | {NO_REPLIES})
     return m[len("claude-"):] if m.startswith("claude-") else m
 
 
@@ -840,7 +849,9 @@ def cmd_compacts(a) -> None:
     if not rows:
         print("compact records: none found")
         return
-    print("compactMetadata keys seen:", ", ".join(sorted({known(k, KNOWN_COMPACT_KEYS) for k in keys})) or "none")
+    unknown = sum(k not in KNOWN_COMPACT_KEYS for k in keys)
+    seen = sorted([k for k in keys if k in KNOWN_COMPACT_KEYS] + ([f"other={unknown}"] if unknown else []))
+    print("compactMetadata keys seen:", ", ".join(seen) or "none")
     print("triggers:", dict(collections.Counter(trigger_word(r["trigger"]) for r in rows)))
     print("role         n  preCtx(median) postCtx(median) summaryTok(median) repliesAfter(median) preRange")
     for role in sorted({r["role"] for r in rows}):
