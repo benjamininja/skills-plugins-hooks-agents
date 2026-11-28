@@ -353,21 +353,26 @@ def test_shapes_hides_a_name_keyed_map_at_depth_one(tmp_path, capsys):
 
 def test_needle_places_positions_and_shape_helpers():
     # F2 of #301: a CRLF lead is still at the start
-    assert list(usage.needle_places({"c": "\r\n<cross-session-message>"}, "cross-session-message")) == [
-        (".c", "at start")]
+    assert list(usage.needle_places({"content": "\r\n<cross-session-message>"}, "cross-session-message")) == [
+        (".content", "at start")]
     # F3 of #301: the branches no other test runs
-    assert list(usage.needle_places({"c": "hi <cross-session-message>"}, "cross-session-message")) == [
-        (".c", "line 1, after text")]
-    assert list(usage.needle_places({"c": "a\nb\nc<cross-session-message>"}, "cross-session-message")) == [
-        (".c", "line 3 or later")]
+    assert list(usage.needle_places({"content": "hi <cross-session-message>"}, "cross-session-message")) == [
+        (".content", "line 1, after text")]
+    assert list(usage.needle_places({"content": "a\nb\nc<cross-session-message>"}, "cross-session-message")) == [
+        (".content", "line 3 or later")]
+    # #312: a top-level key that is not a known word prints "?"
+    assert list(usage.needle_places({"c": "<cross-session-message>"}, "cross-session-message")) == [
+        (".?", "at start")]
     assert list(usage.needle_places({"cross-session-message": 1}, "cross-session-message")) == []
     assert usage.lead_of("  ") == "empty" and usage.lead_of("<1x>") == "<?>" and usage.lead_of("hi") == "text"
     assert usage.lead_of("<task-notification>x") == "<task-notification>"
     assert usage.content_kind(None) == "none" and usage.content_kind(5) == "?"
     assert usage.content_kind(["x", {"type": "a b"}]) == "list[?]"
     assert usage.safe(None) == "-" and usage.safe("a/b") == "?" and usage.safe(3) == "?"
-    att = {"type": "attachment", "attachment": {"type": "queued_command", "content": "<x-y>z"}}
-    assert usage.shape_of(att) == "type=attachment attachment=queued_command meta=False attachment.content=str:<x-y>"
+    att = {"type": "attachment", "attachment": {"type": "queued_command", "content": "<task-notification>z"}}
+    assert usage.shape_of(att) == ("type=attachment attachment=queued_command meta=False "
+                                   "attachment.content=str:<task-notification>")
+    assert usage.lead_of("<x-y>z") == "<?>"  # a tag name that is not a known word (#312)
 
 
 def test_shapes_counts_a_needle_only_in_a_key_as_not_in_a_value(tmp_path, capsys):
@@ -829,6 +834,125 @@ def test_context_reads_a_shape_stored_as_a_string_and_fails_soft_on_bad_json(tmp
     assert "tools in request: 0; mcp servers: 0" in run(capsys, "context", str(good))
     bad = write(tmp_path / "b.jsonl", [{"type": "api-request-shape", "shape": "{not json"}])
     assert "api-request-shape record: none found" in run(capsys, "context", str(bad))
+
+
+# ---- #312: every printed store value is a known word ---------------------------------
+
+PLANT = "plantedname"  # name-like, short, and in no known list: it must never print
+
+
+def test_shapes_prints_no_unknown_type_key_block_or_tag(tmp_path, capsys):
+    s = tmp_path / "store"
+    write(s / "C--x" / "rrrr0001-0000.jsonl", [
+        title("a manager"), user(PROMPT, T(21)), reply("a", T(21)),
+        {"type": PLANT, "subtype": PLANT, "x": 1},
+        {"type": "attachment", "attachment": {"type": PLANT}},
+        {"type": "user", "timestamp": T(21), PLANT: 1, "message": {"content": [{"type": PLANT}]}},
+        {"type": "user", "timestamp": T(21), "message": {"content": "<" + PLANT + ">x"}},
+        {"type": "user", "timestamp": T(21), PLANT: "<cross-session-message>"},
+    ])
+    out = run(capsys, "shapes", "--store", str(s), "--from", "2026-11-21", "--to", "2026-11-21")
+    assert PLANT not in out
+    assert "type=? subtype=? meta=False" in out and "attachment=? meta=False" in out
+    assert "content=list[?]" in out and "content=str:<?>" in out
+    assert "| at .? | at start" in out
+    keys = next(ln for ln in out.splitlines() if ln.startswith("?="))
+    assert keys.startswith("?=2 ")  # the two planted keys, counted under one label
+
+
+def test_model_names_print_only_when_known(tmp_path, capsys):
+    s = tmp_path / "store"
+    write(s / "C--x" / "ssss0001-0000.jsonl", [
+        title("a planner"), user(PROMPT, T(21)),
+        reply("a", T(21), model="claude-" + PLANT), reply("b", T(21), model="claude-" + PLANT),
+        reply("c", T(21), model="claude-opus-5-5"),
+    ])
+    w = ["--store", str(s), "--from", "2026-11-21", "--to", "2026-11-21"]
+    out = run(capsys, "baseline", *w)
+    assert PLANT not in out
+    row = next(ln for ln in out.splitlines() if ln.startswith("planner") and " other " in ln)
+    assert row.split()[4] == "2"  # its two replies still count
+    assert any(ln.startswith("planner") and "opus-5-5" in ln for ln in out.splitlines())
+    out = run(capsys, "ledger", *w)
+    assert PLANT not in out and "replies=     2" in next(ln for ln in out.splitlines() if ln.startswith("other "))
+    assert PLANT not in run(capsys, "startup", *w, "--sessions")
+    f = str(s / "C--x" / "ssss0001-0000.jsonl")
+    assert "model other" in run(capsys, "turns", f)
+
+
+def test_compact_trigger_and_keys_print_only_when_known(tmp_path, capsys):
+    s = tmp_path / "store"
+    cp = compact(T(22, "11:00:00"))
+    cp["compactMetadata"].update(trigger=PLANT, **{PLANT: 1})
+    cp2 = {**compact(T(22, "12:00:00")), "uuid": "c2"}
+    cp2["compactMetadata"]["trigger"] = PLANT
+    write(s / SLUG_A / "tttt0001-0000.jsonl", [
+        title("the planner"), reply("c1", T(22)), cp, reply("c2", T(22, "11:00:02")),
+        cp2, reply("c3", T(22, "12:00:02"))])
+    out = run(capsys, "compacts", "--store", str(s), "--from", "2026-11-22", "--to", "2026-11-22")
+    assert PLANT not in out
+    assert "triggers: {'other': 2}" in out
+    assert "compactMetadata keys seen: durationMs, other, postTokens, preTokens, trigger" in out
+    out = run(capsys, "trial", "--store", str(s), "tttt0001-0000")
+    assert PLANT not in out and "trigger=other pre=150000 post=20000 durationMs=5" in out
+
+
+def test_context_prints_only_known_shape_keys_with_a_count_for_the_rest(tmp_path, capsys):
+    p = write(tmp_path / "s.jsonl", [{"type": "api-request-shape", "shape": json.dumps(
+        {"model": "x", "tools": [], PLANT: 1, PLANT + "2": 2})}])
+    out = run(capsys, "context", str(p))
+    assert PLANT not in out and "top keys: model, other=2, tools" in out
+
+
+def test_reads_and_replies_print_only_known_tool_stop_and_record_names(tmp_path, capsys):
+    p = write(tmp_path / "s.jsonl", [
+        user(PROMPT, T(20)),
+        reply("a", T(20), i=0, cr=1000, stop="tool_use",
+              calls=[("u1", PLANT, {"file_path": PATH}), ("u2", "Read", {"file_path": PATH})]),
+        result("u1", "x" * 400, T(20)),
+        result("u2", "x" * 400, T(20)),
+        {"type": PLANT, "timestamp": T(20)},
+        reply("b", T(20), i=0, cr=1200, stop=PLANT),
+    ])
+    out = run(capsys, "reads", str(p))
+    assert PLANT not in out
+    rows = [ln.split() for ln in out.splitlines() if ln.strip().startswith("1 ")]
+    assert [r[1] for r in rows] == ["other", "Read"]
+    out = run(capsys, "replies", str(p))
+    assert PLANT not in out
+    assert "stop=other" in out and "stop=tool_use" in out and "-- record other" in out
+
+
+def test_shapes_skips_a_sidechain_reply_before_the_landing_count(tmp_path, capsys):
+    # F3 of #308: a sidechain reply that ends its turn, between a main reply that called a
+    # tool and a queued peer message, does not move where that message lands
+    s = tmp_path / "store"
+    write(s / "C--x" / "uuuu0001-0000.jsonl", [
+        title("a manager"), user(PROMPT, T(21, "08:00:00")),
+        reply("r1", T(21, "08:00:01"), stop="tool_use", calls=[("u1", "Bash", {"command": "ls"})]),
+        reply("side", T(21, "08:00:02"), stop="end_turn", side=True),
+        queued(T(21, "08:00:03"), "<cross-session-message from=x>" + PROMPT),
+        result("u1", RESULT, T(21, "08:00:04")),
+        reply("r2", T(21, "08:00:05"), stop="end_turn"),
+    ])
+    out = run(capsys, "shapes", "--store", str(s), "--from", "2026-11-21", "--to", "2026-11-21")
+    assert any(ln.split()[:1] == ["1"] and ln.endswith("tagged queued command | inside a running turn")
+               for ln in out.splitlines())
+    assert "after a reply that ended its turn" not in out
+
+
+def test_a_queued_message_and_its_meta_copy_match_across_whitespace(tmp_path):
+    # F4 of the re-check on PR #308: other line endings and spacing, the same message
+    meta = {**user("Another Claude session sent a message:\r\n<cross-session-message  from=x>\r\nA  B\r\n",
+                   T(21), meta=True), "origin": {"kind": "peer"}, "turnOrigin": "peer"}
+    s = stop_session(tmp_path, [
+        user(PROMPT, T(21)), reply("a", T(21), stop="tool_use"),
+        queued(T(21), "<cross-session-message from=x>\nA B"),
+        meta,
+        reply("b", T(21)),
+    ])
+    assert s.openers == ["typed"]
+    assert s.replies[1].after_peer
 
 
 def test_the_code_holds_no_machine_path_and_reads_no_environment():
