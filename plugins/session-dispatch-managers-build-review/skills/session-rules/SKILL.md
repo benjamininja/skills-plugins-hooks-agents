@@ -135,7 +135,7 @@ comment on its ticket with what it will change, and parks before the
 run (Parking, below): the run waits for the owner's answer to that
 entry. The manager reads the script before it relays the answer, and
 again at closeout. A script that was changed after the owner's answer
-is parked again. A project whose dispatch file holds no `oneshot`
+is parked again. A project whose profiles file holds no `oneshot`
 profile keeps the owner's hand rule.
 
 ## Reading the web
