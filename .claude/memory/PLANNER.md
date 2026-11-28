@@ -62,10 +62,17 @@ and PR #302, the Never line (`0105706`, plugin 0.6.1). Earlier: PR
   save. Then Ben's merge word in the manager's chat.
 - **PR #305** (branch `docs/start-lines-294`, worktree
   `t294-start-lines`, head `a535511`): the two start lines of #294.
-  Security review clean. At the manager's re-proof; then Ben's merge
-  word.
+  Security review clean. Re-proved Green by the manager (its report);
+  Ben's merge word is asked in the manager's chat after the manager's
+  own compact.
 
 **Next, in order.**
+0. **First after the compact: the ruling on #299 step 1.** The finding
+   is at issues/299 issuecomment-7239905558 (the manager's report:
+   about 35 hand rule edits in about 25 sittings since 2026-11-01,
+   with sorts proposed). Not read by the planner yet. Rule which moves
+   go to Ben by button, with what each would newly let every builder
+   run; then the brief for part 2.
 1. After PR #303 merges: the dated trial line in the tools rules file
    (`PROJECT-RULES.md`), its own PR: low and haiku, two weeks from the
    merge day, the manager counts dispatches made without a go and any
