@@ -59,7 +59,12 @@ brief also names the files. A medium brief names the question, where to
 start and the shape of the answer. Each proof command is one a builder
 may run under the builders' settings file, or the brief says the manager
 runs it at re-proof. A brief names its `Profile:`, or `none`, and for
-`probe` it also names its hosts, as the template does. A brief holds no
+`probe` it also names its hosts, as the template does. A brief names
+its `venv:` line (`light`, `full` or `no`). A brief whose work changes
+the project's list of packages (`requirements.txt` or the file the
+project rules file names for it) always says `venv: full`: a light
+environment reads the main checkout's packages, so it can't prove a
+change to them. A brief holds no
 double quote. Template:
 `templates/brief.md` in this plugin.
 
