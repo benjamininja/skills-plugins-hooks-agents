@@ -86,7 +86,15 @@ manager's report. #312 (low, usage.py's older print paths, from PR
 #308's F2 and F3) is filed and held behind PR #308; the planner lifts
 the hold at that merge. In flight by the manager's report: builders
 for #299 part 2 (on Ben's go) and #307 (no go, under the trial).
-Worktrees `t262-row1l`, `t300-rule-texts`, `t294-start-lines`,
+**Later again:** PR #311 merged as `347188b` and PR #308 as
+`189093c`, both checked; all the planner's PRs of the day are merged.
+#312's hold is lifted and F4 is added to it. PR #313 (#299 part 2) is
+read at `eb5be3c`: no breach, one wording fix asked (profiles file,
+not dispatch file; pull/313 issuecomment-7240447362); the fixed head
+goes to the dynasty planner, then Ben's merge word. After it merges,
+the `oneshot` entry in a project's profiles file is Ben's hand step,
+raised by that project's planner (dynasty's).
+Worktrees `t262-row1l`, `t285-role-line`, `t300-rule-texts`, `t294-start-lines`,
 `t300-never-line` and `t300-trial-line` hold merged branches.
 
 **The planner's open PRs (as saved before the compact).**
