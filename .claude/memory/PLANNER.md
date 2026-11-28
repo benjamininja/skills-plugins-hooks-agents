@@ -52,7 +52,24 @@ the planner's chat.
 and PR #302, the Never line (`0105706`, plugin 0.6.1). Earlier: PR
 #197 (`6e43072`), PR #301 (`8b54ee1`).
 
-**The planner's open PRs.**
+**Update, later on 2026-11-28 (wins over the lines below it):** PR #303
+merged as `25aef1a` and PR #305 as `805aab5`, both checked. **PR #309**
+(branch `docs/trial-line-300`, worktree `t300-trial-line`, head
+`11380ac`) is the trial line: low and haiku, 2026-11-28 to 2026-12-12,
+a hold is the `held` label plus a `Held:` line (Ben's button "Label
+plus Held line (Recommended)", issues/300 issuecomment-7240118647).
+Security review clean; at the dynasty planner for a read, then the
+manager's re-proof and Ben's merge word. Due by 2026-12-12: the count
+on #300 and the button to Ben. #307 (low, board.py's cp1252 crash, from
+PR #306's F1) is filed and held behind PR #306; the planner lifts the
+label and the line when #306 merges. Ben, on #111 (the Ask planner
+button): keep the lane order, it was a check that it is not lost. The
+advisory: the dynasty planner's pointer is dynasty #564
+issuecomment-7239843007; no date yet; Tools reports when PR #211 and
+#295's design merge. Next after #309: disposition 4 and the Action for
+#285 once PR #306 is merged; row 1l of #262 as the planner's own PR.
+
+**The planner's open PRs (as saved before the compact).**
 - **PR #303** (branch `docs/rule-texts-300`, worktree
   `t300-rule-texts`, head `2ba4275`, plugin 0.6.2): #300's exception,
   with the condition that a held ticket keeps the owner's word, and
