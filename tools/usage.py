@@ -985,15 +985,108 @@ def needle_places(o, needle: str, path: str = "", depth: int = 0):
         yield path or ".", where
 
 
+SOURCE_KEYS = ("origin", "turnOrigin", "promptSource")
+WORD_RE = re.compile(r"[A-Za-z0-9_-]{1,24}")
+
+
+def word(v) -> str:
+    """A value as one short word, else "?". An object shows at most six of its keys,
+    each key and value under the same rule; a nested object or list is "?"."""
+    if v is None:
+        return "-"
+    if isinstance(v, bool):
+        return "true" if v else "false"
+    if isinstance(v, (int, float)):
+        return "number"
+    if isinstance(v, str):
+        return v if WORD_RE.fullmatch(v) else "?"
+    if isinstance(v, dict):
+        items = sorted(v.items(), key=lambda kv: str(kv[0]))
+        parts = [f"{word(k) if isinstance(k, str) else '?'}="
+                 f"{'?' if isinstance(x, (dict, list)) else word(x)}" for k, x in items[:6]]
+        return "{" + ",".join(parts) + (",..." if len(items) > 6 else "") + "}"
+    return "?"
+
+
+def record_kind(o: dict, needle: str) -> str:
+    """What a user record is, for the source-key count. Never its text."""
+    c = (o.get("message") or {}).get("content") if isinstance(o.get("message"), dict) else None
+    if o.get("isCompactSummary"):
+        return "compact summary"
+    if isinstance(c, list) and any(isinstance(x, dict) and x.get("type") == "tool_result" for x in c):
+        return "tool result"
+    text = text_of(o) if isinstance(o.get("message"), dict) else None
+    if o.get("isMeta"):
+        t = text or ""
+        pos = t.find("<" + needle)
+        return "meta, tag on line 1-2" if pos >= 0 and t[:pos].count("\n") <= 1 else "meta, other"
+    return "other" if text is None else "non-meta " + opener_kind(text)
+
+
+class Arrivals:
+    """Per file: tagged queued commands and tagged meta user records, their overlap
+    and where in a turn they land. Counts only."""
+
+    def __init__(self, needle: str):
+        self.needle = needle
+        self.overlap: collections.Counter = collections.Counter()
+        self.where: collections.Counter = collections.Counter()
+
+    def start_file(self) -> None:
+        self.last_stop: str | None = None  # None: no reply yet
+        self.reply_id = None
+        self.pending = 0  # tagged queued commands since the last reply, not yet met by a meta record
+
+    def position(self) -> str:
+        if self.last_stop is None:
+            return "before any reply"
+        if self.last_stop in (TOOL_USE, "pending"):
+            return "inside a running turn"
+        return "after a reply that ended its turn"
+
+    def flush(self, why: str) -> None:
+        if self.pending:
+            self.overlap[f"queued command, no meta record before {why}"] += self.pending
+        self.pending = 0
+
+    def feed(self, o: dict) -> None:
+        t = o.get("type")
+        if t == "assistant":
+            msg = o.get("message") if isinstance(o.get("message"), dict) else {}
+            if msg.get("model") == SYNTHETIC:
+                return
+            if msg.get("id") != self.reply_id:
+                self.reply_id = msg.get("id")
+                self.flush("the next reply")
+                self.last_stop = "pending"
+            if msg.get("stop_reason"):
+                self.last_stop = msg["stop_reason"]
+        elif t == "attachment":
+            att = o.get("attachment") if isinstance(o.get("attachment"), dict) else {}
+            if att.get("type") == "queued_command" and self.needle in json.dumps(att.get("prompt")):
+                self.where[("tagged queued command", self.position())] += 1
+                self.pending += 1
+        elif t == "user" and o.get("isMeta") and self.needle in (text_of(o) or ""):
+            self.where[("tagged meta record", self.position())] += 1
+            if self.pending:
+                self.pending -= 1
+                self.overlap["queued command, then a meta record before the next reply"] += 1
+            else:
+                self.overlap["meta record, no queued command since the last reply"] += 1
+
+
 def cmd_shapes(a) -> None:
     shapes: collections.Counter = collections.Counter()
     needles: collections.Counter = collections.Counter()
     keys: collections.Counter = collections.Counter()
+    sources: collections.Counter = collections.Counter()
+    arrivals = Arrivals(a.needle)
     n_sessions = n_records = n_needle = 0
     for _, s, role in in_window(a.store, a.lo, a.hi, a.roles):
         if a.only and role not in a.only:
             continue
         n_sessions += 1
+        arrivals.start_file()
         with open(s.path, "r", encoding="utf-8", errors="replace") as fh:
             for line in fh:
                 try:
@@ -1005,13 +1098,16 @@ def cmd_shapes(a) -> None:
                 n_records += 1
                 shape = shape_of(o)
                 shapes[shape] += 1
+                arrivals.feed(o)
                 if o.get("type") == "user":
                     keys.update(safe(k) for k in o)
+                    sources[(record_kind(o, a.needle),) + tuple(word(o.get(k)) for k in SOURCE_KEYS)] += 1
                 if a.needle in line:
                     n_needle += 1
                     places = sorted(set(needle_places(o, a.needle))) or [("(not in a string value)", "-")]
                     for path, where in places:
                         needles[(shape, path, where)] += 1
+        arrivals.flush("the end of the file")
     print(f"window: sessions whose first reply is {a.lo}..{a.hi}; sessions={n_sessions} records={n_records}; "
           "counts and structure only")
     print(f"\n== records by shape (top {a.top}) ==")
@@ -1022,6 +1118,16 @@ def cmd_shapes(a) -> None:
         print(f"{n:8}  {shape} | at {path} | {where}")
     print("\n== top-level keys of user records ==")
     print(" ".join(f"{k}={n}" for k, n in sorted(keys.items())))
+    print(f"\n== user records by what they are, against {', '.join(SOURCE_KEYS)} (one short word, else ?; "
+          "- when missing) ==")
+    for (kind, *vals), n in sorted(sources.items(), key=lambda x: (-x[1], x[0])):
+        print(f"{n:8}  {kind} | " + " ".join(f"{k}={v}" for k, v in zip(SOURCE_KEYS, vals)))
+    print(f"\n== tagged queued commands and tagged meta records: overlap ==")
+    for what, n in sorted(arrivals.overlap.items()):
+        print(f"{n:8}  {what}")
+    print("\n== where they land in a turn ==")
+    for (what, where), n in sorted(arrivals.where.items()):
+        print(f"{n:8}  {what} | {where}")
 
 
 # ---- arguments ----------------------------------------------------------------

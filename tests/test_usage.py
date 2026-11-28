@@ -380,6 +380,62 @@ def test_shapes_counts_a_needle_only_in_a_key_as_not_in_a_value(tmp_path, capsys
     assert "| at (not in a string value) | -" in out
 
 
+def queued(ts, prompt):
+    return {"type": "attachment", "timestamp": ts, "attachment": {"type": "queued_command", "prompt": prompt}}
+
+
+def test_shapes_counts_source_keys_overlap_and_turn_position(tmp_path, capsys):
+    # step 3, part 1: the probe that settles how a peer message is stored
+    peer = "Another Claude session sent a message:\n<cross-session-message from=x>" + PROMPT
+    meta_peer = {**user(peer, T(21, "08:00:04"), meta=True),
+                 "origin": {"kind": "peer", "name": "a private name with spaces"}, "turnOrigin": "x" * 30}
+    typed = {**user(PROMPT, T(21, "08:00:00")), "promptSource": "typed"}
+    s = tmp_path / "store"
+    write(s / "C--x" / "oooo0001-0000.jsonl", [
+        title("a manager"),
+        typed,
+        reply("r1", T(21, "08:00:01"), stop="tool_use", calls=[("u1", "Bash", {"command": "ls"})]),
+        queued(T(21, "08:00:02"), "<cross-session-message from=x>" + PROMPT),   # inside a running turn
+        meta_peer,                                                             # the same message, again
+        result("u1", RESULT, T(21, "08:00:05")),
+        reply("r2", T(21, "08:00:06"), stop="end_turn"),
+        user(peer, T(21, "08:01:00"), meta=True),                              # after an ended turn, alone
+        queued(T(21, "08:01:01"), "<cross-session-message from=x>" + PROMPT),   # no meta record follows
+        reply("r3", T(21, "08:01:02"), stop="end_turn"),
+        queued(T(21, "08:02:00"), "<cross-session-message from=x>" + PROMPT),   # the file ends
+    ])
+    out = run(capsys, "shapes", "--store", str(s), "--from", "2026-11-21", "--to", "2026-11-21")
+    lines = out.splitlines()
+
+    def count(text):
+        (ln,) = [x for x in lines if x.endswith(text) or f"  {text} |" in x or x.strip().endswith(text)]
+        return int(ln.split()[0])
+
+    # source keys, by what the record is: an object prints its keys, a long or spaced value prints ?
+    assert count("meta, tag on line 1-2 | origin={kind=peer,name=?} turnOrigin=? promptSource=-") == 1
+    assert count("meta, tag on line 1-2 | origin=- turnOrigin=- promptSource=-") == 1
+    assert count("non-meta typed | origin=- turnOrigin=- promptSource=typed") == 1
+    assert count("tool result | origin=- turnOrigin=- promptSource=-") == 1
+    # overlap
+    assert count("queued command, then a meta record before the next reply") == 1
+    assert count("meta record, no queued command since the last reply") == 1
+    assert count("queued command, no meta record before the next reply") == 1
+    assert count("queued command, no meta record before the end of the file") == 1
+    # where they land
+    assert count("tagged queued command | inside a running turn") == 1
+    assert count("tagged queued command | after a reply that ended its turn") == 2
+    assert count("tagged meta record | inside a running turn") == 1
+    assert count("tagged meta record | after a reply that ended its turn") == 1
+    assert "private name" not in out and "xxxxxxxxxx" not in out
+
+
+def test_word_prints_one_short_word_or_a_question_mark():
+    assert usage.word("peer") == "peer" and usage.word("a b") == "?" and usage.word("x" * 25) == "?"
+    assert usage.word(None) == "-" and usage.word(True) == "true" and usage.word(3) == "number"
+    assert usage.word([1]) == "?" and usage.word({"k": {"n": 1}}) == "{k=?}"
+    assert usage.word({str(i): "v" for i in range(8)}) == "{0=v,1=v,2=v,3=v,4=v,5=v,...}"
+
+
 def test_shapes_refuses_a_needle_that_is_not_a_name(store):
     for bad in ("a b", "<x>", "x"):
         with pytest.raises(SystemExit):
