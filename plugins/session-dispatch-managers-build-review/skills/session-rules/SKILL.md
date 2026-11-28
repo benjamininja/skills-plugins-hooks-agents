@@ -76,6 +76,13 @@ double quote. Template:
   a workflow's `dispatches` endpoint, or the GitHub web page. A dispatch
   is the owner's. An agent acts through the owner's token, so a check
   on who started the run can't tell them apart; this rule is the guard.
+- Approving, rejecting or bypassing a deployment that waits for review,
+  or re-running a run of a workflow, by any route: `gh api` on a run's
+  `pending_deployments` or rerun endpoints, `gh run rerun`, or the
+  GitHub web page or app. An approval or a re-run is the owner's, as a
+  dispatch is: an agent acts through the owner's token, so a check on
+  who approved can't tell them apart. A run that failed for no fault of
+  the branch is re-run by the owner, or cleared by a new commit.
 - Writing or editing a settings file, a permission file,
   `.claude/dispatch.json` or the owner's list of projects for the
   dispatch script. They are the owner's; an agent proposes text
