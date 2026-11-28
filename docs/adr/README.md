@@ -24,6 +24,7 @@ merged ADR. A row is added in the same PR that adds the ADR
 | 0014 | unused | none | none | The number was never used. There is no file. |
 | [0015](0015-code-review-at-re-proof.md) | A code review at re-proof | accepted, revised | 2026-11-09 | Revision 1 (2026-11-11); Revision 2 (2026-11-12, current: it reverses the original decision in place, before the reversal rule below) |
 | [0016](0016-one-owner-queue-per-project.md) | One owner queue per project, untracked, routed by the ticket's repo | accepted | 2026-11-14 | none (brought up to date on 2026-11-23, before it merged) |
+| [0017](0017-git-guardrails-reads-like-the-shell.md) | git-guardrails reads commands by the shell's rules, and tries what it can't read as git | proposed | 2026-11-14 | none |
 | [0018](0018-threat-model-for-role-sessions.md) | A threat model for role sessions | accepted | 2026-11-14 | none |
 | [0019](0019-on-call-subagents-for-niche-roles.md) | On-call subagents for niche roles | accepted | 2026-11-23 | none |
 | [0020](0020-builder-environment-lifetime.md) | A builder's environment: light at dispatch, removed at closeout by one script | accepted | 2026-11-23 | none |

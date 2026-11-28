@@ -35,6 +35,13 @@
 #   4. Quotes, backticks, parentheses, braces and `$` become spaces, and
 #      whitespace is collapsed, so `(git push)`, `bash -c 'git restore .'`
 #      and `git  push` all read as plain words.
+#   5. Each segment is also read the way Bash and PowerShell read it (#168):
+#      quotes removed and joined, escapes resolved, and a word whose last
+#      path part is git (any case, .exe/.cmd/.bat/.com) becomes `git`. So
+#      `"git"`, `g''it`, `Git` and `& "C:\...\git.exe"` read as `git`. Quoted
+#      text is read again, up to 3 passes, for `bash -c '...'`. A word the
+#      hook cannot read (`$`, a glob) right before a guarded verb or a dash
+#      word is tried as `git`. Every reading is judged; any one blocks.
 # When in doubt the hook blocks: text after a `#` still counts toward a
 # block, and never toward an exemption.
 #
@@ -109,8 +116,11 @@ PLAIN_PUSH='^[[:space:]]*git[[:space:]]+push([[:space:]]+(-u|--set-upstream))?([
 USE_HOOK_CWD=""
 [[ "$COMMAND" =~ $PLAIN_PUSH ]] && USE_HOOK_CWD=1
 
+# Set while a reading that tries an unreadable word as `git` is judged.
+VIEW_NOTE=""
+
 block() {
-  echo "BLOCKED: '$COMMAND' — $1. The user has prevented you from doing this." >&2
+  echo "BLOCKED: '$COMMAND' — $1${VIEW_NOTE}. The user has prevented you from doing this." >&2
   exit 2
 }
 
@@ -130,7 +140,30 @@ SWITCHED_TO_MAIN=""
 # for counting what a push names. Blocking patterns never use this.
 uncommented() { echo "$1" | sed -E 's/(^|[[:space:]])#.*$//'; }
 
+# True when the text holds a `#` inside quotes or right after a backslash
+# or a backtick.
+quoted_hash() {
+  local s="$1" q="" i c
+  [[ "$s" == *'#'* ]] || return 1
+  for ((i = 0; i < ${#s}; i++)); do
+    c="${s:i:1}"
+    if [[ -n "$q" ]]; then
+      [[ "$c" == '#' ]] && return 0
+      [[ "$c" == "$q" ]] && q=""
+      continue
+    fi
+    case "$c" in
+      '\'|'`') [[ "${s:i+1:1}" == '#' ]] && return 0; ((i++)) ;;
+      '"'|"'") q="$c" ;;
+    esac
+  done
+  return 1
+}
+
 GH_CAP=10
+# "<dir>|<branch>" lines already passed, so each reading of a segment does
+# not ask gh again.
+GH_PASSED=$'\n'
 
 # A force branch delete passes only when every branch it names has a merged
 # PR whose head commit is the branch's local tip. $1 = flattened segment,
@@ -158,6 +191,11 @@ check_force_branch_delete() {
   if [[ "$pre" == *'$'* || "$pre" == *'`'* ]]; then
     block "force branch delete with \$ or a backtick — name each branch literally"
   fi
+  # A `#` inside quotes or after an escape is not a comment, so the names
+  # after it are real: block rather than guess which ones git deletes.
+  if quoted_hash "$pre"; then
+    block "force branch delete with a quoted or escaped # — name each branch literally"
+  fi
 
   # The branches it names: words that are not flags, comment excluded.
   local names=() n
@@ -178,6 +216,7 @@ check_force_branch_delete() {
 
   local out oids tip
   for n in "${names[@]}"; do
+    [[ "$GH_PASSED" == *$'\n'"$dir|$n"$'\n'* ]] && continue
     out=$(cd "$dir" 2>/dev/null && timeout "$GH_CAP" gh pr list --head "$n" --state merged --json headRefOid 2>/dev/null) \
       || block "cannot check '$n' against a merged PR: gh is missing, failed or took longer than ${GH_CAP}s"
     oids=$(printf '%s' "$out" \
@@ -189,6 +228,7 @@ check_force_branch_delete() {
     if ! printf '%s\n' "$oids" | grep -qxF "$tip"; then
       block "'$n' has commits after its merged PR (local tip ${tip:0:7} is not the head of any merged PR)"
     fi
+    GH_PASSED+="$dir|$n"$'\n'
   done
   return 0
 }
@@ -336,14 +376,268 @@ check_segment() {
   return 0
 }
 
+# The readings of each segment (#168), one per line as `<note>\x1f<text>`:
+# the segment as it is, then for Bash and for PowerShell up to 3 passes of
+# shell reading (quotes removed and joined, escapes resolved, a git-named
+# word turned into `git`, the word after `git` lowercased, a word holding
+# spaces quoted again so -C paths survive), each pass reading the quoted
+# text of the one before. A word the hook cannot read (it holds `$` or an
+# unquoted `*`, `?`, `[`) that comes right before a guarded verb or a dash
+# word gives one more reading with that word as `git`, and <note> names it.
+# Readings equal up to whitespace are printed once, and a reading with no
+# `git` word (which the gate in check_segment would pass over) is not printed.
+VIEWS_AWK='
+BEGIN { SQ = "\047"; DQ = "\042"; BS = "\\"; BT = "`"; US = "\037"
+        VERBS = " push reset clean checkout restore branch switch "
+        VALOPT = " -C -c --git-dir --work-tree --namespace --exec-path --super-prefix --config-env --attr-source "
+        LDQ1 = "\342\200\234"; LDQ2 = "\342\200\235"; LDQ3 = "\342\200\236"
+        LSQ1 = "\342\200\230"; LSQ2 = "\342\200\231"; LSQ3 = "\342\200\232"; LSQ4 = "\342\200\233" }
+function flush() { if (cur != "") { n++; W[n] = cur; F[n] = flag } cur = ""; flag = 0 }
+function addq(ch) { cur = cur (ch == "#" ? BS "#" : ch) }
+function group(s, i, op, cl, mode,    j, e, depth, q) {
+  q = ""; depth = 0
+  for (j = (op == cl) ? i + 1 : i; j <= L; j++) {
+    e = substr(s, j, 1)
+    if (q != "") {
+      if (e == q) q = ""
+      else if (q == DQ && ((mode == "bash" && e == BS) || (mode == "ps" && e == BT))) j++
+      continue
+    }
+    if (mode == "bash" && e == BS) { j++; continue }
+    if (mode == "ps" && e == BT) { j++; continue }
+    if (op == cl && e == cl) return j
+    if (e == SQ || e == DQ) { q = e; continue }
+    if (op != cl) {
+      if (e == op) depth++
+      else if (e == cl) { depth--; if (depth == 0) return j }
+    }
+  }
+  return L + 1
+}
+function dollar(s, i, mode,    d, j, e) {
+  flag = 1; d = substr(s, i + 1, 1)
+  if (d == "(") {
+    j = group(s, i + 1, "(", ")", mode)
+    cur = cur "$" substr(s, i + 1, j - i)
+    return j + 1
+  }
+  cur = cur "$"
+  if (d == "{") {
+    j = i + 1
+    while (j <= L) { e = substr(s, j, 1); cur = cur e; j++; if (e == "}") break }
+    return j
+  }
+  if (d == SQ && mode == "bash") {
+    cur = cur SQ; j = i + 2
+    while (j <= L) { e = substr(s, j, 1)
+      if (e == BS) { cur = cur e substr(s, j + 1, 1); j += 2; continue }
+      cur = cur e; j++; if (e == SQ) break }
+    return j
+  }
+  return i + 1
+}
+function lex(s, mode,    i, c, d, q, j, e, k, inner, suf, pre, np, a, A) {
+  if (mode == "ps") {
+    gsub(LDQ1, DQ, s); gsub(LDQ2, DQ, s); gsub(LDQ3, DQ, s)
+    gsub(LSQ1, SQ, s); gsub(LSQ2, SQ, s); gsub(LSQ3, SQ, s); gsub(LSQ4, SQ, s)
+    gsub(/\\u201[cdeCDE]/, DQ, s); gsub(/\\u201[89abAB]/, SQ, s)
+  }
+  n = 0; cur = ""; flag = 0; q = ""; L = length(s); i = 1
+  while (i <= L) {
+    c = substr(s, i, 1)
+    if (q == SQ) {
+      if (c == SQ) {
+        if (mode == "ps" && substr(s, i + 1, 1) == SQ) { cur = cur SQ; i += 2; continue }
+        q = ""; i++; continue
+      }
+      addq(c); i++; continue
+    }
+    if (q == DQ) {
+      if (c == DQ) {
+        if (mode == "ps" && substr(s, i + 1, 1) == DQ) { cur = cur DQ; i += 2; continue }
+        q = ""; i++; continue
+      }
+      if (mode == "bash" && c == BS) {
+        d = substr(s, i + 1, 1)
+        if (d == "$" || d == BT || d == DQ || d == BS) { addq(d); i += 2; continue }
+        cur = cur c; i++; continue
+      }
+      if (mode == "ps" && c == BT) { addq(substr(s, i + 1, 1)); i += 2; continue }
+      if (c == "$") { i = dollar(s, i, mode); continue }
+      if (mode == "bash" && c == BT) flag = 1
+      addq(c); i++; continue
+    }
+    if (mode == "bash" && c == BT) {
+      j = group(s, i, BT, BT, mode)
+      cur = cur substr(s, i + 1, j - i - 1); flag = 1; i = j + 1; continue
+    }
+    if (mode == "ps" && c == "(") {
+      j = group(s, i, "(", ")", mode)
+      cur = cur substr(s, i + 1, j - i - 1); flag = 1; i = j + 1; continue
+    }
+    if (mode == "bash" && c == "{") {
+      for (j = i + 1; j <= L; j++) {
+        e = substr(s, j, 1)
+        if (e == "}") break
+        if (index(" \t{;&|()<>`$" SQ DQ BS, e)) { j = 0; break }
+      }
+      if (j && j <= L) {
+        inner = substr(s, i + 1, j - i - 1)
+        if (index(inner, "..")) { cur = cur substr(s, i, j - i + 1); flag = 1; i = j + 1; continue }
+        if (index(inner, ",")) {
+          for (k = j + 1; k <= L && !index(" \t;&|()<>{}`$" SQ DQ BS, substr(s, k, 1)); k++) ;
+          suf = substr(s, j + 1, k - j - 1); pre = cur; cur = ""
+          np = split(inner, A, ",")
+          for (a = 1; a <= np; a++) { cur = pre A[a] suf; flag = 1; flush() }
+          i = k; continue
+        }
+      }
+    }
+    if (c == "<" || c == ">") {
+      if (cur !~ /^[0-9]+$/) flush()
+      for (j = i; j <= L && index("<>", substr(s, j, 1)); j++) ;
+      cur = cur substr(s, i, j - i); flush(); i = j; continue
+    }
+    if (index(" \t(){}", c)) { flush(); i++; continue }
+    if (c == SQ || c == DQ) { q = c; i++; continue }
+    if ((mode == "bash" && c == BS) || (mode == "ps" && c == BT)) { addq(substr(s, i + 1, 1)); i += 2; continue }
+    if (c == "$") { i = dollar(s, i, mode); continue }
+    if (index("*?[", c)) flag = 1
+    cur = cur c; i++
+  }
+  flush()
+  return n
+}
+function norm(w,    k, c, b) {
+  for (k = length(w); k > 0; k--) { c = substr(w, k, 1); if (c == "/" || c == BS) break }
+  b = tolower(substr(w, k + 1))
+  if (b ~ /\.(exe|cmd|bat|com)$/) b = substr(b, 1, length(b) - 4)
+  if (b == "git") return "git"
+  if (b ~ /^git-(push|reset|clean|checkout|restore|branch|switch)$/) return "git " substr(b, 5)
+  return w
+}
+function render(cnt, r, quote, x,    k, w, o, out, sawgit, ag, skip) {
+  out = ""; sawgit = 0; ag = 0; skip = 0
+  for (k = 1; k <= cnt; k++) {
+    w = (k == r) ? "git" : W[k]
+    o = norm(w)
+    if (o != w && sawgit && k != x) o = w
+    if (o == "git" || o ~ /^git /) { sawgit = 1; ag = (o == "git") }
+    else if (ag) {
+      if (skip) skip = 0
+      else if (substr(w, 1, 1) == "-") { if (index(VALOPT, " " w " ")) skip = 1 }
+      else { if (o == w && !index(w, " ") && !index(w, "\t")) o = tolower(w); ag = 0 }
+    }
+    if (quote && o == w && (index(w, " ") || index(w, "\t"))) {
+      if (!index(w, DQ)) o = DQ w DQ; else if (!index(w, SQ)) o = SQ w SQ
+    }
+    out = out (out == "" ? "" : " ") o
+  }
+  return out
+}
+# The subcommand of the git named at word k: the first word after it that is
+# not an option, an option in VALOPT also taking the word after it.
+function subcmd(cnt, k,    j, w) {
+  for (j = k + 1; j <= cnt; j++) {
+    w = W[j]
+    if (substr(w, 1, 1) != "-") return tolower(w)
+    if (index(VALOPT, " " w " ")) j++
+  }
+  return ""
+}
+function collapse(t) { gsub(/[ \t]+/, " ", t); sub(/^ /, "", t); sub(/ $/, "", t); return t }
+function emit(note, text,    key) {
+  key = collapse(text)
+  if (key == "" || key in seen) return
+  if (text !~ /(^|[^A-Za-z0-9_.-])git(\.exe)?([ \t]|$)/) return
+  seen[key] = 1
+  print note US text
+}
+function readings(seg, v0,    m, mode, s, pass, cnt, k, nx, r) {
+  if (seg ~ /^[ \t]*$/) return
+  split("", seen)
+  seen[collapse(seg)] = 1
+  if (v0) print US seg
+  for (m = 1; m <= 2; m++) {
+    mode = (m == 1) ? "bash" : "ps"
+    s = seg
+    for (pass = 1; pass <= 3; pass++) {
+      cnt = lex(s, mode)
+      emit("", render(cnt, 0, 1, 0))
+      for (k = 1; k < cnt; k++) {
+        nx = tolower(W[k + 1])
+        if (F[k] && (index(VERBS, " " nx " ") || substr(nx, 1, 1) == "-")) emit(W[k], render(cnt, k, 1, 0))
+        if (norm(W[k]) != W[k] && index(VERBS, " " subcmd(cnt, k) " ")) emit("", render(cnt, 0, 1, k))
+      }
+      r = render(cnt, 0, 0, 0)
+      if (r == s) break
+      s = r
+    }
+  }
+}
+function toplevel(s,    i, c, q, depth, bt, start, L2) {
+  nt = 0; q = ""; depth = 0; bt = 0; start = 1; L2 = length(s)
+  for (i = 1; i <= L2; i++) {
+    c = substr(s, i, 1)
+    if (q != "") { if (c == q) q = ""; else if (q == DQ && c == BS) i++; continue }
+    if (c == BS) { i++; continue }
+    if (c == SQ || c == DQ) { q = c; continue }
+    if (c == BT) { bt = !bt; continue }
+    if (c == "(") { depth++; continue }
+    if (c == ")") { if (depth > 0) depth--; continue }
+    if (depth || bt) continue
+    if (c == ";" || c == "&" || c == "|") {
+      T[++nt] = substr(s, start, i - start)
+      if ((c == "&" || c == "|") && substr(s, i + 1, 1) == c) i++
+      start = i + 1
+    }
+  }
+  T[++nt] = substr(s, start)
+}
+{
+  toplevel($0)
+  for (t = 1; t <= nt; t++) {
+    tt = T[t]
+    gsub(/(&&|\|\||;|\||&)/, "\n", tt)
+    np = split(tt, P, "\n")
+    for (p = 1; p <= np; p++) readings(P[p], 1)
+    if (np > 1) readings(T[t], 0)
+  }
+}'
+
 # Split on shell separators (&&, ||, ;, |, &) and check each segment on its
 # own. The `&` and `|` of a redirection (`2>&1`, `&>file`, `>|file`) are not
 # separators: reduce those to a plain `>` first, so `git push 2>&1 origin
-# main` stays one segment.
-while IFS= read -r segment; do
-  [[ -z "${segment// /}" ]] && continue
-  check_segment "$segment"
-done < <(printf '%s\n' "$COMMAND" \
-  | sed -E -e 's/&>/>/g' -e 's/>&/>/g' -e 's/>\|/>/g' -e 's/(&&|\|\||;|\||&)/\n/g')
+# main` stays one segment. Each reading of a segment is checked in turn.
+# The readings are built first: if awk is missing or fails, or prints
+# nothing for a command that is not blank, the hook blocks rather than
+# check nothing.
+# The awk program splits each command twice: on every separator, as before
+# (each piece judged as it is and by its readings), and only on separators
+# outside quotes, parentheses and backticks (a piece that holds more than
+# one of the first kind is also read whole).
+views_of() {
+  printf '%s\n' "$1" | sed -E -e 's/&>/>/g' -e 's/>&/>/g' -e 's/>\|/>/g' \
+    | LC_ALL=C awk "$VIEWS_AWK"
+}
+VIEWS=$(views_of "$COMMAND") || block "the hook could not read the command (awk failed)"
+if [[ -z "$VIEWS" && -n "${COMMAND//[[:space:];&|]/}" ]]; then
+  block "the hook could not read the command (no readings)"
+fi
+# Bash removes a backslash-newline and joins the words around it. The text
+# above reads it as a space; the joined text is read as well.
+COMMAND_JOINED=$(printf '%s' "$RAW" | sed -e 's/\\\\/\x01/g' \
+  -e 's/\x01\(\\r\)\{0,1\}\\n//g' -e 's/`\(\\r\)\{0,1\}\\n/ /g' \
+  -e 's/\\[nr]/;/g' -e 's/\\t/ /g' -e 's/\\"/"/g' -e 's/\\\//\//g' \
+  -e 's/\x01/\\/g')
+if [[ "$COMMAND_JOINED" != "$COMMAND" ]]; then
+  MORE=$(views_of "$COMMAND_JOINED") || block "the hook could not read the command (awk failed)"
+  VIEWS+=$'\n'"$MORE"
+fi
+while IFS=$'\x1f' read -r note view; do
+  VIEW_NOTE=""
+  [[ -n "$note" ]] && VIEW_NOTE=" (cannot tell whether '$note' is git — name git literally)"
+  check_segment "$view"
+done <<< "$VIEWS"
 
 exit 0

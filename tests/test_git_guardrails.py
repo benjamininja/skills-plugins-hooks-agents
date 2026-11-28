@@ -94,6 +94,7 @@ if [[ -f "$d/mode" ]]; then
     hang) exec sleep 60 ;;
   esac
 fi
+echo "$head" >> "$d/calls"
 if [[ -f "$d/pr.$head.$state" ]]; then cat "$d/pr.$head.$state"; else echo '[]'; fi
 """
 
@@ -858,3 +859,276 @@ def test_force_delete_never_opens_a_network_path(command, repo_with_branch, gh):
 def test_branch_commands_that_are_not_a_force_delete_pass(command, repo_with_branch):
     result = run_hook(command, project_dir=repo_with_branch)
     assert result.returncode == 0, result.stderr.decode()
+
+
+# --- #168 F5: the git name is read the way the shell reads it ----------------
+
+TOOLS = ["Bash", "PowerShell"]
+
+F5_SPELLINGS = [
+    '"git"',
+    "g''it",
+    "Git",
+    '& "C:\\Program Files\\Git\\cmd\\git.exe"',
+]
+
+GUARDED = [
+    "push origin main",
+    "reset --hard",
+    "clean -f",
+    "checkout .",
+    "restore .",
+    "branch -D done-branch",
+]
+
+
+@pytest.mark.parametrize("tool", TOOLS)
+@pytest.mark.parametrize("guarded", GUARDED)
+@pytest.mark.parametrize("spelling", F5_SPELLINGS)
+def test_an_f5_spelling_is_judged_as_git(spelling, guarded, tool, repo_with_branch):
+    # no merged PR in the gh shim, so the force delete must block too
+    result = run_hook(f"{spelling} {guarded}", project_dir=repo_with_branch, tool=tool)
+    assert result.returncode == 2, result.stderr.decode()
+    assert b"BLOCKED" in result.stderr
+
+
+@pytest.mark.parametrize("tool", TOOLS)
+@pytest.mark.parametrize("spelling", F5_SPELLINGS)
+def test_an_f5_spelling_bare_push(spelling, tool, on_main, on_feature):
+    result = run_hook(f"{spelling} push -u origin", project_dir=on_main, tool=tool)
+    assert result.returncode == 2, result.stderr.decode()
+    assert b"current checked-out branch is 'main'" in result.stderr
+    result = run_hook(f"{spelling} push -u origin", project_dir=on_feature, tool=tool)
+    assert result.returncode == 0, result.stderr.decode()
+
+
+@pytest.mark.parametrize("tool", TOOLS)
+@pytest.mark.parametrize("safe", ["push origin my-feature", "status", "restore --staged .", "clean -n"])
+@pytest.mark.parametrize("spelling", F5_SPELLINGS)
+def test_an_f5_spelling_that_is_safe_passes(spelling, safe, tool, on_feature):
+    result = run_hook(f"{spelling} {safe}", project_dir=on_feature, tool=tool)
+    assert result.returncode == 0, result.stderr.decode()
+
+
+@pytest.mark.parametrize("tool", TOOLS)
+@pytest.mark.parametrize("spelling", F5_SPELLINGS)
+def test_an_f5_spelling_keeps_the_force_delete_exemption(spelling, tool, repo_with_branch, gh):
+    set_pr(gh, "done-branch", tip(repo_with_branch, "done-branch"))
+    result = run_hook(f"{spelling} branch -D done-branch", project_dir=repo_with_branch, tool=tool)
+    assert result.returncode == 0, result.stderr.decode()
+
+
+# a name the hook cannot read, right before a guarded verb, is tried as git
+CANNOT_TELL = [
+    "$g push origin main",
+    "$'\\x67it' reset --hard",
+    "/usr/bin/g?t clean -f",
+]
+
+
+@pytest.mark.parametrize("tool", TOOLS)
+@pytest.mark.parametrize("command", CANNOT_TELL)
+def test_a_name_the_hook_cannot_read_is_tried_as_git(command, tool, on_feature):
+    result = run_hook(command, project_dir=on_feature, tool=tool)
+    assert result.returncode == 2, result.stderr.decode()
+    assert b"cannot tell whether" in result.stderr
+
+
+@pytest.mark.parametrize("tool", TOOLS)
+@pytest.mark.parametrize("command", [
+    "& $git checkout .",
+    '"$(echo git)" restore .',
+    "`echo git` branch -D done-branch",
+    "${GIT} reset --hard",
+])
+def test_a_substituted_name_blocks(command, tool, repo_with_branch):
+    result = run_hook(command, project_dir=repo_with_branch, tool=tool)
+    assert result.returncode == 2, result.stderr.decode()
+
+
+@pytest.mark.parametrize("tool", TOOLS)
+@pytest.mark.parametrize("command", [
+    'git commit -m "$msg"',
+    "echo $HOME",
+    "$g status",
+    "$g log --oneline main",
+    "ls *.txt",
+])
+def test_an_unreadable_word_that_could_not_block_passes(command, tool, on_feature):
+    result = run_hook(command, project_dir=on_feature, tool=tool)
+    assert result.returncode == 0, result.stderr.decode()
+
+
+@pytest.mark.parametrize("tool", TOOLS)
+@pytest.mark.parametrize("command", [
+    "g\\it reset --hard",
+    "g`it reset --hard",
+    "GIT.EXE clean -fd",
+    "/usr/lib/git-core/git-push origin main",
+    "bash -c '\"Git\" reset --hard'",
+    "git RESET --hard",
+    "& 'C:\\Program Files\\Git\\cmd\\git.exe' checkout .",
+])
+def test_other_spellings_of_the_same_class_block(command, tool, on_feature):
+    result = run_hook(command, project_dir=on_feature, tool=tool)
+    assert result.returncode == 2, result.stderr.decode()
+
+
+@pytest.mark.skipif(sys.platform == "win32", reason="Git Bash puts /usr/bin before the PATH it inherits, so a shim cannot shadow awk")
+def test_a_failing_awk_blocks_instead_of_checking_nothing(gh, on_feature):
+    # the gh shim folder is first on PATH: an awk there that fails must not
+    # leave the command unchecked
+    awk = gh / "awk"
+    awk.write_bytes(b"#!/bin/bash\nexit 1\n")
+    awk.chmod(0o755)
+    result = run_hook("git status", project_dir=on_feature)
+    assert result.returncode == 2, result.stderr.decode()
+    assert b"could not read the command" in result.stderr
+
+
+@pytest.mark.skipif(sys.platform == "win32", reason="Git Bash puts /usr/bin before the PATH it inherits, so a shim cannot shadow awk")
+def test_an_awk_that_prints_nothing_blocks(gh, on_feature):
+    awk = gh / "awk"
+    awk.write_bytes(b"#!/bin/bash\nexit 0\n")
+    awk.chmod(0o755)
+    result = run_hook("git status", project_dir=on_feature)
+    assert result.returncode == 2, result.stderr.decode()
+    assert b"no readings" in result.stderr
+
+
+# more shell forms of the git name and its words (#168, review round 1)
+MORE_SHELL_FORMS = [
+    "`printf '\\147it'` reset --hard",
+    "& ('g'+'it') reset --hard",
+    '$(: "(") "git" reset --hard',
+    "$(echo git;) reset --hard",
+    "$(which git | head -1) reset --hard",
+    "git>/dev/null reset --hard",
+    "{git,reset,--hard}",
+    "{git,} reset --hard",
+    "& \u201cgit\u201d reset --hard",
+    "& \u2018git\u2019 clean -f",
+    "gi\\\nt reset --hard",
+    "git re\\\nset --hard",
+    "git -C . RESET --hard",
+    '"\\git" reset --hard',
+    '"g`it" checkout .',
+    "'C:\\Tools\\it''s\\git.exe' restore .",
+]
+
+
+@pytest.mark.parametrize("tool", TOOLS)
+@pytest.mark.parametrize("command", MORE_SHELL_FORMS)
+def test_more_shell_forms_are_read(command, tool, on_feature):
+    result = run_hook(command, project_dir=on_feature, tool=tool)
+    assert result.returncode == 2, result.stderr.decode()
+    assert b"could not read the command" not in result.stderr
+
+
+@pytest.mark.parametrize("tool", TOOLS)
+def test_a_command_sent_with_raw_unicode_is_read(tool, on_feature):
+    body = {"hook_event_name": "PreToolUse", "tool_name": tool,
+            "tool_input": {"command": "& \u201cgit\u201d reset --hard"}}
+    result = run_payload(json.dumps(body, ensure_ascii=False), project_dir=on_feature)
+    assert result.returncode == 2, result.stderr.decode()
+
+
+@pytest.mark.parametrize("tool", TOOLS)
+def test_a_branch_whose_last_part_is_git_is_an_argument(tool, repo_with_branch, gh):
+    git(repo_with_branch, "branch", "topic/git")
+    (gh / "pr.topic").mkdir()
+    (gh / "pr.topic" / "git.merged").write_text(json.dumps([{"headRefOid": tip(repo_with_branch, "topic/git")}]))
+    result = run_hook("git branch -D topic/git", project_dir=repo_with_branch, tool=tool)
+    assert result.returncode == 0, result.stderr.decode()
+    result = run_hook("Git branch -D topic/git", project_dir=repo_with_branch, tool=tool)
+    assert result.returncode == 0, result.stderr.decode()
+
+
+@pytest.mark.parametrize("tool", TOOLS)
+def test_a_folder_named_git_is_an_argument(tool, on_feature, tmp_path):
+    main_named_git = make_repo(tmp_path / "x" / "git", "main")
+    result = run_hook(f"Git -C {main_named_git.as_posix()} push", project_dir=on_feature, tool=tool)
+    assert result.returncode == 2, result.stderr.decode()
+    assert b"could not read the command" not in result.stderr
+    assert b"current checked-out branch is 'main'" in result.stderr
+
+
+# F11 (review re-check at 5f95725): a later git path whose subcommand
+# follows a global option is still tried as git
+@pytest.mark.parametrize("tool", TOOLS)
+@pytest.mark.parametrize("command", [
+    'x=/git "/c/Program Files/Git/cmd/git.exe" -c "user.name=a b" reset --hard',
+    'env -u git "/c/Program Files/Git/cmd/git.exe" -c "user.name=a b" reset --hard',
+])
+def test_f11_a_later_git_path_after_a_global_option_blocks(command, tool, on_feature):
+    result = run_hook(command, project_dir=on_feature, tool=tool)
+    assert result.returncode == 2, result.stderr.decode()
+    assert b"could not read the command" not in result.stderr
+
+
+@pytest.mark.parametrize("tool", TOOLS)
+@pytest.mark.parametrize("command", [
+    'git branch -D done-branch "#" other-branch',
+    "git branch -D done-branch \\# other-branch",
+    "git branch -D done-branch '#x' other-branch",
+    '"git" branch -D done-branch "#" other-branch',
+])
+def test_force_delete_names_are_all_checked(command, tool, repo_with_branch, gh):
+    git(repo_with_branch, "branch", "other-branch")
+    set_pr(gh, "done-branch", tip(repo_with_branch, "done-branch"))
+    result = run_hook(command, project_dir=repo_with_branch, tool=tool)
+    assert result.returncode == 2, result.stderr.decode()
+    assert b"could not read the command" not in result.stderr
+
+
+def test_gh_is_asked_once_per_branch(repo_with_branch, gh):
+    set_pr(gh, "done-branch", tip(repo_with_branch, "done-branch"))
+    result = run_hook('git branch -D "done-branch"', project_dir=repo_with_branch)
+    assert result.returncode == 0, result.stderr.decode()
+    assert (gh / "calls").read_text().split() == ["done-branch"]
+
+
+@pytest.mark.parametrize("tool", TOOLS)
+@pytest.mark.parametrize("command", [
+    '"git" status && "git" push origin main',
+    "Git status; Git reset --hard",
+    "g''it status | Git clean -f",
+    "Git -C . push origin main",
+    '"git" -c x=y reset --hard',
+    '"git" push 2>&1 origin main',
+    "Git push origin main # done",
+])
+def test_a_spelled_name_with_options_and_chains(command, tool, on_feature):
+    result = run_hook(command, project_dir=on_feature, tool=tool)
+    assert result.returncode == 2, result.stderr.decode()
+    assert b"could not read the command" not in result.stderr
+
+
+@pytest.mark.parametrize("tool", TOOLS)
+def test_a_spelled_name_pushing_head_on_main(tool, on_main):
+    result = run_hook('"git" push origin HEAD', project_dir=on_main, tool=tool)
+    assert result.returncode == 2, result.stderr.decode()
+
+
+@pytest.mark.parametrize("tool", TOOLS)
+@pytest.mark.parametrize("command", [
+    "git push origin my-feature 2>&1",
+    "git commit -m \"$(printf 'a; b | c')\"",
+    "echo {a,b} git status",
+    "git log --format='%h (%s)'",
+    "Git push origin my-feature # done",
+])
+def test_more_shell_forms_that_are_safe_pass(command, tool, on_feature):
+    result = run_hook(command, project_dir=on_feature, tool=tool)
+    assert result.returncode == 0, result.stderr.decode()
+
+
+# Ben's ruling on #168, question 1 (whole segment): a quoted refspec reads main too
+@pytest.mark.parametrize("tool", TOOLS)
+@pytest.mark.parametrize("command", [
+    "git push origin HEAD:ma''in",
+    'git push origin ma"in"',
+])
+def test_a_quoted_refspec_naming_main_blocks(command, tool, on_feature):
+    result = run_hook(command, project_dir=on_feature, tool=tool)
+    assert result.returncode == 2, result.stderr.decode()
