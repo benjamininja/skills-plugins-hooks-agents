@@ -892,9 +892,69 @@ def test_compact_trigger_and_keys_print_only_when_known(tmp_path, capsys):
     out = run(capsys, "compacts", "--store", str(s), "--from", "2026-11-22", "--to", "2026-11-22")
     assert PLANT not in out
     assert "triggers: {'other': 2}" in out
-    assert "compactMetadata keys seen: durationMs, other, postTokens, preTokens, trigger" in out
+    # F4 of #319: the unknown key folds into other, with its count shown
+    assert "compactMetadata keys seen: durationMs, other=1, postTokens, preTokens, trigger" in out
     out = run(capsys, "trial", "--store", str(s), "tttt0001-0000")
     assert PLANT not in out and "trigger=other pre=150000 post=20000 durationMs=5" in out
+
+
+def test_unknown_compact_keys_are_counted_under_other(tmp_path, capsys):
+    # F4 of #319: two distinct unknown keys over two compacts count as two
+    s = tmp_path / "store"
+    cp = compact(T(22, "11:00:00"))
+    cp["compactMetadata"][PLANT] = 1
+    cp2 = {**compact(T(22, "12:00:00")), "uuid": "c2"}
+    cp2["compactMetadata"][PLANT + "2"] = 1
+    write(s / SLUG_A / "tttt0002-0000.jsonl", [
+        title("the planner"), reply("c1", T(22)), cp, reply("c2", T(22, "11:00:02")),
+        cp2, reply("c3", T(22, "12:00:02"))])
+    out = run(capsys, "compacts", "--store", str(s), "--from", "2026-11-22", "--to", "2026-11-22")
+    assert PLANT not in out
+    assert "compactMetadata keys seen: durationMs, other=2, postTokens, preTokens, trigger" in out
+
+
+def test_count_of_prints_a_float_rounded_and_nothing_else_stored():
+    # F2 of #319
+    assert usage.count_of(150000) == "150000"
+    assert usage.count_of(150000.6) == "150001"
+    assert usage.count_of(None) == "None"
+    for v in (True, "150000", float("nan"), float("inf"), [1]):
+        assert usage.count_of(v) == "?"
+
+
+def test_trial_prints_a_float_token_count_rounded(tmp_path, capsys):
+    s = tmp_path / "store"
+    write(s / SLUG_A / "tttt0003-0000.jsonl", [
+        title("the planner"), reply("c1", T(22)), compact(T(22, "11:00:00"), pre=150000.4, post=20000.0),
+        reply("c2", T(22, "11:00:02"))])
+    out = run(capsys, "trial", "--store", str(s), "tttt0003-0000")
+    assert "pre=150000 post=20000 durationMs=5" in out
+
+
+def test_a_session_with_no_counted_replies_prints_the_no_replies_mark(tmp_path, capsys):
+    # F3 of #319: not model other, which reads as an unknown model
+    p = write(tmp_path / "s.jsonl", [user(PROMPT, T(21)), reply("syn", T(21), model="<synthetic>")])
+    out = run(capsys, "turns", str(p))
+    assert "model no-replies" in out and "model other" not in out
+
+
+def test_reads_prints_only_a_known_extension(tmp_path, capsys):
+    # F1 of #319: an extension not on the list prints as other, never as itself
+    p = write(tmp_path / "s.jsonl", [
+        user(PROMPT, T(20)),
+        reply("a", T(20), i=0, cr=1000, stop="tool_use",
+              calls=[("u1", "Read", {"file_path": "C:/x/notes." + PLANT[:8]}),
+                     ("u2", "Read", {"file_path": "C:/x/notes.MD"}),
+                     ("u3", "Read", {"file_path": "C:/x/Makefile"})]),
+        result("u1", "x" * 400, T(20)),
+        result("u2", "x" * 400, T(20)),
+        result("u3", "x" * 400, T(20)),
+        reply("b", T(20), i=0, cr=1600, stop="end_turn"),
+    ])
+    out = run(capsys, "reads", str(p))
+    assert PLANT[:8] not in out
+    rows = [ln.split() for ln in out.splitlines() if ln.strip().startswith("1 ")]
+    assert [r[2] for r in rows] == ["other", ".md", "200"]  # the last has no extension column
 
 
 def test_context_prints_only_known_shape_keys_with_a_count_for_the_rest(tmp_path, capsys):
