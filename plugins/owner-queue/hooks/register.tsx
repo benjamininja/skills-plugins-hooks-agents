@@ -42,11 +42,11 @@ import {
   comment,
   commit,
   detail,
+  fault,
   layout,
   here,
   hint,
   idOf,
-  isMalformed,
   labelOf,
   notesOf,
   options,
@@ -67,12 +67,13 @@ import {
   waiting,
 } from './parse'
 
-const VERSION = '0.12.0'
+const VERSION = '0.12.1'
 const PANE = 'owner-queue'
 const TITLE = 'Needs owner'
 const FILE = '.claude/memory/NEEDS-OWNER.md'
 const PROBLEMS = '.claude/owner-queue/problems.log'
 const PROBLEM_KIND = 'Options line: a key appears twice'
+const PROBLEM_KIND_FEW = 'Options line: fewer than two options'
 const EVERY_MS = 5000
 const GIVE_UP_MS = 60000
 const BY_HAND =
@@ -383,14 +384,16 @@ async function log($: EngineInterface, items: OwnerItem[]): Promise<void> {
   if (isLogging) return
   isLogging = true
   try {
-    const bad = items
-      .filter(
-        item =>
-          item.kind === 'decision' &&
-          answerOf(item) === undefined &&
-          isMalformed(item),
-      )
-      .map(item => ({ item, mark: `${at(item)}|${PROBLEM_KIND}` }))
+    const bad = items.flatMap(item => {
+      const found =
+        item.kind === 'decision' && answerOf(item) === undefined
+          ? fault(item)
+          : undefined
+      if (found === undefined) return []
+      const kind = found === 'twice' ? PROBLEM_KIND : PROBLEM_KIND_FEW
+
+      return [{ item, kind, mark: `${at(item)}|${kind}` }]
+    })
     const had = await kept<string[]>($, LOGGED, [])
     const marks = bad.map(({ mark }) => mark)
     if (marks.length === had.length && marks.every(mark => had.includes(mark)))
@@ -402,8 +405,8 @@ async function log($: EngineInterface, items: OwnerItem[]): Promise<void> {
     const path = `${base}/${PROBLEMS}`
     const { day, time } = await clock($)
     const before = (await $.fs.exists(path)) ? await $.fs.read(path) : ''
-    const lines = fresh.map(({ item }) =>
-      problemLine(`${day} ${time}`, item.queue ?? FILE, item, PROBLEM_KIND),
+    const lines = fresh.map(({ item, kind }) =>
+      problemLine(`${day} ${time}`, item.queue ?? FILE, item, kind),
     )
     await $.fs.write(
       path,
@@ -1625,6 +1628,8 @@ export const register: Register = (on, settings) => {
       const mine = held[id]
       const choices =
         item.kind === 'decision' && given === undefined ? options(item) : []
+      const broken =
+        item.kind === 'decision' && given === undefined ? fault(item) : undefined
       // Every code span and block is copied from under the field or the
       // step that names it; an option's spans under the options.
       const blocks = item.blocks ?? []
@@ -1760,11 +1765,21 @@ export const register: Register = (on, settings) => {
                   </Box>
                 )
               })}
-              {item.kind === 'decision' && given === undefined && isMalformed(item) && (
+              {broken === 'twice' && (
                 <Box marginTop={1}>
                   <Text bold>
                     The Options line is malformed: a key appears twice. No
                     options are drawn. Fix the line in the file.
+                  </Text>
+                </Box>
+              )}
+              {broken === 'few' && (
+                <Box marginTop={1}>
+                  <Text bold>
+                    The Options line is malformed: fewer than two options were
+                    read. A key counts only at the start of the line or right
+                    after a semicolon. No options are drawn. Fix the line in
+                    the file.
                   </Text>
                 </Box>
               )}

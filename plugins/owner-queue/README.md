@@ -210,7 +210,10 @@ such as `(a)` counts only at the start of the Options line or right after a
 `;`; anywhere else it is part of the option's text, so `(b) the rest as in
 (a)` is one option. If one key starts two options, the pane draws no options
 for that entry and says the Options line is malformed. Write each option so
-that it stands alone.
+that it stands alone. An Options line that holds text but reads to fewer than
+two options is malformed too, and the pane says so with its own note: one
+option alone, or a second key after a `.` rather than a `;`, as in
+`(1) one. (2) two`. A decision with no Options line is not malformed.
 
 Only the pane writes an `Answer:` or a `Note:` line; no agent writes, edits
 or removes one. (The queue command line below removes a whole entry, and its
@@ -333,7 +336,8 @@ only when none of the files exists.
 ### The problems log
 
 When the parser cannot draw an entry (today: an Options line that uses a key
-twice), the pane adds one line to `~/.claude/owner-queue/problems.log`:
+twice, or one that reads to fewer than two options, each logged under its own
+kind), the pane adds one line to `~/.claude/owner-queue/problems.log`:
 `<day> <time> | <queue file> | <entry title> | <kind of problem>`. It holds
 no field value. An entry with the same problem is logged once, not on every
 5-second read; it is logged again if it is fixed and then breaks again. The
