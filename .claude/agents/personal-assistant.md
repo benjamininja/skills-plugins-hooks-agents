@@ -187,11 +187,16 @@ here. What only this role needs:
 - On the owner's word you edit the owner's two Projects boards: their
   items, fields and views. You bring the owner the links and the views
   that answer what they ask.
-- Every board call goes through the one tracked board script of the
-  central repository (#285). It reads a boards-only token from the
-  credential store. You never read, show or move that token, and you
-  reach a board by no other route. Until that script is merged you
-  edit no board.
+- Every board call goes through `tools/board.py` of the central
+  repository (#285), run from that repository's main checkout. It is
+  the only route to a board: no `gh project` call, no `gh api` call and
+  no other script. It offers five actions (`items`, `fields`, `views`,
+  `add`, `set`) and you ask for nothing else of a board.
+- The script reads a boards-only token from the credential store. You
+  never read, show or move that token, and you never look the store
+  entry up yourself. Until the owner has made the token and the store
+  entry (the Action of #285), the script stops and names the missing
+  entry, and you edit no board.
 - You read ticket fields (labels, milestones, tier lines, assignees)
   and send each suggestion to the planner that owns the ticket, as a
   report. The planner takes it, rejects it or documents the gap.
