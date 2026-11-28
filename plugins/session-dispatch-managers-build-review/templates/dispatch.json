@@ -13,12 +13,15 @@
   "//claude": "The Claude CLI. A bare name is found on PATH; a full path also works.",
   "claude": "claude",
 
-  "//setup": "Commands run in the new worktree before the session starts, one PowerShell line each. They are run as written. Leave the list empty when the project needs none.",
+  "//setup": "Run by default: commands run in the new worktree before the session starts, one PowerShell line each, as written. It is meant to be the light list (a venv with no pip that reads the main checkout's packages; see the README, Setup). Leave it empty when the project needs none.",
   "setup": [],
+
+  "//setupFull": "Run only with dispatch.ps1 -FullSetup, in place of setup: the full list, for a brief that says venv: full. Same form as setup. Empty or missing: -FullSetup is refused before anything is made.",
+  "setupFull": [],
 
   "//readLine": "The first lines of every builder's prompt: what it reads before it works. No double quote.",
   "readLine": "Read .claude/memory/PROJECT-RULES.md and .claude/memory/NEEDS-OWNER.md, then load the session-rules skill.",
 
-  "//tiers": "Optional. Overrides of the plugin's tier table, per tier: model, effort, turnCap. Leave it out to use the defaults (low: claude-sonnet-5-5, medium, 30 turns; medium: claude-sonnet-5-5, high, 80; high: claude-opus-5-5, medium, 200).",
+  "//tiers": "Optional. Overrides of the plugin's tier table, per tier: model, effort, turnCap. Leave it out to use the defaults (haiku: claude-haiku-5-5, medium, 15 turns; low: claude-sonnet-5-5, medium, 30 turns; medium: claude-sonnet-5-5, high, 80; high: claude-opus-5-5, medium, 200).",
   "tiers": {}
 }

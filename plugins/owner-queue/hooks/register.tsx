@@ -4,14 +4,36 @@ import type { EngineInterface, Register, RenderSurface } from 'claude-code'
 import type {
   OwnerAnswers,
   OwnerComments,
+  OwnerHeld,
   OwnerItem,
   OwnerNotes,
   OwnerOption,
   OwnerQueue,
   OwnerQueueFile,
+  OwnerRoster,
+  OwnerSession,
   OwnerStaged,
 } from '../types'
 import type { Committed } from './parse'
+import type { PrepRequest, SessionRecord } from './sessions'
+import {
+  HEARTBEAT_MS,
+  START_LINES,
+  REQUESTS,
+  SESSIONS,
+  WHY,
+  fileName,
+  instruction,
+  isContextDue,
+  isDown,
+  isFresh,
+  isIdleDue,
+  isUsed,
+  recordOf,
+  roleOf,
+  seenOf,
+  wordOf,
+} from './sessions'
 import {
   answerOf,
   carried,
@@ -20,11 +42,11 @@ import {
   comment,
   commit,
   detail,
+  fault,
   layout,
   here,
   hint,
   idOf,
-  isMalformed,
   labelOf,
   notesOf,
   options,
@@ -45,12 +67,13 @@ import {
   waiting,
 } from './parse'
 
-const VERSION = '0.11.0'
+const VERSION = '0.12.1'
 const PANE = 'owner-queue'
 const TITLE = 'Needs owner'
 const FILE = '.claude/memory/NEEDS-OWNER.md'
 const PROBLEMS = '.claude/owner-queue/problems.log'
 const PROBLEM_KIND = 'Options line: a key appears twice'
+const PROBLEM_KIND_FEW = 'Options line: fewer than two options'
 const EVERY_MS = 5000
 const GIVE_UP_MS = 60000
 const BY_HAND =
@@ -77,6 +100,23 @@ const NO_COMMENTS: OwnerComments = {}
 const comments = atom(commentsRef, NO_COMMENTS)
 const writing = atom({ plugin: 'owner-queue', key: 'writing' } as const, [])
 const strokes = atom({ plugin: 'owner-queue', key: 'strokes' } as const, 0)
+const rosterRef = { plugin: 'owner-queue', key: 'roster' } as const
+const NO_ROSTER: OwnerRoster = { sessions: [], held: [] }
+const roster = atom(rosterRef, NO_ROSTER)
+
+/**
+ * This session's own record, when it was started with a tracked role. Only
+ * this session writes its file (#161). Read back from the file after a reload.
+ */
+let self: SessionRecord | undefined
+
+/** True from a prep instruction until the turn it asked for starts. */
+let isQueued = false
+
+let isTending = false
+
+/** A start line the `/clear` re-key moved, waiting for the new id's record. */
+let moved: { to: string; at: number } | undefined
 
 /**
  * What is typed in each open comment box, by item id. Kept here and not in
@@ -344,14 +384,16 @@ async function log($: EngineInterface, items: OwnerItem[]): Promise<void> {
   if (isLogging) return
   isLogging = true
   try {
-    const bad = items
-      .filter(
-        item =>
-          item.kind === 'decision' &&
-          answerOf(item) === undefined &&
-          isMalformed(item),
-      )
-      .map(item => ({ item, mark: `${at(item)}|${PROBLEM_KIND}` }))
+    const bad = items.flatMap(item => {
+      const found =
+        item.kind === 'decision' && answerOf(item) === undefined
+          ? fault(item)
+          : undefined
+      if (found === undefined) return []
+      const kind = found === 'twice' ? PROBLEM_KIND : PROBLEM_KIND_FEW
+
+      return [{ item, kind, mark: `${at(item)}|${kind}` }]
+    })
     const had = await kept<string[]>($, LOGGED, [])
     const marks = bad.map(({ mark }) => mark)
     if (marks.length === had.length && marks.every(mark => had.includes(mark)))
@@ -363,8 +405,8 @@ async function log($: EngineInterface, items: OwnerItem[]): Promise<void> {
     const path = `${base}/${PROBLEMS}`
     const { day, time } = await clock($)
     const before = (await $.fs.exists(path)) ? await $.fs.read(path) : ''
-    const lines = fresh.map(({ item }) =>
-      problemLine(`${day} ${time}`, item.queue ?? FILE, item, PROBLEM_KIND),
+    const lines = fresh.map(({ item, kind }) =>
+      problemLine(`${day} ${time}`, item.queue ?? FILE, item, kind),
     )
     await $.fs.write(
       path,
@@ -550,6 +592,7 @@ async function rekey($: EngineInterface): Promise<void> {
     await shift<string[]>($, 'done', from, to, [], (into, was) => [
       ...new Set([...into, ...was]),
     ])
+    await moveStartLine($, from, to)
     let count = 0
     let left = 0
     for (const one of await every($)) {
@@ -576,8 +619,12 @@ async function rekey($: EngineInterface): Promise<void> {
   }
 }
 
-/** Re-reads every queue file; redraws and toasts on a change. The owner opens the pane. */
-async function refresh($: EngineInterface): Promise<OwnerQueue> {
+/**
+ * Re-reads every queue file; redraws and toasts on a change. The owner opens
+ * the pane. `canPrep` is false inside a `command.run` hook, where a submitted
+ * prompt would wait on the hook itself; the next read takes the triggers.
+ */
+async function refresh($: EngineInterface, canPrep = true): Promise<OwnerQueue> {
   await rekey($)
   const sources = await every($)
   const { file, isMain } = sources[0]
@@ -626,6 +673,8 @@ async function refresh($: EngineInterface): Promise<OwnerQueue> {
   $.ui.status(summary(now.items))
   await log($, items)
   await deliver($, items, answered, wrote)
+  await roll($, items, answered, wrote)
+  if (canPrep) await tend($)
   await $.state.set(readAtRef, (await clock($)).time)
   // What was staged for an entry that has left the list is dropped.
   const { value: held = NONE } = await $.state.get(stagedRef)
@@ -688,15 +737,32 @@ function stage(
       ? was === what
       : was.key !== OTHER && was.key === what.key)
 
+  let isTaken = false
+
   return update($, staged, held => {
     const { [id]: was, ...rest } = held
+    isTaken = isSame(was)
 
-    return isSame(was) ? rest : { ...rest, [id]: what }
-  })
+    return isTaken ? rest : { ...rest, [id]: what }
+  }).then(() =>
+    // A press that stages closes the entry, as a press on its title would.
+    isTaken
+      ? undefined
+      : update($, open, list => list.filter(one => one !== id)),
+  )
 }
 
-/** What one Submit did in one queue file. */
-type Wrote = { count: number; away: number; said: Committed; lost: number }
+/**
+ * What one Submit did in one queue file; `to` names each other session that
+ * an answer, Note or done mark went to.
+ */
+type Wrote = {
+  count: number
+  away: number
+  said: Committed
+  lost: number
+  to: string[]
+}
 
 /**
  * Writes what was staged for one queue file, in one write to that file, and
@@ -720,6 +786,7 @@ async function write1(
       away: 0,
       said: { text: '', answered: [], noted: [], done: [], missing: [] },
       lost,
+      to: [],
     }
   }
   const made = commit(
@@ -782,7 +849,15 @@ async function write1(
       })
   }
 
-  return { count, away, said, lost: made.missing.length }
+  const to = [
+    ...made.answered.map(({ item }) => item),
+    ...made.noted.map(({ item }) => item),
+    ...made.done,
+  ]
+    .map(sessionOf)
+    .filter((id): id is string => id !== undefined && id !== mine)
+
+  return { count, away, said, lost: made.missing.length, to }
 }
 
 /**
@@ -834,6 +909,7 @@ async function submit($: EngineInterface): Promise<void> {
   let count = 0
   let away = 0
   let lost = unplaced.size
+  const targets = new Set<string>()
   const said: Committed = {
     text: '',
     answered: [],
@@ -849,6 +925,7 @@ async function submit($: EngineInterface): Promise<void> {
     said.answered.push(...one.said.answered)
     said.noted.push(...one.said.noted)
     said.done.push(...one.said.done)
+    for (const id of one.to) targets.add(id)
   }
   await $.state.set(stagedRef, NONE)
   await $.state.set(commentsRef, NO_COMMENTS)
@@ -856,6 +933,15 @@ async function submit($: EngineInterface): Promise<void> {
   const notFound = lost > 0 ? `; ${lost} not found` : ''
   const gone = away > 0 ? `; ${away} go to the session that raised them` : ''
   $.ui.toast(`Submitted: ${count}${notFound}${gone}`)
+  // A target that is not running is named, and its item is held (#161).
+  const { value: known = NO_ROSTER } = await $.state.get(rosterRef)
+  for (const id of targets) {
+    const one = known.sessions.find(row => row.id === id)
+    if (one !== undefined && isDown(one.seen))
+      $.ui.toast(
+        `Held for ${one.name}: it is ${one.seen}; the item waits until it runs again`,
+      )
+  }
   if (count - away > 0)
     void $.prompt.submit({
       text: report(said, stamp),
@@ -1005,11 +1091,346 @@ async function copy(
   $.ui.toast(isCopied ? `Copied: ${what}` : 'Could not copy here')
 }
 
+/**
+ * The mod's own data folder, where `drafts` is: the plugin folder, inside the
+ * live clone, its data folders gitignored and never committed.
+ */
+function dataDir($: EngineInterface): string {
+  return $.plugin.root.replaceAll('\\', '/')
+}
+
+const recordPath = ($: EngineInterface, id: string) =>
+  `${dataDir($)}/${SESSIONS}/${fileName(id)}.json`
+const requestPath = ($: EngineInterface, id: string) =>
+  `${dataDir($)}/${REQUESTS}/${fileName(id)}.json`
+
+/** Where a tracked session writes its start line (the write route, #161). */
+const startLinePath = ($: EngineInterface, id: string) =>
+  `${dataDir($)}/${START_LINES}/${fileName(id)}.md`
+
+/** A file time as `YYYY-MM-DD HH:MM`. */
+function dated(ms: number): string {
+  const at = new Date(ms)
+
+  return `${at.getFullYear()}-${two(at.getMonth() + 1)}-${two(at.getDate())} ${two(at.getHours())}:${two(at.getMinutes())}`
+}
+
+/** True while this session's record could not be written; said once (F7). */
+let isUnsaved = false
+
+/**
+ * Writes this session's own record whole. A failed write is said once, since
+ * other panes would then draw this running session as stopped; the next
+ * heartbeat writes it again.
+ */
+async function save($: EngineInterface): Promise<void> {
+  if (self === undefined) return
+  try {
+    await $.fs.write(recordPath($, self.id), `${JSON.stringify(self, null, 2)}\n`)
+    isUnsaved = false
+  } catch {
+    if (!isUnsaved)
+      $.ui.toast(
+        "owner-queue: this session's record could not be written; other panes may show it stopped",
+      )
+    isUnsaved = true
+  }
+}
+
+async function readRecord(
+  $: EngineInterface,
+  id: string,
+): Promise<SessionRecord | undefined> {
+  try {
+    return recordOf(await $.fs.read(recordPath($, id)))
+  } catch {
+    return undefined
+  }
+}
+
+/** The start line file's time and size, or undefined when it is missing. */
+async function startLineStat(
+  $: EngineInterface,
+  id: string,
+): Promise<{ mtimeMs: number; size: number } | undefined> {
+  try {
+    const stat = await $.fs.stat(startLinePath($, id))
+
+    return stat.kind === 'file' ? { mtimeMs: stat.mtimeMs, size: stat.size } : undefined
+  } catch {
+    return undefined
+  }
+}
+
+/**
+ * Tracks this session when it was started with a tracked role, at
+ * `classic.SessionStart`, and after a `/clear` under the new id. A compaction
+ * keeps the record as it was. A start or a resume takes no request older
+ * than itself, and its idle time counts from its first turn in this process,
+ * not from a turn before it was resumed (F5 of PR #197's review).
+ */
+async function enroll(
+  $: EngineInterface,
+  id: string | undefined,
+  role: string | undefined,
+  title: string | undefined,
+  source: string,
+): Promise<void> {
+  if (!id || role === undefined) {
+    self = undefined
+
+    return
+  }
+  const now = await stamp($)
+  const was = await readRecord($, id)
+  const isCompact = source === 'compact'
+  self = {
+    id,
+    role,
+    name: title?.trim() || was?.name || role,
+    // A compaction can come mid-turn: it keeps the state it found.
+    state: isCompact && was?.state === 'busy' ? 'busy' : 'idle',
+    turnStart: was?.turnStart ?? 0,
+    turnEnd: isCompact ? (was?.turnEnd ?? 0) : 0,
+    workStart: was?.workStart ?? 0,
+    tokens: was?.tokens ?? 0,
+    beat: now,
+    ran: isCompact ? (was?.ran ?? now) : Math.max(was?.ran ?? 0, now),
+    sent: was?.sent ?? {},
+    ...(moved?.to === id
+      ? { movedAt: moved.at }
+      : was?.movedAt === undefined
+        ? {}
+        : { movedAt: was.movedAt }),
+  }
+  if (moved?.to === id) moved = undefined
+  await save($)
+}
+
+/**
+ * Sends the prep instruction into this session's own chat, once it is idle.
+ * `ran` is the request it answers, if any. A submit the host refuses takes
+ * nothing: the record is put back, and the next read tries again.
+ */
+async function prep(
+  $: EngineInterface,
+  why: string,
+  now: number,
+  ran?: number,
+): Promise<void> {
+  if (self === undefined) return
+  const one = self
+  const was = { sent: one.sent, ran: one.ran }
+  // One prep answers every trigger until a new turn starts after it.
+  one.sent = { ...one.sent, context: now, idle: now }
+  if (ran !== undefined) one.ran = ran
+  isQueued = true
+  await save($)
+  $.prompt.submit({ text: instruction(why, startLinePath($, one.id)) }).catch(() => {
+    one.sent = was.sent
+    one.ran = was.ran
+    isQueued = false
+    void save($)
+  })
+}
+
+/**
+ * The session's own triggers and the pane's request, checked while it is
+ * idle: a request newer than the last one it took, the context limit, then
+ * 45 minutes idle. A fresh start line stops all three.
+ */
+async function tend($: EngineInterface): Promise<void> {
+  if (self === undefined || self.state !== 'idle' || isQueued || isTending) return
+  isTending = true
+  try {
+    const now = await stamp($)
+    const isLineFresh = isFresh(await startLineStat($, self.id), self)
+    let asked: PrepRequest | undefined
+    try {
+      asked = JSON.parse(await $.fs.read(requestPath($, self.id))) as PrepRequest
+    } catch {
+      asked = undefined
+    }
+    if (typeof asked?.at === 'number' && asked.at > self.ran) {
+      if (!isLineFresh) {
+        await prep($, WHY.request(), now, asked.at)
+
+        return
+      }
+      // A fresh start line answers the request already.
+      self.ran = asked.at
+      await save($)
+    }
+    if (isContextDue(self, isLineFresh))
+      await prep($, WHY.context(self.tokens), now)
+    else if (isIdleDue(self, now, isLineFresh)) await prep($, WHY.idle(), now)
+  } finally {
+    isTending = false
+  }
+}
+
+/** The heartbeat: the record's time, then the triggers. */
+async function beat($: EngineInterface): Promise<void> {
+  if (self === undefined) return
+  self.beat = await stamp($)
+  await save($)
+  await tend($)
+}
+
+/**
+ * After a `/clear`: the start line moves to the new id. The new file takes
+ * the text and the old one is emptied, since the API removes no file. The
+ * new id's record marks it used.
+ */
+async function moveStartLine($: EngineInterface, from: string, to: string): Promise<void> {
+  try {
+    const text = await slurp($, startLinePath($, from))
+    if (text === undefined || text === '') return
+    await $.fs.write(startLinePath($, to), text)
+    await $.fs.write(startLinePath($, from), '')
+    const at = (await startLineStat($, to))?.mtimeMs ?? (await stamp($))
+    if (self?.id === to) {
+      self.movedAt = at
+      await save($)
+    } else moved = { to, at }
+  } catch {
+    $.ui.toast("The start line was not moved to this session's new id")
+  }
+}
+
+/**
+ * Reads every tracked session's record and start line, and what is held
+ * for each one that is not running: pane-written answers and Notes it has
+ * not been told, and done marks waiting in the store.
+ */
+async function roll(
+  $: EngineInterface,
+  items: OwnerItem[],
+  answered: OwnerAnswers,
+  wrote: OwnerNotes,
+): Promise<void> {
+  const now = await stamp($)
+  const folder = `${dataDir($)}/${SESSIONS}`
+  let entries: { name: string; kind: string }[] = []
+  try {
+    entries = [...(await $.fs.list(folder))]
+  } catch {
+    entries = []
+  }
+  const sessions: OwnerSession[] = []
+  for (const entry of entries) {
+    if (entry.kind !== 'file' || !entry.name.endsWith('.json')) continue
+    const text = await slurp($, `${folder}/${entry.name}`)
+    const one = text === undefined ? undefined : recordOf(text)
+    if (one === undefined) continue
+    const seen = seenOf(one, now)
+    if (seen === undefined) continue
+    const stat = await startLineStat($, one.id)
+    sessions.push({
+      id: one.id,
+      role: one.role,
+      name: one.name,
+      seen,
+      ...(stat !== undefined && stat.size > 0
+        ? {
+            prompt: {
+              path: startLinePath($, one.id),
+              at: dated(stat.mtimeMs),
+              isFresh: isFresh(stat, one),
+              isUsed: isUsed(stat, one),
+            },
+          }
+        : {}),
+    })
+  }
+  sessions.sort((a, b) => a.name.localeCompare(b.name) || a.id.localeCompare(b.id))
+  const held: OwnerHeld[] = []
+  for (const one of sessions.filter(row => isDown(row.seen))) {
+    const delivered = await kept<OwnerAnswers>($, `delivered:${one.id}`, {})
+    const noted = await kept<OwnerNotes>($, `noted:${one.id}`, {})
+    const lines: string[] = []
+    for (const item of items.filter(row => sessionOf(row) === one.id)) {
+      const place = at(item)
+      const given = answerOf(item)
+      if (given !== undefined && answered[place] === given && delivered[place] !== given)
+        lines.push(`Answer: ${reference(item)}`)
+      const notes = notesOf(item).filter(
+        line =>
+          (wrote[place] ?? []).includes(line) && !(noted[place] ?? []).includes(line),
+      )
+      if (notes.length > 0)
+        lines.push(
+          `${notes.length} ${notes.length === 1 ? 'Note' : 'Notes'}: ${reference(item)}`,
+        )
+    }
+    lines.push(...(await kept<string[]>($, `done:${one.id}`, [])))
+    if (lines.length > 0)
+      held.push({ id: one.id, name: one.name, seen: one.seen, lines })
+  }
+  const drawn: OwnerRoster = { sessions, held }
+  const { value: was = NO_ROSTER } = await $.state.get(rosterRef)
+  if (JSON.stringify(was) !== JSON.stringify(drawn)) await $.state.set(rosterRef, drawn)
+}
+
+/**
+ * End of Day: a prep request for every running tracked session with no
+ * fresh start line. Each session's own mod takes it at its next read and
+ * runs it once its turn has ended. One not running is drawn in red.
+ */
+async function endOfDay($: EngineInterface): Promise<void> {
+  const { value: now = NO_ROSTER } = await $.state.get(rosterRef)
+  const at = await stamp($)
+  let asked = 0
+  let fresh = 0
+  let down = 0
+  let failed = 0
+  for (const one of now.sessions) {
+    if (isDown(one.seen)) down++
+    else if (one.prompt?.isFresh) fresh++
+    else
+      try {
+        await $.fs.write(requestPath($, one.id), `${JSON.stringify({ at })}\n`)
+        asked++
+      } catch {
+        failed++
+      }
+  }
+  $.ui.toast(
+    [
+      `End of Day: asked ${asked}`,
+      `${fresh} had a fresh start line`,
+      `${down} not running`,
+      ...(failed > 0 ? [`${failed} could not be asked`] : []),
+    ].join('; '),
+  )
+  await refresh($)
+}
+
+/** "Copy start line": the start line file's text, whole. */
+async function copyStartLine(
+  $: EngineInterface,
+  one: OwnerSession,
+  surface: RenderSurface,
+): Promise<void> {
+  const text = await slurp($, startLinePath($, one.id))
+  if (text === undefined || text === '') {
+    $.ui.toast(`No start line for ${one.name}`)
+
+    return
+  }
+  await copy($, text, `the start line of ${one.name}`, surface)
+}
+
 export const register: Register = (on, settings) => {
   found = undefined
   own = undefined
   listed = queuesOf(settings?.queues)
   cleared = undefined
+  self = undefined
+  isQueued = false
+  isTending = false
+  isUnsaved = false
+  moved = undefined
 
   on('session.start', async ($, e, next) => {
     await $.command.register({
@@ -1017,34 +1438,98 @@ export const register: Register = (on, settings) => {
       description:
         'Show the decisions and hands-on actions waiting on the owner',
     })
+    // A reload starts the module's variables over: a tracked session reads
+    // its own record back. A new process is tracked at `classic.SessionStart`.
+    if (self === undefined) {
+      const id = await me($)
+      const was = id === undefined ? undefined : await readRecord($, id)
+      if (was !== undefined && (was.state === 'busy' || was.state === 'idle'))
+        self = was
+    }
     await refresh($)
     $.clock.every(EVERY_MS, () => void refresh($))
+    $.clock.every(HEARTBEAT_MS, () => void beat($))
 
     return next(e)
   })
+
+  // Tracked sessions (#161, Q3): the main thread of a session started with a
+  // tracked `--agent` role. A subagent's start (`agent_id`) is not one.
+  on('classic.SessionStart', async ($, e, next) => {
+    if (e.agent_id === undefined)
+      await enroll($, e.session_id, roleOf(e.agent_type), e.session_title, e.source)
+
+    return next(e)
+  }).catch(($, e, next) => next(e))
+
+  on('turn.start', async ($, e, next) => {
+    if (e.agentId === undefined && self !== undefined) {
+      self.state = 'busy'
+      self.turnStart = await stamp($)
+      // The turn a prep instruction asked for re-arms nothing (F1).
+      if (!isQueued) self.workStart = self.turnStart
+      isQueued = false
+      await save($)
+    }
+
+    return next(e)
+  }).catch(($, e, next) => next(e))
+
+  on('turn.complete', async ($, e, next) => {
+    const done = await next(e)
+    if (e.agentId === undefined && self !== undefined) {
+      self.state = 'idle'
+      self.turnEnd = await stamp($)
+      await save($)
+      await tend($)
+    }
+
+    return done
+  }).catch(($, e, next) => next(e))
+
+  on('session.measure', async ($, e, next) => {
+    if (self !== undefined && typeof e.context.tokens === 'number') {
+      self.tokens = e.context.tokens
+      await save($)
+      await tend($)
+    }
+
+    return next(e)
+  }).catch(($, e, next) => next(e))
 
   // A `/clear` ends the session's id and fires no `session.start` for the new
   // one. The hook reads no id and writes no store: it keeps the ending id, and
   // the next read re-keys once `$.session.id()` answers another. Any other end
   // (a resume into an older conversation) drops it, so that id is never taken
-  // for the cleared session's.
+  // for the cleared session's. A tracked session's record says `cleared` at a
+  // `/clear` and `closed` at any other end.
   on('session.end', async ($, e, next) => {
     if (e.reason !== 'clear') cleared = undefined
     else if (e.sessionId)
       cleared = { from: cleared?.from ?? e.sessionId, at: await stamp($) }
+    if (self !== undefined && self.id === e.sessionId) {
+      self.state = e.reason === 'clear' ? 'cleared' : 'closed'
+      await save($)
+      if (e.reason !== 'clear') self = undefined
+    }
 
     return next(e)
   }).catch(($, e, next) => next(e))
 
   on('command.run', { command: 'owner' }, async ($, e) => {
-    const now = await refresh($)
+    const now = await refresh($, false)
     // `/owner show`, `/owner show a2`: the entries as text in the transcript,
     // where the mouse can select them.
     const asked = /^show\b(.*)$/i.exec((e.args ?? '').trim())
     if (asked) return { text: printed(now.items, asked[1]) }
     // `/owner id`: the id an entry's Session field names for this session.
     if (/^id$/i.test((e.args ?? '').trim()))
-      return { text: `Session: ${(await me($)) ?? 'unknown'}` }
+      return {
+        text: [
+          `Session: ${(await me($)) ?? 'unknown'}`,
+          ...(self === undefined ? [] : [`Start line: ${startLinePath($, self.id)}`]),
+        ].join('\n'),
+      }
     await show($)
 
     return { text: summary(now.items) ?? 'Nothing is waiting on the owner.' }
@@ -1056,18 +1541,31 @@ export const register: Register = (on, settings) => {
     const made = await next(e)
     const mine = await me($)
     const { value: now = EMPTY } = await $.state.get(ref)
-    if (!mine || !now.hasFile) return made
+    const added = [
+      ...(mine && now.hasFile
+        ? [
+            {
+              id: 'owner-queue:session',
+              text: `owner-queue: this session's id is ${mine}. When you write an entry in NEEDS-OWNER.md whose answer should come back to this session, add the field "- Session: ${mine}" to it. For an entry you write for another session, use that session's id.`,
+              scope: 'session' as const,
+            },
+          ]
+        : []),
+      // The write route (#161): the exact file a tracked session's start
+      // line goes to.
+      ...(self === undefined
+        ? []
+        : [
+            {
+              id: 'owner-queue:start-line',
+              text: `owner-queue: this session is tracked as ${self.role}. In the last step of its prep (the session-rules skill, "A role session's clear boundary"), it writes its start line, whole, to ${startLinePath($, self.id)} with its file tool: it replaces the file, never appends. The owner-queue pane reads it from there.`,
+              scope: 'session' as const,
+            },
+          ]),
+    ]
+    if (added.length === 0) return made
 
-    return {
-      sections: [
-        ...made.sections,
-        {
-          id: 'owner-queue:session',
-          text: `owner-queue: this session's id is ${mine}. When you write an entry in NEEDS-OWNER.md whose answer should come back to this session, add the field "- Session: ${mine}" to it. For an entry you write for another session, use that session's id.`,
-          scope: 'session' as const,
-        },
-      ],
-    }
+    return { sections: [...made.sections, ...added] }
   })
 
   on('ui.close', async ($, e, next) => {
@@ -1115,6 +1613,7 @@ export const register: Register = (on, settings) => {
       Object.values(typed).reduce((sum, list) => sum + list.length, 0)
     const opened = new Set(await read($, open))
     const lastRead = await read($, readAt)
+    const tracked = await read($, roster)
     const all = now.items.map(keyOf)
     const foreign = new Set(now.foreign ?? [])
     const isAnswered = (item: OwnerItem) => answerOf(item) !== undefined
@@ -1129,6 +1628,8 @@ export const register: Register = (on, settings) => {
       const mine = held[id]
       const choices =
         item.kind === 'decision' && given === undefined ? options(item) : []
+      const broken =
+        item.kind === 'decision' && given === undefined ? fault(item) : undefined
       // Every code span and block is copied from under the field or the
       // step that names it; an option's spans under the options.
       const blocks = item.blocks ?? []
@@ -1264,11 +1765,21 @@ export const register: Register = (on, settings) => {
                   </Box>
                 )
               })}
-              {item.kind === 'decision' && given === undefined && isMalformed(item) && (
+              {broken === 'twice' && (
                 <Box marginTop={1}>
                   <Text bold>
                     The Options line is malformed: a key appears twice. No
                     options are drawn. Fix the line in the file.
+                  </Text>
+                </Box>
+              )}
+              {broken === 'few' && (
+                <Box marginTop={1}>
+                  <Text bold>
+                    The Options line is malformed: fewer than two options were
+                    read. A key counts only at the start of the line or right
+                    after a semicolon. No options are drawn. Fix the line in
+                    the file.
                   </Text>
                 </Box>
               )}
@@ -1492,6 +2003,81 @@ export const register: Register = (on, settings) => {
       )
     }
 
+    // End of Day sits in the top row, beside Refresh: Submit shows only
+    // while something is staged.
+    const endButton = tracked.sessions.length > 0 && (
+      <Button key="end-of-day" label="End of Day" onPress={() => endOfDay($)} />
+    )
+
+    // Each tracked session (#161): its state, its start line, and a copy
+    // button. Stopped and closed are drawn in red, each with its own word.
+    const startLines = tracked.sessions.length > 0 && (
+      <Box flexDirection="column" marginBottom={1}>
+        <Text bold>Start lines ({tracked.sessions.length})</Text>
+        {tracked.sessions.map(one => {
+          const isOff = isDown(one.seen)
+          const line = one.prompt
+          const word =
+            line === undefined
+              ? undefined
+              : line.isUsed
+                ? 'used'
+                : line.isFresh
+                  ? 'fresh'
+                  : 'stale'
+          const isMissing = isOff && !line?.isFresh
+
+          return (
+            <Box flexDirection="column" paddingLeft={2}>
+              {isOff ? (
+                <Text color="red">{`${one.name} (${one.role}): ${wordOf(one.seen)}`}</Text>
+              ) : (
+                <Text>{`${one.name} (${one.role}): ${wordOf(one.seen)}`}</Text>
+              )}
+              <Box paddingLeft={2} flexDirection="column">
+                {isMissing && (
+                  <Text color="red">{`no start line, ${one.seen}`}</Text>
+                )}
+                {line !== undefined ? (
+                  <Text dimColor>{`Start line ${line.at}: ${word}`}</Text>
+                ) : (
+                  !isMissing && <Text dimColor>No start line yet</Text>
+                )}
+                {line !== undefined && (
+                  <Box flexDirection="row">
+                    <Button
+                      key={`start-line:${one.id}`}
+                      label="Copy start line"
+                      onPress={press => copyStartLine($, one, press.surface)}
+                    />
+                  </Box>
+                )}
+              </Box>
+            </Box>
+          )
+        })}
+      </Box>
+    )
+
+    // What waits on a session that is not running, so none sits unseen.
+    const heldList = tracked.held.length > 0 && (
+      <Box flexDirection="column" marginBottom={1}>
+        <Text bold color="red">
+          Held for sessions not running ({tracked.held.length})
+        </Text>
+        {tracked.held.map(one => (
+          <Box flexDirection="column" paddingLeft={2}>
+            <Text color="red">{`${one.name}: ${one.seen}`}</Text>
+            {one.lines.map(line => (
+              <Box paddingLeft={2}>
+                <Text>{line}</Text>
+              </Box>
+            ))}
+          </Box>
+        ))}
+      </Box>
+    )
+
     return (
       <Box flexDirection="column">
         <Text dimColor>owner-queue {VERSION}</Text>
@@ -1504,13 +2090,17 @@ export const register: Register = (on, settings) => {
         {now.isLoaded && !now.hasFile && (
           <Box flexDirection="column">
             <Text dimColor>No queue file at {now.file ?? FILE}.</Text>
-            <Button key="refresh" label="Refresh" onPress={() => reread($)} />
+            <Box flexDirection="row" gap={2}>
+              <Button key="refresh" label="Refresh" onPress={() => reread($)} />
+              {endButton}
+            </Box>
           </Box>
         )}
         {now.isLoaded && now.hasFile && (
           <Box flexDirection="column">
             <Box flexDirection="row" gap={2} marginBottom={1}>
               <Button key="refresh" label="Refresh" onPress={() => reread($)} />
+              {endButton}
               <Button
                 key="expand-all"
                 label="Expand all"
@@ -1559,6 +2149,8 @@ export const register: Register = (on, settings) => {
               ))}
           </Box>
         )}
+        {heldList}
+        {startLines}
         <Text dimColor>
           Source:{' '}
           {groups.length > 0

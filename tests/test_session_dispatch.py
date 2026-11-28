@@ -117,6 +117,239 @@ def test_a_turn_cap_and_no_setup_are_taken(project):
     assert "python -m venv" not in out
 
 
+FULL = "python -m venv .venv-full"
+
+
+def with_setup_full(project, value):
+    """Set the config's setupFull to value, or remove the key when value is None."""
+    path = project / ".claude" / "dispatch.json"
+    config = json.loads(path.read_text(encoding="utf-8"))
+    config.pop("setupFull", None)
+    if value is not None:
+        config["setupFull"] = value
+    path.write_text(json.dumps(config), encoding="utf-8")
+
+
+def test_the_default_runs_the_setup_list(project):
+    with_setup_full(project, [FULL])
+    done = dispatch(project, "-Tier", "medium")
+
+    assert done.returncode == 0, done.stderr
+    assert "[in the worktree] python -m venv .venv" in done.stdout
+    assert FULL not in done.stdout
+
+
+def test_full_setup_runs_the_setup_full_list(project):
+    with_setup_full(project, [FULL])
+    done = dispatch(project, "-Tier", "medium", "-FullSetup")
+
+    assert done.returncode == 0, done.stderr
+    assert f"[in the worktree] {FULL}" in done.stdout
+    assert "[in the worktree] python -m venv .venv\n" not in done.stdout
+
+
+@pytest.mark.parametrize("value", [[], None], ids=["empty", "no-key"])
+def test_full_setup_without_a_setup_full_list_is_refused_and_makes_no_worktree(project, value):
+    with_setup_full(project, value)
+    for args in (("-FullSetup",), ("-FullSetup", "-Apply")):
+        done = dispatch(project, "-Tier", "medium", *args)
+
+        assert done.returncode == 2
+        assert "dispatch refused: -FullSetup was passed" in done.stderr
+        assert "setupFull" in done.stderr
+        assert "DRY RUN" not in done.stdout
+        assert not (project / ".claude" / "worktrees").exists()
+
+
+def test_no_setup_wins_over_full_setup_and_runs_neither(project):
+    with_setup_full(project, [FULL])
+    done = dispatch(project, "-Tier", "medium", "-NoSetup", "-FullSetup")
+
+    assert done.returncode == 0, done.stderr
+    assert "setup:     none (-NoSetup)" in done.stdout
+    assert "(no setup: -NoSetup)" in done.stdout
+    assert "[in the worktree]" not in done.stdout
+
+
+def test_the_dry_run_names_the_list_it_would_run(project):
+    with_setup_full(project, [FULL, "python -m pip --version"])
+
+    default = dispatch(project, "-Tier", "medium").stdout
+    full = dispatch(project, "-Tier", "medium", "-FullSetup").stdout
+
+    assert "setup:     setup (1 line)" in default
+    assert "setup:     setupFull (2 lines, by -FullSetup)" in full
+    assert "[in the worktree] python -m pip --version" in full
+
+
+def with_setup(project, value):
+    """Set the config's setup list to value."""
+    path = project / ".claude" / "dispatch.json"
+    config = json.loads(path.read_text(encoding="utf-8"))
+    config["setup"] = value
+    path.write_text(json.dumps(config), encoding="utf-8")
+
+
+def test_a_setup_full_of_one_blank_space_line_is_refused_and_makes_no_worktree(project):
+    with_setup_full(project, ["   "])
+    for args in (("-FullSetup",), ("-FullSetup", "-Apply")):
+        done = dispatch(project, "-Tier", "medium", *args)
+
+        assert done.returncode == 2
+        assert "dispatch refused: -FullSetup was passed" in done.stderr
+        assert "DRY RUN" not in done.stdout
+        assert not (project / ".claude" / "worktrees").exists()
+
+
+def test_a_setup_with_an_empty_line_and_a_real_line_runs_the_real_line_only(project):
+    with_setup(project, ["", "python -m venv .venv"])
+    done = dispatch(project, "-Tier", "medium")
+
+    assert done.returncode == 0, done.stderr
+    assert "setup:     setup (1 line)" in done.stdout
+    listed = [line for line in done.stdout.splitlines() if "[in the worktree]" in line]
+    assert listed == ["  [in the worktree] python -m venv .venv"]
+
+
+def test_the_dry_run_prints_no_empty_line_for_either_list(project):
+    with_setup(project, ["  ", "python -m venv .venv", "\t"])
+    with_setup_full(project, ["", FULL, " "])
+
+    for args in ((), ("-FullSetup",)):
+        done = dispatch(project, "-Tier", "medium", *args)
+
+        assert done.returncode == 0, done.stderr
+        listed = [line for line in done.stdout.splitlines() if "[in the worktree]" in line]
+        assert len(listed) == 1, done.stdout
+        assert all(line.split("[in the worktree]", 1)[1].strip() for line in listed)
+
+
+@pytest.mark.parametrize("cap", ["0", "-3", "81"])
+def test_a_turn_cap_that_is_not_a_lowering_is_refused(project, cap):
+    done = dispatch(project, "-Tier", "medium", "-TurnCap", cap)
+
+    assert done.returncode == 2
+    assert "dispatch refused: -TurnCap" in done.stderr
+    assert "DRY RUN" not in done.stdout
+
+
+def test_a_turn_cap_equal_to_the_tiers_cap_is_taken(project):
+    out = dispatch(project, "-Tier", "medium", "-TurnCap", "80").stdout
+
+    assert "Or stop after 80 turns." in out
+
+
+def test_the_cap_a_config_override_sets_is_the_bound(project):
+    path = project / ".claude" / "dispatch.json"
+    config = json.loads(path.read_text(encoding="utf-8"))
+    config["tiers"] = {"low": {"turnCap": 10}}
+    path.write_text(json.dumps(config), encoding="utf-8")
+
+    assert dispatch(project, "-Tier", "low", "-TurnCap", "11").returncode == 2
+    assert "Or stop after 10 turns." in dispatch(project, "-Tier", "low", "-TurnCap", "10").stdout
+
+
+def test_the_dry_run_without_origin_prints_the_base_and_does_not_fail(project):
+    done = dispatch(project, "-Tier", "medium")
+
+    assert done.returncode == 0, done.stderr
+    out = done.stdout
+    assert "base:      origin/main (not found yet; -Apply fetches first" in out
+    assert "git -C" in out and "fetch --quiet origin" in out
+    add = next(line for line in out.splitlines() if "worktree add" in line)
+    assert add.endswith("-b worktree-fix-42 --no-track refs/remotes/origin/main")
+    assert out.index("fetch --quiet origin") < out.index("worktree add")
+
+
+def _origin_main(project):
+    """Give the project an origin/main ref at one commit, with no remote."""
+    subprocess.run(
+        ["git", "-C", str(project), "-c", "user.name=t", "-c", "user.email=t@example.com",
+         "commit", "-q", "--allow-empty", "-m", "base"],
+        check=True,
+    )
+    sha = subprocess.run(
+        ["git", "-C", str(project), "rev-parse", "HEAD"], check=True, capture_output=True, text=True
+    ).stdout.strip()
+    subprocess.run(["git", "-C", str(project), "update-ref", "refs/remotes/origin/main", sha], check=True)
+    subprocess.run(["git", "-C", str(project), "update-ref", "refs/remotes/origin/stack", sha], check=True)
+    return sha
+
+
+def test_the_dry_run_names_the_base_commit_and_does_not_fetch(project):
+    sha = _origin_main(project)
+    before = sorted(p.name for p in (project / ".git" / "refs" / "remotes" / "origin").iterdir())
+
+    out = dispatch(project, "-Tier", "medium").stdout
+
+    assert f"base:      origin/main at {sha} (as of the last fetch; -Apply fetches first)" in out
+    assert sorted(p.name for p in (project / ".git" / "refs" / "remotes" / "origin").iterdir()) == before
+
+
+def test_a_base_is_taken_and_printed(project):
+    sha = _origin_main(project)
+
+    out = dispatch(project, "-Tier", "medium", "-Base", "origin/stack").stdout
+
+    assert f"base:      origin/stack at {sha}" in out
+    assert "--no-track refs/remotes/origin/stack" in out
+
+
+def test_a_local_tag_or_branch_named_like_the_base_does_not_hide_the_remote_ref(project):
+    sha = _origin_main(project)
+    git = ["git", "-C", str(project), "-c", "user.name=t", "-c", "user.email=t@example.com"]
+    subprocess.run([*git, "commit", "-q", "--allow-empty", "-m", "later"], check=True)
+    later = subprocess.run(
+        [*git, "rev-parse", "HEAD"], check=True, capture_output=True, text=True
+    ).stdout.strip()
+    assert later != sha
+    subprocess.run([*git, "tag", "origin/main", later], check=True)
+    subprocess.run([*git, "branch", "origin/stack", later], check=True)
+
+    out = dispatch(project, "-Tier", "medium").stdout
+    stacked = dispatch(project, "-Tier", "medium", "-Base", "origin/stack").stdout
+
+    assert f"base:      origin/main at {sha} " in out
+    assert f"base:      origin/stack at {sha} " in stacked
+    assert later not in out + stacked
+
+
+def test_a_worktree_already_there_is_not_fetched_for(project):
+    (project / ".claude" / "worktrees" / "fix-42").mkdir(parents=True)
+
+    out = dispatch(project, "-Tier", "medium").stdout
+
+    assert "(already there)" in out
+    assert "the worktree is already there; it is left as it is" in out
+    assert "fetch --quiet origin" not in out
+    assert "worktree add" not in out
+
+
+def test_apply_runs_the_one_worktree_command_the_dry_run_prints():
+    # -Apply cannot run in a test: it needs the owner's list in the user
+    # profile and the claude CLI. So the executed command is the printed
+    # array, and no second spelling of it may stand in the script.
+    text = SCRIPT.read_text(encoding="utf-8")
+
+    assert text.count("'worktree', 'add'") == 1
+    assert "worktree add" not in text
+    assert "$addArgs = $addWorktree[1..($addWorktree.Count - 1)]" in text
+    assert "& git @addArgs" in text
+    assert "--no-track" in text and "$baseRef" in text
+
+
+@pytest.mark.parametrize(
+    "base",
+    ["main", "origin/", "origin/-x", "-origin/main", "origin/a..b", "origin/x.lock", "upstream/main", "origin/a b"],
+)
+def test_a_base_that_is_not_an_origin_branch_is_refused(project, base):
+    done = dispatch(project, "-Tier", "medium", "-Base", base)
+
+    assert done.returncode == 2
+    assert "dispatch refused: -Base must be origin/<branch>" in done.stderr
+    assert "DRY RUN" not in done.stdout
+
+
 def test_the_config_may_override_a_tier(project):
     path = project / ".claude" / "dispatch.json"
     config = json.loads(path.read_text(encoding="utf-8"))
@@ -221,6 +454,15 @@ def test_the_template_config_is_read_by_the_script(project):
 
     assert done.returncode == 0, done.stderr
     assert "--agent stage-builder" in done.stdout
+    assert "setup:     setup (0 lines)" in done.stdout
+
+
+def test_the_template_config_shows_both_setup_lists():
+    config = json.loads((PLUGIN / "templates" / "dispatch.json").read_text(encoding="utf-8"))
+
+    assert config["setup"] == [] and config["setupFull"] == []
+    assert "light" in config["//setup"]
+    assert "-FullSetup" in config["//setupFull"]
 
 
 RESEARCH = {
@@ -462,3 +704,26 @@ def test_the_template_probe_profile_holds_one_fixed_path_rule(project):
     assert "profile:   probe (1 allow, 0 deny" in done.stdout
     allowed = start_line(done.stdout).split("--allowedTools", 1)[1].split("--disallowedTools", 1)[0]
     assert "builder-state/probe.py" in allowed
+
+
+ONESHOT_RULE = "Bash(.venv/Scripts/python.exe builder-state/oneshot.py)"
+
+
+def test_the_template_oneshot_profile_holds_one_fixed_path_rule(project):
+    with_profiles(project, {})
+    templates = PLUGIN / "templates"
+    shutil.copy(templates / "builder-profiles.example.json", project / ".claude" / "builder-profiles.json")
+    profiles = json.loads((templates / "builder-profiles.example.json").read_text(encoding="utf-8"))["profiles"]
+
+    assert profiles["oneshot"] == {"allow": [ONESHOT_RULE]}
+    assert "*" not in ONESHOT_RULE and not ONESHOT_RULE.startswith("-")
+    others = [rule for name, p in profiles.items() if name != "oneshot" and isinstance(p, dict)
+              for rule in p.get("allow", [])]
+    assert not [rule for rule in others if "oneshot" in rule]
+    done = dispatch(project, "-Tier", "medium", "-Profile", "oneshot")
+
+    assert done.returncode == 0, done.stderr
+    assert "profile:   oneshot (1 allow, 0 deny" in done.stdout
+    allowed = start_line(done.stdout).split("--allowedTools", 1)[1].split("--disallowedTools", 1)[0]
+    assert "builder-state/oneshot.py" in allowed
+    assert "builder-state/probe.py" not in allowed

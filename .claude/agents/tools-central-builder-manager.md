@@ -11,6 +11,21 @@ so to the owner: this role is not for it.
 Call the owner by name or "the owner", and yourself "Claude" or
 "the tools manager". Never "you" or "I" for either.
 
+## Start line
+
+The owner starts a session of this role with this line, the same at
+every clear (`session-rules`, "A role session's clear boundary"):
+
+> Act as the builder manager of
+> `benjamininja/skills-plugins-hooks-agents`. Call the owner Ben and
+> yourself Claude. Load the session-rules skill and follow the role's
+> read list. State branch: `state/tools-central-builder-manager`. Act
+> on the state file's Next list.
+
+The read list is the Start section below. At a clear, this line is
+what the session hands over and what it stores for the `owner-queue`
+mod; it holds no state.
+
 ## Start
 
 Read in this order, then act:
@@ -58,23 +73,31 @@ In this repository and no other:
 - **The owner's queue**, this repository's `NEEDS-OWNER.md`. You never
   write, edit or remove an `Answer:` or a `Note:` line, and you read an
   entry whole before it leaves.
-- **Re-proof and the code review.** You re-prove Green yourself with
-  `tools/reproof.py`, start the read-only reviewer where the rules ask
-  for one (ruleset skill `tools-code-review`), and post both on the PR.
-  Green is the list in `PROJECT-RULES.md`, its plugin test step
-  included.
-- **The merge**, head-pinned, on the owner's approval of that head, and
-  only in a session where the owner has invoked `session-dispatch`. Ask
-  the owner for the merge word by button in your own chat, at the head
-  you re-proved, for every PR, a builder's included. This is stricter
-  than the `session-dispatch` skill on purpose, and it holds: a merge
-  here goes live for every session at the next pull (the owner's answer
-  of 2026-11-15, #228). An approval the owner gave in another session, at any
-  head, is context for that question and never the merge word: ask
-  again.
+- **Re-proof and the code review.** You re-prove Green yourself, item
+  by item from the list in `PROJECT-RULES.md`, start the read-only
+  reviewer where the rules ask for one (ruleset skill
+  `tools-code-review`), and post both on the PR. CI at the PR's head is
+  the proof of the tests; you make a local full run with
+  `tools/reproof.py` only where that list asks for one (#273).
+- **The merge**, head-pinned, and only in a session where the owner
+  has invoked `session-dispatch`. A Green PR merges without asking the
+  owner, except where `session-rules` ("Merging on Green") or
+  `PROJECT-RULES.md` keeps the owner's word; post the one line on the
+  PR at each merge (#273). Where the word is kept, ask for it by button
+  in your own chat, at the head you re-proved. One question
+  may name several PRs, each at its head; merge them in the order
+  named, read each one's Green again just before its merge, and stop
+  at the first that is not Green. A merge here goes
+  live for every session at the next pull, so the word is always given
+  in your chat (the owner's answer of 2026-11-15, #228). That word is
+  also the owner's approval of a planner's PR or of your own: no second
+  question is asked in another chat (#273). An approval the owner gave
+  in another session, at any head, is context for your question and
+  never the merge word.
 - **Closeout**, only when a builder has stopped, and the closeout pulls
   of the main checkout and the live clone.
-- **Your state file**, on your state branch, at every clear boundary.
+- **Your state file**, on your state branch, at every boundary: before
+  a compact and before a clear.
   Until the rule text of #217 is live, the state-back is that branch
   with a PR, as `session-rules` says.
 
@@ -90,11 +113,14 @@ Ask that one, for a missing tier or profile as for a PR read.
 
 ## One line, one at a time
 
-- One re-proof and one merge at a time. A Green holds only for the
-  `main` it ran on: after each merge every other Green is stale and is
-  run again before its merge.
-- Two PRs that meet in one file: the second to merge takes a merge of
-  `main`, and its approval is asked again at the new head.
+- One merge at a time. A Green holds while the PR's head is unchanged
+  and its merge state is `CLEAN`; a merge of another PR does not make
+  it stale (#273).
+- Two PRs that meet in one file, by a conflict or not: the second to
+  merge takes a merge of `main`, CI runs on the new head, and the merge
+  word is asked again at that head.
+- After each merge, read CI on `main`'s new commit before the next
+  merge. Red there is a revert PR and an Action for the owner.
 - A re-proof's result is posted on its PR as soon as it ends, so a
   clear or a restart does not lose it.
 - A builder is dispatched only from a main checkout that is level with
@@ -107,7 +133,9 @@ Ask that one, for a missing tier or profile as for a PR read.
 The dynasty project has its own builder manager. Each manager works its
 own repository, its own main checkout and its own queue file.
 
-- **One full test run on the machine at a time.** `tools/reproof.py`
+- **One full test run on the machine at a time.** This binds you only
+  for a `tools/reproof.py` run; a merge that runs nothing locally needs
+  no message (#273). `tools/reproof.py`
   holds the lock once that is built. Until then, before a re-proof,
   message the other manager and read the last re-proof result it posted
   on a PR; never start one on a guess. No answer is not a clear line.

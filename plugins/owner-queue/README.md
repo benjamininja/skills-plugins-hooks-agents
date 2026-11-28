@@ -4,7 +4,8 @@ A Claude Code mod that shows what is waiting on the owner: the decisions and
 by-hand actions listed in a project's `.claude/memory/NEEDS-OWNER.md`.
 A decision is answered by pressing one of its options, or by typing an
 answer, and `Submit`. `Post comment` stages typed words, as a comment or as
-the answer; nothing is written or sent until `Submit`.
+the answer; nothing is written or sent until `Submit`. An entry closes when
+it is answered or marked done, as a press on its title would close it (0.11.1).
 
 - A band above the prompt gives the counts and a `Show queue` / `Hide queue`
   button.
@@ -35,7 +36,9 @@ the answer; nothing is written or sent until `Submit`.
   skill is the fallback for a session without the mod, or when it gave up.
   Submit says in the pressing session only
   the entries that name it or name no session. The mod tells each session
-  its id in the system prompt, and `/owner id` prints it.
+  its id in the system prompt, and `/owner id` prints it (and, for a
+  tracked session, its start line's path; see "Tracked sessions and start
+  lines").
 - A fenced code block inside an entry is one chunk: the pane draws it
   under the field or step that holds it, with one `Copy block N` button
   that copies it with its line breaks.
@@ -109,6 +112,84 @@ the answer; nothing is written or sent until `Submit`.
 - A session loads the mod once, at launch. A session started before an
   update keeps the old copy; the version line shows which one is drawing.
 
+## Tracked sessions and start lines
+
+A role session prepares at its boundary (session-rules, "A role session's
+clear boundary"), and in the last step of that prep it gives its start
+line: the committed constant from its role file, the same at every
+boundary. The mod measures and prompts that prep, and stores the start
+line; the
+session's model never counts for itself. Each tracked session's own copy of
+the mod does the measuring and pulls its instructions. No session pushes to
+another (#161, the planner's ruling).
+
+- **Tracked sessions.** A session is tracked when its main thread was started
+  with one of these `--agent` roles: `central-planner`,
+  `central-builder-manager`, `tools-central-builder-manager` or
+  `supabase-consultant`. A role a plugin provides counts by its name
+  after the `plugin:` prefix. It registers itself at start
+  (`classic.SessionStart`, its `agent_type`). Stage builders and sessions
+  with no role are never tracked and write nothing.
+- **The store.** Three folders in the mod's own data folder, beside
+  `drafts`: the plugin folder, which is inside the live clone (see Install).
+  The plugin's `.gitignore` names all three, so they are never committed:
+  - `sessions/<id>.json`: each tracked session's own record. Only that
+    session writes it. It holds its role and name, its state (`busy` at a
+    turn's start, `idle` at its end, `closed` at the session's end), the
+    time of its last turn start and end, its context tokens, and a
+    heartbeat written every 30 seconds.
+  - `requests/<id>.json`: a prep request. Only the pane writes it, when the
+    owner presses End of Day.
+  - `start-lines/<id>.md`: the session's start line, and nothing else.
+    Only the session writes it, whole, in the last step of its prep.
+
+  The records are files, not keys in the mod's `$.store`, because `$.store`
+  is one JSON file with no compare-and-set: two sessions writing it at the
+  same moment could lose a write.
+- **What the pane shows of a session.** A fresh heartbeat means running,
+  busy or idle as the record says. `closed` means closed. A heartbeat three
+  beats stale with no `closed` means stopped. Stopped and closed are drawn in
+  red, each with its own word.
+- **The write route.** A tracked session's system prompt names the exact
+  file for its start line, `start-lines/<id>.md` under the mod's folder,
+  and `/owner id` prints it. In the last step of its prep the session
+  writes the start line, whole, with its file tool. It replaces the file
+  and never appends. A session that works on after its prep writes it
+  again before its turn ends.
+- **Fresh or stale.** A start line is fresh when its file time is at or
+  after the session's last turn start. A turn that starts later makes it
+  stale.
+- **The triggers.** Each is sent once, and never while the start line is
+  fresh. Only a turn of work that starts after it re-arms a trigger; the
+  prep turn the instruction starts does not, so a prep that ends with no
+  start line (Esc, a denied write, a question back) is not sent again
+  until a turn of work has run. The instruction names no kind of
+  boundary. The session's own mod sends it into its own chat, and only
+  while the session is idle, so a busy session gets it right after its
+  current turn:
+  - its context reaches 255,000 tokens. This is a must: the session finishes
+    its current step and prepares before new work;
+  - it has been idle 45 minutes after a turn;
+  - the owner pressed End of Day.
+- **Start lines**, a section of the pane: one row per tracked session,
+  with its name, role and state, the start line's time and `fresh`,
+  `stale` or `used`, and `Copy start line`, which copies the file whole.
+- **End of Day**, in the pane's top row beside `Refresh`: it writes a prep
+  request for every running tracked session with no fresh start line. Each
+  takes it at its next read, once its turn has ended. A stopped or closed
+  session is drawn in red as "no start line, closed" (or "stopped"); its
+  last start line stays as it was.
+- **A `/clear`.** A cleared id is not closed. The re-key that already runs
+  moves the start line to the new id: the new file gets the text, the old
+  one is emptied, and the row says `used` until the session writes a new
+  one. The old id's row is no longer drawn.
+- **Held for a session that is not running.** When Submit sends an answer, a
+  Note or a done mark to a tracked session that is stopped or closed, the
+  toast names it and says the item is held. The pane lists every such item
+  under "Held for sessions not running", so none sits unseen. A session with
+  no record, such as an untracked builder, cannot be judged: it gets no
+  held toast.
+
 ## File format it reads
 
 ```markdown
@@ -129,11 +210,15 @@ such as `(a)` counts only at the start of the Options line or right after a
 `;`; anywhere else it is part of the option's text, so `(b) the rest as in
 (a)` is one option. If one key starts two options, the pane draws no options
 for that entry and says the Options line is malformed. Write each option so
-that it stands alone.
+that it stands alone. An Options line that holds text but reads to fewer than
+two options is malformed too, and the pane says so with its own note: one
+option alone, or a second key after a `.` rather than a `;`, as in
+`(1) one. (2) two`. A decision with no Options line is not malformed.
 
 Only the pane writes an `Answer:` or a `Note:` line; no agent writes, edits
 or removes one. (The queue command line below removes a whole entry, and its
-`Answer:` line goes with it; with `--with-notes` its Notes too.)
+`Answer:` line goes with it only with `--with-answers`, its Notes only with
+`--with-notes`.)
 
 ## Edit the queue from a script
 
@@ -144,7 +229,7 @@ TypeScript file as it is. The first argument is the queue file.
 
 ```bash
 node plugins/owner-queue/hooks/queue-cli.ts <queue file> add decision --block-file <file>
-node plugins/owner-queue/hooks/queue-cli.ts <queue file> remove --title "<title>"
+node plugins/owner-queue/hooks/queue-cli.ts <queue file> remove --title "<title>" [--with-notes] [--with-answers]
 node plugins/owner-queue/hooks/queue-cli.ts <queue file> prune --keep "<text>"
 ```
 
@@ -154,15 +239,22 @@ node plugins/owner-queue/hooks/queue-cli.ts <queue file> prune --keep "<text>"
   unclosed code fence, or a title already in that section, or if that section
   holds text between its heading and its first entry.
 - `remove --title "<title>"` removes one whole entry, from its title line to
-  the next heading, whatever its box, and an answered entry goes with its
-  `Answer:` line. It is refused if the title is missing or not unique (a title
-  used in both sections needs `--kind decision` or `--kind action`), or if the
-  entry holds a `Note:` line. With `--with-notes` the Notes leave with the
-  entry. Removing a whole entry is the only way the CLI ever removes an
-  `Answer:` or `Note:` line; it never writes or edits one.
-- `prune [--keep "<text>"]...` removes the ticked `[x]` Actions, except those
-  whose title holds a `--keep` text. A ticked Action that holds a `Note:` line
-  stays, and is listed, unless `--with-notes` is given.
+  the next heading, whatever its box. It is refused if the title is missing or
+  not unique (a title used in both sections needs `--kind decision` or
+  `--kind action`), or if the entry holds a `Note:` or an `Answer:` line. The
+  refusal names the entry, the line that holds it and the flag to pass. With
+  `--with-notes` the Notes leave with the entry; with `--with-answers` the
+  `Answer:` line does (an `Answer:` is the owner's decision, which the manager
+  may not have recorded yet). `--with-notes` covers only Notes, and an entry
+  holding both lines needs both flags. Removing a whole entry is the only way
+  the CLI ever removes an `Answer:` or `Note:` line; it never writes or edits
+  one.
+- `prune [--keep "<text>"]... [--with-notes] [--with-answers]` removes the
+  ticked `[x]` Actions, except those whose title holds a `--keep` text. A
+  ticked Action that holds a `Note:` line stays unless `--with-notes` is given,
+  and one that holds an `Answer:` line stays unless `--with-answers` is given.
+  The report lists each held entry as `{"title", "line"}`, where `line` is
+  `Note`, `Answer` or `Note and Answer`.
 - Line endings (CRLF too) and every other byte stay as they were. An edit is
   checked after it is made: if any `Answer:` or `Note:` line outside the
   removed entry would differ, the open entries would not be as expected, or a
@@ -185,6 +277,23 @@ new session.
   "CLAUDE_CODE_PLUGIN_DIRS": "<live clone>\\plugins\\owner-queue"
 }
 ```
+
+That `env` block is the one place that names plugin folders (#195):
+
+- **More than one folder** goes in the same value, joined by a semicolon on
+  Windows.
+- **No operating-system variable of the same name may exist.** A user-level
+  one wins over the settings file in a desktop session. This must print an
+  empty line in PowerShell:
+  `[Environment]::GetEnvironmentVariable('CLAUDE_CODE_PLUGIN_DIRS', 'User')`
+- **The value is read when the app starts a session.** After an edit, quit
+  the desktop app fully, tray icon included, and start it again;
+  `/reload-plugins` does not bring in a new folder. This prints what the
+  file holds:
+  `(Get-Content -Raw "$HOME\.claude\settings.json" | ConvertFrom-Json).env.CLAUDE_CODE_PLUGIN_DIRS`
+- **`pluginConfigs` in the same file is not the environment.** It holds the
+  mod's own options, such as `queues` below, and a folder named there loads
+  nothing.
 
 ### One queue per project, many in one pane
 
@@ -227,7 +336,8 @@ only when none of the files exists.
 ### The problems log
 
 When the parser cannot draw an entry (today: an Options line that uses a key
-twice), the pane adds one line to `~/.claude/owner-queue/problems.log`:
+twice, or one that reads to fewer than two options, each logged under its own
+kind), the pane adds one line to `~/.claude/owner-queue/problems.log`:
 `<day> <time> | <queue file> | <entry title> | <kind of problem>`. It holds
 no field value. An entry with the same problem is logged once, not on every
 5-second read; it is logged again if it is fixed and then breaks again. The
@@ -236,9 +346,9 @@ read or delete.
 
 ### The `Session:` line
 
-An entry's `- Session:` line is the id of the session that raises it, as
-`/owner id` prints it in that session. A wrong id sends the answer to
-another session.
+An entry's `- Session:` line is the id of the session that acts on the
+answer (for a builder's park, the manager), as `/owner id` prints it in that
+session. A wrong id sends the answer to another session.
 
 ## Develop
 
