@@ -30,12 +30,13 @@ git history.
 
 ### Next
 
-1. **#285**: PR #321 (#307) merged `f50dac1`. The Action for Ben to
-   re-run the D rows with `--boards-only` on board 2 went to the
-   manager on 2026-11-28, with this session's id (issues/285
-   issuecomment-7241138525). #285 closes when D1 passes. If D1 still
-   fails it comes back to the planner; the next option is the
-   script's own query, not `read:org`.
+1. **#285**: Ben's second D rows run failed at D1 (gh project wants
+   two more read scopes; issues/285 issuecomment-7241535234). Ben's
+   button "Own queries (Recommended)": **#328** (medium) makes
+   `board.py` send its own queries; it needs Ben's go in the manager's
+   chat. Its builder posts its list of queries on #328 first; read it
+   if the manager asks. After its PR merges: a new Action for Ben to
+   run the widened D rows on board 2. #285 closes when all pass.
 2. **#317**: PR #322 merged `598a325` on Ben's word, with the planner's
    four edits (pull/322 issuecomment-7241172319). On 2026-12-12 ask
    Ben by button for one `usage.py tags` run, compared on #317.
@@ -130,6 +131,8 @@ All on 2026-11-28, by Ben's button unless said.
   first (recorded on #323).
 - Merged on Ben's word: PR #318 `ed3a569` (#298), PR #304 `148b48e`
   (#293). #240 step 2 is dispatched.
+- #285: "Own queries (Recommended)" (issues/285
+  issuecomment-7241535234); #328 filed.
 - Merged: PR #322 `598a325` (#317, Ben's word), PR #327 `6db4e43`
   (#325, on Green).
 - Merged on Green: PR #320 `6fd5dae` (#319), PR #321 `f50dac1` (#307).
