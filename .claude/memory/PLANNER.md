@@ -33,9 +33,11 @@ git history.
 1. **PR #313** (#299 part 2, the `oneshot` profile; branch
    `worktree-t299-oneshot`, head `6f465a8` at this save). The planner
    asked six exact edits (pull/313 issuecomment-7240460466 and
-   7240483125). If the manager asks, read the head against those
-   sentences. Then the dynasty planner's new read, then Ben's merge
-   word in the manager's chat. After the merge: lift #317's hold, and
+   7240483125). All six are in at that head and the dynasty planner
+   read it with no change asked (the manager's report). Next: the
+   manager's re-proof, then Ben's merge word in the manager's chat.
+   The example file's `//oneshot` note went to #317's brief instead
+   (issues/317 issuecomment-7240624875). After the merge: lift #317's hold, and
    tell the dynasty planner that the `oneshot` entry in dynasty's
    profiles file is Ben's hand step, raised on its side.
 2. **#307** (low; board.py's cp1252 crash, plus part A `--owner @me`
