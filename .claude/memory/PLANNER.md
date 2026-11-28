@@ -73,6 +73,15 @@ issuecomment-7239843007; no date yet; Tools reports when PR #211 and
 `01afdfe`) is row 1l of #262, one sentence in the tools manager's role
 file; security review clean; at the manager for re-proof and Ben's
 merge word. PR #308 is #263 step 3's (the manager's lane).
+**Later still:** PR #309 merged as `d1b920c` (the trial is live to
+2026-12-12) and PR #306 as `7385794`, both checked. #307's hold is
+lifted. **PR #311** (branch `docs/assistant-board-285`, worktree
+`t285-role-line`, head `d526a0a`) is disposition 4 of #285; security
+review clean; at the manager with PR #310 for re-proof and Ben's merge
+word. The Action for #285 (token, store entry, D rows) went to the
+manager as a ready entry with this session's id; #285 closes after
+Ben ticks it. Worktrees `t300-rule-texts`, `t294-start-lines`,
+`t300-never-line` and `t300-trial-line` hold merged branches.
 
 **The planner's open PRs (as saved before the compact).**
 - **PR #303** (branch `docs/rule-texts-300`, worktree
