@@ -130,11 +130,14 @@ one ticket and changes data that is not rebuilt runs under the standing
 is always `builder-state/oneshot.py`, run by the one exact rule in that
 profile, with no argument and no wildcard. The planner puts a
 `Profile: oneshot` line on the ticket, and the brief names the data the
-script may change. The builder writes the script, posts it whole in a
-comment on its ticket with what it will change, and parks before the
-run (Parking, below): the run waits for the owner's answer to that
-entry. The manager reads the script before it relays the answer, and
-again at closeout. A script that was changed after the owner's answer
+script may change. A ticket with `Profile: oneshot` is never dispatched
+under the exception of `session-dispatch`, "Before a dispatch": it keeps
+the owner's word, whatever its tier. The builder writes the script,
+posts it whole in a comment on its ticket with what it will change, and
+parks before the run (Parking, below): the run waits for the owner's
+answer to that entry. The manager reads the script before the entry
+goes into the owner's queue, before it relays the answer, and again at
+closeout. A script that was changed after the owner's answer
 is parked again. A project whose profiles file holds no `oneshot`
 profile keeps the owner's hand rule.
 

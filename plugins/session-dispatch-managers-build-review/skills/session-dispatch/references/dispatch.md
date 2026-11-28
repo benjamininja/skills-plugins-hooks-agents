@@ -129,7 +129,9 @@ dispatched.
    `builder-state/oneshot.py` against the data its brief names and the
    copy it posted on its ticket: the script that ran must be the one the
    owner answered, and change nothing else. Anything else is listed for
-   the owner.
+   the owner. The same read is made earlier too, before the run's entry
+   goes into the owner's queue and before the owner's answer is relayed
+   (`session-rules`, `references/parking.md`, Relayed answers).
 2. `git pull --ff-only` on the main checkout.
 3. Right after the merge and the pull, with no separate word from the
    owner, run the closeout script for that builder (below): the dry run,

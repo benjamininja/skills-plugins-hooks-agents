@@ -354,11 +354,15 @@ shared builders' file or in another profile.
 A script run once for one ticket that changes data that is not rebuilt
 has one profile, `oneshot`, with exactly one rule:
 `Bash(.venv/Scripts/python.exe builder-state/oneshot.py)`. No argument,
-no wildcard. The brief names the data the script may change. The
-builder posts the script whole on its ticket and parks before the run,
-which waits for the owner's answer; the manager reads the script before
-it relays that answer and again at closeout. A project without the
-profile keeps a rule the owner adds by hand. The rule never goes in the
+no wildcard, never `builder-state/*.py`. The brief names the data the
+script may change. A ticket with `Profile: oneshot` is never dispatched
+under the exception of `session-dispatch`, "Before a dispatch": it
+keeps the owner's word, whatever its tier. The builder posts the script
+whole on its ticket and parks before the run, which waits for the
+owner's answer. The manager reads the script before the entry goes into
+the owner's queue, before it relays the answer, and again at closeout.
+A project whose profiles file holds no `oneshot` profile keeps a rule
+the owner adds by hand. The rule never goes in the
 shared builders' file or in another profile.
 
 These points were tested in throwaway sessions (Claude Code 2.1.318),
