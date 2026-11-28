@@ -11,65 +11,64 @@ state.
 
 2026-11-28, by Tools-builder-manager, queue id
 `ea58e038-9092-4552-9e4c-32bb3cdf8281`, at a compact prep on Ben's word.
-`origin/main` is at `0105706` (#302); main's CI green at `a774e8e`, the
-run at `0105706` was in progress at the save. Both checkouts are at
-`0105706`. `session-dispatch` is armed in this session; a compact keeps
-it and the id, a clear drops both.
+`origin/main` is at `189093c` (#308), and main's CI is green there and at
+every merge before it. Both checkouts are at `189093c`. `session-dispatch`
+is armed in this session; a compact keeps it and the id, a clear drops
+both.
 
-**Ben's standing word (issues/300 issuecomment-7219760428, confirmed
-issuecomment-7239515907):** complete the held work. Every tools dispatch
-keeps Ben's go by button until #300's exception (#303) and the trial line
-have both merged; merge words stay as the rules keep them.
+**The trial line is live** (#309 as `d1b920c`, under #303's conditions):
+from 2026-11-28 to 2026-12-12, low and haiku tickets dispatch without a
+go. Before each one, read the ticket's labels and body: a `held` label or
+a `Held:` line means Ben's word is needed. List each such dispatch below
+(In flight, "trial") and mark any that went wrong. Medium and high, gate
+text and merge words keep Ben's word as before.
 
-**Background at the save:** `tools/reproof.py 304 7a741a45e72d0b16b130af308becffe69eb79c5d`
-running from the live clone (about 70 min), task `bnh0cbrz8`; its
-result is also kept as `result-304-7a741a45e72d.txt` beside the lock in
-`~/.claude-reproof/`.
+**Background at the save:**
+- `tools/reproof.py 304 7a741a45e72d0b16b130af308becffe69eb79c5d`, running
+  from the live clone since 07:23, task `bnh0cbrz8`. Its result also lands
+  as `result-304-7a741a45e72d.txt` in `~/.claude-reproof/`.
+- The code review of #316 (low, first round), a background reviewer.
 
 ### Next
 
-1. **#304** (#293, `t293-optionsnote`, head `7a741a4`): review posted
-   (pull/304 issuecomment-7239929415), no blocking finding, F1 advisory
-   to the planner for a ticket. When reproof.py returns: post it, hygiene
-   over the branch, post the re-proof, ask Ben's merge word. At
-   merge, tell both managers: a Decision with one option or a broken
-   second key loses its buttons and shows the new note.
-2. **#305** (#294 start lines, planner's PR, head `a535511`): re-proved
-   Green (pull/305 issuecomment-7239912343). Read main's run at
-   `0105706`, then ask Ben's merge word.
-3. **#303** (#300 exception and #250 decision 10, planner's PR, head
-   `2ba4275`, dynasty planner's read at pull/303 issuecomment-7239906356):
-   re-prove when CI finishes (hygiene, no review), ask Ben's word. Then
-   the planner's trial-line PR, and the #262 rule-text build on Ben's go
-   (ruling at issues/262 issuecomment-7239858390).
-4. **#306** (#285, `t285-board`): builder building after the planner's
-   read (issues/285 issuecomment-7239802406); re-prove when reported.
-5. **#298** (`t298-blanklines`): commit `79c7618` on its branch; wait for
-   its report, then review (low), hygiene, one dry run with `-FullSetup`,
-   Ben's word (plugin).
-6. **#263 step 3** (`t263-usage-scripts`, probe at `8b7084b`): Ben
-   approved the personal-assistant's run; the assistant was not running.
-   Queue Action placed. When it is up, send it Ben's word and the
-   command, relay the three count sections to the builder.
-7. **#211** (`t168-gitgate`, high, `89a57ae`): check behind main; fresh
-   re-check of F11; hook tests by the manager; hygiene; re-proof; Ben's
-   word naming #295's four classes.
-8. **#256**, this branch's PR: merge `origin/main` in, push, ask Ben.
-9. **#182 repair** (`t175-reproofrule`, DIRTY): brief from the planner,
-   now freed by #296.
-10. **Waiting on merges:** #289 step 1 (high, find-out) when no test run
-    is on the machine; #295 then #289 step 2 then #200 after #211;
-    #240 after #293; #111 in the mod lane; #299 part 2 and #262 build
-    after the planner's rulings.
+1. **#316** (#312, `t312-usageprints`, head `d0686a9`, trial): hygiene
+   passed and the review is running. On a clean review, post the re-proof
+   and merge on Green (paths only `tools/`, `tests/`), then close out.
+2. **#304** (#293, `t293-optionsnote`, `7a741a4`): review posted, with no
+   blocking finding. On reproof.py's result: post it, run hygiene, post
+   the re-proof, ask Ben's merge word. At the merge, tell both managers
+   that a Decision with one option or a broken second key loses its
+   buttons and shows the new note. Then dispatch #240 (after #293).
+3. **#313** (#299 part 2, `t299-oneshot`, gate text): `t299-oneshot` is
+   making six edits (pull/313 issuecomment-7240460466 and
+   issuecomment-7240483125). On its new head: re-check the changed
+   lines, run hygiene, send the head to dff-central-planner for a read,
+   then ask Ben's merge word. After the merge, tell the planner, which
+   lifts #317's hold. #317 is gate text and keeps Ben's go.
+4. **#307** (`t307-boardutf8`, low, trial): cp1252 fix plus parts A and B
+   (issues/307 issuecomment-7240559476: `--owner @me` after a login
+   check, and `--boards-only`). Re-prove when reported, and merge on Green
+   if its paths are only `tools/` and `tests/`. Then the planner raises
+   the D rows re-run Action; #285 stays open until D1 passes.
+5. **#298** (`t298-blanklines`, low, plugin): resumed at about 08:30 to
+   merge main, push and open its PR. Then review (low), hygiene, one
+   `-FullSetup` dry run, and Ben's word (plugin).
+6. **#211** (`t168-gitgate`, high): resumed at about 08:35 to merge main
+   (it was 14 behind) and push. Then a fresh re-check of F11, the hook
+   tests, hygiene, the re-proof, and Ben's word naming #295's four
+   classes.
+7. **#256**, this branch's PR: merge `origin/main` in, push, ask Ben.
+8. **#182 repair** (`t175-reproofrule`, DIRTY): waits for the planner's
+   brief.
+9. **Waiting on merges:** #289 step 1 (high, find-out) when no test run is
+   on the machine; #295, then #289 step 2, then #200, after #211; #262's
+   build on Ben's go; #111 in the mod lane.
 
 ### Waiting
 
-- On Ben (queue): fill `setup`/`setupFull` in the dispatch config (#251);
-  start the personal-assistant for the #263 probe; the deny rules for
-  approvals and re-runs (#300, then the manager runs `gh run rerun --help`
-  expecting a refusal). Merge words as each PR is re-proved.
-- On the planner: rulings on #299 step 1 (issues/299
-  issuecomment-7239905558); the #182 repair brief.
+- On Ben: nothing in the queue. Merge words: #304, #313, #298, #211, #256.
+- On the planner: the #182 repair brief, and #263's close (ruled; the
+  planner closes it).
 - Left for Ben, unchanged: worktree `s70-guard`, `t112-closeout-pulls`,
   branch `t161-reset-prompt-pointer`, `~/.claude` on
   `settings/shared-rule-trial` until dotclaude#12 merges.
@@ -78,53 +77,68 @@ result is also kept as `result-304-7a741a45e72d.txt` beside the lock in
 
 | Builder | Ticket | Tier | Session | PR | Stage |
 |---|---|---|---|---|---|
-| `t293-optionsnote` | #293 | medium | `d4cf10e4` | #304 at `7a741a4` | green by builder; review and reproof.py running |
-| `t285-board` | #285 | medium | `cf0646a1` | #306 | building after the planner's read |
-| `t298-blanklines` | #298 | low | `4f110cf4` | not yet | commit `79c7618`, idle |
-| `t263-usage-scripts` | #263 | medium | `6bf2091b` | none yet | waits for the probe output |
-| `t168-gitgate` | #168 | high | `2b73b5ff` | #211 at `89a57ae` | manager's re-check owed |
-| `t175-reproofrule` | #175 | low | `9144aeda` | #182 at `5632555` | DIRTY; repair to brief |
+| `t312-usageprints` | #312 | low, trial | `1b977f71` | #316 at `d0686a9` | review running |
+| `t293-optionsnote` | #293 | medium | `d4cf10e4` | #304 at `7a741a4` | reproof.py running |
+| `t299-oneshot` | #299 | medium | `ab68bc30` | #313 at `80e795f`+ | six edits |
+| `t307-boardutf8` | #307 | low, trial | `0f9021bd` | none yet | building, parts A and B added |
+| `t298-blanklines` | #298 | low | `4f110cf4-0db4-49d6-b1bd-6acf7a0a4a15` | none yet | resumed to open its PR |
+| `t168-gitgate` | #168 | high | `2b73b5ff-0140-485b-a518-27a4fb54c994` | #211 at `89a57ae` | resumed to merge main |
+| `t175-reproofrule` | #175 | low | `9144aeda` | #182 at `5632555` | DIRTY; waits for a brief |
 
-Open PRs: 306, 305, 304, 303, 256, 211, 182.
+Trial dispatches so far: #307 and #312, both on 2026-11-28; none has gone
+wrong.
+
+Open PRs: 316, 313, 304, 256, 211, 182.
 
 ### Peers
 
 Tools-central-planner (`0a6ad927-943a-481d-99fc-f2cbfcda8498`),
-personal-assistant (not running at the save), dff-central-builder-manager
-(`637314ca-f6ae-4049-a3ff-576bd1479cfe`), dff-central-planner
-(`0ef68551`). Reach them by name with ListAgents.
+personal-assistant (`061c1d24-09c1-4c01-8d89-ff693eb974d9`),
+dff-central-builder-manager (`637314ca-f6ae-4049-a3ff-576bd1479cfe`),
+dff-central-planner (`0ef68551-3dad-4f09-b5af-b164a0307ae9`). Reach them
+by name with ListAgents.
 
 ### Reads and checks due
 
 - Main's last finished run before each merge; CI on main's new commit
   after each merge.
 - `tools/reproof.py` takes the full 40-character head sha, holds a
-  machine-wide lock, about 70 minutes; only for PRs that touch
-  `plugins/owner-queue/`.
+  machine-wide lock and runs about 70 minutes. It is only for PRs that
+  touch `plugins/owner-queue/`.
 - Hygiene: the system Python's `-m pre_commit run check-in-hygiene
-  --from-ref origin/main --to-ref HEAD` in a temporary detached worktree
+  --from-ref origin/main --to-ref HEAD`, in a temporary detached worktree
   of the PR head, removed after.
 - Closeout: stop the builder, check its pid is dead, `git worktree
-  unlock`, closeout.py dry run then `--apply`, then `claude rm`.
-- Never `cd` into a builder worktree: the session's folder follows it.
-- Builders write nothing under `.claude/`: a brief whose files are
-  there goes to the planner (#294).
-- #187 watch, for the planner.
+  unlock` if locked, closeout.py dry run then `--apply`, then
+  `claude rm`. Then the pulls, with a notice first when a role file,
+  session-rules, session-dispatch, a hook or the owner-queue mod moves.
+- Never `cd` into a builder worktree. Edit the queue file with the Edit
+  or Write tool only, never with a script: a script splice broke its
+  `## Actions` heading once.
+- Builders write nothing under `.claude/`: a brief whose files are there
+  goes to the planner (#294).
 
 ### Decided since the last merged state PR
 
 - 2026-11-28, Ben's buttons in the tools manager's chat:
-  - Retry the #296 `-FullSetup` dry run once (refused, exit 2, as expected).
-  - Merge #296 at `624b511` (`a774e8e`); t251b and t251-venv-setup closed out.
-  - Dispatch all ready items (issues/300 issuecomment-7239545798):
-    t294, t293, t285, t298, t299, t262 dispatched; t263 resumed for step 3.
+  - Retry the #296 `-FullSetup` dry run once (refused, exit 2, as
+    expected).
+  - Merge #296 at `624b511` (`a774e8e`); t251b and t251-venv-setup are
+    closed out.
+  - Dispatch all ready items (issues/300 issuecomment-7239545798).
   - #294's files are written by the Tools planner (issues/294
-    issuecomment-7239883980); t294 closed out.
+    issuecomment-7239883980).
   - Merge #302 at `3f02699` (`0105706`).
-  - The personal-assistant runs the #263 probe on the real store.
-  - Delete t251-venv-setup's `.venv-light` and close it out (done).
-- 2026-11-28: t262 and t299 find-outs posted and closed out
-  (issues/262 issuecomment-7239815948, issues/299 issuecomment-7239905558).
+  - The personal-assistant runs the #263 probe, and after #308 the
+    `tags` read, on the real store.
+  - Merge #305 (`805aab5`), #303 (`25aef1a`), #309 (`d1b920c`), #310
+    (`3eba79a`) and #311 (`347188b`).
+  - Dispatch #299 part 2 (issues/299 issuecomment-7240316779).
+- 2026-11-28, on Green: #306 (`7385794`) and #308 (`189093c`); t285-board
+  and t263-usage-scripts are closed out.
+- 2026-11-28, Ben in the pane: no allow rule for the builders' catalog
+  check (issues/299 issuecomment-7240505050). Boards token made, D1 fails
+  (issues/285 issuecomment-7240599188).
 - 2026-11-27 decisions: see this file at `e40c8c7`.
 
 ## Reference
