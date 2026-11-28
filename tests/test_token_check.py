@@ -348,6 +348,27 @@ def test_a_bad_boards_argument_is_refused_before_any_call(arg):
     assert fake.calls == []
 
 
+def test_boards_only_runs_the_d_rows_and_no_other_call(monkeypatch):
+    fake_board = FakeBoard()
+    monkeypatch.setattr(token_check, "load_board", lambda: fake_board)
+    fake = Fake()
+    code, out = run_main(fake, "--boards", "someone/3", "--boards-only")
+    assert fake.calls == []
+    assert fake_board.asked == [("someone", "3", REPO)]
+    rows = [line.split("|")[1].strip() for line in out.splitlines() if line.startswith("| ")]
+    assert rows[1:] == ["D1 board", "D2 scopes", "D2 refused"]
+    assert code == 0
+
+
+def test_boards_only_without_boards_is_refused_before_any_call(monkeypatch):
+    monkeypatch.setattr(token_check, "load_board", lambda: FakeBoard())
+    fake = Fake()
+    with pytest.raises(SystemExit) as exc:
+        token_check.main([REPO, "--boards-only"], runner=fake, now=fixed_now)
+    assert exc.value.code == 2
+    assert fake.calls == []
+
+
 def test_the_real_board_script_loads_and_names_the_rows():
     module = token_check.load_board()
     assert callable(module.boards_rows)

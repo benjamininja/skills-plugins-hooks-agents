@@ -1,6 +1,7 @@
 """Login test: runs the calls #204 lists with the calling window's login and prints one table.
 
 Usage:  python tools/token_check.py <owner>/<repo> [--advisory <GHSA id>] [--stored-git-credential]
+                                    [--boards <login>/<number> [--boards-only]]
 
 Reads (A1 to A9) run against the newest open pull request, or the newest merged
 one. Writes (B1 to B9, C2, C4, C5) run on throwaway objects this run makes: an
@@ -17,6 +18,8 @@ Output is also scrubbed of token-shaped text, as a second guard.
 it reaches that board, holds the project scope and no other, and is refused a read of the
 repository's Actions secrets. Those calls go through tools/board.py, which alone
 reads that token from the credential store; without --boards nothing reads it.
+--boards-only, with --boards, runs the D rows alone: no auth, A, B or C row, nothing
+is made on GitHub and the window's login is not used (#307).
 """
 
 from __future__ import annotations
@@ -89,7 +92,11 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
     parser.add_argument("--advisory", type=advisory_arg, default=None)
     parser.add_argument("--stored-git-credential", action="store_true")
     parser.add_argument("--boards", type=board_arg, default=None)
-    return parser.parse_args(argv)
+    parser.add_argument("--boards-only", action="store_true")
+    args = parser.parse_args(argv)
+    if args.boards_only and not args.boards:
+        parser.error("--boards-only needs --boards <login>/<number>")
+    return args
 
 
 def load_board():
@@ -330,15 +337,16 @@ def main(argv: list[str], runner=run, now=None) -> int:
     moment = now() if now else datetime.now(timezone.utc)
     check = Check(args.repo, runner, moment.strftime("%Y%m%dT%H%M%SZ"),
                   args.stored_git_credential, args.advisory)
-    check.gh("auth", "auth", "status")
-    check.reads()
-    try:
-        if not check.writes():
-            check.skip("writes", "B1-B9, C2, C4, C5", "ended early: a call the rest needs failed")
-    finally:
-        check.cleanup()
-    check.skip("B10", "gh api -X PATCH repos/<repo>/security-advisories/<id>",
-               "not run: a write to a real draft advisory")
+    if not args.boards_only:
+        check.gh("auth", "auth", "status")
+        check.reads()
+        try:
+            if not check.writes():
+                check.skip("writes", "B1-B9, C2, C4, C5", "ended early: a call the rest needs failed")
+        finally:
+            check.cleanup()
+        check.skip("B10", "gh api -X PATCH repos/<repo>/security-advisories/<id>",
+                   "not run: a write to a real draft advisory")
     if args.boards:
         owner, number = args.boards.split("/")
         try:

@@ -5,6 +5,7 @@ and every child process go to fakes. The one real call is a Windows read of an
 entry that does not exist, which proves the CredReadW path without a secret.
 """
 import importlib.util
+import io
 import os
 import subprocess
 import sys
@@ -56,6 +57,8 @@ class Fake:
         self.calls.append((list(argv), token))
         if self.raises:
             raise self.raises
+        if argv == board.LOGIN_CALL:
+            return 0, OWNER + "\n", ""
         if argv[:3] == ["gh", "project", "view"] and ".id" in argv:
             return 0, PROJECT_ID + "\n", ""
         out, err = self.out, self.err
@@ -122,17 +125,17 @@ def test_only_the_five_actions_exist():
 
 def test_each_action_makes_its_gh_call_with_the_token():
     expected = {
-        "items": ["gh", "project", "item-list", NUMBER, "--owner", OWNER, "--format", "json",
+        "items": ["gh", "project", "item-list", NUMBER, "--owner", "@me", "--format", "json",
                   "--limit", "100"],
-        "fields": ["gh", "project", "field-list", NUMBER, "--owner", OWNER, "--format", "json"],
-        "add": ["gh", "project", "item-add", NUMBER, "--owner", OWNER, "--url", URL,
+        "fields": ["gh", "project", "field-list", NUMBER, "--owner", "@me", "--format", "json"],
+        "add": ["gh", "project", "item-add", NUMBER, "--owner", "@me", "--url", URL,
                 "--format", "json"],
     }
     for action, argv in expected.items():
         fake = Fake(out="{}\n")
         args = [action, OWNER, NUMBER] + ([URL] if action == "add" else [])
         assert board.main(args, runner=fake, read=reader()) == 0
-        assert fake.calls == [(argv, SECRET)]
+        assert fake.calls == [(board.LOGIN_CALL, SECRET), (argv, SECRET)]
 
 
 def test_views_is_one_fixed_graphql_read():
@@ -160,8 +163,10 @@ def test_set_reads_the_board_id_then_edits_one_field(flag, value, expected):
     code = board.main(["set", OWNER, NUMBER, "--item", ITEM, "--field", FIELD, f"{flag}={value}"],
                       runner=fake, read=reader())
     assert code == 0
-    (lookup, _), (edit, token) = fake.calls
+    (login, _), (lookup, _), (edit, token) = fake.calls
+    assert login == board.LOGIN_CALL
     assert lookup[:4] == ["gh", "project", "view", NUMBER] and ".id" in lookup
+    assert lookup[4:6] == ["--owner", "@me"]
     assert edit == ["gh", "project", "item-edit", "--id", ITEM, "--project-id", PROJECT_ID,
                     "--field-id", FIELD, expected]
     assert token == SECRET
@@ -171,13 +176,77 @@ def test_set_stops_when_the_board_id_is_not_found():
     class NoBoard(Fake):
         def __call__(self, argv, token):
             self.calls.append((list(argv), token))
+            if argv == board.LOGIN_CALL:
+                return 0, OWNER + "\n", ""
             return 1, "", "Could not resolve to a ProjectV2"
 
     fake = NoBoard()
     code = board.main(["set", OWNER, NUMBER, "--item", ITEM, "--field", FIELD, "--text", "x"],
                       runner=fake, read=reader())
     assert code == 1
-    assert len(fake.calls) == 1
+    assert len(fake.calls) == 2
+
+
+PROJECT_ACTIONS = [a for a in ACTIONS if a[0] != "views"]
+
+
+@pytest.mark.parametrize("argv", PROJECT_ACTIONS)
+def test_every_project_call_goes_as_at_me_after_the_login_check(argv):
+    fake = Fake()
+    assert board.main(argv, runner=fake, read=reader()) == 0
+    assert fake.calls[0] == (board.LOGIN_CALL, SECRET)
+    for call, _ in fake.calls[1:]:
+        assert call[:2] == ["gh", "project"]
+        assert OWNER not in call
+        if "--owner" in call:
+            assert call[call.index("--owner") + 1] == "@me"
+    assert sum(call == board.LOGIN_CALL for call, _ in fake.calls) == 1
+
+
+class OtherLogin(Fake):
+    def __init__(self, login="someone-else", code=0, err=""):
+        super().__init__()
+        self.login, self.login_code, self.login_err = login, code, err
+
+    def __call__(self, argv, token):
+        if argv == board.LOGIN_CALL:
+            self.calls.append((list(argv), token))
+            return self.login_code, self.login + "\n", self.login_err
+        return super().__call__(argv, token)
+
+
+@pytest.mark.parametrize("argv", PROJECT_ACTIONS)
+def test_another_owner_stops_with_exit_2_before_any_project_call(argv, capsys):
+    fake = OtherLogin()
+    assert board.main(argv, runner=fake, read=reader()) == 2
+    assert [call for call, _ in fake.calls] == [board.LOGIN_CALL]
+    err = capsys.readouterr().err
+    assert "boards of another owner are not supported" in err
+    assert "someone-else" not in err
+
+
+def test_a_failed_login_read_stops_before_any_project_call(capsys):
+    fake = OtherLogin(login="", code=1, err=f"HTTP 401 near {SECRET}\n")
+    assert board.main(["items", OWNER, NUMBER], runner=fake, read=reader()) == 1
+    assert [call for call, _ in fake.calls] == [board.LOGIN_CALL]
+    assert SECRET not in capsys.readouterr().err
+
+
+def test_the_login_is_compared_without_case():
+    fake = OtherLogin(login=OWNER.upper())
+    assert board.main(["items", OWNER, NUMBER], runner=fake, read=reader()) == 0
+
+
+def test_at_me_skips_the_login_read():
+    fake = Fake()
+    assert board.main(["items", "@me", NUMBER], runner=fake, read=reader()) == 0
+    assert [call[:3] for call, _ in fake.calls] == [["gh", "project", "item-list"]]
+
+
+def test_views_makes_no_login_read():
+    fake = OtherLogin()
+    board.main(["views", OWNER, NUMBER], runner=fake, read=reader())
+    assert board.LOGIN_CALL not in [call for call, _ in fake.calls]
 
 
 def test_calls_are_argument_lists_never_shell_strings():
@@ -235,6 +304,22 @@ def test_token_shaped_text_is_scrubbed_even_when_it_is_not_the_value(capsys):
     fake = Fake(out=f"other login {SHAPED}\n")
     board.main(["items", OWNER, NUMBER], runner=fake, read=reader())
     assert SHAPED not in capsys.readouterr().out
+
+
+@pytest.mark.parametrize("action", ["items", "fields"])
+def test_board_text_outside_cp1252_prints_through_a_cp1252_pipe(action, monkeypatch):
+    # #307: a piped stdout on Windows encodes as cp1252 unless the script says otherwise
+    title = "Board \U0001F680 todo → done"
+    out = io.TextIOWrapper(io.BytesIO(), encoding="cp1252")
+    err = io.TextIOWrapper(io.BytesIO(), encoding="cp1252")
+    monkeypatch.setattr(sys, "stdout", out)
+    monkeypatch.setattr(sys, "stderr", err)
+    fake = Fake(out=f'{{"title": "{title}"}}\n', err=f"note {title}\n")
+    assert board.main([action, OWNER, NUMBER], runner=fake, read=reader()) == 0
+    out.flush()
+    err.flush()
+    assert title in out.buffer.getvalue().decode("utf-8")
+    assert title in err.buffer.getvalue().decode("utf-8")
 
 
 def test_every_print_in_the_script_goes_through_scrub():
@@ -334,8 +419,10 @@ def test_credreadw_on_an_entry_that_does_not_exist_is_a_store_error():
 class CheckFake:
     """Answers the three D calls; each answer can be swapped."""
 
-    def __init__(self, board_code=0, scopes="project", secrets=(1, "", "gh: Resource not accessible by personal access token (HTTP 403)"), leak=None):
+    def __init__(self, board_code=0, scopes="project", secrets=(1, "", "gh: Resource not accessible by personal access token (HTTP 403)"), leak=None,
+                 login=(0, OWNER + "\n", "")):
         self.calls = []
+        self.login = login
         self.board_code = board_code
         self.scopes = scopes
         self.secrets = secrets
@@ -343,6 +430,8 @@ class CheckFake:
 
     def __call__(self, argv, token):
         self.calls.append((list(argv), token))
+        if argv == board.LOGIN_CALL:
+            return self.login
         if argv[:3] == ["gh", "project", "view"]:
             return self.board_code, "3\n", "" if self.board_code == 0 else f"not found {self.leak or ''}"
         if argv[:3] == ["gh", "api", "-i"]:
@@ -365,8 +454,28 @@ def test_a_boards_only_token_passes_d1_and_both_d2_rows():
     assert rows[1][3] == "scopes: project"
     assert rows[2][3] == "refused (HTTP 403)"
     assert all(token == SECRET for _, token in fake.calls)
-    assert fake.calls[2][0] == ["gh", "api", "repos/someone/some-repo/actions/secrets",
+    assert fake.calls[0][0] == board.LOGIN_CALL
+    assert fake.calls[1][0] == ["gh", "project", "view", NUMBER, "--owner", "@me", "--format",
+                                "json", "--jq", ".number"]
+    assert fake.calls[3][0] == ["gh", "api", "repos/someone/some-repo/actions/secrets",
                                 "--jq", ".total_count"]
+
+
+def test_d1_fails_on_another_login_without_a_project_call_or_the_login():
+    fake = CheckFake(login=(0, "someone-else\n", ""))
+    rows = rows_of(fake)
+    assert rows[0][2:] == ("FAIL", "boards of another owner are not supported")
+    assert "someone-else" not in repr(rows)
+    assert not [c for c, _ in fake.calls if c[:2] == ["gh", "project"]]
+    assert [r[0] for r in rows] == ["D1 board", "D2 scopes", "D2 refused"]
+
+
+def test_d1_fails_on_a_failed_login_read_with_the_error_scrubbed():
+    fake = CheckFake(login=(1, "", f"HTTP 401 near {SECRET}"))
+    rows = rows_of(fake)
+    assert rows[0][2] == "FAIL" and "HTTP 401" in rows[0][3]
+    assert SECRET not in repr(rows)
+    assert not [c for c, _ in fake.calls if c[:2] == ["gh", "project"]]
 
 
 @pytest.mark.parametrize("scopes", ["project, repo", "public_repo, project", "project, workflow",
