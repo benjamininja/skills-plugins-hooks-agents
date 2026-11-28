@@ -37,6 +37,9 @@ git history.
    chat. Its builder posts its list of queries on #328 first; read it
    if the manager asks. After its PR merges: a new Action for Ben to
    run the widened D rows on board 2. #285 closes when all pass.
+   The builder's plan is read, no breach (issues/328
+   issuecomment-7241599804). **#329** (low, decimals for
+   `set --number`) is held behind #328's PR; lift it at that merge.
 2. **#317**: PR #322 merged `598a325` on Ben's word, with the planner's
    four edits (pull/322 issuecomment-7241172319). On 2026-12-12 ask
    Ben by button for one `usage.py tags` run, compared on #317.
