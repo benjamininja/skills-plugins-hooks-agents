@@ -95,6 +95,19 @@ list below where they differ).**
 - The dynasty planner told Ben the advisory's fallback applies; its
   pointer and the new date are owed.
 
+**Latest on 2026-11-28.**
+- PR #302 merged (`0105706`), checked. The deny-rules Action went to
+  the manager as a ready entry (one rule for the builders' file, six
+  for the main checkout's local settings file; unverified until the
+  manager's `gh run rerun --help` is refused). The planner repeats
+  that check in its own session once Ben has ticked it.
+- PR #303 took main in: head `2ba4275`, version 0.6.2, security review
+  clean at that head, with the dynasty planner for its read. Then the
+  manager's re-proof and Ben's merge word; then the trial line PR.
+- Ben's #294 button is on record (issues/294 issuecomment-7239883980).
+  PR #305 is at re-proof. PR #304 (#293) is reported green.
+- #263's probe run waits for the personal-assistant's session.
+
 **Next, in order.**
 1. The draft advisory GHSA-27j5-qx96-v8w3: the status of its gaps and
    the Tools view (do not publish whole on 2026-11-28; move the date
