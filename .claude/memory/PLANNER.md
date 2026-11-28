@@ -37,8 +37,12 @@ git history.
    chat. Its builder posts its list of queries on #328 first; read it
    if the manager asks. After its PR merges: a new Action for Ben to
    run the widened D rows on board 2. #285 closes when all pass.
-   The builder's plan is read, no breach (issues/328
-   issuecomment-7241599804). **#329** (low, decimals for
+   The builder's plan is read, no breach. By Ben's button "Run before
+   merge (Recommended)" the PR is NOT merged on Green: it holds until
+   Ben runs the D rows from its branch and all pass (issues/328
+   issuecomment-7241637480). When the manager names a Green head,
+   send the Action. Ben's queue answer (b): one allow rule for
+   docs.github.com, drafted and sent to the manager as an Action. **#329** (low, decimals for
    `set --number`) is held behind #328's PR; lift it at that merge.
 2. **#317**: PR #322 merged `598a325` on Ben's word, with the planner's
    four edits (pull/322 issuecomment-7241172319). On 2026-12-12 ask
@@ -134,6 +138,9 @@ All on 2026-11-28, by Ben's button unless said.
   first (recorded on #323).
 - Merged on Ben's word: PR #318 `ed3a569` (#298), PR #304 `148b48e`
   (#293). #240 step 2 is dispatched.
+- #328: "Run before merge (Recommended)" (issues/328
+  issuecomment-7241637480), after the planner wrongly closed two
+  refused calls with nothing queued.
 - #285: "Own queries (Recommended)" (issues/285
   issuecomment-7241535234); #328 filed.
 - Merged: PR #322 `598a325` (#317, Ben's word), PR #327 `6db4e43`
