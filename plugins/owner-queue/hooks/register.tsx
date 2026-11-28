@@ -67,7 +67,7 @@ import {
   waiting,
 } from './parse'
 
-const VERSION = '0.12.1'
+const VERSION = '0.12.2'
 const PANE = 'owner-queue'
 const TITLE = 'Needs owner'
 const FILE = '.claude/memory/NEEDS-OWNER.md'
@@ -83,6 +83,13 @@ const HALF =
 const ANSWERS = 'answers'
 const NOTES = 'notes'
 const LOGGED = 'logged'
+
+/**
+ * The store's records keyed by a queue file's path (`at()`), in the order a
+ * folder move carries them. A name ending in `:` starts one key per session.
+ * A new record keyed by `at()` is added here, so a move carries it too.
+ */
+const PATHED = ['delivered:', 'noted:', ANSWERS, NOTES, LOGGED] as const
 
 const ref = { plugin: 'owner-queue', key: 'queue' } as const
 const EMPTY: OwnerQueue = { isLoaded: false, hasFile: false, items: [] }
@@ -619,6 +626,178 @@ async function rekey($: EngineInterface): Promise<void> {
   }
 }
 
+/** The queue path a store key, or a `logged` mark, starts with: the text before its first `|`. */
+function pathOf(key: string): string {
+  const cut = key.indexOf('|')
+
+  return cut < 0 ? '' : key.slice(0, cut)
+}
+
+/** The entry id a store key, or a `logged` mark, holds after its path. */
+function entryOf(key: string, isMark: boolean): string {
+  const rest = key.slice(pathOf(key).length + 1)
+  const cut = rest.lastIndexOf('|')
+
+  return isMark && cut >= 0 ? rest.slice(0, cut) : rest
+}
+
+/**
+ * One record's value with each key (or each `logged` mark) under the queue
+ * path `from`, compared as `sameFile` does, put under `to`. Where the key is
+ * already under `to`, one line (`answers`, `delivered:`) keeps the line there
+ * and a list of Note lines (`notes`, `noted:`) takes both, the lines there
+ * first. Any other key, and any other value, stays as it was.
+ */
+function repathed(value: unknown, from: string, to: string): unknown {
+  const isOld = (key: string) => sameFile(pathOf(key), from)
+  const place = (key: string) => `${to}${key.slice(pathOf(key).length)}`
+  if (Array.isArray(value)) {
+    const out: unknown[] = []
+    for (const one of value) {
+      const now = typeof one === 'string' && isOld(one) ? place(one) : one
+      if (!out.includes(now)) out.push(now)
+    }
+
+    return out
+  }
+  if (value === null || typeof value !== 'object') return value
+  const entries = Object.entries(value)
+  const out: Record<string, unknown> = Object.fromEntries(
+    entries.filter(([key]) => !isOld(key)),
+  )
+  for (const [key, one] of entries) {
+    if (!isOld(key)) continue
+    const there = out[place(key)]
+    out[place(key)] =
+      there === undefined
+        ? one
+        : Array.isArray(there) && Array.isArray(one)
+          ? [...new Set([...there, ...one])]
+          : there
+  }
+
+  return out
+}
+
+/** Old queue paths whose records were left where they are; each is toasted once. */
+const unmoved = new Set<string>()
+
+/** Whether each absolute queue path that no read names was found gone. */
+const gone = new Map<string, boolean>()
+
+let isMigrating = false
+
+/** True when the file is not there; an error counts as there, so nothing moves. */
+async function isGone($: EngineInterface, file: string): Promise<boolean> {
+  const name = slashed(file).toLowerCase()
+  const known = gone.get(name)
+  if (known !== undefined) return known
+  let isMissing = false
+  try {
+    isMissing = !(await $.fs.exists(file))
+  } catch {
+    isMissing = false
+  }
+  gone.set(name, isMissing)
+
+  return isMissing
+}
+
+/**
+ * After a folder move (#240): the records the store keeps under a queue path
+ * that is gone move to the queue file that took its place, so an Answer or a
+ * Note the pane wrote before the move is still the pane's, and is carried
+ * once. A path is old when no queue the pane reads names it, it is absolute,
+ * and the file is not there. Its new path is the one queue read now with the
+ * same repo folder name that holds an entry found under the old path. With
+ * none, or more than one, nothing moves and a toast names the path, once.
+ * Each session's `delivered:` and `noted:` records move first, then
+ * `answers` and `notes`, then `logged`, so a stop part way never says an
+ * Answer again, and the next read finishes the move. Nothing is deleted.
+ */
+async function migrate(
+  $: EngineInterface,
+  sources: Source[],
+  items: OwnerItem[],
+): Promise<void> {
+  if (isMigrating) return
+  isMigrating = true
+  try {
+    let all: string[] | undefined
+    try {
+      all = await $.store.keys()
+    } catch {
+      all = undefined
+    }
+    const mine = all === undefined ? await me($) : undefined
+    const names = PATHED.flatMap(family =>
+      !family.endsWith(':')
+        ? [family]
+        : all !== undefined
+          ? all.filter(key => key.startsWith(family))
+          : mine !== undefined
+            ? [`${family}${mine}`]
+            : [],
+    )
+    const olds = new Map<string, { path: string; ids: Set<string> }>()
+    for (const name of names) {
+      const value = await kept<unknown>($, name, undefined)
+      const isMark = Array.isArray(value)
+      const keys = isMark
+        ? value.filter((one): one is string => typeof one === 'string')
+        : value !== null && typeof value === 'object'
+          ? Object.keys(value)
+          : []
+      for (const key of keys) {
+        const path = pathOf(key)
+        if (!/^([A-Za-z]:)?\//.test(slashed(path))) continue
+        if (sources.some(one => sameFile(one.file, path))) continue
+        const norm = slashed(path).toLowerCase()
+        if (unmoved.has(norm)) continue
+        const one = olds.get(norm) ?? { path, ids: new Set<string>() }
+        one.ids.add(entryOf(key, isMark))
+        olds.set(norm, one)
+      }
+    }
+    const moves: { from: string; to: string }[] = []
+    for (const [norm, { path, ids }] of olds) {
+      if (!(await isGone($, path))) continue
+      const label = labelOf(path).toLowerCase()
+      const found = sources.filter(
+        one =>
+          labelOf(one.file).toLowerCase() === label &&
+          items.some(item => item.queue === one.file && ids.has(idOf(item))),
+      )
+      const [to] = found
+      if (found.length === 1 && to !== undefined) {
+        moves.push({ from: path, to: to.file })
+        continue
+      }
+      unmoved.add(norm)
+      $.ui.toast(
+        `Records under ${path} were not moved: ${found.length === 0 ? 'no queue read now' : `${found.length} queues read now`} match it`,
+      )
+    }
+    if (moves.length === 0) return
+    for (const name of names) {
+      const was = await kept<unknown>($, name, undefined)
+      if (was === undefined) continue
+      const now = moves.reduce<unknown>(
+        (value, one) => repathed(value, one.from, one.to),
+        was,
+      )
+      if (JSON.stringify(now) !== JSON.stringify(was)) await $.store.set(name, now)
+    }
+  } catch {
+    // Nothing is lost: what did not move moves at the next read.
+  } finally {
+    isMigrating = false
+  }
+}
+
+/** True once this session has said its own queue file is missing. */
+let isWarned = false
+
 /**
  * Re-reads every queue file; redraws and toasts on a change. The owner opens
  * the pane. `canPrep` is false inside a `command.run` hook, where a submitted
@@ -640,6 +819,12 @@ async function refresh($: EngineInterface, canPrep = true): Promise<OwnerQueue> 
     if (text !== undefined)
       items.push(...parse(text).map(item => ({ ...item, queue: one.file })))
   }
+  if (queues[0]?.hasFile === false && !isWarned) {
+    isWarned = true
+    $.ui.toast(`This session's own queue file was not found: ${file}`)
+  }
+  // Before any read of the store, so it reads the records at their new path.
+  await migrate($, sources, items)
   await pull($)
   const answered = await penned($)
   const wrote = await kept<OwnerNotes>($, NOTES, {})
@@ -1431,6 +1616,9 @@ export const register: Register = (on, settings) => {
   isTending = false
   isUnsaved = false
   moved = undefined
+  isWarned = false
+  unmoved.clear()
+  gone.clear()
 
   on('session.start', async ($, e, next) => {
     await $.command.register({
