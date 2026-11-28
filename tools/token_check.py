@@ -15,8 +15,9 @@ credential from `gh` for this window; --stored-git-credential leaves that out.
 Output is also scrubbed of token-shaped text, as a second guard.
 
 --boards <login>/<number> adds rows D1 and D2 for the boards-only token (#285):
-it reaches that board, holds the project scope and no other, and is refused a read of the
-repository's Actions secrets. Those calls go through tools/board.py, which alone
+it reaches that board, and the queries of board.py's items, fields and views each
+answer with a count only (#328); it holds the project scope and no other, and is
+refused a read of the repository's Actions secrets. Those calls go through tools/board.py, which alone
 reads that token from the credential store; without --boards nothing reads it.
 --boards-only, with --boards, runs the D rows alone: no auth, A, B or C row, nothing
 is made on GitHub and the window's login is not used (#307).

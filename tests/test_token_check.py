@@ -288,13 +288,19 @@ def test_a_checkout_without_the_default_head_stops_before_any_push():
     assert code == 1
 
 
+D_ROWS = ["D1 board", "D1 items", "D1 fields", "D1 views", "D2 scopes", "D2 refused"]
+
+
 class FakeBoard:
     """Stands in for tools/board.py; records what boards_rows was asked."""
 
     def __init__(self, rows=None, raises=None):
         self.asked = []
         self.rows = rows if rows is not None else [
-            ("D1 board", "gh project view 3 --owner someone", "PASS", ""),
+            ("D1 board", "gh api graphql BOARD_QUERY number=3", "PASS", ""),
+            ("D1 items", "gh api graphql ITEMS_QUERY number=3 first=100", "PASS", "count: 4"),
+            ("D1 fields", "gh api graphql FIELDS_QUERY number=3", "PASS", "count: 9"),
+            ("D1 views", "gh api graphql VIEWS_QUERY number=3", "PASS", "count: 2"),
             ("D2 scopes", "gh api -i rate_limit", "PASS", "scopes: project"),
             ("D2 refused", f"gh api repos/{REPO}/actions/secrets", "PASS", "refused (HTTP 403)"),
         ]
@@ -321,7 +327,7 @@ def test_boards_adds_the_d_rows_for_that_board_and_repository(monkeypatch):
     monkeypatch.setattr(token_check, "load_board", lambda: fake_board)
     code, out = run_main(Fake(), "--boards", "someone/3")
     assert fake_board.asked == [("someone", "3", REPO)]
-    for rid in ("D1 board", "D2 scopes", "D2 refused"):
+    for rid in D_ROWS:
         assert f"| {rid} |" in out
     assert code == 0
 
@@ -356,7 +362,7 @@ def test_boards_only_runs_the_d_rows_and_no_other_call(monkeypatch):
     assert fake.calls == []
     assert fake_board.asked == [("someone", "3", REPO)]
     rows = [line.split("|")[1].strip() for line in out.splitlines() if line.startswith("| ")]
-    assert rows[1:] == ["D1 board", "D2 scopes", "D2 refused"]
+    assert rows[1:] == D_ROWS
     assert code == 0
 
 

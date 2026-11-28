@@ -6,7 +6,9 @@ entry that does not exist, which proves the CredReadW path without a secret.
 """
 import importlib.util
 import io
+import json
 import os
+import re
 import subprocess
 import sys
 import uuid
@@ -28,6 +30,7 @@ OWNER, NUMBER = "someone", "3"
 ITEM, FIELD = "PVTI_lADOabc123", "PVTSSF_lADOabc123"
 URL = "https://github.com/someone/some-repo/issues/12"
 PROJECT_ID = "PVT_kwHOabc123"
+CONTENT_ID = "I_kwDOabc123"
 
 ACTIONS = [
     ["items", OWNER, NUMBER],
@@ -37,7 +40,7 @@ ACTIONS = [
     ["views", "@me", NUMBER],
     ["add", OWNER, NUMBER, URL],
     ["set", OWNER, NUMBER, "--item", ITEM, "--field", FIELD, "--text", "hello"],
-    ["set", OWNER, NUMBER, "--item", ITEM, "--field", FIELD, "--number", "2.5"],
+    ["set", OWNER, NUMBER, "--item", ITEM, "--field", FIELD, "--number", "25"],
     ["set", OWNER, NUMBER, "--item", ITEM, "--field", FIELD, "--date", "2026-12-01"],
     ["set", OWNER, NUMBER, "--item", ITEM, "--field", FIELD, "--option", "f75ad846"],
     ["set", OWNER, NUMBER, "--item", ITEM, "--field", FIELD, "--iteration", "abc123"],
@@ -59,8 +62,10 @@ class Fake:
             raise self.raises
         if argv == board.LOGIN_CALL:
             return 0, OWNER + "\n", ""
-        if argv[:3] == ["gh", "project", "view"] and ".id" in argv:
+        if f"query={board.BOARD_QUERY}" in argv:
             return 0, PROJECT_ID + "\n", ""
+        if f"query={board.RESOURCE_QUERY}" in argv:
+            return 0, CONTENT_ID + "\n", ""
         out, err = self.out, self.err
         if self.leak:
             out = f"{out}token={self.leak} header Authorization: token {self.leak}\n"
@@ -97,6 +102,8 @@ def never_read(entry):
     ["set", OWNER, NUMBER, "--item", ITEM, "--field", FIELD],
     ["set", OWNER, NUMBER, "--item", ITEM, "--field", FIELD, "--text", "x", "--date", "2026-01-01"],
     ["set", OWNER, NUMBER, "--item", ITEM, "--field", FIELD, "--date", "tomorrow"],
+    ["set", OWNER, NUMBER, "--item", ITEM, "--field", FIELD, "--number", "2.5"],
+    ["set", OWNER, NUMBER, "--item", ITEM, "--field", FIELD, "--number", "@file"],
     ["delete", OWNER, NUMBER],
     ["items", OWNER, NUMBER, "--token", "x"],
 ])
@@ -123,53 +130,124 @@ def test_only_the_five_actions_exist():
 # ---- the calls made ---------------------------------------------------------
 
 
-def test_each_action_makes_its_gh_call_with_the_token():
+def gql(query, *values):
+    return ["gh", "api", "graphql", "-f", f"query={query}", *values]
+
+
+BOARD_ID_CALL = gql(board.BOARD_QUERY, "-F", f"number={NUMBER}") + [
+    "--jq", ".data.viewer.projectV2.id"]
+
+
+def test_each_action_makes_its_graphql_calls_with_the_token():
     expected = {
-        "items": ["gh", "project", "item-list", NUMBER, "--owner", "@me", "--format", "json",
-                  "--limit", "100"],
-        "fields": ["gh", "project", "field-list", NUMBER, "--owner", "@me", "--format", "json"],
-        "add": ["gh", "project", "item-add", NUMBER, "--owner", "@me", "--url", URL,
-                "--format", "json"],
+        "items": [gql(board.ITEMS_QUERY, "-F", f"number={NUMBER}", "-F", "first=100")],
+        "fields": [gql(board.FIELDS_QUERY, "-F", f"number={NUMBER}")],
+        "views": [gql(board.VIEWS_QUERY, "-F", f"number={NUMBER}")],
+        "add": [BOARD_ID_CALL,
+                gql(board.RESOURCE_QUERY, "-f", f"url={URL}") + [
+                    "--jq", ".data.resource.id // empty"],
+                gql(board.ADD_MUTATION, "-f", f"project={PROJECT_ID}", "-f",
+                    f"content={CONTENT_ID}")],
     }
-    for action, argv in expected.items():
+    for action, argvs in expected.items():
         fake = Fake(out="{}\n")
         args = [action, OWNER, NUMBER] + ([URL] if action == "add" else [])
         assert board.main(args, runner=fake, read=reader()) == 0
-        assert fake.calls == [(board.LOGIN_CALL, SECRET), (argv, SECRET)]
+        assert fake.calls == [(board.LOGIN_CALL, SECRET)] + [(a, SECRET) for a in argvs]
 
 
-def test_views_is_one_fixed_graphql_read():
+@pytest.mark.parametrize("argv", ACTIONS)
+def test_no_action_builds_a_gh_project_call(argv):
+    # #328: gh project asks GitHub for more than the project scope
     fake = Fake(out="{}\n")
-    board.main(["views", OWNER, NUMBER], runner=fake, read=reader())
-    ((argv, _),) = fake.calls
-    assert argv[:3] == ["gh", "api", "graphql"]
-    assert f"query={board.VIEWS_QUERY}" in argv and f"login={OWNER}" in argv
-    assert "mutation" not in board.VIEWS_QUERY and "mutation" not in board.VIEWS_QUERY_ME
-    fake = Fake(out="{}\n")
-    board.main(["views", "@me", NUMBER], runner=fake, read=reader())
-    ((argv, _),) = fake.calls
-    assert f"query={board.VIEWS_QUERY_ME}" in argv and not any(a.startswith("login=") for a in argv)
+    board.main(argv, runner=fake, read=reader())
+    graphql_calls = [call for call, _ in fake.calls if call != board.LOGIN_CALL]
+    assert graphql_calls
+    for call in graphql_calls:
+        assert "project" not in call[:2]
+        assert call[:4] == ["gh", "api", "graphql", "-f"]
+        assert call[4].removeprefix("query=") in board.QUERIES
+        assert not any(a.startswith("query=") for a in call[5:])
 
 
-@pytest.mark.parametrize("flag,value,expected", [
-    ("--text", "-starts-with-a-dash", "--text=-starts-with-a-dash"),
-    ("--number", "-3", "--number=-3"),
-    ("--date", "2026-12-01", "--date=2026-12-01"),
-    ("--option", "f75ad846", "--single-select-option-id=f75ad846"),
-    ("--iteration", "abc123", "--iteration-id=abc123"),
+def test_no_gh_project_command_is_left_in_the_script():
+    source = SCRIPT.read_text(encoding="utf-8")
+    assert not re.search(r'"gh",\s*"project"', source)
+    assert "gh project" not in source.split('"""', 2)[2]  # after the module's docstring
+
+
+def test_the_queries_are_fixed_texts_and_only_add_and_set_write():
+    reads = (board.BOARD_QUERY, board.ITEMS_QUERY, board.FIELDS_QUERY, board.VIEWS_QUERY,
+             board.RESOURCE_QUERY)
+    assert all(q.startswith("query(") and "mutation" not in q for q in reads)
+    writes = [board.ADD_MUTATION, *(m for m, _ in board.SET_MUTATIONS.values())]
+    assert all(q.startswith("mutation(") for q in writes)
+    for q in reads[:4]:
+        assert "viewer { projectV2(number: $number)" in q
+    for q in board.QUERIES:
+        assert "organization" not in q and "user(" not in q and "discussion" not in q.lower()
+
+
+@pytest.mark.parametrize("flag,value,kind,gh_flag", [
+    ("--text", "-starts-with-a-dash", "text", "-f"),
+    ("--number", "-3", "value_number", "-F"),
+    ("--date", "2026-12-01", "date", "-f"),
+    ("--option", "f75ad846", "option", "-f"),
+    ("--iteration", "abc123", "iteration", "-f"),
 ])
-def test_set_reads_the_board_id_then_edits_one_field(flag, value, expected):
+def test_set_reads_the_board_id_then_edits_one_field(flag, value, kind, gh_flag):
     fake = Fake()
     code = board.main(["set", OWNER, NUMBER, "--item", ITEM, "--field", FIELD, f"{flag}={value}"],
                       runner=fake, read=reader())
     assert code == 0
     (login, _), (lookup, _), (edit, token) = fake.calls
     assert login == board.LOGIN_CALL
-    assert lookup[:4] == ["gh", "project", "view", NUMBER] and ".id" in lookup
-    assert lookup[4:6] == ["--owner", "@me"]
-    assert edit == ["gh", "project", "item-edit", "--id", ITEM, "--project-id", PROJECT_ID,
-                    "--field-id", FIELD, expected]
+    assert lookup == BOARD_ID_CALL
+    assert edit == gql(board.SET_MUTATIONS[kind][0], "-f", f"project={PROJECT_ID}",
+                       "-f", f"item={ITEM}", "-f", f"field={FIELD}", gh_flag, f"value={value}")
     assert token == SECRET
+
+
+def test_set_sends_the_number_as_a_float_and_everything_else_as_a_string():
+    kinds = {k: m for k, (m, _) in board.SET_MUTATIONS.items()}
+    assert "$value: Float!" in kinds["value_number"] and "value: {number: $value}" in kinds["value_number"]
+    assert "$value: Date!" in kinds["date"]
+    assert "value: {singleSelectOptionId: $value}" in kinds["option"]
+    assert "value: {iterationId: $value}" in kinds["iteration"]
+    assert [flag for _, flag in board.SET_MUTATIONS.values()].count("-F") == 1
+
+
+@pytest.mark.parametrize("text", ['say "hi" {x}', '{"a": 1}', "a } { b", "$value", "x=y"])
+def test_a_value_with_quotes_or_braces_reaches_the_child_as_one_argument(text):
+    fake = Fake()
+    assert board.main(["set", OWNER, NUMBER, "--item", ITEM, "--field", FIELD, "--text", text],
+                      runner=fake, read=reader()) == 0
+    edit = fake.calls[-1][0]
+    assert edit[-2:] == ["-f", f"value={text}"]
+    assert edit[4] == f"query={board.SET_MUTATIONS['text'][0]}"
+    assert sum(text in a for a in edit[5:]) == 1  # the values after the fixed text
+
+
+def test_a_url_and_a_cursor_are_never_in_the_query_text():
+    cursor = 'Y3Vyc29y"}{'
+    page = {"data": {"viewer": {"projectV2": {"items": {
+        "totalCount": 2, "pageInfo": {"hasNextPage": True, "endCursor": cursor},
+        "nodes": [{"id": "PVTI_a"}]}}}}}
+
+    class Pages(Fake):
+        def __call__(self, argv, token):
+            self.calls.append((list(argv), token))
+            if argv == board.LOGIN_CALL:
+                return 0, OWNER + "\n", ""
+            return 0, json.dumps(page), ""
+
+    fake = Pages()
+    board.main(["items", OWNER, NUMBER, "--limit", "2"], runner=fake, read=reader())
+    second = fake.calls[2][0]
+    assert second[-2:] == ["-f", f"after={cursor}"] and cursor not in second[4]
+    fake = Fake()
+    board.main(["add", OWNER, NUMBER, URL], runner=fake, read=reader())
+    assert all(URL not in call[4] for call, _ in fake.calls[1:])
 
 
 def test_set_stops_when_the_board_id_is_not_found():
@@ -187,19 +265,18 @@ def test_set_stops_when_the_board_id_is_not_found():
     assert len(fake.calls) == 2
 
 
-PROJECT_ACTIONS = [a for a in ACTIONS if a[0] != "views"]
+PROJECT_ACTIONS = [a for a in ACTIONS if a[1] == OWNER]
 
 
 @pytest.mark.parametrize("argv", PROJECT_ACTIONS)
-def test_every_project_call_goes_as_at_me_after_the_login_check(argv):
+def test_every_board_call_is_the_viewers_after_the_login_check(argv):
     fake = Fake()
     assert board.main(argv, runner=fake, read=reader()) == 0
     assert fake.calls[0] == (board.LOGIN_CALL, SECRET)
     for call, _ in fake.calls[1:]:
-        assert call[:2] == ["gh", "project"]
-        assert OWNER not in call
-        if "--owner" in call:
-            assert call[call.index("--owner") + 1] == "@me"
+        assert call[:3] == ["gh", "api", "graphql"]
+        values = [a for a in call if a != f"url={URL}"]  # the URL holds its repository's owner
+        assert not any(OWNER in a for a in values) and not any(a.startswith("login=") for a in call)
     assert sum(call == board.LOGIN_CALL for call, _ in fake.calls) == 1
 
 
@@ -240,13 +317,96 @@ def test_the_login_is_compared_without_case():
 def test_at_me_skips_the_login_read():
     fake = Fake()
     assert board.main(["items", "@me", NUMBER], runner=fake, read=reader()) == 0
-    assert [call[:3] for call, _ in fake.calls] == [["gh", "project", "item-list"]]
+    assert [call[:5] for call, _ in fake.calls] == [
+        gql(board.ITEMS_QUERY)]
 
 
-def test_views_makes_no_login_read():
-    fake = OtherLogin()
-    board.main(["views", OWNER, NUMBER], runner=fake, read=reader())
-    assert board.LOGIN_CALL not in [call for call, _ in fake.calls]
+def page_of(ids, has_next, cursor="c1", total=None):
+    return json.dumps({"data": {"viewer": {"projectV2": {"items": {
+        "totalCount": len(ids) if total is None else total,
+        "pageInfo": {"hasNextPage": has_next, "endCursor": cursor},
+        "nodes": [{"id": i, "content": {"title": f"title {i}"}} for i in ids]}}}}})
+
+
+class Paged(Fake):
+    """Answers item pages in order."""
+
+    def __init__(self, pages):
+        super().__init__()
+        self.pages = list(pages)
+
+    def __call__(self, argv, token):
+        self.calls.append((list(argv), token))
+        if argv == board.LOGIN_CALL:
+            return 0, OWNER + "\n", ""
+        return self.pages.pop(0)
+
+
+def test_items_pages_until_the_limit_and_prints_one_object(capsys, monkeypatch):
+    fake = Paged([(0, page_of(["a", "b"], True, "c1", 5), ""),
+                  (0, page_of(["c", "d"], True, "c2", 5), "")])
+    monkeypatch.setattr(board, "PAGE", 2)
+    assert board.main(["items", OWNER, NUMBER, "--limit", "3"], runner=fake, read=reader()) == 0
+    printed = json.loads(capsys.readouterr().out)
+    assert printed["totalCount"] == 5
+    assert [n["id"] for n in printed["items"]] == ["a", "b", "c"]
+    calls = [call for call, _ in fake.calls[1:]]
+    assert "first=2" in calls[0] and not any(a.startswith("after=") for a in calls[0])
+    assert "first=1" in calls[1] and "after=c1" in calls[1]
+
+
+def test_items_stops_at_the_last_page():
+    fake = Paged([(0, page_of(["a"], False), "")])
+    assert board.main(["items", OWNER, NUMBER], runner=fake, read=reader()) == 0
+    assert len(fake.calls) == 2
+
+
+def test_items_stops_on_an_empty_page_that_says_there_is_more():
+    fake = Paged([(0, page_of([], True), "")])
+    assert board.main(["items", OWNER, NUMBER], runner=fake, read=reader()) == 0
+    assert len(fake.calls) == 2
+
+
+def test_a_failed_page_is_passed_on_with_its_exit_code(capsys):
+    fake = Paged([(0, page_of(["a"], True), ""), (1, "", "gh: HTTP 502\n")])
+    assert board.main(["items", OWNER, NUMBER], runner=fake, read=reader()) == 1
+    captured = capsys.readouterr()
+    assert captured.out == "" and "HTTP 502" in captured.err
+
+
+def test_add_stops_with_exit_2_when_the_token_cannot_read_the_issue(capsys):
+    class Private(Fake):
+        def __call__(self, argv, token):
+            if f"query={board.RESOURCE_QUERY}" in argv:
+                self.calls.append((list(argv), token))
+                return 0, "", ""  # resource is null: the --jq answer is empty
+            return super().__call__(argv, token)
+
+    fake = Private()
+    assert board.main(["add", OWNER, NUMBER, URL], runner=fake, read=reader()) == 2
+    assert not [c for c, _ in fake.calls if f"query={board.ADD_MUTATION}" in c]
+    err = capsys.readouterr().err
+    assert err.strip() == ("board.py: the boards token cannot read that repository's "
+                           "issue or pull request")
+
+
+@pytest.mark.parametrize("err,code", [
+    ("gh: Your token has not been granted the required scopes (INSUFFICIENT_SCOPES)", 2),
+    ("gh: Could not resolve to a Repository with the name 'x'.", 2),
+    ("gh: Resource not accessible (HTTP 403)", 2),
+    ("error connecting to api.github.com", 1),
+])
+def test_a_refused_lookup_is_exit_2_and_another_failure_is_passed_on(err, code):
+    class Lookup(Fake):
+        def __call__(self, argv, token):
+            if f"query={board.RESOURCE_QUERY}" in argv:
+                self.calls.append((list(argv), token))
+                return 1, "", err
+            return super().__call__(argv, token)
+
+    fake = Lookup()
+    assert board.main(["add", OWNER, NUMBER, URL], runner=fake, read=reader()) == code
+    assert not [c for c, _ in fake.calls if f"query={board.ADD_MUTATION}" in c]
 
 
 def test_calls_are_argument_lists_never_shell_strings():
@@ -416,24 +576,34 @@ def test_credreadw_on_an_entry_that_does_not_exist_is_a_store_error():
 # ---- the token-check rows -----------------------------------------------------------
 
 
+COUNTS = {"ITEMS": "4", "FIELDS": "9", "VIEWS": "2"}
+
+
 class CheckFake:
-    """Answers the three D calls; each answer can be swapped."""
+    """Answers the D calls; each answer can be swapped."""
 
     def __init__(self, board_code=0, scopes="project", secrets=(1, "", "gh: Resource not accessible by personal access token (HTTP 403)"), leak=None,
-                 login=(0, OWNER + "\n", "")):
+                 login=(0, OWNER + "\n", ""), board_out=NUMBER + "\n", reads=None):
         self.calls = []
         self.login = login
         self.board_code = board_code
+        self.board_out = board_out
         self.scopes = scopes
         self.secrets = secrets
         self.leak = leak
+        self.reads = {name: (0, f"{count}\n", "") for name, count in COUNTS.items()}
+        self.reads.update(reads or {})
 
     def __call__(self, argv, token):
         self.calls.append((list(argv), token))
         if argv == board.LOGIN_CALL:
             return self.login
-        if argv[:3] == ["gh", "project", "view"]:
-            return self.board_code, "3\n", "" if self.board_code == 0 else f"not found {self.leak or ''}"
+        if f"query={board.BOARD_QUERY}" in argv:
+            return (self.board_code, self.board_out,
+                    "" if self.board_code == 0 else f"not found {self.leak or ''}")
+        for name in COUNTS:
+            if f"query={getattr(board, name + '_QUERY')}" in argv:
+                return self.reads[name]
         if argv[:3] == ["gh", "api", "-i"]:
             head = "HTTP/2.0 200 OK\nAuthorization: token " + (self.leak or "x") + "\n"
             if self.scopes is not None:
@@ -446,28 +616,76 @@ def rows_of(fake, read=None):
     return board.boards_rows(OWNER, NUMBER, "someone/some-repo", runner=fake, read=read or reader())
 
 
-def test_a_boards_only_token_passes_d1_and_both_d2_rows():
+def row(rows, rid):
+    (found,) = [r for r in rows if r[0] == rid]
+    return found
+
+
+D_ROWS = ["D1 board", "D1 items", "D1 fields", "D1 views", "D2 scopes", "D2 refused"]
+
+
+def test_a_boards_only_token_passes_every_d_row():
     fake = CheckFake()
     rows = rows_of(fake)
-    assert [(r[0], r[2]) for r in rows] == [("D1 board", "PASS"), ("D2 scopes", "PASS"),
-                                            ("D2 refused", "PASS")]
-    assert rows[1][3] == "scopes: project"
-    assert rows[2][3] == "refused (HTTP 403)"
+    assert [(r[0], r[2]) for r in rows] == [(rid, "PASS") for rid in D_ROWS]
+    assert row(rows, "D1 board")[1] == f"gh api graphql BOARD_QUERY number={NUMBER}"
+    assert row(rows, "D1 items")[3] == "count: 4"
+    assert row(rows, "D1 fields")[3] == "count: 9"
+    assert row(rows, "D1 views")[3] == "count: 2"
+    assert row(rows, "D2 scopes")[3] == "scopes: project"
+    assert row(rows, "D2 refused")[3] == "refused (HTTP 403)"
     assert all(token == SECRET for _, token in fake.calls)
-    assert fake.calls[0][0] == board.LOGIN_CALL
-    assert fake.calls[1][0] == ["gh", "project", "view", NUMBER, "--owner", "@me", "--format",
-                                "json", "--jq", ".number"]
-    assert fake.calls[3][0] == ["gh", "api", "repos/someone/some-repo/actions/secrets",
-                                "--jq", ".total_count"]
+    calls = [c for c, _ in fake.calls]
+    assert calls[0] == board.LOGIN_CALL
+    assert calls[1] == gql(board.BOARD_QUERY, "-F", f"number={NUMBER}") + [
+        "--jq", ".data.viewer.projectV2.number"]
+    assert calls[2] == gql(board.ITEMS_QUERY, "-F", f"number={NUMBER}", "-F", "first=100") + [
+        "--jq", ".data.viewer.projectV2.items.totalCount"]
+    assert calls[3] == gql(board.FIELDS_QUERY, "-F", f"number={NUMBER}") + [
+        "--jq", ".data.viewer.projectV2.fields.totalCount"]
+    assert calls[4] == gql(board.VIEWS_QUERY, "-F", f"number={NUMBER}") + [
+        "--jq", ".data.viewer.projectV2.views.totalCount"]
+    assert calls[6] == ["gh", "api", "repos/someone/some-repo/actions/secrets",
+                        "--jq", ".total_count"]
+    assert not [c for c in calls if c[:2] == ["gh", "project"]]
 
 
-def test_d1_fails_on_another_login_without_a_project_call_or_the_login():
+def test_each_read_row_runs_the_actions_own_query():
+    fake = CheckFake()
+    rows_of(fake)
+    sent = [c[4] for c, _ in fake.calls if c[:3] == ["gh", "api", "graphql"]]
+    for query in (board.ITEMS_QUERY, board.FIELDS_QUERY, board.VIEWS_QUERY):
+        assert f"query={query}" in sent
+
+
+@pytest.mark.parametrize("name,rid", [("ITEMS", "D1 items"), ("FIELDS", "D1 fields"),
+                                      ("VIEWS", "D1 views")])
+def test_a_read_row_prints_a_count_only(name, rid):
+    title = "Secret plan title"
+    rows = rows_of(CheckFake(reads={name: (0, f'{{"title": "{title}"}}\n', "")}))
+    assert row(rows, rid)[2:] == ("FAIL", "no count in the answer")
+    assert title not in repr(rows)
+
+
+@pytest.mark.parametrize("name,rid", [("ITEMS", "D1 items"), ("FIELDS", "D1 fields"),
+                                      ("VIEWS", "D1 views")])
+def test_a_refused_read_fails_its_row_with_the_error_scrubbed_and_no_output(name, rid):
+    err = f"gh: The 'title' field requires one of the following scopes: ['repo'] {SECRET}"
+    rows = rows_of(CheckFake(reads={name: (1, "Item title in the body", err)}))
+    found = row(rows, rid)
+    assert found[2] == "FAIL" and "requires one of the following scopes" in found[3]
+    assert SECRET not in repr(rows) and "Item title" not in repr(rows)
+    assert [r[2] for r in rows if r[0] != rid and r[0].startswith("D1")] == ["PASS", "PASS", "PASS"]
+
+
+def test_d1_fails_on_another_login_without_a_board_call_or_the_login():
     fake = CheckFake(login=(0, "someone-else\n", ""))
     rows = rows_of(fake)
     assert rows[0][2:] == ("FAIL", "boards of another owner are not supported")
     assert "someone-else" not in repr(rows)
-    assert not [c for c, _ in fake.calls if c[:2] == ["gh", "project"]]
-    assert [r[0] for r in rows] == ["D1 board", "D2 scopes", "D2 refused"]
+    assert not [c for c, _ in fake.calls if c[:3] == ["gh", "api", "graphql"]]
+    assert [r[0] for r in rows] == D_ROWS
+    assert [r[2] for r in rows[1:4]] == ["not run"] * 3
 
 
 def test_d1_fails_on_a_failed_login_read_with_the_error_scrubbed():
@@ -475,7 +693,7 @@ def test_d1_fails_on_a_failed_login_read_with_the_error_scrubbed():
     rows = rows_of(fake)
     assert rows[0][2] == "FAIL" and "HTTP 401" in rows[0][3]
     assert SECRET not in repr(rows)
-    assert not [c for c, _ in fake.calls if c[:2] == ["gh", "project"]]
+    assert not [c for c, _ in fake.calls if c[:3] == ["gh", "api", "graphql"]]
 
 
 @pytest.mark.parametrize("scopes", ["project, repo", "public_repo, project", "project, workflow",
@@ -484,30 +702,38 @@ def test_d1_fails_on_a_failed_login_read_with_the_error_scrubbed():
                                     "read:project", ""])
 def test_any_scope_besides_project_or_a_missing_one_fails_d2(scopes):
     rows = rows_of(CheckFake(scopes=scopes))
-    assert rows[1][2] == "FAIL"
+    assert row(rows, "D2 scopes")[2] == "FAIL"
 
 
 def test_project_with_its_read_half_passes_d2():
-    assert rows_of(CheckFake(scopes="project, read:project"))[1][2] == "PASS"
+    assert row(rows_of(CheckFake(scopes="project, read:project")), "D2 scopes")[2] == "PASS"
 
 
 def test_no_scope_header_fails_d2():
-    assert rows_of(CheckFake(scopes=None))[1][2:] == ("FAIL", "no scope list in the answer")
+    assert row(rows_of(CheckFake(scopes=None)), "D2 scopes")[2:] == (
+        "FAIL", "no scope list in the answer")
 
 
 def test_a_secrets_read_let_through_fails_and_its_answer_is_dropped():
     rows = rows_of(CheckFake(secrets=(0, f"5 {SECRET}", "")))
-    assert rows[2][2:] == ("FAIL", "the token was let through")
+    assert row(rows, "D2 refused")[2:] == ("FAIL", "the token was let through")
     assert SECRET not in repr(rows)
 
 
 def test_a_404_is_refused_and_another_error_is_a_fail():
-    assert rows_of(CheckFake(secrets=(1, "", "gh: Not Found (HTTP 404)")))[2][2] == "PASS"
-    assert rows_of(CheckFake(secrets=(1, "", "error connecting to api.github.com")))[2][2] == "FAIL"
+    refused = CheckFake(secrets=(1, "", "gh: Not Found (HTTP 404)"))
+    assert row(rows_of(refused), "D2 refused")[2] == "PASS"
+    other = CheckFake(secrets=(1, "", "error connecting to api.github.com"))
+    assert row(rows_of(other), "D2 refused")[2] == "FAIL"
 
 
 def test_a_board_not_reached_fails_d1():
     assert rows_of(CheckFake(board_code=1))[0][2] == "FAIL"
+
+
+def test_another_board_number_back_fails_d1():
+    assert rows_of(CheckFake(board_out="7\n"))[0][2:] == (
+        "FAIL", "the board's number did not come back")
 
 
 def test_no_row_holds_the_token_or_a_header():
