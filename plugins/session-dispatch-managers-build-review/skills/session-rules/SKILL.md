@@ -554,10 +554,12 @@ tier, the finding classes and the record.
 
 A message makes the session that gets it read its whole context again,
 and so does every reply. A message is sent only when the receiver must
-act or decide.
+act or decide, or where a rule of this skill or of the project rules
+file names that message.
 
 - **A builder messages its manager** when its PR is green by its own
-  check, at a park, at a denied call and at its end. Progress goes on
+  check, after its answer in a review round, at a park, at a denied
+  call and at its end. Progress goes on
   its ticket, not in a message.
 - **What is on GitHub is sent as a link.** One line says what happened
   and what the receiver is to do, then the link. The record's text is
@@ -570,7 +572,8 @@ act or decide.
 - **Independent tool calls go out together,** in one reply, where none
   needs another's result. This means several calls in one reply, never
   a chain inside one call: a builder's one command per call stands. A
-  batch that is refused as a whole is sent again one call at a time.
+  batch that is refused as a whole is sent again one call at a time; a
+  call that is then refused on its own is a denied call (above).
 
 ## The planner
 

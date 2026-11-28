@@ -30,9 +30,9 @@ All of these hold, or there is no dispatch:
   its files and its proof, and which is not held: neither by the
   owner, nor by the planner's order behind another ticket. The project
   rules file names how a hold is marked, and a held ticket keeps the
-  owner's word. Nor does it hold for a ticket with `Profile: oneshot`,
-  which keeps the owner's word whatever its tier. The owner having
-  invoked this skill in
+  owner's word. Nor does the exception hold for a ticket with
+  `Profile: oneshot`, which keeps the owner's word whatever its tier.
+  The owner having invoked this skill in
   the session stays required, and nothing under "Never" in
   `session-rules` loosens. The manager says in its next report which
   tickets it dispatched this way. A project whose rules file names no
