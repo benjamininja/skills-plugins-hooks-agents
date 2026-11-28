@@ -80,11 +80,55 @@ the example settings files deny it.
 | `buildersSettings` | The builders' settings file, from the main checkout. Its `permissions.deny` list is also passed to the session. |
 | `buildersProfiles` | Optional. The owner's profiles file, from the main checkout, for `-Profile`. See [Profiles](#profiles). |
 | `claude` | The Claude CLI: a name on `PATH` or a full path. |
-| `setup` | PowerShell lines run in the new worktree before the session starts. They run as written, which is why only the owner writes this file. |
+| `setup` | PowerShell lines run in the new worktree before the session starts, by default. Meant to be the light list. They run as written, which is why only the owner writes this file. See [Setup](#setup). |
+| `setupFull` | Optional. The full list, run in place of `setup` only with `-FullSetup`. Empty or missing: `-FullSetup` is refused. |
 | `readLine` | The first lines of every builder's prompt. No double quote. |
 | `tiers` | Optional overrides of the tier table: `model`, `effort`, `turnCap` per tier. |
 
 A key that starts with `//` is a note and is not read.
+
+## Setup
+
+The config holds two lists of setup lines. The script runs one of them
+in the new worktree, after it is made and before the session starts,
+each line as `powershell.exe -NoProfile -NonInteractive -Command <line>`
+from the worktree's top. A line that exits non-zero refuses the
+dispatch. Nothing is put in place of a name in a line, and each line is
+a new process, so a variable does not carry from one line to the next.
+
+| The brief's `venv:` line | The manager passes | The list that runs |
+|---|---|---|
+| `light` | nothing | `setup` |
+| `full` | `-FullSetup` | `setupFull` |
+| `no` | `-NoSetup` | none |
+
+`-NoSetup` wins over `-FullSetup`. With `-FullSetup` and an empty or
+missing `setupFull`, the dispatch is refused before anything is made:
+no fetch, no branch, no worktree. A config with no `setupFull` key runs
+`setup` as before when the switch is not passed. The dry run prints the
+list's name and its lines. A missed `-FullSetup` is not caught by the
+script: the builder's work fails at the first missing package.
+
+**The light form.** A light `.venv` is a venv made with the main
+checkout's `.venv\Scripts\python.exe` and no pip, plus one `.pth` file
+in its `Lib\site-packages` that names the main checkout's
+`.venv\Lib\site-packages`, so the builder runs with the main checkout's
+packages and installs nothing. Its limits:
+
+- The `.pth` holds the main checkout's path as it was when the worktree
+  was made. If the main checkout moves, or its `.venv` is rebuilt or
+  deleted, the light `.venv` breaks with no error until an import fails.
+- A setup line calls no program of the main checkout's `.venv` but
+  `python.exe`. Its other programs (`pytest.exe` and the like) name
+  their interpreter by an absolute path that may be stale; the light
+  form runs everything as `python.exe -m <module>`.
+- The `.pth` is written without a byte-order mark (`Set-Content
+  -Encoding ascii`). Windows PowerShell 5.1 writes one with `-Encoding
+  utf8`, and Python then reads a path that names no folder.
+- So a main checkout whose path has a character outside ASCII cannot
+  use the light list: its `setup` is the full list.
+- A hook that makes its own environment, such as a `language: python`
+  pre-commit hook, is not affected by either list.
 
 ## The owner's list of projects
 
@@ -163,12 +207,13 @@ the config's `tiers`.
 
 ```
 dispatch.ps1 -Name <name> -Tier <haiku|low|medium|high> -PromptFile <file>
-             [-Profile <name>] [-TurnCap <n>] [-Base origin/<branch>] [-NoSetup]
-             [-Project <folder>] [-Apply]
+             [-Profile <name>] [-TurnCap <n>] [-Base origin/<branch>]
+             [-FullSetup] [-NoSetup] [-Project <folder>] [-Apply]
 ```
 
 Without `-Apply` the script reads the config, the brief, the deny list
-and the profile, prints every command it would run, and changes nothing.
+and the profile, prints every command it would run, the setup list
+included by its name, and changes nothing.
 Read that output, then run the same line with `-Apply`.
 
 The script refuses, with exit code 2 and one line that begins
@@ -189,6 +234,8 @@ The script refuses, with exit code 2 and one line that begins
   string, holds a double quote or ends in a backslash, or its base file is missing, not JSON or lacks a shared
   deny rule;
 - `-TurnCap` is zero, negative, or above the tier's cap;
+- `-FullSetup` is given without `-NoSetup`, and the config's `setupFull`
+  is empty or missing;
 - `-Base` is not `origin/<branch>`, or starts with a hyphen;
 - `-Apply` is given and the project is not on the owner's list;
 - `-Apply` is given, the worktree is not there yet, and `git fetch origin`
@@ -202,7 +249,7 @@ with its commit as of the last fetch. It does not fetch.
 With `-Apply` it fetches `origin` in the main checkout (that moves no
 file and not the checkout's branch), makes the worktree
 `.claude/worktrees/<name>` on branch `worktree-<name>` at the base, with
-no upstream, runs the setup lines, starts the session in the
+no upstream, runs the chosen setup list (see [Setup](#setup)), starts the session in the
 background, and checks that the session is alive and runs in its
 worktree. If the check fails it stops the session and says so. A worktree
 already there is left as it is, at whatever base it has, and no fetch is

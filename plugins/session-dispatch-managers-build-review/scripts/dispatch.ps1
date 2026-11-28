@@ -17,7 +17,9 @@
        worktree-<Name>, with no upstream, at refs/remotes/<-Base> (default
        origin/main); a failed fetch or a missing base stops the run before
        anything is made
-    6. run the project's setup commands in it
+    6. run one of the project's two setup lists in it: setup by default,
+       setupFull with -FullSetup (an empty or missing setupFull is refused
+       before step 5), none with -NoSetup, which wins over -FullSetup
     7. start the session in the background
     8. before step 5, read claude agents --json and set aside the ids of
        rows already named <Name>; after step 7, wait up to 30 s (a look
@@ -44,6 +46,7 @@
   .\dispatch.ps1 -Name fix-42 -Tier low -PromptFile C:\briefs\fix-42.txt
   .\dispatch.ps1 -Name fix-42 -Tier low -PromptFile C:\briefs\fix-42.txt -Apply
   .\dispatch.ps1 -Name find-7 -Tier medium -PromptFile C:\briefs\find-7.txt -Profile research
+  .\dispatch.ps1 -Name big-9 -Tier high -PromptFile C:\briefs\big-9.txt -FullSetup
 #>
 [CmdletBinding()]
 param(
@@ -55,6 +58,7 @@ param(
     [string]$Profile,
     [string]$Project = (Get-Location).Path,
     [switch]$NoSetup,
+    [switch]$FullSetup,
     [switch]$Apply
 )
 
@@ -114,10 +118,26 @@ $agent = Setting 'agent' $null
 $settingsRel = Setting 'buildersSettings' $null
 $claude = Setting 'claude' 'claude'
 $readLine = [string](Setting 'readLine' '')
-$setup = @(Setting 'setup' @())
 if (-not $agent) { Refuse 'the config file names no agent' }
 if (-not $settingsRel) { Refuse 'the config file names no buildersSettings file' }
 if ($readLine.Contains('"')) { Refuse 'the readLine of the config file holds a double quote' }
+
+# The setup list: setup by default, setupFull with -FullSetup, none with
+# -NoSetup, which wins. An empty setupFull is refused here, before anything
+# is made.
+if ($NoSetup) {
+    $setupName = ''
+    $setup = @()
+} elseif ($FullSetup) {
+    $setupName = 'setupFull'
+    $setup = @(Setting 'setupFull' @() | Where-Object { $_ })
+    if ($setup.Count -eq 0) {
+        Refuse '-FullSetup was passed, but the config file has no setupFull list or it is empty. The owner fills setupFull in the config, or the dispatch runs without -FullSetup'
+    }
+} else {
+    $setupName = 'setup'
+    $setup = @(Setting 'setup' @())
+}
 
 # 2. The tier.
 if (-not $Tier) { Refuse 'no tier, no dispatch. Planning sets the tier; pass it with -Tier' }
@@ -283,6 +303,13 @@ if ($Profile) {
     Write-Output 'profile:   none'
 }
 Write-Output "mode:      $mode"
+if ($NoSetup) {
+    Write-Output 'setup:     none (-NoSetup)'
+} else {
+    $setupBy = if ($FullSetup) { ', by -FullSetup' } else { '' }
+    $setupLines = if ($setup.Count -eq 1) { '1 line' } else { "$($setup.Count) lines" }
+    Write-Output "setup:     $setupName ($setupLines$setupBy)"
+}
 
 # The owner's list of main checkouts where -Apply may act. The profile
 # folder comes from the system, not from an environment variable a

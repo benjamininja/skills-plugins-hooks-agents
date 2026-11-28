@@ -117,6 +117,71 @@ def test_a_turn_cap_and_no_setup_are_taken(project):
     assert "python -m venv" not in out
 
 
+FULL = "python -m venv .venv-full"
+
+
+def with_setup_full(project, value):
+    """Set the config's setupFull to value, or remove the key when value is None."""
+    path = project / ".claude" / "dispatch.json"
+    config = json.loads(path.read_text(encoding="utf-8"))
+    config.pop("setupFull", None)
+    if value is not None:
+        config["setupFull"] = value
+    path.write_text(json.dumps(config), encoding="utf-8")
+
+
+def test_the_default_runs_the_setup_list(project):
+    with_setup_full(project, [FULL])
+    done = dispatch(project, "-Tier", "medium")
+
+    assert done.returncode == 0, done.stderr
+    assert "[in the worktree] python -m venv .venv" in done.stdout
+    assert FULL not in done.stdout
+
+
+def test_full_setup_runs_the_setup_full_list(project):
+    with_setup_full(project, [FULL])
+    done = dispatch(project, "-Tier", "medium", "-FullSetup")
+
+    assert done.returncode == 0, done.stderr
+    assert f"[in the worktree] {FULL}" in done.stdout
+    assert "[in the worktree] python -m venv .venv\n" not in done.stdout
+
+
+@pytest.mark.parametrize("value", [[], None], ids=["empty", "no-key"])
+def test_full_setup_without_a_setup_full_list_is_refused_and_makes_no_worktree(project, value):
+    with_setup_full(project, value)
+    for args in (("-FullSetup",), ("-FullSetup", "-Apply")):
+        done = dispatch(project, "-Tier", "medium", *args)
+
+        assert done.returncode == 2
+        assert "dispatch refused: -FullSetup was passed" in done.stderr
+        assert "setupFull" in done.stderr
+        assert "DRY RUN" not in done.stdout
+        assert not (project / ".claude" / "worktrees").exists()
+
+
+def test_no_setup_wins_over_full_setup_and_runs_neither(project):
+    with_setup_full(project, [FULL])
+    done = dispatch(project, "-Tier", "medium", "-NoSetup", "-FullSetup")
+
+    assert done.returncode == 0, done.stderr
+    assert "setup:     none (-NoSetup)" in done.stdout
+    assert "(no setup: -NoSetup)" in done.stdout
+    assert "[in the worktree]" not in done.stdout
+
+
+def test_the_dry_run_names_the_list_it_would_run(project):
+    with_setup_full(project, [FULL, "python -m pip --version"])
+
+    default = dispatch(project, "-Tier", "medium").stdout
+    full = dispatch(project, "-Tier", "medium", "-FullSetup").stdout
+
+    assert "setup:     setup (1 line)" in default
+    assert "setup:     setupFull (2 lines, by -FullSetup)" in full
+    assert "[in the worktree] python -m pip --version" in full
+
+
 @pytest.mark.parametrize("cap", ["0", "-3", "81"])
 def test_a_turn_cap_that_is_not_a_lowering_is_refused(project, cap):
     done = dispatch(project, "-Tier", "medium", "-TurnCap", cap)
@@ -347,6 +412,15 @@ def test_the_template_config_is_read_by_the_script(project):
 
     assert done.returncode == 0, done.stderr
     assert "--agent stage-builder" in done.stdout
+    assert "setup:     setup (0 lines)" in done.stdout
+
+
+def test_the_template_config_shows_both_setup_lists():
+    config = json.loads((PLUGIN / "templates" / "dispatch.json").read_text(encoding="utf-8"))
+
+    assert config["setup"] == [] and config["setupFull"] == []
+    assert "light" in config["//setup"]
+    assert "-FullSetup" in config["//setupFull"]
 
 
 RESEARCH = {
