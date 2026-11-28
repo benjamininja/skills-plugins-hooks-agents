@@ -30,68 +30,59 @@ git history.
 
 ### Next
 
-1. **PR #313** (#299 part 2, the `oneshot` profile; branch
-   `worktree-t299-oneshot`, head `6f465a8` at this save). The planner
-   asked six exact edits (pull/313 issuecomment-7240460466 and
-   7240483125). All six are in at that head and the dynasty planner
-   read it with no change asked (the manager's report). It is
-   re-proved Green (the manager's report); Ben's merge word is asked
-   in the manager's chat. #317's brief also got the dispatch-list
-   sentence from that re-check's F3 (issues/317
-   issuecomment-7240643687).
-   The example file's `//oneshot` note went to #317's brief instead
-   (issues/317 issuecomment-7240624875). After the merge: lift #317's hold, and
-   tell the dynasty planner that the `oneshot` entry in dynasty's
-   profiles file is Ben's hand step, raised on its side.
-2. **#307** (low; board.py's cp1252 crash, plus part A `--owner @me`
-   and part B `--boards-only`, issues/307 issuecomment-7240559476). A
-   builder runs under the trial line. After its PR merges: send the
-   manager a ready Action for Ben to re-run the D rows with
-   `--boards-only` on board 2, with this session's id. **#285** closes
-   when D1 passes. If D1 still fails it comes back to the planner; the
-   next option is the script's own query, not `read:org`.
-3. **#317** (low, gate text; a Messages between sessions section in
-   `session-rules`, Ben's button "Both rules (Recommended)"). Held
-   behind PR #313 (label and `Held:` line). Lift both when #313 merges;
-   it keeps Ben's go and merge word, and its head goes to the dynasty
-   planner. Two weeks after it merges: one `usage.py tags` run on
-   Ben's word, compared on #317.
-4. **PR #316** (#312, usage.py's print paths, low, under the trial):
-   re-proved by the manager. Its advisories F1 to F4 are **#319**
-   (low), held behind PR #316; lift the label and the `Held:` line
-   when #316 merges.
-5. **The trial line** (PR #309, merged): low and haiku dispatch
+1. **#307** (low; board.py's cp1252 crash, plus part A `--owner @me`
+   and part B `--boards-only`, issues/307 issuecomment-7240559476). No
+   PR is open yet; the manager tells the planner when its PR merges.
+   Then: send the manager a ready Action for Ben to re-run the D rows
+   with `--boards-only` on board 2, with this session's id. **#285**
+   closes when D1 passes. If D1 still fails it comes back to the
+   planner; the next option is the script's own query, not `read:org`.
+2. **#317** (low, gate text; a Messages between sessions section in
+   `session-rules`, Ben's button "Both rules (Recommended)", plus the
+   example file's `//oneshot` note and the dispatch-list sentence).
+   Unheld on 2026-11-28 after PR #313 merged `f88d633` (issues/317
+   issuecomment-7240798267). It keeps Ben's go and merge word, goes
+   after PR #318 (both move the plugin's version line), and its head
+   goes to the dynasty planner. Two weeks after it merges: one
+   `usage.py tags` run on Ben's word, compared on #317.
+3. **#319** (low; usage.py's extension list and three print fixes).
+   Unheld on 2026-11-28 after PR #316 merged `13481f0` (issues/319
+   issuecomment-7240798623). It may dispatch under the trial line.
+4. **The trial line** (PR #309, merged): low and haiku dispatch
    without a go from 2026-11-28 to 2026-12-12. By 2026-12-12 the
    planner posts the manager's count on #300 and asks Ben by button
    whether it becomes standing, runs again or ends.
-6. Reads and rulings as they post: #289 step 1; #295's design (parks
+5. Reads and rulings as they post: #289 step 1; #295's design (parks
    with Ben); any head the manager asks for.
-7. **#262:** the rule-text build is the manager's on Ben's go; the mod
+6. **#262:** the rule-text build is the manager's on Ben's go; the mod
    half's brief is owed after #240 step 2 merges.
-8. **#111** (the Ask planner button): all five questions ruled; the
+7. **#111** (the Ask planner button): all five questions ruled; the
    build brief is owed after #240 step 2 merges and after #262's mod
    half. Ben on 2026-11-28: keep the order, it was a check that it is
    not lost.
-9. The draft advisory GHSA-27j5-qx96-v8w3: the dynasty planner's
+8. The draft advisory GHSA-27j5-qx96-v8w3: the dynasty planner's
    pointer is dynasty #564 issuecomment-7239843007; no date yet. Tell
    it when PR #211 merges and when #295's design is approved. No
    detail of an open gap goes on any public record.
-10. The older list: #217 C to F, the assistant's owner-queue text PR,
-    the ADR index sentence, #167.
+9. The older list: #217 C to F, the assistant's owner-queue text PR,
+   the ADR index sentence, #167.
 
 ### Waiting
 
-- On Ben, in the manager's chat: the merge word for PR #313 after the
-  dynasty planner's read; the go for #317, for #262's rule-text build
-  and for every medium or high dispatch.
-- On Ben, in the queue: nothing raised by this session is open. The
-  boards-token Action was ticked on 2026-11-28 08:15:26 (issues/285
-  issuecomment-7240570673).
-- On the manager: PR #313's re-proof, the builders for #307 and #312,
-  PR #304 (#293), then #240 step 2.
+- On Ben, in the manager's chat: the go for #317, for #262's rule-text
+  build and for every medium or high dispatch.
+- On Ben, in the queue: nothing raised by this session is open.
+- On the manager: the builders for #307 and #319, PR #318 (#298, to
+  merge main and take plugin version 0.6.4), PR #304 (#293), then
+  #240 step 2.
 - In the hook lane: PR #211, then #295, then #289 step 2, then #200.
   In the owner-queue lane: PR #304, #240 step 2, #262's mod half,
-  #111. After PR #296: #298 and the repair of PR #182.
+  #111. The repair of PR #182 follows PR #318.
+- The dynasty planner was told of the `oneshot` hand step on
+  2026-11-28; the send noted a new session under that name, so its id
+  below may be stale until it sends its own.
+- A report went to the Dugout Standard session on how context is
+  saved here (Dugout-Standard-App issue 49); nothing is owed.
 
 ### Peers
 
@@ -131,6 +122,8 @@ All on 2026-11-28, by Ben's button unless said.
   issuecomment-7240534221); #317 filed.
 - The deny rules reach the planner's session (issues/300
   issuecomment-7239984512).
+- Merged, builders': PR #313 `f88d633` (the `oneshot` profile, on Ben's
+  button), PR #316 `13481f0` (#312). Holds lifted on #317 and #319.
 - Merged, the planner's own: PR #302 `0105706`, PR #310 `3eba79a`
   (#262 row 1l), PR #311 `347188b` (#285 disposition 4). Builders':
   PR #306 `7385794`, PR #308 `189093c`.
