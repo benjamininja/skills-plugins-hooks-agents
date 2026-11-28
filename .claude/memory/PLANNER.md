@@ -44,7 +44,11 @@ older blocks are in this file's git history.
    pytest says `venv: light`, never `no`.**
 2. **#324** (PR #304's F1, low) is held behind PR #326 (#240 step 2,
    branch `worktree-t240-rekey`); lift the label and the `Held:` line
-   when that PR merges.
+   when that PR merges. PR #326 at `d3f4d10`: its review has no
+   blocking finding; the builder's three open points are ruled, no
+   breach (issues/240 issuecomment-7243576768). Its advisories F1, F3
+   and F4 are **#334** (low, held behind PR #326 and then #324, same
+   file): lift it when #324's PR merges.
 3. **After PR #326 merges:** write the brief for #262's mod half, then
    the brief for **#111** (the Ask planner button; all five questions
    are ruled). Ben on 2026-11-28: keep that order.
@@ -111,6 +115,8 @@ All on 2026-11-28, by Ben's button unless said.
   advisories F1 and F2, both held (planner).
 - Merged: PR #330 `1abdfe1` (#328), on Green after that run (pull/330
   issuecomment-7243279315). #285 closed; #329's hold lifted.
+- PR #326's open points ruled, #334 filed (planner; issues/240
+  issuecomment-7243576768).
 - #332: "At first use (Recommended)", in the planner's chat; closed
   (first-use table: issues/332 issuecomment-7243495141).
 
