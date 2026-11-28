@@ -12,18 +12,26 @@ The script never reads a token or any environment variable. Its first row is
 `gh auth status`, which masks the token. Git calls that reach GitHub take their
 credential from `gh` for this window; --stored-git-credential leaves that out.
 Output is also scrubbed of token-shaped text, as a second guard.
+
+--boards <login>/<number> adds rows D1 and D2 for the boards-only token (#285):
+it reaches that board, holds no repository scope, and is refused a read of the
+repository's Actions secrets. Those calls go through tools/board.py, which alone
+reads that token from the credential store; without --boards nothing reads it.
 """
 
 from __future__ import annotations
 
 import argparse
 import base64
+import importlib.util
 import re
 import shlex
 import subprocess
 import sys
 from datetime import datetime, timezone
+from pathlib import Path
 
+BOARD_RE = re.compile(r"[A-Za-z0-9](?:[A-Za-z0-9-]{0,38})/[0-9]{1,6}")
 REPO_RE = re.compile(r"[A-Za-z0-9._-]+/[A-Za-z0-9._-]+")
 ADVISORY_RE = re.compile(r"GHSA(-[A-Za-z0-9]{4}){3}")
 NUMBER_RE = re.compile(r"/([0-9]+)\s*$")
@@ -69,12 +77,27 @@ def advisory_arg(text: str) -> str:
     return text
 
 
+def board_arg(text: str) -> str:
+    if not BOARD_RE.fullmatch(text):
+        raise argparse.ArgumentTypeError("expected <login>/<board number>")
+    return text
+
+
 def parse_args(argv: list[str]) -> argparse.Namespace:
     parser = argparse.ArgumentParser(prog="token_check.py", description=__doc__.splitlines()[0])
     parser.add_argument("repo", type=repo_arg)
     parser.add_argument("--advisory", type=advisory_arg, default=None)
     parser.add_argument("--stored-git-credential", action="store_true")
+    parser.add_argument("--boards", type=board_arg, default=None)
     return parser.parse_args(argv)
+
+
+def load_board():
+    """tools/board.py, loaded only when --boards is given."""
+    spec = importlib.util.spec_from_file_location("board", Path(__file__).with_name("board.py"))
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
 
 
 def first_line(text: str) -> str:
@@ -316,6 +339,12 @@ def main(argv: list[str], runner=run, now=None) -> int:
         check.cleanup()
     check.skip("B10", "gh api -X PATCH repos/<repo>/security-advisories/<id>",
                "not run: a write to a real draft advisory")
+    if args.boards:
+        owner, number = args.boards.split("/")
+        try:
+            check.rows.extend(load_board().boards_rows(owner, number, args.repo))
+        except Exception as exc:
+            check.rows.append(("D", "tools/board.py", FAIL, f"{type(exc).__name__}: {exc}"))
     print(render(args.repo, check.rows))
     return 1 if any(row[2] == FAIL for row in check.rows) else 0
 
