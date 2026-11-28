@@ -12,19 +12,21 @@ in this file's git history:
 The last stacked version, with 26 session blocks, is that branch's commit
 before the #243 rewrite.
 
-Last state-back: 2026-11-28, before a clear Ben asked for. A clear
-gives this planner a new queue id: send it to the peers.
+Last state-back: 2026-11-28, at the start-up after the clear Ben asked
+for. A clear gives this planner a new queue id: send it to the peers.
 
 ## Current
 
 ### Saved
 
-2026-11-28, before a clear Ben asked for. The saving session was
-0a6ad927-943a-481d-99fc-f2cbfcda8498; **the clear gives a new id, so
-the new session sends it to the four peers and to the Dugout Standard
-session, and asks each for its own.** No background task runs. Nothing
-waits on Ben in the planner's chat. One queue entry of this session is
-open and needs a re-key: the D rows run for PR #330 (Next 1). This block is whole:
+2026-11-28, after the clear Ben asked for. The saving session is
+ad27c4f7-ccae-4f9d-aab0-2be31444a3f3 (before the clear:
+0a6ad927-943a-481d-99fc-f2cbfcda8498). The new id is sent to the four
+peers and to the Dugout Standard session. **A later clear gives a new
+id again: send it to the same five.** No background task runs. One
+queue entry of this session is open and re-keyed to the new id: the
+D rows run for PR #330, which Ben has answered by a pane Note
+(Next 1); the manager ticks it at the merge. This block is whole:
 older blocks are in this file's git history.
 
 ### Next
@@ -33,17 +35,18 @@ older blocks are in this file's git history.
    `worktree-t328-ownqueries`) is re-proved Green at `ff2cc80` (the
    manager's report; head and clean merge state checked) and is NOT
    merged: Ben's button "Run before merge (Recommended)" (issues/328
-   issuecomment-7241637480). The Action for Ben's run of the D rows
-   from that branch went to the manager on 2026-11-28 with the OLD
-   session id 0a6ad927-943a-481d-99fc-f2cbfcda8498: **ask the manager
-   to re-key it to the new id.** When Ben's result comes: post it on
-   #328. All six rows pass: tell the manager, the PR goes to merge on
-   Ben's word, #285 closes, then lift **#329** (`held` label and
-   `Held:` line). A row fails: it is fixed on the same PR and the run
-   is asked again at the new head. Owed after the run: tickets for PR
-   #330's advisories F1 (one refusal line hides different failures)
-   and F2 (the `add` and `set` texts are proved by nothing before a
-   real use); read them in the PR's review comment first.
+   issuecomment-7241637480). **Ben ran the D rows on 2026-11-28 and
+   all six pass** (issues/328 issuecomment-7243277622; read in the
+   queue entry, which is re-keyed to this session). The manager
+   merges it at `ff2cc80` on Ben's word in the manager's chat, once
+   Ben has invoked `session-dispatch` there, and ticks the Action.
+   **When the merge is on `main`:** close #285 with a line on what
+   proved it, lift **#329** (`held` label and `Held:` line), and send
+   the personal-assistant #332's step 1 (one `add` and each `set`
+   kind once, a table of the seven texts back). The advisories are
+   filed: **#331** (F1, low, held behind #329, same file) and
+   **#332** (F2, medium, held behind the merge and that first use).
+   Lift #331 when #329's PR merges.
 2. **#324** (PR #304's F1, low) is held behind PR #326 (#240 step 2,
    branch `worktree-t240-rekey`); lift the label and the `Held:` line
    when that PR merges.
@@ -73,14 +76,16 @@ older blocks are in this file's git history.
 
 ### Waiting
 
-- On Ben, in the manager's chat: the merge word for PR #326 and, after
-  his D rows run, for PR #330; the go for #262's rule-text build and
-  for every medium or high dispatch.
-- On Ben, in the queue: the Action "Run the boards rows from PR
-  #330's branch, before its merge (#328)", Session
-  0a6ad927-943a-481d-99fc-f2cbfcda8498 until re-keyed.
-- On the manager: PR #330's and PR #326's re-proofs; the Green head
-  of PR #330 named to the planner.
+- On Ben, in the manager's chat: `session-dispatch` invoked there,
+  then the merge word for PR #330 (its run is done) and for PR #326;
+  the go for #262's rule-text build and for every medium or high
+  dispatch.
+- In the queue: the Action "Run the boards rows from PR #330's
+  branch, before its merge (#328)", Session
+  ad27c4f7-ccae-4f9d-aab0-2be31444a3f3, done by Ben and not yet
+  ticked.
+- On the manager: the merge of PR #330 and its closeout; PR #326's
+  re-proof.
 - In the hook lane: PR #211, then #295, then #289 step 2, then #200.
   In the owner-queue lane: PR #326, #262's mod half, #111, #324. The
   repair of PR #182 is still owed.
@@ -90,18 +95,19 @@ older blocks are in this file's git history.
 
 ### Peers
 
-Ids of 2026-11-28; ask each for its own after the clear.
-Tools-builder-manager ea58e038-9092-4552-9e4c-32bb3cdf8281;
-dff-central-planner 0ef68551-3dad-4f09-b5af-b164a0307ae9 (a send on
-2026-11-28 noted a new session under that name, so this id may be
-stale); dff-central-builder-manager
-637314ca-f6ae-4049-a3ff-576bd1479cfe; personal-assistant
-061c1d24-09c1-4c01-8d89-ff693eb974d9. The Dugout Standard session is
-named dugout-standard-planner (no id held).
+Ids of 2026-11-28, each as that session reported it after its own
+clear unless said. dff-central-planner
+36235893-7875-4548-9384-a950ad72d75d; personal-assistant
+9892259d-36fe-4e53-a301-2cfcac1df068; dugout-standard-planner
+b5f4cf26-115a-4e01-b766-e8504c065057; Tools-builder-manager
+0e714f8a-9e39-453b-aa53-f3f91e9431ec; dff-central-builder-manager
+10ea8a98-91e0-445b-bef3-77cb005def21.
 
 ### Reads and checks due
 
-- When Ben's D rows result comes: Next 1.
+- When PR #330 is on `main`: close #285, lift #329, send #332's
+  step 1 to the personal-assistant (Next 1).
+- When #329's PR merges: lift #331.
 - When PR #326 merges: lift #324; the two briefs of Next 3.
 - 2026-12-12: the two buttons of Next 4.
 - 2026-12-31 or Dugout Standard's tenth merged builder PR: #323.
@@ -113,6 +119,10 @@ named dugout-standard-planner (no id held).
 ### Decided since the last merged state PR
 
 All on 2026-11-28, by Ben's button unless said.
+
+- Ben's D rows run from PR #330's branch: six of six pass (issues/328
+  issuecomment-7243277622). #331 and #332 filed from that PR's
+  advisories F1 and F2, both held (planner).
 
 - The cut is reversed and #300 is whole: "Reverse all, #300 whole
   (Recommended)" (issues/300 issuecomment-7239515907).
