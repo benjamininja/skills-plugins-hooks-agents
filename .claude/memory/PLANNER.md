@@ -48,11 +48,12 @@ Compacts since this clear: 0.
   (`8b54ee1`). Open PRs: #302, #296, #256, #211, #182.
 
 **Next, in order.**
-1. The draft advisory GHSA-27j5-qx96-v8w3: the dynasty planner asked
-   on 2026-11-28 which gaps are closed by a merged PR and which are
-   open, and for the Tools view on publishing that day (its dated
-   check). The answer goes to it in chat only; no detail of an open
-   gap on a public record. It brings Ben the question by button.
+1. The draft advisory GHSA-27j5-qx96-v8w3: the status of its gaps and
+   the Tools view (do not publish whole on 2026-11-28; move the date
+   past PR #211 and #295's design) went to the dynasty planner in chat
+   on 2026-11-28. It brings Ben the question by button; its record's
+   link, with the new date, is owed back here. No detail of an open
+   gap goes on a public record.
 2. PR #302: sign-off, Ben's merge word, the deny-rule Action.
 3. Rulings as each find-out posts (#262 step 1, #299 step 1, #289
    step 1); a read of #285's plan and of #295's design; a read of any
