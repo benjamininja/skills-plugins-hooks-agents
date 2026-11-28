@@ -34,8 +34,11 @@ git history.
    `worktree-t299-oneshot`, head `6f465a8` at this save). The planner
    asked six exact edits (pull/313 issuecomment-7240460466 and
    7240483125). All six are in at that head and the dynasty planner
-   read it with no change asked (the manager's report). Next: the
-   manager's re-proof, then Ben's merge word in the manager's chat.
+   read it with no change asked (the manager's report). It is
+   re-proved Green (the manager's report); Ben's merge word is asked
+   in the manager's chat. #317's brief also got the dispatch-list
+   sentence from that re-check's F3 (issues/317
+   issuecomment-7240643687).
    The example file's `//oneshot` note went to #317's brief instead
    (issues/317 issuecomment-7240624875). After the merge: lift #317's hold, and
    tell the dynasty planner that the `oneshot` entry in dynasty's
@@ -54,8 +57,9 @@ git history.
    planner. Two weeks after it merges: one `usage.py tags` run on
    Ben's word, compared on #317.
 4. **PR #316** (#312, usage.py's print paths, low, under the trial):
-   the manager's lane; advisories from its review are the planner's to
-   ticket.
+   re-proved by the manager. Its advisories F1 to F4 are **#319**
+   (low), held behind PR #316; lift the label and the `Held:` line
+   when #316 merges.
 5. **The trial line** (PR #309, merged): low and haiku dispatch
    without a go from 2026-11-28 to 2026-12-12. By 2026-12-12 the
    planner posts the manager's count on #300 and asks Ben by button
