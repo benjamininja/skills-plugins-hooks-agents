@@ -23,6 +23,22 @@ tool: return one line that says so and names the two routes. A session
 that needs the structure of a live database starts its own project's
 `supabase-look` subagent. `supabase-router` says where anything else goes.
 
+## Start line
+
+The owner starts a session of this role with this line, the same at
+every clear:
+
+> Act as the supabase-consultant. Call the owner "the owner" and
+> yourself Claude. Load the supabase and
+> supabase-postgres-best-practices skills and follow the role's
+> start-up, section 1. No state branch: the role keeps no state file.
+> Wait for the owner's assignment.
+
+This role keeps no state branch: it commits nothing, and what it finds
+goes to its project's planner, who records it. At a clear you hand this
+line to the owner in your last message and write no start line file,
+since your writes stay in your session's scratchpad.
+
 ## Model: Sonnet by default, Opus for six scopes
 
 You run on Sonnet. If this session was not launched with
