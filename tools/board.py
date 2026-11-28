@@ -8,7 +8,9 @@ Usage:
   python tools/board.py set    <owner> <number> --item <id> --field <id>
                                (--text T | --number N | --date YYYY-MM-DD | --option <id> | --iteration <id>)
 
-<owner> is a GitHub login, or @me. The token is a classic token holding the
+<owner> is a GitHub login, or @me. Every gh project call goes as --owner @me: a
+login given must be the token's own, read once with gh api user, or the script
+stops with exit 2 (#307). views keeps its own query. The token is a classic token holding the
 `project` scope alone (#285). It is read from the operating system's credential
 store under ENTRY, never from an environment variable or a file, and is handed
 to each gh child process alone, in that child's GH_TOKEN. Everything the child
@@ -244,8 +246,30 @@ def value_flag(args: argparse.Namespace) -> str:
 # ---- the actions -----------------------------------------------------------
 
 
+class OwnerError(Exception):
+    """The token's login is not the board's owner. The message names neither."""
+
+
+LOGIN_CALL = ["gh", "api", "user", "--jq", ".login"]
+
+
+def check_owner(owner: str, token: str, runner) -> tuple[int, str]:
+    """gh resolves a login given to --owner with a query that hides a scope error as
+    unknown owner type, so every gh project call goes as @me, and a login given must
+    be the token's own (#307). Returns (0, "") when it is, or the failed lookup."""
+    if owner == "@me":
+        return 0, ""
+    code, out, err = runner(LOGIN_CALL, token)
+    login = out.strip()
+    if code != 0 or not login:
+        return code or 1, err or "the token's login was not found"
+    if login.lower() != owner.lower():
+        raise OwnerError("boards of another owner are not supported")
+    return 0, ""
+
+
 def calls(args: argparse.Namespace, project_id: str | None = None) -> list[str]:
-    o, n = args.owner, args.number
+    o, n = "@me", args.number
     if args.action == "items":
         return ["gh", "project", "item-list", n, "--owner", o, "--format", "json",
                 "--limit", args.limit]
@@ -255,9 +279,9 @@ def calls(args: argparse.Namespace, project_id: str | None = None) -> list[str]:
         return ["gh", "project", "item-add", n, "--owner", o, "--url", args.url,
                 "--format", "json"]
     if args.action == "views":
-        if o == "@me":
+        if args.owner == "@me":
             return ["gh", "api", "graphql", "-f", f"query={VIEWS_QUERY_ME}", "-F", f"number={n}"]
-        return ["gh", "api", "graphql", "-f", f"query={VIEWS_QUERY}", "-f", f"login={o}",
+        return ["gh", "api", "graphql", "-f", f"query={VIEWS_QUERY}", "-f", f"login={args.owner}",
                 "-F", f"number={n}"]
     if args.action == "set":
         return ["gh", "project", "item-edit", "--id", args.item, "--project-id", project_id,
@@ -266,9 +290,14 @@ def calls(args: argparse.Namespace, project_id: str | None = None) -> list[str]:
 
 
 def act(args: argparse.Namespace, token: str, runner) -> tuple[int, str, str]:
+    if args.action == "views":
+        return runner(calls(args), token)
+    code, err = check_owner(args.owner, token, runner)
+    if code != 0:
+        return code, "", err
     if args.action == "set":
         # item-edit takes the board's node id, not its number
-        code, out, err = runner(["gh", "project", "view", args.number, "--owner", args.owner,
+        code, out, err = runner(["gh", "project", "view", args.number, "--owner", "@me",
                                  "--format", "json", "--jq", ".id"], token)
         project_id = out.strip()
         if code != 0 or not project_id:
@@ -296,6 +325,9 @@ def main(argv: list[str], runner=run, read=read_token) -> int:
         print(f"board.py: {scrub(str(exc))}", file=sys.stderr)
         print(f"board.py: the boards token is read from the credential store entry {ENTRY}; "
               "the owner makes it by hand (#285).", file=sys.stderr)
+        return 2
+    except OwnerError as exc:
+        print(f"board.py: {scrub(str(exc), token)}", file=sys.stderr)
         return 2
     except Exception as exc:  # any other error is shown scrubbed, never raw
         print(f"board.py: {type(exc).__name__}: {scrub(str(exc), token)}", file=sys.stderr)
@@ -343,10 +375,17 @@ def boards_rows(owner: str, number: str, repo: str, runner=run,
         return scrub(first_line(err) or first_line(out) or f"exit {code}", token)
 
     rows = []
-    argv = ["gh", "project", "view", number, "--owner", owner, "--format", "json", "--jq", ".number"]
-    code, out, err = call(argv)
-    rows.append(("D1 board", " ".join(argv), "PASS" if code == 0 else "FAIL",
-                 "" if code == 0 else error(code, out, err)))
+    argv = ["gh", "project", "view", number, "--owner", "@me", "--format", "json", "--jq", ".number"]
+    try:
+        code, err = check_owner(owner, token, lambda argv, _token: call(argv))
+    except OwnerError as exc:
+        code, err = 2, str(exc)
+    if code != 0:
+        rows.append(("D1 board", " ".join(LOGIN_CALL), "FAIL", error(code, "", err)))
+    else:
+        code, out, err = call(argv)
+        rows.append(("D1 board", " ".join(argv), "PASS" if code == 0 else "FAIL",
+                     "" if code == 0 else error(code, out, err)))
 
     argv = ["gh", "api", "-i", "rate_limit"]
     code, out, err = call(argv)
