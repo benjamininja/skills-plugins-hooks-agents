@@ -704,3 +704,26 @@ def test_the_template_probe_profile_holds_one_fixed_path_rule(project):
     assert "profile:   probe (1 allow, 0 deny" in done.stdout
     allowed = start_line(done.stdout).split("--allowedTools", 1)[1].split("--disallowedTools", 1)[0]
     assert "builder-state/probe.py" in allowed
+
+
+ONESHOT_RULE = "Bash(.venv/Scripts/python.exe builder-state/oneshot.py)"
+
+
+def test_the_template_oneshot_profile_holds_one_fixed_path_rule(project):
+    with_profiles(project, {})
+    templates = PLUGIN / "templates"
+    shutil.copy(templates / "builder-profiles.example.json", project / ".claude" / "builder-profiles.json")
+    profiles = json.loads((templates / "builder-profiles.example.json").read_text(encoding="utf-8"))["profiles"]
+
+    assert profiles["oneshot"] == {"allow": [ONESHOT_RULE]}
+    assert "*" not in ONESHOT_RULE and not ONESHOT_RULE.startswith("-")
+    others = [rule for name, p in profiles.items() if name != "oneshot" and isinstance(p, dict)
+              for rule in p.get("allow", [])]
+    assert not [rule for rule in others if "oneshot" in rule]
+    done = dispatch(project, "-Tier", "medium", "-Profile", "oneshot")
+
+    assert done.returncode == 0, done.stderr
+    assert "profile:   oneshot (1 allow, 0 deny" in done.stdout
+    allowed = start_line(done.stdout).split("--allowedTools", 1)[1].split("--disallowedTools", 1)[0]
+    assert "builder-state/oneshot.py" in allowed
+    assert "builder-state/probe.py" not in allowed
