@@ -47,6 +47,37 @@ Compacts since this clear: 0.
 - **PR #197 is merged** (`6e43072`), checked. PR #301 is merged
   (`8b54ee1`). Open PRs: #302, #296, #256, #211, #182.
 
+**Later on 2026-11-28 (this wins over the lines above and the Next
+list below where they differ).**
+- PR #296 merged (`a774e8e`, plugin 0.6.0). The setup-lists Action is
+  in the tools queue, raised by the manager. The line for dynasty #655
+  is sent.
+- PR #302 took main in: head `3f02699`, version 0.6.1, CLEAN, checks
+  pass, the dynasty planner signed off that head (pull/302
+  issuecomment-7239755363). It waits for the manager's re-proof and
+  Ben's merge word in the manager's chat.
+- **PR #303** (head `734194c`, branch `docs/rule-texts-300`, worktree
+  `t300-rule-texts`): #300's exception and decision 10 of #250 in one
+  PR, on Ben's button "One PR for both (Recommended)". Version 0.6.2;
+  it takes main in after #302 merges, and the new head goes to the
+  dynasty planner again. Sent for a read at `734194c`. After it
+  merges: the dated trial line in the tools rules file, its own PR.
+- #285: the builder's plan is read, no breach (issues/285
+  issuecomment-7239802406). Disposition 4 (the assistant's role file
+  names `tools/board.py`) is the planner's PR after #285 merges, and
+  the Action with Ben's two hand steps is copied from that PR's body.
+- #294: parked by its builder, since both files are under `.claude/`.
+  The manager asks Ben who writes them. If the planner: the wording is
+  in the brief and the builder's plan on #294; the consultant keeps no
+  state branch and its start line says so.
+- Six builders run (#294 parked, #293, #285, #298, #299, #262); #263
+  step 3 resumes next; #289 step 1 waits for a quiet machine.
+- The advisory: Ben typed in the dynasty planner's chat, as relayed,
+  that it should be made ready that day, with the date move as the
+  fallback. The Tools reading sent back: only PR #211 can land that
+  day; the rest cannot. The record's link is owed from the dynasty
+  planner.
+
 **Next, in order.**
 1. The draft advisory GHSA-27j5-qx96-v8w3: the status of its gaps and
    the Tools view (do not publish whole on 2026-11-28; move the date
