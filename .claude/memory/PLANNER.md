@@ -105,6 +105,14 @@ between sessions section in `session-rules`) is filed, held behind PR
 a `usage.py tags` run on Ben's word, compared on #317. Ben answered
 the catalog Decision (a): no allow rule for builders (issues/299
 issuecomment-7240505050).
+**#285's Action:** Ben made the token and ticked; D2 rows PASS, D1
+FAIL (unknown owner type). Cause read from gh's source (the combined
+user and organisation lookup hides a scope error; `@me` avoids it),
+not proved on the token. The fix rides on #307 as parts A (`--owner
+@me`) and B (`--boards-only`): issues/307 issuecomment-7240559476.
+After #307 merges the planner raises the D-row re-run as an Action;
+#285 stays open until D1 passes. If it still fails it comes back to
+the planner (next option: the script's own query; not `read:org`).
 Worktrees `t262-row1l`, `t285-role-line`, `t300-rule-texts`, `t294-start-lines`,
 `t300-never-line` and `t300-trial-line` hold merged branches.
 
