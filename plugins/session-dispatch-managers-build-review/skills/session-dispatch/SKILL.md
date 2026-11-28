@@ -26,8 +26,11 @@ All of these hold, or there is no dispatch:
   dispatched and in what order; it is not, alone, the word to start.
   **One exception.** A project rules file may name tiers, never above
   low, whose tickets are dispatched without that word. It holds only
-  for a ticket whose `Tier:` line the planner set, and whose brief
-  names its files and its proof. The owner having invoked this skill in
+  for a ticket whose `Tier:` line the planner set, whose brief names
+  its files and its proof, and which is not held: neither by the
+  owner, nor by the planner's order behind another ticket. The project
+  rules file names how a hold is marked, and a held ticket keeps the
+  owner's word. The owner having invoked this skill in
   the session stays required, and nothing under "Never" in
   `session-rules` loosens. The manager says in its next report which
   tickets it dispatched this way. A project whose rules file names no
