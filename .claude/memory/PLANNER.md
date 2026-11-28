@@ -67,7 +67,12 @@ button): keep the lane order, it was a check that it is not lost. The
 advisory: the dynasty planner's pointer is dynasty #564
 issuecomment-7239843007; no date yet; Tools reports when PR #211 and
 #295's design merge. Next after #309: disposition 4 and the Action for
-#285 once PR #306 is merged; row 1l of #262 as the planner's own PR.
+#285 once PR #306 is merged. The dynasty planner read PR #309 at
+`11380ac`, no change asked (pull/309 issuecomment-7240142282). **PR
+#310** (branch `docs/manager-boundary-262`, worktree `t262-row1l`, head
+`01afdfe`) is row 1l of #262, one sentence in the tools manager's role
+file; security review clean; at the manager for re-proof and Ben's
+merge word. PR #308 is #263 step 3's (the manager's lane).
 
 **The planner's open PRs (as saved before the compact).**
 - **PR #303** (branch `docs/rule-texts-300`, worktree
