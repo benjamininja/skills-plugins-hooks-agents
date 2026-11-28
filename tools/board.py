@@ -115,9 +115,19 @@ SET_MUTATIONS = {
 QUERIES = (BOARD_QUERY, ITEMS_QUERY, FIELDS_QUERY, VIEWS_QUERY, RESOURCE_QUERY, ADD_MUTATION,
            *(m for m, _ in SET_MUTATIONS.values()))
 PAGE = 100  # GitHub's largest page
-# what a lookup of an issue the token cannot read answers
-REFUSED_RE = re.compile(r"INSUFFICIENT_SCOPES|FORBIDDEN|NOT_FOUND|Could not resolve|"
-                        r"requires one of the following scopes|HTTP 40[34]")
+# What a failed lookup of an issue answers, in three kinds (#331). A rate limit or an
+# SSO refusal is also an HTTP 403, so it is read first and passed on as it came.
+OTHER_403_RE = re.compile(r"rate limit|RATE_LIMITED|SAML|\bSSO\b", re.IGNORECASE)
+# a link that resolves to nothing
+MISSING_RE = re.compile(r"NOT_FOUND|Could not resolve|HTTP 404")
+# a scope or access refusal
+REFUSED_RE = re.compile(r"INSUFFICIENT_SCOPES|FORBIDDEN|"
+                        r"requires one of the following scopes|HTTP 403")
+MISSING_LINE = "no issue or pull request is at that link"
+REFUSED_LINE = "the boards token cannot read that repository's issue or pull request"
+# A negative value argparse reads as an option when it follows a space (#331):
+# its own matcher takes -3 and -.5 but not -1.25e2 or -3.
+ARGPARSE_NEGATIVE_RE = re.compile(r"-[0-9]+|-[0-9]*\.[0-9]+")
 
 
 class StoreError(Exception):
@@ -297,6 +307,11 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
     value.add_argument("--date", type=pattern(DATE_RE, "a date YYYY-MM-DD"))
     value.add_argument("--option", type=pattern(OPTION_RE, "a single-select option id"))
     value.add_argument("--iteration", type=pattern(OPTION_RE, "an iteration id"))
+    for flag, text in zip(argv, argv[1:]):
+        # --number or a prefix of it, then a negative value argparse would read as an option
+        if (len(flag) > 2 and "--number".startswith(flag) and VALUE_NUMBER_RE.fullmatch(text)
+                and text.startswith("-") and not ARGPARSE_NEGATIVE_RE.fullmatch(text)):
+            edit.error(f"a negative number is written with the equals sign, as --number={text}")
     return parser.parse_args(argv)
 
 
@@ -366,7 +381,8 @@ class OwnerError(Exception):
 
 
 class ContentError(Exception):
-    """The token cannot read the issue or pull request to add. The message names neither."""
+    """The issue or pull request to add is not there, or the token cannot read it.
+    The message names neither."""
 
 
 LOGIN_CALL = ["gh", "api", "user", "--jq", ".login"]
@@ -416,14 +432,21 @@ def board_id(number: str, token: str, runner) -> tuple[int, str, str]:
 
 
 def add(args: argparse.Namespace, project_id: str, token: str, runner) -> tuple[int, str, str]:
+    # No fallback to another token in any branch (#328). Three lines, not one (#331).
     code, out, err = runner(resource_call(args.url), token)
-    if code != 0 and not REFUSED_RE.search(f"{err}\n{out}"):
+    if code == 0:
+        content_id = out.strip()
+        if not content_id:
+            raise ContentError(MISSING_LINE)  # the resource came back null
+        return runner(add_call(project_id, content_id), token)
+    text = f"{err}\n{out}"
+    if OTHER_403_RE.search(text):
         return code, out, err
-    content_id = out.strip() if code == 0 else ""
-    if not content_id:
-        # no fallback to another token (#328)
-        raise ContentError("the boards token cannot read that repository's issue or pull request")
-    return runner(add_call(project_id, content_id), token)
+    if MISSING_RE.search(text):
+        raise ContentError(MISSING_LINE)
+    if REFUSED_RE.search(text):
+        raise ContentError(REFUSED_LINE)
+    return code, out, err
 
 
 def act(args: argparse.Namespace, token: str, runner) -> tuple[int, str, str]:
