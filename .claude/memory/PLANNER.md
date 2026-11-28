@@ -31,22 +31,16 @@ older blocks are in this file's git history.
 
 ### Next
 
-1. **#328 and #285** (the boards token). PR #330 (#328, branch
-   `worktree-t328-ownqueries`) is re-proved Green at `ff2cc80` (the
-   manager's report; head and clean merge state checked) and is NOT
-   merged: Ben's button "Run before merge (Recommended)" (issues/328
-   issuecomment-7241637480). **Ben ran the D rows on 2026-11-28 and
-   all six pass** (issues/328 issuecomment-7243277622; read in the
-   queue entry, which is re-keyed to this session). The manager
-   merges it at `ff2cc80` on Ben's word in the manager's chat, once
-   Ben has invoked `session-dispatch` there, and ticks the Action.
-   **When the merge is on `main`:** close #285 with a line on what
-   proved it, lift **#329** (`held` label and `Held:` line), and send
-   the personal-assistant #332's step 1 (one `add` and each `set`
-   kind once, a table of the seven texts back). The advisories are
-   filed: **#331** (F1, low, held behind #329, same file) and
-   **#332** (F2, medium, held behind the merge and that first use).
-   Lift #331 when #329's PR merges.
+1. **The boards token, after the merge.** PR #330 is on `main` as
+   `1abdfe1` (checked), after Ben's D rows run passed six of six
+   (issues/328 issuecomment-7243277622). #328 and #285 are closed;
+   #329's hold is lifted (issues/329 issuecomment-7243313395), so
+   the manager may dispatch it at low. Open: **#331** (F1, low, held
+   behind #329's PR, same file): lift it when that PR merges.
+   **#332** (F2, medium, held): the personal-assistant is asked for
+   the first-use table of its step 1; when it comes, check it against
+   the board, post it on #332, then a button to Ben on a standing
+   proof, or a brief for any refused text.
 2. **#324** (PR #304's F1, low) is held behind PR #326 (#240 step 2,
    branch `worktree-t240-rekey`); lift the label and the `Held:` line
    when that PR merges.
@@ -76,16 +70,10 @@ older blocks are in this file's git history.
 
 ### Waiting
 
-- On Ben, in the manager's chat: `session-dispatch` invoked there,
-  then the merge word for PR #330 (its run is done) and for PR #326;
-  the go for #262's rule-text build and for every medium or high
-  dispatch.
-- In the queue: the Action "Run the boards rows from PR #330's
-  branch, before its merge (#328)", Session
-  ad27c4f7-ccae-4f9d-aab0-2be31444a3f3, done by Ben and not yet
-  ticked.
-- On the manager: the merge of PR #330 and its closeout; PR #326's
-  re-proof.
+- On Ben, in the manager's chat: the merge word for PR #326; the go
+  for #262's rule-text build and for every medium or high dispatch.
+- On the manager: PR #326's re-proof; #329's dispatch.
+- On the personal-assistant: #332's first-use table.
 - In the hook lane: PR #211, then #295, then #289 step 2, then #200.
   In the owner-queue lane: PR #326, #262's mod half, #111, #324. The
   repair of PR #182 is still owed.
@@ -105,9 +93,8 @@ b5f4cf26-115a-4e01-b766-e8504c065057; Tools-builder-manager
 
 ### Reads and checks due
 
-- When PR #330 is on `main`: close #285, lift #329, send #332's
-  step 1 to the personal-assistant (Next 1).
 - When #329's PR merges: lift #331.
+- When the personal-assistant's table comes: #332 (Next 1).
 - When PR #326 merges: lift #324; the two briefs of Next 3.
 - 2026-12-12: the two buttons of Next 4.
 - 2026-12-31 or Dugout Standard's tenth merged builder PR: #323.
@@ -123,6 +110,8 @@ All on 2026-11-28, by Ben's button unless said.
 - Ben's D rows run from PR #330's branch: six of six pass (issues/328
   issuecomment-7243277622). #331 and #332 filed from that PR's
   advisories F1 and F2, both held (planner).
+- Merged: PR #330 `1abdfe1` (#328), on Green after that run (pull/330
+  issuecomment-7243279315). #285 closed; #329's hold lifted.
 
 - The cut is reversed and #300 is whole: "Reverse all, #300 whole
   (Recommended)" (issues/300 issuecomment-7239515907).
