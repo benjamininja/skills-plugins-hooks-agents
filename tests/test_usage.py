@@ -290,6 +290,103 @@ def test_reads_claims_no_bound_when_a_compact_falls_inside_the_turn(tmp_path, ca
     assert "upper bound" not in out
 
 
+def test_reads_names_the_compact_before_negative_growth(tmp_path, capsys):
+    # F9 of #297: an auto-compact inside the start-up leaves negative growth; both are named
+    p = write(tmp_path / "s.jsonl", [
+        user(PROMPT, T(20)),
+        reply("a", T(20), i=0, cr=180_000, stop="tool_use", calls=[("u1", "Read", {"file_path": PATH})]),
+        result("u1", "x" * 400, T(20)),
+        compact(T(20, "10:00:05")),
+        reply("b", T(20, "10:00:06"), i=0, cr=30_000, stop="end_turn"),
+    ])
+    out = run(capsys, "reads", str(p))
+    line = next(ln for ln in out.splitlines() if ln.startswith("no bound is claimed"))
+    assert line.startswith("no bound is claimed: a compact falls inside the turn")
+    assert "growth is -150000, so 4.0 is assumed" in line
+
+
+def test_shapes_finds_where_a_peer_message_is_stored_and_prints_no_text(tmp_path, capsys):
+    s = tmp_path / "store"
+    peer = "Another Claude session sent a message:\n<cross-session-message from=x>" + PROMPT
+    write(s / "C--x" / "llll0001-0000.jsonl", [
+        title("a manager"),
+        user(PROMPT, T(21, "08:00:00")),
+        reply("a", T(21, "08:00:01")),
+        user(peer, T(21, "08:01:00"), meta=True),                          # a meta string
+        {"type": "attachment", "timestamp": T(21), "attachment": {         # an attachment
+            "type": "queued_command", "content": "<cross-session-message from=x>" + PROMPT}},
+        {"type": "user", "timestamp": T(21), "message": {"content": [      # a list block
+            {"type": "text", "text": "see:\n\n\n<cross-session-message>" + PROMPT}]}},
+        reply("b", T(21, "08:02:01")),
+        {"type": "user", "isSidechain": True, "message": {"content": "<cross-session-message>"}},
+        {"type": "progress", "message": {"content": [
+            {"type": "tool_use", "input": {"privatefield": "<cross-session-message>"}}]}},
+    ])
+    out = run(capsys, "shapes", "--store", str(s), "--from", "2026-11-21", "--to", "2026-11-21",
+              "--only", "manager")
+    assert "sessions=1 records=8" in out
+    assert "type=user meta=False content=str:text" in out
+    assert "records holding 'cross-session-message': 4 ==" in out
+    # keys below the third level may be data: they print as ?
+    assert "| at .message.content[].input.? | at start" in out and "privatefield" not in out
+    lines = [ln for ln in out.splitlines() if " | at " in ln]
+    assert any("meta=True content=str:text | at .message.content | line 2" in ln for ln in lines)
+    assert any("attachment=queued_command" in ln and "| at .attachment.content | at start" in ln for ln in lines)
+    assert any("content=list[text:text] | at .message.content[].text | line 3 or later" in ln for ln in lines)
+    # user record key names, with counts; the sidechain record is left out
+    assert "isMeta=2 message=3 timestamp=3 type=3" in out and "isSidechain" not in out
+    assert "Another Claude" not in out and "from=x" not in out
+
+
+def test_shapes_hides_a_name_keyed_map_at_depth_one(tmp_path, capsys):
+    # F1 of #301: a data map keyed by names right under the record prints "?"
+    s = tmp_path / "store"
+    write(s / "C--x" / "mmmm0001-0000.jsonl", [
+        title("a manager"), user(PROMPT, T(21)), reply("a", T(21)),
+        {"type": "user", "toolUseResult": {"secret-branch-name": "<cross-session-message>"}},
+        {"type": "user", "toolUseResult": {"stdout": "<cross-session-message>"}},
+    ])
+    out = run(capsys, "shapes", "--store", str(s), "--from", "2026-11-21", "--to", "2026-11-21")
+    assert "| at .toolUseResult.? | at start" in out and "secret-branch-name" not in out
+    assert "| at .toolUseResult.stdout | at start" in out
+
+
+def test_needle_places_positions_and_shape_helpers():
+    # F2 of #301: a CRLF lead is still at the start
+    assert list(usage.needle_places({"c": "\r\n<cross-session-message>"}, "cross-session-message")) == [
+        (".c", "at start")]
+    # F3 of #301: the branches no other test runs
+    assert list(usage.needle_places({"c": "hi <cross-session-message>"}, "cross-session-message")) == [
+        (".c", "line 1, after text")]
+    assert list(usage.needle_places({"c": "a\nb\nc<cross-session-message>"}, "cross-session-message")) == [
+        (".c", "line 3 or later")]
+    assert list(usage.needle_places({"cross-session-message": 1}, "cross-session-message")) == []
+    assert usage.lead_of("  ") == "empty" and usage.lead_of("<1x>") == "<?>" and usage.lead_of("hi") == "text"
+    assert usage.lead_of("<task-notification>x") == "<task-notification>"
+    assert usage.content_kind(None) == "none" and usage.content_kind(5) == "?"
+    assert usage.content_kind(["x", {"type": "a b"}]) == "list[?]"
+    assert usage.safe(None) == "-" and usage.safe("a/b") == "?" and usage.safe(3) == "?"
+    att = {"type": "attachment", "attachment": {"type": "queued_command", "content": "<x-y>z"}}
+    assert usage.shape_of(att) == "type=attachment attachment=queued_command meta=False attachment.content=str:<x-y>"
+
+
+def test_shapes_counts_a_needle_only_in_a_key_as_not_in_a_value(tmp_path, capsys):
+    s = tmp_path / "store"
+    write(s / "C--x" / "nnnn0001-0000.jsonl", [
+        title("a manager"), user(PROMPT, T(21)), reply("a", T(21)),
+        {"type": "progress", "cross-session-message": 1},
+    ])
+    out = run(capsys, "shapes", "--store", str(s), "--from", "2026-11-21", "--to", "2026-11-21")
+    assert "| at (not in a string value) | -" in out
+
+
+def test_shapes_refuses_a_needle_that_is_not_a_name(store):
+    for bad in ("a b", "<x>", "x"):
+        with pytest.raises(SystemExit):
+            usage.main(["shapes", "--store", str(store), "--from", "2026-11-17", "--to", "2026-11-24",
+                        "--needle", bad])
+
+
 def test_tags_counts_openers_by_kind_with_ambiguous_apart(tmp_path, capsys):
     # F8: step 2 reads this line to check the stored lead of a peer message
     s = tmp_path / "store"
@@ -471,7 +568,7 @@ def test_turns_and_replies_name_what_opened_each_turn(tmp_path, capsys):
 
 def test_every_subcommand_prints_no_transcript_text(store, compact_store, capsys):
     w = ["--from", "2026-11-01", "--to", "2026-11-30"]
-    for cmd in ("baseline", "ledger", "startup", "tags", "compacts"):
+    for cmd in ("baseline", "ledger", "startup", "tags", "compacts", "shapes"):
         run(capsys, cmd, "--store", str(store), *w)
         run(capsys, cmd, "--store", str(compact_store), *w)
     f = str(store / SLUG_A / "aaaa1111-0000.jsonl")
